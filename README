@@ -2,20 +2,18 @@
 
 Se você acabou de clonar este repositório, siga estes passos:
 
-1. Instalar dependências:
-npm install
-
-2.Crie um arquivo .env na raiz do projeto:
+1. Crie um arquivo .env na raiz do projeto:
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=SUA_SENHA_AQUI
 DB_NAME=NOME_DO_BANCO
 JWT_SECRET=segredo
 
+2. Instalar dependências:
+npm install
+
 3. Criar Banco e Tabelas (Atenção: Isso apaga dados antigos e cria o banco do zero com livros de exemplo):
 npm run setup
-
-Admin Padrão: admin@biblioteca.com | Senha: admin123
 
 4. Rodar o Sistema
 Você precisará de dois terminais abertos:
@@ -25,3 +23,5 @@ npm run dev
 
 Terminal 2 (Interface CLI):
 npm run cli
+
+Admin Padrão: admin@biblioteca.com | Senha: admin123
