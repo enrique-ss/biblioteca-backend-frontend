@@ -9,7 +9,7 @@ npm install
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=SUA_SENHA_AQUI
-DB_NAME=bdb
+DB_NAME=NOME_DO_BANCO
 JWT_SECRET=segredo
 
 3. Criar Banco e Tabelas (Atenção: Isso apaga dados antigos e cria o banco do zero com livros de exemplo):
