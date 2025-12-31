@@ -39,20 +39,17 @@ async function setupDatabase() {
 
     console.log('\n📋 Criando tabelas...\n');
 
-    // IMPORTANTE: Deletar na ordem correta (tabelas dependentes primeiro)
-    // 1. Deletar tabela de alugueis primeiro (tem foreign keys)
+    // IMPORTANTE: Deletar na ordem correta
     if (await db.schema.hasTable('alugueis')) {
       await db.schema.dropTable('alugueis');
       console.log('🗑️  Tabela alugueis removida');
     }
 
-    // 2. Deletar tabela de livros
     if (await db.schema.hasTable('livros')) {
       await db.schema.dropTable('livros');
       console.log('🗑️  Tabela livros removida');
     }
 
-    // 3. Deletar tabela de usuarios por último
     if (await db.schema.hasTable('usuarios')) {
       await db.schema.dropTable('usuarios');
       console.log('🗑️  Tabela usuarios removida');
@@ -60,8 +57,7 @@ async function setupDatabase() {
 
     console.log('');
 
-    // Criar tabelas na ordem correta (independentes primeiro)
-    // 1. Criar tabela de Usuários (sem dependências)
+    // 1. Criar tabela de Usuários
     await db.schema.createTable('usuarios', (table: any) => { 
       table.increments('id').primary(); 
       table.string('nome', 100).notNullable(); 
@@ -69,17 +65,21 @@ async function setupDatabase() {
       table.string('telefone', 20); 
       table.string('endereco', 200); 
       table.string('senha', 255).notNullable(); 
+      // Alterado para bater com seu código de permissão (bibliotecario/usuario)
       table.enum('tipo', ['usuario', 'bibliotecario']).defaultTo('usuario');
       table.timestamp('created_at').defaultTo(db.fn.now()); 
     });
     console.log('✅ Tabela usuarios criada');
 
-    // 2. Criar tabela de Livros (sem dependências)
+    // 2. Criar tabela de Livros (COM AS NOVAS COLUNAS)
     await db.schema.createTable('livros', (table: any) => { 
       table.increments('id').primary(); 
       table.string('titulo', 150).notNullable(); 
       table.string('autor', 100).notNullable(); 
       table.integer('ano_lancamento').notNullable(); 
+      table.string('genero', 100);    // <-- Adicionado
+      table.string('corredor', 10);   // <-- Adicionado
+      table.string('prateleira', 10); // <-- Adicionado
       table.text('descricao');
       table.string('isbn', 20);
       table.enum('status', ['disponivel', 'alugado']).defaultTo('disponivel'); 
@@ -87,7 +87,7 @@ async function setupDatabase() {
     });
     console.log('✅ Tabela livros criada');
 
-    // 3. Criar tabela de Alugueis (com foreign keys)
+    // 3. Criar tabela de Alugueis
     await db.schema.createTable('alugueis', (table: any) => { 
       table.increments('id').primary(); 
       table.integer('usuario_id').unsigned().notNullable(); 
@@ -113,47 +113,46 @@ async function setupDatabase() {
       tipo: 'bibliotecario'
     });
     console.log('✅ Bibliotecário criado!');
-    console.log('   Email: admin@biblioteca.com');
-    console.log('   Senha: admin123');
 
-    // Inserir alguns livros de exemplo
+    // Inserir alguns livros de exemplo com localizações
     console.log('\n📚 Inserindo livros de exemplo...');
     await db('livros').insert([
-      {
-        titulo: '1984',
-        autor: 'George Orwell',
-        ano_lancamento: 1949,
-        descricao: 'Um clássico da ficção distópica',
-        isbn: '978-0451524935',
-        status: 'disponivel'
-      },
-      {
-        titulo: 'Dom Casmurro',
-        autor: 'Machado de Assis',
-        ano_lancamento: 1899,
-        descricao: 'Romance da literatura brasileira',
-        isbn: '978-8535911664',
-        status: 'disponivel'
-      },
-      {
-        titulo: 'O Senhor dos Anéis',
-        autor: 'J.R.R. Tolkien',
-        ano_lancamento: 1954,
-        descricao: 'Épico de fantasia',
-        isbn: '978-0544003415',
-        status: 'disponivel'
-      }
-    ]);
+  {
+    titulo: 'Vade Mecum 2024',
+    autor: 'Saraiva',
+    ano_lancamento: 2024,
+    genero: 'Direito',
+    corredor: '03',
+    prateleira: 'S-2',
+    status: 'disponivel'
+  },
+  {
+    titulo: 'O Código da Vinci',
+    autor: 'Dan Brown',
+    ano_lancamento: 2003,
+    genero: 'Suspense Policial',
+    corredor: '09',
+    prateleira: 'LT-4',
+    status: 'disponivel'
+  },
+  {
+    titulo: 'Breves Respostas para Grandes Questões',
+    autor: 'Stephen Hawking',
+    ano_lancamento: 2018,
+    genero: 'Física / Ciência',
+    corredor: '05',
+    prateleira: 'C-1',
+    status: 'disponivel'
+  }
+]);
     console.log('✅ Livros de exemplo inseridos');
 
     console.log('\n🎉 Setup concluído com sucesso!\n');
-    console.log('📝 Próximo passo: npm run dev\n');
     
     await db.destroy(); 
     process.exit(0);
   } catch (error) {
     console.error('❌ Erro:', error);
-    await connection.destroy(); 
     process.exit(1);
   }
 }
