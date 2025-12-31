@@ -82,18 +82,24 @@ async function listarLivros(filtro: string = '') {
     const livros = response.data;
     
     if (livros.length === 0) {
-      console.log('\n📚 Nenhum livro encontrado.');
+      console.log('\n📚 Nenhum livro encontrado.\n');
     } else {
-      console.table(livros.map((l: any) => ({
+      console.log(`\n🏛️  CATÁLOGO DA BIBLIOTECA:`);
+      
+      // Criamos um novo array formatado para a tabela ficar bonita
+      const tabelaFormatada = livros.map((l: any) => ({
         ID: l.id,
         Título: l.titulo,
-        Gênero: l.genero,
+        Gênero: l.genero || 'N/A',
         Local: `${l.corredor}/${l.prateleira}`,
-        Status: l.status
-      })));
+        Status: l.status === 'disponivel' ? '✅ Livre' : '❌ Alugado'
+      }));
+
+      // O console.table desenha a tabela perfeitamente independente do tamanho do texto
+      console.table(tabelaFormatada);
     }
   } catch (error: any) {
-    console.log('\n❌ Erro na consulta.');
+    console.log('\n❌ Erro na consulta ao servidor.');
   }
 }
 
