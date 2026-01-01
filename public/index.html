@@ -9,184 +9,237 @@
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📚 LuizaTeca</h1>
-            <p>Sistema de Gerenciamento de Biblioteca</p>
-            <div id="userInfo" class="user-info" style="display: none;">
-                <span id="userName"></span> | <span id="userType"></span>
-            </div>
-        </div>
+    <div class="noise"></div>
 
-        <div class="content">
-            <!-- Tela de Login -->
-            <div id="loginScreen" class="screen active">
-                <form id="loginForm" class="login-form">
-                    <h2 class="text-center" style="margin-bottom: 30px;">🔐 Login</h2>
-                    <div class="form-group">
-                        <label>📧 Email</label>
-                        <input type="email" id="loginEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label>🔒 Senha</label>
-                        <input type="password" id="loginPassword" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-                    <div class="text-center mt-20">
-                        <p>Não tem conta? <button type="button" class="link-btn"
-                                onclick="showScreen('registerScreen')">Cadastre-se</button></p>
-                    </div>
-                </form>
+    <div class="bi-gradient"></div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">
+                <span class="logo-icon">📚</span>
+                <span class="logo-text">LuizaTeca</span>
+            </h1>
+            <p class="subtitle">Sistema de Gerenciamento de Biblioteca</p>
+            <div id="userInfo" class="user-info" style="display: none;">
+                <span class="user-badge">
+                    <span id="userName"></span>
+                    <span class="separator">|</span>
+                    <span id="userType"></span>
+                </span>
             </div>
+        </header>
+
+        <main class="content">
+            <!-- Tela de Login -->
+            <section id="loginScreen" class="screen active">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">🔐 Login</h2>
+                    </div>
+                    <form id="loginForm" class="form">
+                        <div class="form-group">
+                            <label class="form-label">📧 Email</label>
+                            <input type="email" id="loginEmail" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🔒 Senha</label>
+                            <input type="password" id="loginPassword" class="form-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <span>Entrar</span>
+                        </button>
+                        <div class="form-footer">
+                            <p>Não tem conta?
+                                <button type="button" class="link-btn" onclick="showScreen('registerScreen')">
+                                    Cadastre-se
+                                </button>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </section>
 
             <!-- Tela de Cadastro -->
-            <div id="registerScreen" class="screen">
-                <form id="registerForm" class="register-form">
-                    <h2 class="text-center" style="margin-bottom: 30px;">✍️ Cadastro</h2>
-                    <div class="form-group">
-                        <label>👤 Nome</label>
-                        <input type="text" id="regNome" required>
+            <section id="registerScreen" class="screen">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">✍️ Cadastro</h2>
                     </div>
-                    <div class="form-group">
-                        <label>📧 Email</label>
-                        <input type="email" id="regEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label>🔒 Senha</label>
-                        <input type="password" id="regSenha" required>
-                    </div>
-                    <div class="form-group">
-                        <label>🎭 Tipo de Conta</label>
-                        <select id="regTipo">
-                            <option value="usuario">👤 Usuário</option>
-                            <option value="bibliotecario">👨‍💼 Bibliotecário</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Cadastrar</button>
-                    <button type="button" class="btn btn-secondary btn-block"
-                        onclick="showScreen('loginScreen')">Voltar</button>
-                </form>
-            </div>
+                    <form id="registerForm" class="form">
+                        <div class="form-group">
+                            <label class="form-label">👤 Nome</label>
+                            <input type="text" id="regNome" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">📧 Email</label>
+                            <input type="email" id="regEmail" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🔒 Senha</label>
+                            <input type="password" id="regSenha" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🎭 Tipo de Conta</label>
+                            <select id="regTipo" class="form-input">
+                                <option value="usuario">👤 Usuário</option>
+                                <option value="bibliotecario">👨‍💼 Bibliotecário</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <span>Cadastrar</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-block" onclick="showScreen('loginScreen')">
+                            <span>Voltar</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
 
             <!-- Menu Principal -->
-            <div id="menuScreen" class="screen">
-                <h2 style="margin-bottom: 20px;">Menu Principal</h2>
-                <div class="menu-grid" id="menuGrid"></div>
-                <div class="text-center mt-20">
-                    <button class="btn btn-danger" onclick="logout()">🚪 Sair</button>
+            <section id="menuScreen" class="screen">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Menu Principal</h2>
+                    </div>
+                    <div class="menu-grid" id="menuGrid"></div>
+                    <div class="card-footer">
+                        <button class="btn btn-danger" onclick="logout()">
+                            <span>🚪 Sair</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Tela de Livros -->
-            <div id="livrosScreen" class="screen">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>📚 Acervo de Livros</h2>
-                    <div>
-                        <button class="btn btn-success" onclick="showModal('addLivroModal')" id="btnAddLivro"
-                            style="display: none;">➕ Adicionar Livro</button>
-                        <button class="btn btn-secondary" onclick="showScreen('menuScreen')">↩️ Voltar</button>
+            <section id="livrosScreen" class="screen">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h2 class="section-title">📚 Acervo de Livros</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-success" onclick="showModal('addLivroModal')" id="btnAddLivro"
+                                style="display: none;">
+                                <span>Adicionar</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="showScreen('menuScreen')">
+                                <span>Voltar</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="livrosTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Título</th>
+                                    <th>Autor</th>
+                                    <th>Gênero</th>
+                                    <th>Localização</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="table-container">
-                    <table id="livrosTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Título</th>
-                                <th>Autor</th>
-                                <th>Gênero</th>
-                                <th>Localização</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+            </section>
 
             <!-- Tela de Aluguéis -->
-            <div id="alugueisScreen" class="screen">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>📋 Empréstimos</h2>
-                    <div>
-                        <button class="btn btn-success" onclick="showModal('addAluguelModal')" id="btnAddAluguel"
-                            style="display: none;">➕ Novo Aluguel</button>
-                        <button class="btn btn-secondary" onclick="showScreen('menuScreen')">↩️ Voltar</button>
+            <section id="alugueisScreen" class="screen">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h2 class="section-title">📋 Empréstimos</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-success" onclick="showModal('addAluguelModal')" id="btnAddAluguel"
+                                style="display: none;">
+                                <span>Novo Aluguel</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="showScreen('menuScreen')">
+                                <span>Voltar</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="alugueisTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuário</th>
+                                    <th>Livro</th>
+                                    <th>Data Aluguel</th>
+                                    <th>Prazo Devolução</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="table-container">
-                    <table id="alugueisTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Usuário</th>
-                                <th>Livro</th>
-                                <th>Data Aluguel</th>
-                                <th>Prazo Devolução</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+            </section>
 
             <!-- Tela de Usuários -->
-            <div id="usuariosScreen" class="screen">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>👥 Gerenciar Usuários</h2>
-                    <button class="btn btn-secondary" onclick="showScreen('menuScreen')">↩️ Voltar</button>
+            <section id="usuariosScreen" class="screen">
+                <div class="glass-card">
+                    <div class="section-header">
+                        <h2 class="section-title">👥 Gerenciar Usuários</h2>
+                        <button class="btn btn-secondary" onclick="showScreen('menuScreen')">
+                            <span>Voltar</span>
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="usuariosTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Tipo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="table-container">
-                    <table id="usuariosTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Tipo</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
 
     <!-- Modal Adicionar Livro -->
     <div id="addLivroModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-backdrop" onclick="closeModal('addLivroModal')"></div>
+        <div class="modal-content glass-card">
             <div class="modal-header">
-                <h2>➕ Cadastrar Novo Livro</h2>
+                <h2 class="modal-title">➕ Cadastrar Novo Livro</h2>
             </div>
-            <form id="addLivroForm">
+            <form id="addLivroForm" class="form">
                 <div class="form-group">
-                    <label>📖 Título</label>
-                    <input type="text" id="livroTitulo" required>
+                    <label class="form-label">📖 Título</label>
+                    <input type="text" id="livroTitulo" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label>✍️ Autor</label>
-                    <input type="text" id="livroAutor" required>
+                    <label class="form-label">✍️ Autor</label>
+                    <input type="text" id="livroAutor" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label>📅 Ano de Lançamento</label>
-                    <input type="number" id="livroAno" required>
+                    <label class="form-label">📅 Ano de Lançamento</label>
+                    <input type="number" id="livroAno" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label>🎭 Gênero</label>
-                    <input type="text" id="livroGenero" required>
+                    <label class="form-label">🎭 Gênero</label>
+                    <input type="text" id="livroGenero" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label>🔢 ISBN (opcional)</label>
-                    <input type="text" id="livroIsbn">
+                    <label class="form-label">🔢 ISBN (opcional)</label>
+                    <input type="text" id="livroIsbn" class="form-input">
                 </div>
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-success">Cadastrar</button>
-                    <button type="button" class="btn btn-secondary"
-                        onclick="closeModal('addLivroModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <span>Cadastrar</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addLivroModal')">
+                        <span>Cancelar</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -194,23 +247,27 @@
 
     <!-- Modal Adicionar Aluguel -->
     <div id="addAluguelModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-backdrop" onclick="closeModal('addAluguelModal')"></div>
+        <div class="modal-content glass-card">
             <div class="modal-header">
-                <h2>➕ Registrar Novo Aluguel</h2>
+                <h2 class="modal-title">➕ Registrar Novo Aluguel</h2>
             </div>
-            <form id="addAluguelForm">
+            <form id="addAluguelForm" class="form">
                 <div class="form-group">
-                    <label>📚 Livro</label>
-                    <select id="aluguelLivro" required></select>
+                    <label class="form-label">📚 Livro</label>
+                    <select id="aluguelLivro" class="form-input" required></select>
                 </div>
                 <div class="form-group">
-                    <label>👤 Usuário</label>
-                    <select id="aluguelUsuario" required></select>
+                    <label class="form-label">👤 Usuário</label>
+                    <select id="aluguelUsuario" class="form-input" required></select>
                 </div>
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-success">Registrar</button>
-                    <button type="button" class="btn btn-secondary"
-                        onclick="closeModal('addAluguelModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <span>Registrar</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addAluguelModal')">
+                        <span>Cancelar</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -218,35 +275,42 @@
 
     <!-- Modal Editar Usuário -->
     <div id="editUsuarioModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-backdrop" onclick="closeModal('editUsuarioModal')"></div>
+        <div class="modal-content glass-card">
             <div class="modal-header">
-                <h2>✏️ Editar Usuário</h2>
+                <h2 class="modal-title">✏️ Editar Usuário</h2>
             </div>
-            <form id="editUsuarioForm">
+            <form id="editUsuarioForm" class="form">
                 <input type="hidden" id="editUsuarioId">
                 <div class="form-group">
-                    <label>👤 Nome</label>
-                    <input type="text" id="editUsuarioNome" required>
+                    <label class="form-label">👤 Nome</label>
+                    <input type="text" id="editUsuarioNome" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label>📧 Email</label>
-                    <input type="email" id="editUsuarioEmail" required>
+                    <label class="form-label">📧 Email</label>
+                    <input type="email" id="editUsuarioEmail" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label>🎭 Tipo</label>
-                    <select id="editUsuarioTipo">
+                    <label class="form-label">🎭 Tipo</label>
+                    <select id="editUsuarioTipo" class="form-input">
                         <option value="usuario">👤 Usuário</option>
                         <option value="bibliotecario">👨‍💼 Bibliotecário</option>
                     </select>
                 </div>
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-success">Salvar</button>
-                    <button type="button" class="btn btn-secondary"
-                        onclick="closeModal('editUsuarioModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <span>Salvar</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editUsuarioModal')">
+                        <span>Cancelar</span>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <div id="alertContainer"></div>
+
     <script src="script.js"></script>
 </body>
 
