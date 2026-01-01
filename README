@@ -1,27 +1,71 @@
-🚀 Quick Start - Biblioteca API & CLI
+# 📚 Biblioteca API, CLI & Web
 
-Se você acabou de clonar este repositório, siga estes passos:
+Sistema de biblioteca com backend em Node.js, autenticação via JWT e interfaces CLI e Web.
+O usuário escolhe qual interface utilizar, ambas consumindo a mesma API.
 
-1. Crie um arquivo .env na raiz do projeto:
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=SUA_SENHA_AQUI
-DB_NAME=NOME_DO_BANCO
-JWT_SECRET=segredo
+## 🚀 Quick Start
 
-2. Instalar dependências:
+Se você acabou de clonar este repositório, siga os passos abaixo.
+
+## Pré-requisitos
+
+- Node.js (versão 18 ou superior, inclui npm)
+- MySQL Server em execução
+- Cliente MySQL (opcional, ex: MySQL Workbench)
+
+## Configuração do ambiente
+
+1. Crie um arquivo `.env` na raiz do projeto:
+
+DB_HOST=localhost  
+DB_USER=root  
+DB_PASSWORD=SUA_SENHA_AQUI  
+DB_NAME=NOME_DO_BANCO  
+JWT_SECRET=segredo  
+
+## Instalação
+
+2. Instale as dependências do projeto:
+
 npm install
 
-3. Criar Banco e Tabelas (Atenção: Isso apaga dados antigos e cria o banco do zero com livros de exemplo):
+## Banco de dados
+
+3. Criar o banco e as tabelas  
+Atenção: este comando remove dados antigos, recria o banco e insere dados de exemplo.
+
 npm run setup
 
-4. Rodar o Sistema
-Você precisará de dois terminais abertos:
+## Execução
 
-Terminal 1 (Servidor):
+4. Inicie o servidor da API:
+
 npm run dev
 
-Terminal 2 (Interface CLI):
+Após iniciar a API, escolha a interface desejada.
+
+Interface CLI:
+
 npm run cli
 
-Admin Padrão: admin@biblioteca.com | Senha: admin123
+Interface Web:
+
+Acesse pelo navegador no endereço configurado no projeto  
+(ex: http://localhost:3000)
+
+## Credenciais padrão
+
+Administrador  
+Email: admin@biblioteca.com  
+Senha: admin123
+
+## Arquitetura
+
+- routes/: definição dos endpoints HTTP
+- controllers/: lógica da aplicação
+- middlewares/: autenticação e validações
+- database/: configuração do banco
+- cli/: interface de linha de comando
+- web/: interface web
+- index.ts: inicialização do servidor
+- setup.ts: configuração global do projeto
