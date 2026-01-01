@@ -4,10 +4,10 @@ import dotenv from 'dotenv';
 import { db } from './database';
 
 // Importações usando nomes de variáveis claros para evitar conflitos de cache
-import routerUsuario from './routes/usuarioRoutes';
-import routerAuth from './routes/authRoutes';
+import routerUsuario from './routes/UsuarioRoutes';
+import routerAuth from './routes/AuthRoutes';
 import routerLivro from './routes/LivroRoutes';
-import routerAluguel from './routes/aluguelRoutes';
+import routerAluguel from './routes/AluguelRoutes';
 
 dotenv.config();
 const app = express();
@@ -38,7 +38,7 @@ const startServer = async () => {
     app.listen(Number(PORT), '0.0.0.0', () => {
       console.clear();
       console.log('🚀 LUIZATECA ONLINE EM: http://127.0.0.1:' + PORT);
-      console.log('👉 Em um novo terminal: npm run cli');
+      console.log('👉 Em um novo terminal, escolha o método de acesso:\n\nDigite: "npm run cli" para acessar via terminal.\nDigite: "npm run web" para acessar via interface web.');
     });
   } catch (error) {
     console.error('❌ Erro ao iniciar servidor:', error);

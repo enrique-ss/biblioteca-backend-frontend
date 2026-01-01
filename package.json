@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx kill-port 3000 && nodemon --exec ts-node src/index.ts",
     "cli": "ts-node src/cli.ts",
-    "start": "node dist/index.js",
+    "web": "open-cli public/index.html",
     "build": "tsc",
     "setup": "ts-node src/setup.ts"
   },
@@ -37,6 +37,7 @@
     "@types/node": "^20.10.5",
     "kill-port": "^2.0.1",
     "nodemon": "^3.0.2",
+    "open-cli": "^8.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }

@@ -11,7 +11,6 @@ Se você acabou de clonar este repositório, siga os passos abaixo.
 
 - Node.js (versão 18 ou superior, inclui npm)
 - MySQL Server em execução
-- Cliente MySQL (opcional, ex: MySQL Workbench)
 
 ## Configuração do ambiente
 
@@ -31,8 +30,8 @@ npm install
 
 ## Banco de dados
 
-3. Criar o banco e as tabelas  
-Atenção: este comando remove dados antigos, recria o banco e insere dados de exemplo.
+3. Criar o banco de dados e as tabelas  
+Atenção: se já houver um banco com esse nome, todos os dados dele serão apagados!
 
 npm run setup
 
@@ -42,6 +41,7 @@ npm run setup
 
 npm run dev
 
+## Visualização das interfaces
 Após iniciar a API, escolha a interface desejada.
 
 Interface CLI:
@@ -50,12 +50,11 @@ npm run cli
 
 Interface Web:
 
-Acesse pelo navegador no endereço configurado no projeto  
-(ex: http://localhost:3000)
+npm run web
 
 ## Credenciais padrão
 
-Administrador  
+Administrador:
 Email: admin@biblioteca.com  
 Senha: admin123
 
@@ -68,4 +67,4 @@ Senha: admin123
 - cli/: interface de linha de comando
 - web/: interface web
 - index.ts: inicialização do servidor
-- setup.ts: configuração global do projeto
+- setup.ts: cria as configurações global do projeto
