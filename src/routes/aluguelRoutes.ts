@@ -4,9 +4,9 @@ import { authMiddleware, bibliotecarioMiddleware } from '../middlewares/auth';
 
 const router = Router();
 
-router.post('/', authMiddleware, AluguelController.alugar);
-// Alterado para buscar todos os registros (visão do admin)
-router.get('/todos', authMiddleware, bibliotecarioMiddleware, AluguelController.listarTodos);
+router.post('/', authMiddleware, bibliotecarioMiddleware, AluguelController.alugar);
 router.put('/:id/devolver', authMiddleware, bibliotecarioMiddleware, AluguelController.devolver);
+router.get('/todos', authMiddleware, bibliotecarioMiddleware, AluguelController.listarTodos);
+router.get('/meus', authMiddleware, AluguelController.meusAlugueis);
 
 export default router;

@@ -3,196 +3,331 @@ import * as readline from 'readline';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-const PORT = process.env.PORT || 3000;
-const API_URL = `http://127.0.0.1:${PORT}/api`;
-
+const api = axios.create({ baseURL: 'http://127.0.0.1:3000/api' });
 let token: string | null = null;
-let usuarioLogado: any = null;
+let user: any = null;
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const pergunta = (t: string): Promise<string> => new Promise((r) => rl.question(t, r));
-const limparTela = () => console.clear();
 
-const api = axios.create({ baseURL: API_URL, headers: { 'Content-Type': 'application/json' } });
 api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// ========== AUXILIARES VISUAIS ==========
-function exibirCabecalho(titulo: string) {
-  console.log('\n' + '═'.repeat(50));
-  console.log(`  ${titulo}`);
-  console.log('═'.repeat(50));
+const limpar = () => console.clear();
+
+function mostrarBanner() {
+  console.log(`
+  ██╗     ██╗   ██╗██╗███████╗ █████╗ ████████╗███████╗ ██████╗ █████╗ 
+  ██║     ██║   ██║██║╚══███╔╝██╔══██╗╚══██╔══╝██╔════╝██╔════╝██╔══██╗
+  ██║     ██║   ██║██║  ███╔╝ ███████║   ██║   █████╗  ██║     ███████║
+  ██║     ██║   ██║██║ ███╔╝  ██╔══██║   ██║   ██╔══╝  ██║     ██╔══██║
+  ███████╗╚██████╔╝██║███████╗██║  ██║   ██║   ███████╗╚██████╗██║  ██║
+  ╚══════╝ ╚═════╝ ╚═╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝
+  `);
 }
 
-// ========== FUNÇÕES DO SISTEMA ==========
-
-async function registrar() {
-  limparTela();
-  exibirCabecalho('📝 CADASTRO LUIZATECA');
-  const nome = await pergunta('👤 Nome: ');
-  const email = await pergunta('📧 Email: ');
-  const senha = await pergunta('🔑 Senha: ');
-  const tipo = await pergunta('🎭 Tipo (leitor/bibliotecario): ');
-
-  try {
-    const res = await api.post('/auth/registrar', { nome, email, senha, tipo, telefone: '000' });
-    token = res.data.token;
-    usuarioLogado = res.data.usuario;
-    console.log('\n✅ Perfil criado com sucesso na LuizaTeca!');
-    return true;
-  } catch (err: any) {
-    console.log('\n❌ Erro: ' + (err.response?.data?.error || 'Falha no registro'));
-    await pergunta('\nPressione ENTER...');
-    return false;
-  }
+function divisor() {
+  console.log('─'.repeat(70));
 }
 
-async function login() {
-  limparTela();
-  exibirCabecalho('🔐 ACESSO LUIZATECA');
-  const email = await pergunta('📧 Email: ');
-  const senha = await pergunta('🔑 Senha: ');
-  try {
-    const res = await api.post('/auth/login', { email, senha });
-    token = res.data.token;
-    usuarioLogado = res.data.usuario;
-    return true;
-  } catch {
-    console.log('\n❌ Credenciais inválidas.');
-    await pergunta('\nPressione ENTER...');
-    return false;
-  }
-}
+// ============ FUNÇÕES DE LIVROS ============
 
-async function listarLivros() {
+async function visualizarAcervo() {
+  limpar();
+  console.log('══════════════════ ACERVO DE LIVROS ══════════════════');
   try {
     const res = await api.get('/livros');
-    exibirCabecalho('📘 ACERVO DISPONÍVEL');
-    console.table(res.data.map((l: any) => ({
-      ID: l.id,
-      Título: l.titulo,
-      Gênero: l.genero || 'Geral',
-      Status: l.status === 'disponivel' ? 'DISPONÍVEL' : 'ALUGADO'
-    })));
-  } catch (e) { console.log('Erro ao conectar com a API.'); }
-}
-
-async function realizarAluguel() {
-  limparTela();
-  await listarLivros();
-  exibirCabecalho('🤝 NOVO EMPRÉSTIMO');
-  const livro_id = await pergunta('🆔 ID do Livro: ');
-  const data = await pergunta('📅 Data para Devolução (AAAA-MM-DD): ');
-
-  try {
-    await api.post('/alugueis', { livro_id: Number(livro_id), data_prevista_devolucao: data });
-    console.log('\n✅ Aluguel registrado!');
-  } catch (err: any) {
-    console.log('\n❌ Falha: ' + (err.response?.data?.error || 'Erro'));
-  }
-  await pergunta('\nENTER para continuar...');
-}
-
-// Visualização para o LEITOR
-async function meusAlugueis() {
-  limparTela();
-  exibirCabecalho('📖 MEUS LIVROS ALUGADOS');
-  try {
-    const res = await api.get('/alugueis/meus');
-    if (res.data.length === 0) console.log('Você não tem livros alugados no momento.');
-    else {
-      console.table(res.data.map((a: any) => ({
-        Livro: a.titulo,
-        Prazo: new Date(a.data_prevista_devolucao).toLocaleDateString(),
-        Situação: a.status.toUpperCase()
+    if (res.data.length === 0) {
+      console.log('\n📚 Nenhum livro cadastrado ainda.');
+    } else {
+      console.table(res.data.map((l: any) => ({
+        ID: l.id,
+        Título: l.titulo,
+        Autor: l.autor,
+        Gênero: l.genero || 'N/A',
+        Local: `Corredor ${l.corredor} - ${l.prateleira}`,
+        Status: l.status.toUpperCase()
       })));
     }
-  } catch (e) { console.log('Erro ao buscar seus dados.'); }
-  await pergunta('\nENTER para voltar...');
+  } catch (e: any) {
+    console.log('❌ Erro ao carregar acervo:', e.response?.data?.error || e.message);
+  }
+  await pergunta('\n↩️  Pressione Enter para voltar...');
 }
 
-// Visualização para o BIBLIOTECÁRIO
-async function gerenciarAlugueisGeral() {
-  limparTela();
-  exibirCabecalho('📊 PAINEL ADMINISTRATIVO - GERAL');
+async function cadastrarLivro() {
+  limpar();
+  console.log('══════════════════ CADASTRAR NOVO LIVRO ══════════════════');
+
+  try {
+    const titulo = await pergunta('📖 Título: ');
+    const autor = await pergunta('✍️  Autor: ');
+    const ano = await pergunta('📅 Ano de lançamento: ');
+    const genero = await pergunta('🎭 Gênero: ');
+    const isbn = await pergunta('🔢 ISBN (opcional): ');
+
+    const res = await api.post('/livros', {
+      titulo,
+      autor,
+      ano_lancamento: parseInt(ano),
+      genero,
+      isbn: isbn || null
+    });
+
+    console.log('\n✅ Livro cadastrado com sucesso!');
+    console.log(`📍 Localização automática: Corredor ${res.data.corredor} - ${res.data.prateleira}`);
+  } catch (e: any) {
+    console.log('❌ Erro:', e.response?.data?.error || e.message);
+  }
+
+  await pergunta('\n↩️  Pressione Enter para voltar...');
+}
+
+// ============ FUNÇÕES DE ALUGUÉIS ============
+
+async function listarEmprestimosAtivos() {
+  limpar();
+  console.log('══════════════════ EMPRÉSTIMOS ATIVOS ══════════════════');
+
   try {
     const res = await api.get('/alugueis/todos');
-    if (res.data.length === 0) console.log('Sem registros de empréstimo.');
-    else {
-      console.table(res.data.map((a: any) => ({
+    const ativos = res.data.filter((a: any) => a.status === 'ativo');
+
+    if (ativos.length === 0) {
+      console.log('\n📋 Nenhum empréstimo ativo no momento.');
+    } else {
+      console.table(ativos.map((a: any) => ({
         ID: a.id,
-        Livro: a.livro,
-        Cliente: a.cliente,
-        Prazo: new Date(a.data_prevista_devolucao).toLocaleDateString(),
-        Status: a.status.toUpperCase()
+        Usuário: a.usuario,
+        Livro: a.titulo,
+        Alugado: new Date(a.data_aluguel).toLocaleDateString('pt-BR'),
+        'Prazo Devolução': new Date(a.data_prevista_devolucao).toLocaleDateString('pt-BR'),
+        Local: `${a.corredor}-${a.prateleira}`
       })));
-
-      const idDev = await pergunta('\n➤ Digite ID para Devolução (ou ENTER para sair): ');
-      if (idDev) {
-        await api.put(`/alugueis/${idDev}/devolver`);
-        console.log('✅ Devolução processada com sucesso!');
-      }
     }
-  } catch (e) { console.log('❌ Acesso negado.'); }
-  await pergunta('\nENTER para voltar...');
+  } catch (e: any) {
+    console.log('❌ Erro:', e.response?.data?.error || e.message);
+  }
+
+  await pergunta('\n↩️  Pressione Enter para voltar...');
 }
 
-// ========== MENUS ==========
+async function registrarNovoAluguel() {
+  limpar();
+  console.log('══════════════════ REGISTRAR NOVO ALUGUEL ══════════════════');
 
-async function menuPrincipal(): Promise<void> {
-  limparTela();
-  console.log('╔' + '═'.repeat(48) + '╗');
-  console.log(`║ USUÁRIO: ${usuarioLogado.nome.padEnd(35)} ║`);
-  console.log(`║ CARGO:   ${usuarioLogado.tipo.toUpperCase().padEnd(35)} ║`);
-  console.log('╚' + '═'.repeat(48) + '╝');
+  try {
+    // Listar livros disponíveis
+    const livros = await api.get('/livros?status=disponivel');
 
-  console.log('\n  1. 📘 Consultar Acervo');
-  console.log('  2. 🤝 Alugar um Livro');
+    if (livros.data.length === 0) {
+      console.log('\n❌ Nenhum livro disponível para aluguel.');
+      await pergunta('\n↩️  Pressione Enter para voltar...');
+      return;
+    }
 
-  // Opção muda conforme o cargo
-  if (usuarioLogado.tipo === 'bibliotecario') {
-    console.log('  3. 📊 Gerenciar Todos os Aluguéis (Admin)');
+    console.log('\n📚 LIVROS DISPONÍVEIS:');
+    console.table(livros.data.map((l: any) => ({
+      ID: l.id,
+      Título: l.titulo,
+      Autor: l.autor
+    })));
+
+    const livro_id = await pergunta('\n📖 ID do livro: ');
+
+    // Listar usuários
+    const usuarios = await api.get('/usuarios');
+    console.log('\n👥 USUÁRIOS:');
+    console.table(usuarios.data.map((u: any) => ({
+      ID: u.id,
+      Nome: u.nome,
+      Tipo: u.tipo
+    })));
+
+    const usuario_id = await pergunta('\n👤 ID do usuário: ');
+
+    const res = await api.post('/alugueis', {
+      livro_id: parseInt(livro_id),
+      usuario_id: parseInt(usuario_id)
+    });
+
+    console.log('\n✅', res.data.message);
+    console.log(`📅 Prazo de devolução: ${res.data.prazo}`);
+  } catch (e: any) {
+    console.log('❌ Erro:', e.response?.data?.error || e.message);
+  }
+
+  await pergunta('\n↩️  Pressione Enter para voltar...');
+}
+
+async function devolverLivro() {
+  limpar();
+  console.log('══════════════════ DEVOLVER LIVRO ══════════════════');
+
+  try {
+    const res = await api.get('/alugueis/todos');
+    const ativos = res.data.filter((a: any) => a.status === 'ativo');
+
+    if (ativos.length === 0) {
+      console.log('\n📋 Nenhum empréstimo ativo para devolver.');
+      await pergunta('\n↩️  Pressione Enter para voltar...');
+      return;
+    }
+
+    console.table(ativos.map((a: any) => ({
+      ID: a.id,
+      Usuário: a.usuario,
+      Livro: a.titulo,
+      'Prazo': new Date(a.data_prevista_devolucao).toLocaleDateString('pt-BR')
+    })));
+
+    const id = await pergunta('\n🔢 ID do aluguel para devolver: ');
+
+    await api.put(`/alugueis/${id}/devolver`);
+    console.log('\n✅ Livro devolvido com sucesso!');
+  } catch (e: any) {
+    console.log('❌ Erro:', e.response?.data?.error || e.message);
+  }
+
+  await pergunta('\n↩️  Pressione Enter para voltar...');
+}
+
+async function meusEmprestimos() {
+  limpar();
+  console.log('══════════════════ MEUS EMPRÉSTIMOS ══════════════════');
+
+  try {
+    const res = await api.get('/alugueis/meus');
+
+    if (res.data.length === 0) {
+      console.log('\n📋 Você não tem empréstimos registrados.');
+    } else {
+      console.table(res.data.map((a: any) => ({
+        Livro: a.titulo,
+        Autor: a.autor,
+        Alugado: new Date(a.data_aluguel).toLocaleDateString('pt-BR'),
+        Prazo: new Date(a.data_prevista_devolucao).toLocaleDateString('pt-BR'),
+        Status: a.status.toUpperCase(),
+        Local: `${a.corredor}-${a.prateleira}`
+      })));
+    }
+  } catch (e: any) {
+    console.log('❌ Erro:', e.response?.data?.error || e.message);
+  }
+
+  await pergunta('\n↩️  Pressione Enter para voltar...');
+}
+
+// ============ FUNÇÕES DE USUÁRIOS ============
+
+async function gerenciarUsuarios() {
+  limpar();
+  console.log('══════════════════ GERENCIAR USUÁRIOS ══════════════════');
+
+  try {
+    const res = await api.get('/usuarios');
+    console.table(res.data.map((u: any) => ({
+      ID: u.id,
+      Nome: u.nome,
+      Email: u.email,
+      Tipo: u.tipo.toUpperCase()
+    })));
+  } catch (e: any) {
+    console.log('❌ Erro:', e.response?.data?.error || e.message);
+  }
+
+  await pergunta('\n↩️  Pressione Enter para voltar...');
+}
+
+// ============ MENU PRINCIPAL ============
+
+async function menu() {
+  limpar();
+  mostrarBanner();
+  console.log(`👤 USUÁRIO: ${user.nome} | 🎭 CARGO: ${user.tipo.toUpperCase()}`);
+  divisor();
+
+  console.log('1. 📚 Consultar Livros');
+
+  if (user.tipo === 'bibliotecario') {
+    console.log('2. 📋 Empréstimos Ativos');
+    console.log('3. ➕ Registrar Novo Aluguel');
+    console.log('4. ↩️  Devolver Livro');
+    console.log('5. 📖 Cadastrar Novo Livro');
+    console.log('6. 👥 Gerenciar Usuários');
   } else {
-    console.log('  3. 📖 Meus Aluguéis');
+    console.log('2. 📖 Meus Empréstimos');
   }
 
-  console.log('  0. 🚪 Sair');
+  console.log('0. 🚪 Sair');
+  divisor();
 
-  const op = await pergunta('\n➤ Escolha: ');
+  const op = await pergunta('Opção: ');
 
-  if (op === '1') { await listarLivros(); await pergunta('\nENTER...'); }
-  else if (op === '2') await realizarAluguel();
-  else if (op === '3') {
-    if (usuarioLogado.tipo === 'bibliotecario') await gerenciarAlugueisGeral();
-    else await meusAlugueis();
+  if (op === '1') await visualizarAcervo();
+  else if (op === '2' && user.tipo === 'bibliotecario') await listarEmprestimosAtivos();
+  else if (op === '2' && user.tipo === 'usuario') await meusEmprestimos();
+  else if (op === '3' && user.tipo === 'bibliotecario') await registrarNovoAluguel();
+  else if (op === '4' && user.tipo === 'bibliotecario') await devolverLivro();
+  else if (op === '5' && user.tipo === 'bibliotecario') await cadastrarLivro();
+  else if (op === '6' && user.tipo === 'bibliotecario') await gerenciarUsuarios();
+  else if (op === '0') {
+    token = null;
+    user = null;
+    return start();
   }
-  else if (op === '0') { token = null; return menuInicial(); }
 
-  await menuPrincipal();
+  menu();
 }
 
-async function menuInicial(): Promise<void> {
-  limparTela();
-  // Logo LuizaTeca
-  console.log('  _     _    _ _____ ______       _______ ______ _____          ');
-  console.log(' | |   | |  | |_   _|___  /   /\\ |__   __|  ____/ ____|   /\\    ');
-  console.log(' | |   | |  | | | |    / /   /  \\   | |  | |__ | |       /  \\   ');
-  console.log(' | |   | |  | | | |   / /   / /\\ \\  | |  |  __|| |      / /\\ \\  ');
-  console.log(' | |___| |__| |_| |_ / /__ / ____ \\ | |  | |___| |____ / ____ \\ ');
-  console.log(' |______\\____/|_____/_____/_/    \\_\\|_|  |______\\_____/_/    \\_\\');
-  console.log('\n               --- BEM-VINDO À LUIZATECA ---');
-  console.log('\n' + '─'.repeat(70));
-  console.log('  [1] ENTRAR    [2] NOVO PERFIL    [0] SAIR');
-  console.log('─'.repeat(70));
+// ============ LOGIN/REGISTRO ============
 
-  const op = await pergunta('\n➤ Opção: ');
-  if (op === '1') { if (await login()) await menuPrincipal(); else await menuInicial(); }
-  else if (op === '2') { if (await registrar()) await menuPrincipal(); else await menuInicial(); }
-  else if (op === '0') process.exit(0);
-  else await menuInicial();
+async function start() {
+  limpar();
+  mostrarBanner();
+
+  console.log('1. 🔐 Login');
+  console.log('2. ✍️  Cadastro');
+  console.log('0. 🚪 Sair');
+
+  const op = await pergunta('\n> ');
+
+  if (op === '0') process.exit(0);
+
+  const email = await pergunta('📧 Email: ');
+  const senha = await pergunta('🔒 Senha: ');
+
+  try {
+    if (op === '2') {
+      const nome = await pergunta('👤 Nome: ');
+      console.log('\nTipo de conta: 1. Leitor | 2. Bibliotecário');
+      const tOp = await pergunta('> ');
+      const tipo = tOp === '2' ? 'bibliotecario' : 'usuario';
+
+      const res = await api.post('/auth/registrar', { nome, email, senha, tipo });
+      token = res.data.token;
+      user = res.data.usuario;
+      console.log('\n✅ Cadastro realizado com sucesso!');
+    } else if (op === '1') {
+      const res = await api.post('/auth/login', { email, senha });
+      token = res.data.token;
+      user = res.data.usuario;
+      console.log('\n✅ Login realizado com sucesso!');
+    } else {
+      console.log('❌ Opção inválida!');
+      await pergunta('\nPressione Enter...');
+      return start();
+    }
+
+    await pergunta('\n↩️  Enter para acessar o sistema...');
+    menu();
+  } catch (e: any) {
+    console.log('\n❌ Erro:', e.response?.data?.error || 'Servidor offline');
+    await pergunta('\n↩️  Pressione Enter...');
+    start();
+  }
 }
 
-menuInicial();
+start();
