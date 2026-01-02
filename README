@@ -1,4 +1,4 @@
-# 📚 Biblioteca API, CLI & Web
+# 📚 Biblioteca API com CLI & Web
 
 Sistema de biblioteca com backend em Node.js, autenticação via JWT e interfaces CLI e Web.
 O usuário escolhe qual interface utilizar, ambas consumindo a mesma API.
