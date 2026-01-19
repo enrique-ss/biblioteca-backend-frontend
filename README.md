@@ -14,13 +14,7 @@ Se você acabou de clonar este repositório, siga os passos abaixo.
 
 ## Configuração do ambiente
 
-1. Crie um arquivo `.env` na raiz do projeto:
-
-DB_HOST=localhost  
-DB_USER=root  
-DB_PASSWORD=SUA_SENHA_AQUI  
-DB_NAME=NOME_DO_BANCO  
-JWT_SECRET=segredo  
+1. Crie um arquivo `.env` na raiz do projeto seguindo o .env.exemple:
 
 ## Instalação
 
@@ -51,12 +45,6 @@ npm run cli
 Interface Web:
 
 npm run web
-
-## Credenciais padrão
-
-Administrador:
-Email: admin@biblioteca.com  
-Senha: admin123
 
 ## Arquitetura
 
