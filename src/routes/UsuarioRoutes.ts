@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { UsuarioController } from '../controllers/UsuarioController';
-import { authMiddleware, bibliotecarioMiddleware } from '../middlewares/auth';
+import { verificarToken, verificarBibliotecario } from '../middlewares/auth';
 
 const router = Router();
+const controller = new UsuarioController();
 
-// Apenas bibliotecários podem usar estas rotas
-router.get('/', authMiddleware, bibliotecarioMiddleware, UsuarioController.listar);
-router.put('/:id', authMiddleware, bibliotecarioMiddleware, UsuarioController.editar);
-router.delete('/:id', authMiddleware, bibliotecarioMiddleware, UsuarioController.excluir);
+router.get('/', verificarToken, verificarBibliotecario, controller.listar);
+router.put('/:id', verificarToken, verificarBibliotecario, controller.atualizar);
+router.delete('/:id', verificarToken, verificarBibliotecario, controller.excluir);
 
 export default router;

@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
 
 const router = Router();
+const controller = new AuthController();
 
-// Ajustado para bater com a chamada do CLI
-router.post('/registrar', AuthController.register);
-router.post('/login', AuthController.login);
+router.post('/registrar', controller.registrar);
+router.post('/login', controller.login);
 
 export default router;

@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { AluguelController } from '../controllers/AluguelController';
-import { authMiddleware, bibliotecarioMiddleware } from '../middlewares/auth';
+import { verificarToken, verificarBibliotecario } from '../middlewares/auth';
 
 const router = Router();
+const controller = new AluguelController();
 
-router.post('/', authMiddleware, bibliotecarioMiddleware, AluguelController.alugar);
-router.put('/:id/devolver', authMiddleware, bibliotecarioMiddleware, AluguelController.devolver);
-router.get('/todos', authMiddleware, bibliotecarioMiddleware, AluguelController.listarTodos);
-router.get('/meus', authMiddleware, AluguelController.meusAlugueis);
+router.post('/', verificarToken, verificarBibliotecario, controller.criar);
+router.get('/todos', verificarToken, verificarBibliotecario, controller.listarTodos);
+router.get('/meus', verificarToken, controller.meus);
+router.put('/:id/devolver', verificarToken, verificarBibliotecario, controller.devolver);
 
 export default router;
