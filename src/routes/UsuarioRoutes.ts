@@ -5,8 +5,11 @@ import { verificarToken, verificarBibliotecario } from '../middlewares/auth';
 const router = Router();
 const controller = new UsuarioController();
 
-router.get('/', verificarToken, verificarBibliotecario, controller.listar);
-router.put('/:id', verificarToken, verificarBibliotecario, controller.atualizar);
-router.delete('/:id', verificarToken, verificarBibliotecario, controller.excluir);
+// Bloqueio total: Apenas bibliotecários acessam a lista de usuários
+router.use(verificarToken, verificarBibliotecario);
+
+router.get('/', controller.listar);
+router.put('/:id', controller.atualizar);
+router.delete('/:id', controller.excluir);
 
 export default router;

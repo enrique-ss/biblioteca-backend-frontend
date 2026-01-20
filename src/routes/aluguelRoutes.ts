@@ -5,9 +5,14 @@ import { verificarToken, verificarBibliotecario } from '../middlewares/auth';
 const router = Router();
 const controller = new AluguelController();
 
-router.post('/', verificarToken, verificarBibliotecario, controller.criar);
-router.get('/todos', verificarToken, verificarBibliotecario, controller.listarTodos);
-router.get('/meus', verificarToken, controller.meus);
-router.put('/:id/devolver', verificarToken, verificarBibliotecario, controller.devolver);
+router.use(verificarToken); // Todos precisam de login
+
+// Rotas do Usuário Comum
+router.get('/meus', controller.meus);
+
+// Rotas exclusivas do Bibliotecário
+router.get('/todos', verificarBibliotecario, controller.listarTodos);
+router.post('/', verificarBibliotecario, controller.criar);
+router.put('/:id/devolver', verificarBibliotecario, controller.devolver);
 
 export default router;

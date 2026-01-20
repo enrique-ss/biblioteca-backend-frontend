@@ -3,28 +3,30 @@
   "version": "1.0.0",
   "scripts": {
     "setup": "ts-node src/setup.ts",
-    "dev": "nodemon src/index.ts",
+    "dev": "npx kill-port 3000 && nodemon src/index.ts",
     "cli": "ts-node src/cli.ts",
     "start": "ts-node src/index.ts"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
-    "mysql2": "^3.6.5",
-    "axios": "^1.6.2"
+    "mysql2": "^3.6.5"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/cors": "^2.8.17",
+    "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.10.5",
-    "typescript": "^5.3.3",
+    "nodemon": "^3.0.2",
     "ts-node": "^10.9.2",
-    "nodemon": "^3.0.2"
+    "typescript": "^5.3.3"
   }
 }

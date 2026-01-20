@@ -1,12 +1,12 @@
 import knex from 'knex';
 import dotenv from 'dotenv';
+import bcrypt from 'bcrypt'; // Adicionado para a senha do admin
 
 dotenv.config();
 
 async function setup() {
   console.log('🔧 Iniciando configuração do banco de dados...\n');
 
-  // Conexão sem database para criar o banco
   const connection = knex({
     client: 'mysql2',
     connection: {
@@ -18,14 +18,11 @@ async function setup() {
   });
 
   try {
-    // Criar banco de dados
     const dbName = process.env.DB_NAME || 'biblioteca';
     await connection.raw(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
     console.log(`✅ Banco de dados '${dbName}' criado/verificado`);
-
     await connection.destroy();
 
-    // Conectar ao banco criado
     const db = knex({
       client: 'mysql2',
       connection: {
@@ -37,7 +34,7 @@ async function setup() {
       }
     });
 
-    // Criar tabela de usuários
+    // --- CRIAÇÃO DAS TABELAS (USUÁRIOS) ---
     const tabelaUsuarios = await db.schema.hasTable('usuarios');
     if (!tabelaUsuarios) {
       await db.schema.createTable('usuarios', (table) => {
@@ -49,11 +46,24 @@ async function setup() {
         table.timestamp('created_at').defaultTo(db.fn.now());
       });
       console.log('✅ Tabela "usuarios" criada');
-    } else {
-      console.log('ℹ️  Tabela "usuarios" já existe');
     }
 
-    // Criar tabela de livros
+    // --- INSERÇÃO DO ADMIN (LOGICA NOVA) ---
+    const adminEmail = 'admin@admin';
+    const adminExiste = await db('usuarios').where({ email: adminEmail }).first();
+
+    if (!adminExiste) {
+      const senhaHash = await bcrypt.hash('admin123', 10);
+      await db('usuarios').insert({
+        nome: 'Administrador Master',
+        email: adminEmail,
+        senha: senhaHash,
+        tipo: 'bibliotecario'
+      });
+      console.log(`⭐ Usuário ADMIN criado: ${adminEmail} | senha: admin123`);
+    }
+
+    // --- CRIAÇÃO DAS TABELAS (LIVROS) ---
     const tabelaLivros = await db.schema.hasTable('livros');
     if (!tabelaLivros) {
       await db.schema.createTable('livros', (table) => {
@@ -69,11 +79,9 @@ async function setup() {
         table.timestamp('created_at').defaultTo(db.fn.now());
       });
       console.log('✅ Tabela "livros" criada');
-    } else {
-      console.log('ℹ️  Tabela "livros" já existe');
     }
 
-    // Criar tabela de aluguéis
+    // --- CRIAÇÃO DAS TABELAS (ALUGUÉIS) ---
     const tabelaAlugueis = await db.schema.hasTable('alugueis');
     if (!tabelaAlugueis) {
       await db.schema.createTable('alugueis', (table) => {
@@ -85,19 +93,13 @@ async function setup() {
         table.timestamp('data_devolucao').nullable();
         table.enum('status', ['ativo', 'devolvido']).defaultTo('ativo');
         table.timestamp('created_at').defaultTo(db.fn.now());
-
         table.foreign('livro_id').references('id').inTable('livros').onDelete('CASCADE');
         table.foreign('usuario_id').references('id').inTable('usuarios').onDelete('CASCADE');
       });
       console.log('✅ Tabela "alugueis" criada');
-    } else {
-      console.log('ℹ️  Tabela "alugueis" já existe');
     }
 
     console.log('\n🎉 Configuração concluída com sucesso!');
-    console.log('📝 Execute "npm run dev" para iniciar o servidor');
-    console.log('💻 Execute "npm run cli" para usar a interface CLI\n');
-
     await db.destroy();
     process.exit(0);
   } catch (error) {

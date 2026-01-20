@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/authController';
 
 const router = Router();
-const controller = new AuthController();
+const authController = new AuthController();
 
-router.post('/registrar', controller.registrar);
-router.post('/login', controller.login);
+// Abertas: Ninguém tem token antes de logar/cadastrar
+router.post('/registrar', authController.registrar);
+router.post('/login', authController.login);
 
 export default router;

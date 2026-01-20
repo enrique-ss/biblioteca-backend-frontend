@@ -5,7 +5,10 @@ import { verificarToken, verificarBibliotecario } from '../middlewares/auth';
 const router = Router();
 const controller = new LivroController();
 
-router.get('/', verificarToken, controller.listar);
+// Público: Ver os livros
+router.get('/', controller.listar);
+
+// Protegido: Só bibliotecário cadastra
 router.post('/', verificarToken, verificarBibliotecario, controller.cadastrar);
 
 export default router;
