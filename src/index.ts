@@ -56,6 +56,7 @@ const server = app.listen(PORT, () => {
   console.log(`\n🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📍 http://localhost:${PORT}`);
   console.log(`🌍 Ambiente: ${process.env.NODE_ENV || 'development'}\n`);
+  console.log('📚 Em outro terminal digite: npm run cli');
 });
 
 // Graceful shutdown
