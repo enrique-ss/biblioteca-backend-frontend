@@ -1,58 +1,84 @@
-# 📚 Biblioteca API com CLI & Web
+# 📚 Sistema de Biblioteca API (CLI & Web)
 
-Sistema de biblioteca com backend em Node.js, autenticação via JWT e interfaces CLI e Web.
-O usuário escolhe qual interface utilizar, ambas consumindo a mesma API.
+Sistema para gestão de acervo e empréstimos, com backend em Node.js, autenticação JWT e suporte a múltiplos perfis de acesso.
+
+---
+
+## 🎯 Funcionalidades Principais
+
+* **🔒 Autenticação Segura:** Registro e login com senhas criptografadas (bcrypt) e sessões via JWT.
+* **👥 Perfis de Acesso:**
+    * **Leitor (usuario):** Consulta o acervo e visualiza seu histórico de empréstimos.
+    * **Bibliotecário (admin):** Gestão total (cadastrar livros, registrar empréstimos e devoluções).
+* **📖 Gestão de Acervo:** Cadastro de livros com status automático (**disponível/alugado**).
+* **🔄 Ciclo de Empréstimo:** Registro de saídas com prazo de 14 dias e devoluções atômicas (atualiza livro e empréstimo simultaneamente).
+
+---
 
 ## 🚀 Quick Start
 
-Se você acabou de clonar este repositório, siga os passos abaixo.
+### Pré-requisitos
+* Node.js (v18 ou superior)
+* MySQL Server em execução
 
-## Pré-requisitos
+### Instalação e Configuração
+1.  **Ambiente:** Crie um arquivo `.env` na raiz do projeto seguindo o `.env.example`.
+2.  **Dependências:**
+    ```bash
+    npm install
+    ```
+3.  **Banco de Dados:** (Atenção: este comando recria as tabelas e apaga dados antigos)
+    ```bash
+    npm run setup
+    ```
 
-- Node.js (versão 18 ou superior, inclui npm)
-- MySQL Server em execução
+### Execução
+1.  **Inicie a API (Servidor):**
+    ```bash
+    npm run dev
+    ```
+2.  **Escolha sua Interface:**
+    * **Interface CLI:** `npm run cli`
+    * **Interface Web:** `npm run web`
 
-## Configuração do ambiente
+---
 
-1. Crie um arquivo `.env` na raiz do projeto seguindo o .env.exemple:
+## 🛠️ Arquitetura do Projeto
 
-## Instalação
+* **routes/**: Definição dos endpoints HTTP (Auth, Livros, Aluguéis).
+* **controllers/**: Lógica da aplicação e regras de negócio.
+* **middlewares/**: Autenticação e validações de permissão.
+* **database/**: Configuração e scripts de conexão via Prisma.
+* **cli/**: Interface de linha de comando interativa.
+* **web/**: Interface para navegadores.
 
-2. Instale as dependências do projeto:
+---
 
-npm install
+## 📝 Regras de Negócio Implementadas
 
-## Banco de dados
+* **Cadastro Admin:** Para criar uma conta de bibliotecário na CLI, utilize a opção secreta digitando **"admin"**.
+* **Validação de Status:** O sistema impede o empréstimo de livros que já estejam com status `alugado`.
+* **Prazos Automáticos:** Todo empréstimo gera uma data de devolução prevista para **14 dias** corridos.
+* **Operação Atômica:** A devolução garante que o histórico de aluguel e a disponibilidade do livro sejam atualizados em conjunto (rollback em caso de falha).
+* **Privacidade:** Leitores visualizam apenas seus próprios empréstimos, enquanto bibliotecários têm visão geral do sistema.
 
-3. Criar o banco de dados e as tabelas  
-Atenção: se já houver um banco com esse nome, todos os dados dele serão apagados!
+---
 
-npm run setup
+## 📊 Estrutura de Dados (Principais)
 
-## Execução
+* **Usuario:** ID, Nome, Email (Único), Senha (Hash), Tipo (usuario/bibliotecario).
+* **Livro:** ID, Título, Autor, Ano, Gênero, Status (disponivel/alugado).
+* **Aluguel:** ID, Livro_ID, Usuario_ID, Data_Emprestimo, Data_Prevista, Data_Devolucao.
 
-4. Inicie o servidor da API:
+---
 
-npm run dev
+## 🛠️ Stack Tecnológica
 
-## Visualização das interfaces
-Após iniciar a API, escolha a interface desejada.
+* **Backend:** Node.js, Express, TypeScript.
+* **ORM:** Prisma / MySQL.
+* **Segurança:** JWT (JSON Web Token), Bcrypt.
+* **Interface:** Axios, Readline (CLI), ANSI Colors.
 
-Interface CLI:
+---
 
-npm run cli
-
-Interface Web:
-
-npm run web
-
-## Arquitetura
-
-- routes/: definição dos endpoints HTTP
-- controllers/: lógica da aplicação
-- middlewares/: autenticação e validações
-- database/: configuração do banco
-- cli/: interface de linha de comando
-- web/: interface web
-- index.ts: inicialização do servidor
-- setup.ts: cria as configurações global do projeto
+**Desenvolvido como um MVP para gestão eficiente de bibliotecas.**
