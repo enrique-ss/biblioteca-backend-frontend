@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AluguelController } from '../controllers/aluguelController';
+import { AluguelController } from '../controllers/AluguelController';
 import { verificarToken, verificarBibliotecario } from '../middlewares/auth';
 
 const router = Router();

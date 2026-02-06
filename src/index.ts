@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from './routes/authRoutes';
-import livroRoutes from './routes/livroRoutes';
-import aluguelRoutes from './routes/aluguelRoutes';
+import authRoutes from './routes/AuthRoutes';
+import livroRoutes from './routes/LivroRoutes';
+import aluguelRoutes from './routes/AluguelRoutes';
 import usuarioRoutes from './routes/usuarioRoutes';
 
 dotenv.config();
