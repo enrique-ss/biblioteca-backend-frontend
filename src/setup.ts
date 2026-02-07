@@ -1,6 +1,6 @@
 import knex from 'knex';
 import dotenv from 'dotenv';
-import bcrypt from 'bcrypt'; // Adicionado para a senha do admin
+import bcrypt from 'bcryptjs'; // Adicionado para a senha do admin
 
 dotenv.config();
 
