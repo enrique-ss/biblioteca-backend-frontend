@@ -1,438 +1,477 @@
-// ===== CONFIGURAÇÃO =====
+// ═══════════════════════════════════════════════════════
+//  LuizaTeca — script.js
+//  Frontend puro: chama API, renderiza resposta. Sem regras de negócio.
+// ═══════════════════════════════════════════════════════
+
 const API_URL = 'http://127.0.0.1:3000/api';
-let token = null;
+let token       = null;
 let currentUser = null;
 
-// ===== FUNÇÕES DE NAVEGAÇÃO =====
-function showScreen(screenId) {
+// ─── Sessão ──────────────────────────────────────────
+function saveSession() {
+    sessionStorage.setItem('luizateca_token', token);
+    sessionStorage.setItem('luizateca_user',  JSON.stringify(currentUser));
+}
+
+function restoreSession() {
+    const t = sessionStorage.getItem('luizateca_token');
+    const u = sessionStorage.getItem('luizateca_user');
+    if (t && u) {
+        token       = t;
+        currentUser = JSON.parse(u);
+        updateNavbar();
+        loadMenu();
+        showScreen('menuScreen');
+    }
+}
+
+function clearSession() {
+    sessionStorage.clear();
+    token       = null;
+    currentUser = null;
+}
+
+// ─── Navegação ───────────────────────────────────────
+function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function showModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
 }
 
+function showConfirm({ icon = '⚠️', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
+    document.getElementById('confirmIcon').textContent  = icon;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent   = msg;
+    document.getElementById('confirmOkBtn').textContent = okLabel;
+    document.getElementById('confirmOkBtn').onclick     = () => { closeConfirm(); onOk(); };
+    document.getElementById('confirmDialog').classList.add('active');
+}
+
+function closeConfirm() {
+    document.getElementById('confirmDialog').classList.remove('active');
+}
+
+// ─── Toast ───────────────────────────────────────────
 function showAlert(message, type = 'success') {
-    const alertContainer = document.getElementById('alertContainer');
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.textContent = message;
-
-    alertContainer.appendChild(alertDiv);
-
+    const icons = { success: '✓', danger: '✕', warning: '⚠' };
+    const el    = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `<span class="toast-icon">${icons[type] ?? '•'}</span><span class="toast-msg">${message}</span>`;
+    document.getElementById('alertContainer').appendChild(el);
     setTimeout(() => {
-        alertDiv.style.animation = 'slideInRight 0.5s ease reverse';
-        setTimeout(() => alertDiv.remove(), 500);
-    }, 3000);
+        el.style.cssText += 'opacity:0;transform:translateX(40px);transition:0.35s ease';
+        setTimeout(() => el.remove(), 360);
+    }, 3400);
 }
 
-// ===== FUNÇÕES DE API =====
-async function apiCall(endpoint, options = {}) {
+// ─── API helper ──────────────────────────────────────
+async function api(endpoint, options = {}) {
     const headers = { 'Content-Type': 'application/json' };
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    try {
-        const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.error || 'Erro na requisição');
-        }
-
-        return data;
-    } catch (error) {
-        console.error('Erro na API:', error);
-        throw error;
-    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res  = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || data.message || 'Erro na requisição');
+    return data;
 }
 
-// ===== AUTENTICAÇÃO =====
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
+// ─── Helpers ─────────────────────────────────────────
+function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(iso) {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; }
+}
+
+function setLoading(tbodyId, cols) {
+    document.getElementById(tbodyId).innerHTML =
+        `<tr class="loading-row"><td colspan="${cols}"><span class="spinner"></span>Carregando…</td></tr>`;
+}
+
+function setEmpty(tbodyId, cols, msg = 'Nenhum registro encontrado.') {
+    document.getElementById(tbodyId).innerHTML =
+        `<tr><td colspan="${cols}" class="table-empty">${msg}</td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const senha = document.getElementById('loginPassword').value;
-
     try {
-        const data = await apiCall('/auth/login', {
+        const data = await api('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, senha })
+            body: JSON.stringify({
+                email: document.getElementById('loginEmail').value,
+                senha: document.getElementById('loginPassword').value
+            })
         });
-
-        token = data.token;
+        token       = data.token;
         currentUser = data.usuario;
-        updateUserInfo();
+        saveSession();
+        updateNavbar();
         loadMenu();
         showScreen('menuScreen');
-        showAlert('Login realizado com sucesso!');
         e.target.reset();
-    } catch (error) {
-        showAlert(error.message || 'Erro ao fazer login', 'danger');
+    } catch (err) {
+        showAlert(err.message, 'danger');
     }
 });
 
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
+document.getElementById('registerForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const nome = document.getElementById('regNome').value;
-    const email = document.getElementById('regEmail').value;
-    const senha = document.getElementById('regSenha').value;
-    const tipo = document.getElementById('regTipo').value;
-
     try {
-        const data = await apiCall('/auth/registrar', {
+        const data = await api('/auth/registrar', {
             method: 'POST',
-            body: JSON.stringify({ nome, email, senha, tipo })
+            body: JSON.stringify({
+                nome:  document.getElementById('regNome').value,
+                email: document.getElementById('regEmail').value,
+                senha: document.getElementById('regSenha').value,
+                tipo:  document.getElementById('regTipo').value
+            })
         });
-
-        token = data.token;
+        token       = data.token;
         currentUser = data.usuario;
-        updateUserInfo();
+        saveSession();
+        updateNavbar();
         loadMenu();
         showScreen('menuScreen');
-        showAlert('Cadastro realizado com sucesso!');
         e.target.reset();
-    } catch (error) {
-        showAlert(error.message || 'Erro ao fazer cadastro', 'danger');
+    } catch (err) {
+        showAlert(err.message, 'danger');
     }
 });
-
-function updateUserInfo() {
-    document.getElementById('userName').textContent = currentUser.nome;
-    document.getElementById('userType').textContent = currentUser.tipo === 'bibliotecario' ? '👨‍💼 Bibliotecário' : '👤 Usuário';
-    document.getElementById('userInfo').style.display = 'block';
-}
 
 function logout() {
-    if (!confirm('Deseja realmente sair?')) return;
-
-    token = null;
-    currentUser = null;
-    document.getElementById('userInfo').style.display = 'none';
-    showScreen('loginScreen');
-    showAlert('Logout realizado com sucesso!');
-}
-
-// ===== MENU =====
-function loadMenu() {
-    const menuGrid = document.getElementById('menuGrid');
-    menuGrid.innerHTML = '';
-
-    const menus = [
-        { icon: '📚', title: 'Consultar Livros', desc: 'Gerenciar acervo', screen: 'livrosScreen', action: loadLivros }
-    ];
-
-    if (currentUser.tipo === 'bibliotecario') {
-        menus.push(
-            { icon: '📋', title: 'Empréstimos', desc: 'Gerenciar aluguéis', screen: 'alugueisScreen', action: loadAlugueis },
-            { icon: '👥', title: 'Usuários', desc: 'Gerenciar usuários', screen: 'usuariosScreen', action: loadUsuarios }
-        );
-        document.getElementById('btnAddLivro').style.display = 'inline-block';
-        document.getElementById('btnAddAluguel').style.display = 'inline-block';
-    } else {
-        menus.push(
-            { icon: '📖', title: 'Meus Empréstimos', desc: 'Ver meus livros', screen: 'alugueisScreen', action: loadMeusAlugueis }
-        );
-        document.getElementById('btnAddLivro').style.display = 'none';
-        document.getElementById('btnAddAluguel').style.display = 'none';
-    }
-
-    menus.forEach(menu => {
-        const card = document.createElement('div');
-        card.className = 'menu-card';
-        card.innerHTML = `
-            <div class="icon">${menu.icon}</div>
-            <h3>${menu.title}</h3>
-            <p>${menu.desc}</p>
-        `;
-        card.onclick = () => {
-            menu.action();
-            showScreen(menu.screen);
-        };
-        menuGrid.appendChild(card);
+    showConfirm({
+        icon: '🚪', title: 'Encerrar sessão',
+        msg: 'Deseja realmente sair?', okLabel: 'Sair',
+        onOk() {
+            clearSession();
+            updateNavbar();
+            showScreen('loginScreen');
+        }
     });
 }
 
-// ===== LIVROS =====
-async function loadLivros() {
-    try {
-        const data = await apiCall('/livros');
-        const tbody = document.querySelector('#livrosTable tbody');
-        tbody.innerHTML = '';
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum livro cadastrado</td></tr>';
-            return;
-        }
-
-        data.forEach(livro => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${livro.id}</td>
-                <td>${livro.titulo}</td>
-                <td>${livro.autor}</td>
-                <td>${livro.genero || 'N/A'}</td>
-                <td>${livro.corredor}-${livro.prateleira}</td>
-                <td>
-                    <span class="badge ${livro.status === 'disponivel' ? 'badge-success' : 'badge-danger'}">
-                        ${livro.status === 'disponivel' ? '🟢 Disponível' : '🔴 Alugado'}
-                    </span>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        showAlert('Erro ao carregar livros', 'danger');
+function updateNavbar() {
+    const show = !!currentUser;
+    document.getElementById('navUser').style.display   = show ? 'flex'        : 'none';
+    document.getElementById('btnLogout').style.display = show ? 'inline-flex' : 'none';
+    if (show) {
+        document.getElementById('navUserName').textContent = currentUser.nome;
+        document.getElementById('navUserRole').textContent = currentUser.tipo;
     }
 }
 
-document.getElementById('addLivroForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+// ═══════════════════════════════════════════════════════
+//  MENU
+// ═══════════════════════════════════════════════════════
+function loadMenu() {
+    document.getElementById('menuUserName').textContent = currentUser.nome;
 
-    const livro = {
-        titulo: document.getElementById('livroTitulo').value,
-        autor: document.getElementById('livroAutor').value,
-        ano_lancamento: parseInt(document.getElementById('livroAno').value),
-        genero: document.getElementById('livroGenero').value,
-        isbn: document.getElementById('livroIsbn').value || null
-    };
+    const isBib = currentUser.tipo === 'bibliotecario';
+    const grid  = document.getElementById('menuGrid');
+    grid.innerHTML = '';
 
+    const items = [
+        { icon:'📚', title:'Acervo de Livros', desc:'Consultar livros',
+          action() { loadLivros(); showScreen('livrosScreen'); } }
+    ];
+
+    if (isBib) {
+        items.push(
+            { icon:'📋', title:'Empréstimos', desc:'Gerenciar aluguéis',
+              action() { loadAlugueis(); showScreen('alugueisScreen'); } },
+            { icon:'👥', title:'Usuários',    desc:'Gerenciar cadastros',
+              action() { loadUsuarios(); showScreen('usuariosScreen'); } }
+        );
+    } else {
+        items.push(
+            { icon:'📖', title:'Meus Empréstimos', desc:'Seus livros alugados',
+              action() { loadMeusAlugueis(); showScreen('alugueisScreen'); } }
+        );
+    }
+
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'menu-card';
+        card.innerHTML = `
+            <span class="menu-card-icon">${item.icon}</span>
+            <div class="menu-card-title">${item.title}</div>
+            <div class="menu-card-desc">${item.desc}</div>`;
+        card.addEventListener('click', item.action);
+        grid.appendChild(card);
+    });
+
+    document.getElementById('btnAddLivro').style.display   = isBib ? 'inline-flex' : 'none';
+    document.getElementById('btnAddAluguel').style.display = isBib ? 'inline-flex' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+//  LIVROS
+// ═══════════════════════════════════════════════════════
+
+async function loadLivros() {
+    setLoading('livrosTbody', 6);
     try {
-        await apiCall('/livros', {
-            method: 'POST',
-            body: JSON.stringify(livro)
+        const data = await api('/livros');
+        const tbody = document.getElementById('livrosTbody');
+        tbody.innerHTML = '';
+        if (!data.length) { setEmpty('livrosTbody', 6); return; }
+        data.forEach(livro => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color:var(--parchment-faint)">${esc(livro.id)}</td>
+                <td><strong>${esc(livro.titulo)}</strong></td>
+                <td>${esc(livro.autor)}</td>
+                <td>${esc(livro.genero)}</td>
+                <td style="font-family:'Cinzel',serif;font-size:0.78rem;color:var(--parchment-dim)">${esc(livro.corredor)}-${esc(livro.prateleira)}</td>
+                <td>${badgeStatus(livro.status)}</td>`;
+            tbody.appendChild(tr);
         });
+    } catch (err) {
+        setEmpty('livrosTbody', 6, err.message);
+        showAlert(err.message, 'danger');
+    }
+}
 
-        showAlert('Livro cadastrado com sucesso!');
+document.getElementById('addLivroForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+        await api('/livros', {
+            method: 'POST',
+            body: JSON.stringify({
+                titulo:         document.getElementById('livroTitulo').value,
+                autor:          document.getElementById('livroAutor').value,
+                ano_lancamento: parseInt(document.getElementById('livroAno').value),
+                genero:         document.getElementById('livroGenero').value,
+                isbn:           document.getElementById('livroIsbn').value || null
+            })
+        });
+        showAlert('Livro cadastrado!');
         closeModal('addLivroModal');
-        loadLivros();
         e.target.reset();
-    } catch (error) {
-        showAlert(error.message || 'Erro ao cadastrar livro', 'danger');
+        loadLivros();
+    } catch (err) {
+        showAlert(err.message, 'danger');
     }
 });
 
-// ===== ALUGUÉIS =====
+// ═══════════════════════════════════════════════════════
+//  ALUGUÉIS
+// ═══════════════════════════════════════════════════════
+
 async function loadAlugueis() {
+    document.getElementById('alugueisTitle').innerHTML = `📋 <span>Empréstimos</span>`;
+    setLoading('alugueisTbody', 7);
     try {
-        const data = await apiCall('/alugueis/todos');
-        const tbody = document.querySelector('#alugueisTable tbody');
-        tbody.innerHTML = '';
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum empréstimo registrado</td></tr>';
-            return;
-        }
-
-        data.forEach(aluguel => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${aluguel.id}</td>
-                <td>${aluguel.usuario}</td>
-                <td>${aluguel.titulo}</td>
-                <td>${new Date(aluguel.data_aluguel).toLocaleDateString('pt-BR')}</td>
-                <td>${new Date(aluguel.data_prevista_devolucao).toLocaleDateString('pt-BR')}</td>
-                <td>
-                    <span class="badge ${aluguel.status === 'ativo' ? 'badge-warning' : 'badge-success'}">
-                        ${aluguel.status === 'ativo' ? '🟡 Ativo' : '🟢 Devolvido'}
-                    </span>
-                </td>
-                <td>
-                    ${aluguel.status === 'ativo' ?
-                    `<button class="btn btn-success action-btn" onclick="devolverLivro(${aluguel.id})">
-                            <span>Devolver</span>
-                        </button>` :
-                    '-'}
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        showAlert('Erro ao carregar empréstimos', 'danger');
+        const data = await api('/alugueis/todos');
+        renderAlugueis(data, true);
+    } catch (err) {
+        setEmpty('alugueisTbody', 7, err.message);
+        showAlert(err.message, 'danger');
     }
 }
 
 async function loadMeusAlugueis() {
+    document.getElementById('alugueisTitle').innerHTML = `📖 <span>Meus Empréstimos</span>`;
+    setLoading('alugueisTbody', 7);
     try {
-        const data = await apiCall('/alugueis/meus');
-        const tbody = document.querySelector('#alugueisTable tbody');
-        tbody.innerHTML = '';
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Você não tem empréstimos</td></tr>';
-            return;
-        }
-
-        data.forEach(aluguel => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${aluguel.id}</td>
-                <td>${currentUser.nome}</td>
-                <td>${aluguel.titulo}</td>
-                <td>${new Date(aluguel.data_aluguel).toLocaleDateString('pt-BR')}</td>
-                <td>${new Date(aluguel.data_prevista_devolucao).toLocaleDateString('pt-BR')}</td>
-                <td>
-                    <span class="badge ${aluguel.status === 'ativo' ? 'badge-warning' : 'badge-success'}">
-                        ${aluguel.status === 'ativo' ? '🟡 Ativo' : '🟢 Devolvido'}
-                    </span>
-                </td>
-                <td>-</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        showAlert('Erro ao carregar seus empréstimos', 'danger');
+        const data = await api('/alugueis/meus');
+        renderAlugueis(data, false);
+    } catch (err) {
+        setEmpty('alugueisTbody', 7, err.message);
+        showAlert(err.message, 'danger');
     }
 }
 
-async function devolverLivro(id) {
-    if (!confirm('Confirmar devolução do livro?')) return;
-
-    try {
-        await apiCall(`/alugueis/${id}/devolver`, { method: 'PUT' });
-        showAlert('Livro devolvido com sucesso!');
-        loadAlugueis();
-    } catch (error) {
-        showAlert(error.message || 'Erro ao devolver livro', 'danger');
-    }
+function renderAlugueis(data, showDevolver) {
+    const tbody = document.getElementById('alugueisTbody');
+    tbody.innerHTML = '';
+    if (!data.length) { setEmpty('alugueisTbody', 7); return; }
+    data.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="color:var(--parchment-faint)">${esc(a.id)}</td>
+            <td>${esc(a.usuario)}</td>
+            <td><strong>${esc(a.titulo)}</strong></td>
+            <td style="font-size:0.88rem;color:var(--parchment-dim)">${fmtDate(a.data_aluguel)}</td>
+            <td style="font-size:0.88rem;color:var(--parchment-dim)">${fmtDate(a.data_prevista_devolucao)}</td>
+            <td>${badgeStatus(a.status)}</td>
+            <td>${showDevolver && a.status === 'ativo'
+                ? `<button class="btn btn-success btn-sm" onclick="devolverLivro(${a.id})">Devolver</button>`
+                : `<span style="color:var(--parchment-faint);font-size:0.8rem">—</span>`}</td>`;
+        tbody.appendChild(tr);
+    });
 }
 
 async function prepareAluguelModal() {
     try {
         const [livros, usuarios] = await Promise.all([
-            apiCall('/livros?status=disponivel'),
-            apiCall('/usuarios')
+            api('/livros?status=disponivel'),
+            api('/usuarios')
         ]);
-
-        const selectLivro = document.getElementById('aluguelLivro');
-        const selectUsuario = document.getElementById('aluguelUsuario');
-
-        selectLivro.innerHTML = '<option value="">Selecione um livro...</option>';
-        livros.forEach(livro => {
-            selectLivro.innerHTML += `<option value="${livro.id}">${livro.titulo} - ${livro.autor}</option>`;
-        });
-
-        selectUsuario.innerHTML = '<option value="">Selecione um usuário...</option>';
-        usuarios.forEach(usuario => {
-            selectUsuario.innerHTML += `<option value="${usuario.id}">${usuario.nome} (${usuario.email})</option>`;
-        });
-    } catch (error) {
-        showAlert('Erro ao carregar dados', 'danger');
+        const selL = document.getElementById('aluguelLivro');
+        const selU = document.getElementById('aluguelUsuario');
+        selL.innerHTML = '<option value="">Selecione um livro…</option>';
+        selU.innerHTML = '<option value="">Selecione um usuário…</option>';
+        livros.forEach(l   => selL.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)}</option>`);
+        usuarios.forEach(u => selU.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`);
+        openModal('addAluguelModal');
+    } catch (err) {
+        showAlert(err.message, 'danger');
     }
 }
 
-document.getElementById('btnAddAluguel').addEventListener('click', prepareAluguelModal);
-
-document.getElementById('addAluguelForm').addEventListener('submit', async (e) => {
+document.getElementById('addAluguelForm').addEventListener('submit', async e => {
     e.preventDefault();
-
-    const aluguel = {
-        livro_id: parseInt(document.getElementById('aluguelLivro').value),
-        usuario_id: parseInt(document.getElementById('aluguelUsuario').value)
-    };
-
-    if (!aluguel.livro_id || !aluguel.usuario_id) {
-        showAlert('Selecione um livro e um usuário', 'danger');
-        return;
-    }
-
     try {
-        await apiCall('/alugueis', {
+        await api('/alugueis', {
             method: 'POST',
-            body: JSON.stringify(aluguel)
+            body: JSON.stringify({
+                livro_id:   parseInt(document.getElementById('aluguelLivro').value),
+                usuario_id: parseInt(document.getElementById('aluguelUsuario').value)
+            })
         });
-
-        showAlert('Aluguel registrado com sucesso!');
+        showAlert('Empréstimo registrado!');
         closeModal('addAluguelModal');
-        loadAlugueis();
         e.target.reset();
-    } catch (error) {
-        showAlert(error.message || 'Erro ao registrar aluguel', 'danger');
+        loadAlugueis();
+    } catch (err) {
+        showAlert(err.message, 'danger');
     }
 });
 
-// ===== USUÁRIOS =====
-async function loadUsuarios() {
-    try {
-        const data = await apiCall('/usuarios');
-        const tbody = document.querySelector('#usuariosTable tbody');
-        tbody.innerHTML = '';
-
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum usuário cadastrado</td></tr>';
-            return;
+function devolverLivro(id) {
+    showConfirm({
+        icon: '📖', title: 'Confirmar devolução',
+        msg: 'Registrar a devolução deste livro?', okLabel: 'Devolver',
+        async onOk() {
+            try {
+                await api(`/alugueis/${id}/devolver`, { method: 'PUT' });
+                showAlert('Livro devolvido!');
+                loadAlugueis();
+            } catch (err) {
+                showAlert(err.message, 'danger');
+            }
         }
+    });
+}
 
-        data.forEach(usuario => {
+// ═══════════════════════════════════════════════════════
+//  USUÁRIOS
+// ═══════════════════════════════════════════════════════
+
+async function loadUsuarios() {
+    setLoading('usuariosTbody', 5);
+    try {
+        const data = await api('/usuarios');
+        const tbody = document.getElementById('usuariosTbody');
+        tbody.innerHTML = '';
+        if (!data.length) { setEmpty('usuariosTbody', 5); return; }
+        data.forEach(u => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${usuario.id}</td>
-                <td>${usuario.nome}</td>
-                <td>${usuario.email}</td>
+                <td style="color:var(--parchment-faint)">${esc(u.id)}</td>
+                <td><strong>${esc(u.nome)}</strong></td>
+                <td style="color:var(--parchment-dim)">${esc(u.email)}</td>
+                <td>${badgeTipo(u.tipo)}</td>
                 <td>
-                    <span class="badge ${usuario.tipo === 'bibliotecario' ? 'badge-warning' : 'badge-success'}">
-                        ${usuario.tipo === 'bibliotecario' ? '👨‍💼 Bibliotecário' : '👤 Usuário'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-primary action-btn" onclick='editarUsuario(${JSON.stringify(usuario)})'>
-                        <span>✏️ Editar</span>
-                    </button>
-                    <button class="btn btn-danger action-btn" onclick="excluirUsuario(${usuario.id})">
-                        <span>🗑️ Excluir</span>
-                    </button>
-                </td>
-            `;
+                    <div class="td-actions">
+                        <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id}, '${esc(u.nome)}')">Excluir</button>
+                    </div>
+                </td>`;
             tbody.appendChild(tr);
         });
-    } catch (error) {
-        showAlert('Erro ao carregar usuários', 'danger');
+    } catch (err) {
+        setEmpty('usuariosTbody', 5, err.message);
+        showAlert(err.message, 'danger');
     }
 }
 
-function editarUsuario(usuario) {
-    document.getElementById('editUsuarioId').value = usuario.id;
-    document.getElementById('editUsuarioNome').value = usuario.nome;
-    document.getElementById('editUsuarioEmail').value = usuario.email;
-    document.getElementById('editUsuarioTipo').value = usuario.tipo;
-    showModal('editUsuarioModal');
+function editarUsuario(u) {
+    document.getElementById('editUsuarioId').value    = u.id;
+    document.getElementById('editUsuarioNome').value  = u.nome;
+    document.getElementById('editUsuarioEmail').value = u.email;
+    document.getElementById('editUsuarioTipo').value  = u.tipo;
+    openModal('editUsuarioModal');
 }
 
-document.getElementById('editUsuarioForm').addEventListener('submit', async (e) => {
+document.getElementById('editUsuarioForm').addEventListener('submit', async e => {
     e.preventDefault();
-
     const id = document.getElementById('editUsuarioId').value;
-    const usuario = {
-        nome: document.getElementById('editUsuarioNome').value,
-        email: document.getElementById('editUsuarioEmail').value,
-        tipo: document.getElementById('editUsuarioTipo').value
-    };
-
     try {
-        await apiCall(`/usuarios/${id}`, {
+        await api(`/usuarios/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(usuario)
+            body: JSON.stringify({
+                nome:  document.getElementById('editUsuarioNome').value,
+                email: document.getElementById('editUsuarioEmail').value,
+                tipo:  document.getElementById('editUsuarioTipo').value
+            })
         });
-
-        showAlert('Usuário atualizado com sucesso!');
+        showAlert('Usuário atualizado!');
         closeModal('editUsuarioModal');
         loadUsuarios();
-    } catch (error) {
-        showAlert(error.message || 'Erro ao atualizar usuário', 'danger');
+    } catch (err) {
+        showAlert(err.message, 'danger');
     }
 });
 
-async function excluirUsuario(id) {
-    if (!confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita!')) return;
-
-    try {
-        await apiCall(`/usuarios/${id}`, { method: 'DELETE' });
-        showAlert('Usuário excluído com sucesso!');
-        loadUsuarios();
-    } catch (error) {
-        showAlert(error.message || 'Erro ao excluir usuário', 'danger');
-    }
+function excluirUsuario(id, nome) {
+    showConfirm({
+        icon: '🗑️', title: 'Excluir usuário',
+        msg: `Excluir "${nome}"? Ação irreversível.`, okLabel: 'Excluir',
+        async onOk() {
+            try {
+                await api(`/usuarios/${id}`, { method: 'DELETE' });
+                showAlert('Usuário excluído!');
+                loadUsuarios();
+            } catch (err) {
+                showAlert(err.message, 'danger');
+            }
+        }
+    });
 }
+
+// ─── Badges: apenas mapeiam strings da API para HTML ─
+function badgeStatus(status) {
+    const map = {
+        disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
+        alugado:    `<span class="badge badge-danger"><span class="badge-dot"></span>Alugado</span>`,
+        ativo:      `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
+        devolvido:  `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
+    };
+    return map[status] ?? `<span class="badge">${esc(status)}</span>`;
+}
+
+function badgeTipo(tipo) {
+    const map = {
+        bibliotecario: `<span class="badge badge-gold">Bibliotecário</span>`,
+        usuario: `<span class="badge" style="background:rgba(100,100,100,0.12);color:var(--parchment-dim);border-color:var(--border-s)">Usuário</span>`,
+    };
+    return map[tipo] ?? `<span class="badge">${esc(tipo)}</span>`;
+}
+
+// ─── ESC fecha modais ─────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.modal.active').forEach(m => closeModal(m.id));
+    closeConfirm();
+});
+
+// ─── Init ─────────────────────────────────────────────
+restoreSession();
