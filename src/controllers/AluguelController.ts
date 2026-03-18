@@ -3,7 +3,8 @@ import { AuthRequest } from '../middlewares/auth';
 import db from '../database';
 
 export class AluguelController {
-  // ✅ PASSO 7: Criar Aluguel (Regra de 14 dias no servidor)
+
+  // ✅ PASSO 7: Criar Aluguel
   criar = async (req: AuthRequest, res: Response) => {
     try {
       const { livro_id, usuario_id } = req.body;
@@ -12,7 +13,6 @@ export class AluguelController {
       data_prevista.setDate(data_aluguel.getDate() + 14);
 
       await db.transaction(async (trx) => {
-        // Verifica se o livro está disponível
         const livro = await trx('livros').where({ id: livro_id, status: 'disponivel' }).first();
         if (!livro) throw new Error('Livro não disponível para empréstimo.');
 
@@ -28,14 +28,14 @@ export class AluguelController {
 
       res.status(201).json({
         message: 'Empréstimo registrado com sucesso!',
-        prazo: data_prevista.toLocaleDateString('pt-BR') // Já manda formatado
+        prazo: data_prevista.toLocaleDateString('pt-BR')
       });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   };
 
-  // ✅ PASSO 8: Listar todos (Filtro e Formatação no servidor)
+  // ✅ PASSO 8: Listar todos — campos em camelCase, consistentes com o frontend
   listarTodos = async (req: AuthRequest, res: Response) => {
     try {
       const alugueis = await db('alugueis')
@@ -44,53 +44,42 @@ export class AluguelController {
         .where('alugueis.status', 'ativo')
         .select(
           'alugueis.id',
-          'usuarios.nome as Usuário',
-          'livros.titulo as Livro',
-          'alugueis.data_prevista_devolucao as Prazo'
+          'usuarios.nome    as usuario',
+          'livros.titulo    as titulo',
+          'alugueis.data_aluguel',
+          'alugueis.data_prevista_devolucao as prazo',
+          'alugueis.status'
         );
 
-      // Limpa os dados para a CLI apenas dar um console.table()
-      const formatados = alugueis.map(a => ({
-        ID: a.id,
-        Usuário: a.Usuário,
-        Livro: a.Livro,
-        Prazo: new Date(a.Prazo).toLocaleDateString('pt-BR')
-      }));
-
-      res.json(formatados);
+      res.json(alugueis);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao listar empréstimos' });
     }
   };
 
-  // ✅ PASSO 8: Meus Empréstimos (Segurança de Tipo + Formatação)
+  // ✅ PASSO 8: Meus Empréstimos — campos em camelCase
   meus = async (req: AuthRequest, res: Response) => {
     try {
-      // O "!" garante ao TS que o usuário existe (validado pelo middleware)
       const usuario_id = req.usuario!.id;
 
       const alugueis = await db('alugueis')
         .join('livros', 'alugueis.livro_id', 'livros.id')
         .where({ 'alugueis.usuario_id': usuario_id })
         .select(
-          'livros.titulo as Título',
-          'alugueis.data_prevista_devolucao as Devolução',
-          'alugueis.status as Situação'
+          'alugueis.id',
+          'livros.titulo',
+          'alugueis.data_aluguel',
+          'alugueis.data_prevista_devolucao as prazo',
+          'alugueis.status'
         );
 
-      const formatados = alugueis.map(a => ({
-        ...a,
-        Devolução: new Date(a.Devolução).toLocaleDateString('pt-BR'),
-        Situação: a.Situação === 'ativo' ? '🟡 PENDENTE' : '🟢 ENTREGUE'
-      }));
-
-      res.json(formatados);
+      res.json(alugueis);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao buscar seus dados' });
     }
   };
 
-  // ✅ PASSO 9: Devolver (Regra Atômica)
+  // ✅ PASSO 9: Devolver
   devolver = async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;

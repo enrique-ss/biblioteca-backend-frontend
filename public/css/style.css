@@ -46,28 +46,28 @@
    TOKENS — LIGHT
 ═══════════════════════════════════ */
 [data-theme="light"] {
-    --bg: #f5f0e8;
-    --surface-1: #ede7d9;
-    --surface-2: #e4ddd0;
-    --surface-3: #d8d0c0;
-    --surface-4: #ccc3b0;
-    --text: #2a2010;
-    --text-dim: #6b5c40;
-    --text-faint: #a89070;
-    --gold: #8a6010;
-    --gold-dim: #b8900a;
-    --crimson: #9a1e14;
-    --crimson-dim: rgba(154, 30, 20, 0.12);
-    --success: #1a5c30;
-    --success-dim: rgba(26, 92, 48, 0.12);
-    --warning: #7a5010;
-    --warning-dim: rgba(122, 80, 16, 0.12);
-    --border-s: rgba(100, 80, 40, 0.12);
-    --border-m: rgba(100, 80, 40, 0.22);
-    --border-l: rgba(100, 80, 40, 0.38);
-    --shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
-    --nav-bg: rgba(237, 231, 217, 0.95);
+    --bg: #ffffff;
+    --surface-1: #f4f4f4;
+    --surface-2: #ebebeb;
+    --surface-3: #dedede;
+    --surface-4: #cccccc;
+    --text: #111111;
+    --text-dim: #444444;
+    --text-faint: #888888;
+    --gold: #7a5500;
+    --gold-dim: #a87800;
+    --crimson: #b00000;
+    --crimson-dim: rgba(176, 0, 0, 0.10);
+    --success: #1a6e38;
+    --success-dim: rgba(26, 110, 56, 0.12);
+    --warning: #8a5200;
+    --warning-dim: rgba(138, 82, 0, 0.12);
+    --border-s: rgba(0, 0, 0, 0.08);
+    --border-m: rgba(0, 0, 0, 0.16);
+    --border-l: rgba(0, 0, 0, 0.30);
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.18);
+    --nav-bg: rgba(255, 255, 255, 0.96);
 }
 
 /* ═══════════════════════════════════
@@ -926,15 +926,22 @@ body::before {
 }
 
 [data-theme="light"] .toast-success {
-    background: rgba(230, 245, 235, 0.97);
+    background: rgba(235, 255, 242, 0.98);
+    border-color: rgba(26, 110, 56, 0.35);
 }
 
 [data-theme="light"] .toast-danger {
-    background: rgba(250, 230, 228, 0.97);
+    background: rgba(255, 235, 235, 0.98);
+    border-color: rgba(176, 0, 0, 0.35);
 }
 
 [data-theme="light"] .toast-warning {
-    background: rgba(250, 240, 220, 0.97);
+    background: rgba(255, 245, 220, 0.98);
+    border-color: rgba(138, 82, 0, 0.35);
+}
+
+[data-theme="light"] .toast-msg {
+    color: #111111;
 }
 
 /* ═══════════════════════════════════
@@ -1100,6 +1107,46 @@ body::before {
 .perfil-field-value {
     font-size: var(--fs-base);
     color: var(--text);
+}
+
+
+/* ═══════════════════════════════════
+   BADGES — light mode overrides
+═══════════════════════════════════ */
+[data-theme="light"] .badge-success {
+    background: rgba(26, 110, 56, 0.10);
+    color: #1a6e38;
+    border-color: rgba(26, 110, 56, 0.30);
+}
+
+[data-theme="light"] .badge-success .badge-dot {
+    background: #1a6e38;
+}
+
+[data-theme="light"] .badge-danger {
+    background: rgba(176, 0, 0, 0.08);
+    color: #b00000;
+    border-color: rgba(176, 0, 0, 0.28);
+}
+
+[data-theme="light"] .badge-danger .badge-dot {
+    background: #b00000;
+}
+
+[data-theme="light"] .badge-warning {
+    background: rgba(138, 82, 0, 0.10);
+    color: #8a5200;
+    border-color: rgba(138, 82, 0, 0.28);
+}
+
+[data-theme="light"] .badge-warning .badge-dot {
+    background: #8a5200;
+}
+
+[data-theme="light"] .badge-gold {
+    background: rgba(122, 85, 0, 0.08);
+    color: #7a5500;
+    border-color: rgba(122, 85, 0, 0.25);
 }
 
 /* ═══════════════════════════════════

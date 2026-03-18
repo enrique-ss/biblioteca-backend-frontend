@@ -179,7 +179,7 @@ function loadMenu() {
 
     const items = [
         {
-            icon: '📚', title: 'Acervo de Livros', desc: 'Consultar livros',
+            icon: '📚', title: 'Acervo de Livros',
             action() { loadLivros(); showScreen('livrosScreen'); }
         }
     ];
@@ -187,18 +187,18 @@ function loadMenu() {
     if (isBib) {
         items.push(
             {
-                icon: '📋', title: 'Empréstimos', desc: 'Gerenciar aluguéis',
-                action() { showScreen('emprestimosMenuScreen'); }
+                icon: '📋', title: 'Empréstimos',
+                action() { loadAlugueis(); showScreen('alugueisScreen'); }
             },
             {
-                icon: '👥', title: 'Usuários', desc: 'Gerenciar cadastros',
+                icon: '👥', title: 'Usuários',
                 action() { loadUsuarios(); showScreen('usuariosScreen'); }
             }
         );
     } else {
         items.push(
             {
-                icon: '📖', title: 'Meus Empréstimos', desc: 'Seus livros alugados',
+                icon: '📖', title: 'Meus Empréstimos',
                 action() { loadMeusAlugueis(); showScreen('alugueisScreen'); }
             }
         );
@@ -206,7 +206,7 @@ function loadMenu() {
 
     items.push(
         {
-            icon: '🪪', title: 'Meu Perfil', desc: 'Ver e editar seus dados',
+            icon: '✏️', title: 'Meu Perfil',
             action() { loadPerfil(); showScreen('perfilScreen'); }
         }
     );
@@ -216,13 +216,13 @@ function loadMenu() {
         card.className = 'menu-card';
         card.innerHTML = `
             <span class="menu-card-icon">${item.icon}</span>
-            <div class="menu-card-title">${item.title}</div>
-            <div class="menu-card-desc">${item.desc}</div>`;
+            <div class="menu-card-title">${item.title}</div>`;
         card.addEventListener('click', item.action);
         grid.appendChild(card);
     });
 
     document.getElementById('btnAddLivro').style.display = isBib ? 'inline-flex' : 'none';
+    document.getElementById('btnNovoAluguel').style.display = isBib ? 'inline-flex' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -277,8 +277,7 @@ document.getElementById('addLivroForm').addEventListener('submit', async e => {
 
 // Voltar: bibliotecário → sub-menu; usuário → menu principal
 function voltarAlugueis() {
-    const destino = currentUser.tipo === 'bibliotecario' ? 'emprestimosMenuScreen' : 'menuScreen';
-    showScreen(destino);
+    showScreen('menuScreen');
 }
 
 async function loadAlugueis() {
@@ -314,14 +313,13 @@ function renderAlugueis(data, showDevolver) {
     }
     data.forEach(a => {
         const tr = document.createElement('tr');
-        const status = a.status || a['Situação'] || '—';
         tr.innerHTML = `
             <td style="color:var(--text-faint)">${esc(a.id)}</td>
-            <td>${esc(a.usuario || a['Usuário'] || '—')}</td>
-            <td><strong>${esc(a.titulo || a['Livro'] || '—')}</strong></td>
+            <td>${esc(a.usuario ?? '—')}</td>
+            <td><strong>${esc(a.titulo ?? '—')}</strong></td>
             <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
-            <td style="color:var(--text-dim)">${fmtDate(a.data_prevista_devolucao || a['Prazo'])}</td>
-            <td>${badgeStatus(status)}</td>
+            <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
+            <td>${badgeStatus(a.status)}</td>
             <td>${showDevolver && a.status === 'ativo'
                 ? `<button class="btn btn-success btn-sm" onclick="devolverLivro(${a.id})">Devolver</button>`
                 : `<span style="color:var(--text-faint);font-size:.8rem">—</span>`
@@ -362,15 +360,6 @@ document.getElementById('addAluguelForm').addEventListener('submit', async e => 
     } catch (err) { showAlert(err.message, 'danger'); }
 });
 
-document.getElementById('devolverForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const id = document.getElementById('devolverAluguelId').value;
-    try {
-        const res = await api(`/alugueis/${id}/devolver`, { method: 'PUT' });
-        showAlert(res.message || 'Livro devolvido!');
-        closeModal('devolverModal'); e.target.reset();
-    } catch (err) { showAlert(err.message, 'danger'); }
-});
 
 function devolverLivro(id) {
     showConfirm({

@@ -141,41 +141,13 @@
                 </div>
             </section>
 
-            <!-- ════ 3. SUB-MENU EMPRÉSTIMOS (BIBLIOTECÁRIO) ════ -->
-            <section id="emprestimosMenuScreen" class="screen">
-                <div class="menu-screen-wrap">
-                    <div class="menu-welcome">
-                        <h2>📋 <span>Empréstimos</span></h2>
-                        <p>Gerencie os empréstimos da biblioteca</p>
-                    </div>
-                    <div class="menu-grid">
-                        <div class="menu-card" onclick="loadAlugueis(); showScreen('alugueisScreen');">
-                            <span class="menu-card-icon">📋</span>
-                            <div class="menu-card-title">Ver Todos</div>
-                            <div class="menu-card-desc">Empréstimos ativos</div>
-                        </div>
-                        <div class="menu-card" onclick="prepareAluguelModal()">
-                            <span class="menu-card-icon">➕</span>
-                            <div class="menu-card-title">Novo Aluguel</div>
-                            <div class="menu-card-desc">Registrar empréstimo</div>
-                        </div>
-                        <div class="menu-card" onclick="openModal('devolverModal')">
-                            <span class="menu-card-icon">↩️</span>
-                            <div class="menu-card-title">Devolver Livro</div>
-                            <div class="menu-card-desc">Registrar devolução</div>
-                        </div>
-                    </div>
-                    <div class="menu-logout">
-                        <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar ao menu</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ════ 3. LISTA DE EMPRÉSTIMOS ════ -->
+            <!-- ════ 3. EMPRÉSTIMOS ════ -->
             <section id="alugueisScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title" id="alugueisTitle">📋 <span>Empréstimos</span></h2>
                     <div class="page-actions">
+                        <button class="btn btn-success" id="btnNovoAluguel" style="display:none;"
+                            onclick="prepareAluguelModal()">+ Novo Aluguel</button>
                         <button class="btn btn-ghost" onclick="voltarAlugueis()">← Voltar</button>
                     </div>
                 </div>
@@ -318,22 +290,6 @@
         </div>
     </div>
 
-    <!-- ════ MODAL: DEVOLVER ════ -->
-    <div id="devolverModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('devolverModal')"></div>
-        <div class="modal-box">
-            <h2 class="modal-title">Devolver Livro</h2>
-            <p class="modal-subtitle">Informe o ID do aluguel para registrar a devolução</p>
-            <form id="devolverForm" novalidate>
-                <div class="form-group"><label class="form-label">ID do Aluguel</label><input type="number"
-                        id="devolverAluguelId" class="form-input" placeholder="Ex: 42" required></div>
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-gold">Confirmar Devolução</button>
-                    <button type="button" class="btn btn-ghost" onclick="closeModal('devolverModal')">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- ════ MODAL: EDITAR USUÁRIO ════ -->
     <div id="editUsuarioModal" class="modal">
