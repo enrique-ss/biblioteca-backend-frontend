@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
+import { verificarToken } from '../middlewares/auth';
 
 const router = Router();
-const authController = new AuthController();
+const controller = new AuthController();
 
-// Abertas: Ninguém tem token antes de logar/cadastrar
-router.post('/registrar', authController.registrar);
-router.post('/login', authController.login);
+router.post('/registrar', controller.registrar);
+router.post('/login', controller.login);
+
+// Qualquer usuário autenticado pode editar o próprio perfil
+router.put('/perfil', verificarToken, controller.editarPerfil);
 
 export default router;

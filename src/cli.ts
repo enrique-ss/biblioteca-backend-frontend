@@ -25,9 +25,8 @@ const cores = {
 };
 
 const emoji = {
-  livro: '📚', usuario: '👤', admin: '👨‍💼', aluguel: '📋', check: '✅',
-  erro: '❌', info: 'ℹ️', voltar: '↩️', sair: '🚪', adicionar: '➕',
-  calendario: '📅', local: '📍', email: '📧', senha: '🔒'
+  check: '✅', erro: '❌',
+  email: '📧', senha: '🔒', usuario: '👤', admin: '👨‍💼',
 };
 
 function colorir(texto: string, cor: string): string { return `${cor}${texto}${cores.reset}`; }
@@ -53,143 +52,318 @@ function mostrarBanner() {
 
 function divisor(cor: string = cores.ciano): void { console.log(colorir('─'.repeat(70), cor)); }
 
-function caixaOpcao(numero: string, texto: string, icone: string): void {
-  console.log(`  ${colorir(numero, cores.amarelo + cores.bold)} ${icone}  ${texto}`);
+function opcao(numero: string, texto: string): void {
+  console.log(`  ${colorir(numero, cores.amarelo + cores.bold)}  ${texto}`);
 }
-
-// ============ UTILITÁRIOS DE INTERFACE ============
 
 async function obterOpcaoValida(msg: string, opcoes: string[]): Promise<string> {
   const op = await pergunta(msg);
   if (!opcoes.includes(op)) {
-    console.log(colorir(`\n${emoji.erro} Opção "${op}" inválida! Tente: ${opcoes.join(', ')}`, cores.vermelho + cores.bold));
-    await pergunta(colorir(`\n${emoji.voltar} Pressione Enter...`, cores.dim));
-    return "";
+    console.log(colorir(`\nOpcao "${op}" invalida! Tente: ${opcoes.join(', ')}`, cores.vermelho + cores.bold));
+    await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+    return '';
   }
   return op;
 }
 
-// ============ SUB-MENUS (AÇÕES) ============
+// ============ 2. CONSULTAR ACERVO ============
 
 async function visualizarAcervo() {
   limpar();
-  titulo('📚 ACERVO DE LIVROS 📚', cores.magenta);
+  titulo('ACERVO DE LIVROS', cores.magenta);
   try {
     const res = await api.get('/livros');
-    res.data.length === 0 ? console.log('\nNenhum livro.') : console.table(res.data);
-  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
-  await pergunta(colorir(`\n${emoji.voltar} Pressione Enter...`, cores.dim));
+    res.data.length === 0 ? console.log('\nNenhum livro cadastrado.') : console.table(res.data);
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+
+  if (user.tipo === 'bibliotecario') {
+    divisor();
+    opcao('1', 'Adicionar Livro');
+    opcao('0', 'Voltar');
+    divisor();
+    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '0']);
+    if (op === '1') await cadastrarLivro();
+  } else {
+    await pergunta(colorir(`\nPressione Enter para voltar...`, cores.dim));
+  }
 }
 
 async function cadastrarLivro() {
   limpar();
-  titulo('➕ NOVO LIVRO', cores.verde);
+  titulo('NOVO LIVRO', cores.verde);
   const body = {
-    titulo: await pergunta('Título: '),
+    titulo: await pergunta('Titulo: '),
     autor: await pergunta('Autor: '),
     ano_lancamento: parseInt(await pergunta('Ano: ')),
-    genero: await pergunta('Gênero: ')
+    genero: await pergunta('Genero: '),
   };
   try {
     const res = await api.post('/livros', body);
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
-  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
-  await pergunta(colorir(`\n${emoji.voltar} Pressione Enter...`, cores.dim));
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
 }
 
-async function gerenciarAlugueis(modo: 'todos' | 'meus') {
+// ============ 3. EMPRESTIMOS (BIBLIOTECARIO) ============
+
+async function menuEmprestimos() {
+  while (true) {
+    limpar();
+    titulo('EMPRESTIMOS', cores.azul);
+    opcao('1', 'Ver todos os emprestimos');
+    opcao('2', 'Novo aluguel');
+    opcao('3', 'Devolver livro');
+    opcao('0', 'Voltar');
+    divisor();
+
+    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
+    if (op === '') continue;
+    if (op === '0') break;
+    if (op === '1') await listarTodosAlugueis();
+    else if (op === '2') await registrarAluguel();
+    else if (op === '3') await devolverLivro();
+  }
+}
+
+async function listarTodosAlugueis() {
   limpar();
-  titulo(modo === 'todos' ? '📋 TODOS EMPRÉSTIMOS' : '📖 MEUS EMPRÉSTIMOS', cores.azul);
+  titulo('TODOS OS EMPRESTIMOS', cores.azul);
   try {
-    const res = await api.get(`/alugueis/${modo}`);
-    res.data.length === 0 ? console.log('\nNada encontrado.') : console.table(res.data);
-  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
-  await pergunta(colorir(`\n${emoji.voltar} Pressione Enter...`, cores.dim));
+    const res = await api.get('/alugueis/todos');
+    res.data.length === 0 ? console.log('\nNenhum emprestimo ativo.') : console.table(res.data);
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
 }
 
 async function registrarAluguel() {
   limpar();
-  titulo('➕ NOVO ALUGUEL', cores.verde);
-  const dados = { livro_id: await pergunta('ID Livro: '), usuario_id: await pergunta('ID Usuário: ') };
+  titulo('NOVO ALUGUEL', cores.verde);
+  const dados = {
+    livro_id: await pergunta('ID do Livro: '),
+    usuario_id: await pergunta('ID do Usuario: '),
+  };
   try {
     const res = await api.post('/alugueis', dados);
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
-  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
-  await pergunta(colorir(`\n${emoji.voltar} Pressione Enter...`, cores.dim));
+    console.log(colorir(`   Prazo: ${res.data.prazo}`, cores.dim));
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
 }
 
 async function devolverLivro() {
   limpar();
-  titulo('↩️ DEVOLVER', cores.amarelo);
-  const id = await pergunta('ID Aluguel: ');
+  titulo('DEVOLVER LIVRO', cores.amarelo);
+  const id = await pergunta('ID do Aluguel: ');
   try {
     const res = await api.put(`/alugueis/${id}/devolver`);
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
-  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
-  await pergunta(colorir(`\n${emoji.voltar} Pressione Enter...`, cores.dim));
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
 }
 
-// ============ FLUXO PRINCIPAL ============
+// ============ 3. MEUS EMPRESTIMOS (USUARIO) ============
+
+async function meusAlugueis() {
+  limpar();
+  titulo('MEUS EMPRESTIMOS', cores.azul);
+  try {
+    const res = await api.get('/alugueis/meus');
+    res.data.length === 0 ? console.log('\nNenhum emprestimo encontrado.') : console.table(res.data);
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+}
+
+// ============ 4. USUARIOS (BIBLIOTECARIO) ============
+
+async function menuUsuarios() {
+  while (true) {
+    limpar();
+    titulo('USUARIOS', cores.ciano);
+    opcao('1', 'Listar usuarios');
+    opcao('2', 'Atualizar usuario');
+    opcao('3', 'Deletar usuario');
+    opcao('0', 'Voltar');
+    divisor();
+
+    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
+    if (op === '') continue;
+    if (op === '0') break;
+    if (op === '1') await listarUsuarios();
+    else if (op === '2') await atualizarUsuario();
+    else if (op === '3') await deletarUsuario();
+  }
+}
+
+async function listarUsuarios() {
+  limpar();
+  titulo('LISTA DE USUARIOS', cores.ciano);
+  try {
+    const res = await api.get('/usuarios');
+    res.data.length === 0 ? console.log('\nNenhum usuario.') : console.table(res.data);
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+}
+
+async function atualizarUsuario() {
+  limpar();
+  titulo('ATUALIZAR USUARIO', cores.amarelo);
+  const id = await pergunta('ID do usuario: ');
+  const nome = await pergunta('Novo nome  (Enter para manter): ');
+  const email = await pergunta('Novo email (Enter para manter): ');
+  const tipo = await pergunta('Novo tipo [usuario/bibliotecario] (Enter para manter): ');
+  const body: any = {};
+  if (nome) body.nome = nome;
+  if (email) body.email = email;
+  if (tipo) body.tipo = tipo;
+  try {
+    const res = await api.put(`/usuarios/${id}`, body);
+    console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+}
+
+async function deletarUsuario() {
+  limpar();
+  titulo('DELETAR USUARIO', cores.vermelho);
+  const id = await pergunta('ID do usuario: ');
+  try {
+    const res = await api.delete(`/usuarios/${id}`);
+    console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+}
+
+// ============ 5. MEU PERFIL ============
+
+async function menuMeuPerfil() {
+  while (true) {
+    limpar();
+    titulo('MEU PERFIL', cores.magenta);
+    console.log(colorir(`\n  Nome:  ${user.nome}`, cores.branco));
+    console.log(colorir(`  Email: ${user.email}`, cores.branco));
+    console.log(colorir(`  Tipo:  ${user.tipo}\n`, cores.branco));
+    divisor();
+    opcao('1', 'Editar perfil');
+    opcao('0', 'Voltar');
+    divisor();
+
+    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '0']);
+    if (op === '') continue;
+    if (op === '0') break;
+    if (op === '1') await editarPerfil();
+  }
+}
+
+async function editarPerfil() {
+  limpar();
+  titulo('EDITAR PERFIL', cores.amarelo);
+  const nome = await pergunta(`Novo nome  (atual: ${user.nome}):  `);
+  const email = await pergunta(`Novo email (atual: ${user.email}): `);
+  const senha = await pergunta('Nova senha (Enter para manter):    ');
+  const body: any = {};
+  if (nome) body.nome = nome;
+  if (email) body.email = email;
+  if (senha) body.senha = senha;
+  try {
+    const res = await api.put('/auth/perfil', body);
+    if (nome) user.nome = nome;
+    if (email) user.email = email;
+    console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+}
+
+// ============ MENU PRINCIPAL ============
 
 async function menu() {
   while (true) {
     limpar();
     mostrarBanner();
     const cor = user.tipo === 'bibliotecario' ? cores.magenta : cores.ciano;
-    console.log(colorir(`\n  ${user.tipo === 'bibliotecario' ? emoji.admin : emoji.usuario} ${user.nome.toUpperCase()} (${user.tipo})`, cor + cores.bold));
+    console.log(colorir(`\n  ${user.tipo === 'bibliotecario' ? emoji.admin : emoji.usuario}  ${user.nome.toUpperCase()} (${user.tipo})`, cor + cores.bold));
     divisor();
 
-    const opcoes = user.tipo === 'bibliotecario' ? ['1', '2', '3', '4', '5', '0'] : ['1', '2', '0'];
-
-    caixaOpcao('1', 'Consultar Acervo', emoji.livro);
     if (user.tipo === 'bibliotecario') {
-      caixaOpcao('2', 'Empréstimos Ativos', emoji.aluguel);
-      caixaOpcao('3', 'Novo Aluguel', emoji.adicionar);
-      caixaOpcao('4', 'Devolver Livro', emoji.voltar);
-      caixaOpcao('5', 'Cadastrar Livro', emoji.adicionar);
+      opcao('1', 'Consultar Acervo');
+      opcao('2', 'Emprestimos');
+      opcao('3', 'Usuarios');
+      opcao('4', 'Meu Perfil');
+      opcao('0', 'Sair');
+      divisor();
+
+      const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '4', '0']);
+      if (op === '') continue;
+      if (op === '0') break;
+      if (op === '1') await visualizarAcervo();
+      else if (op === '2') await menuEmprestimos();
+      else if (op === '3') await menuUsuarios();
+      else if (op === '4') await menuMeuPerfil();
+
     } else {
-      caixaOpcao('2', 'Meus Empréstimos', emoji.aluguel);
+      opcao('1', 'Consultar Acervo');
+      opcao('2', 'Meus Emprestimos');
+      opcao('3', 'Meu Perfil');
+      opcao('0', 'Sair');
+      divisor();
+
+      const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
+      if (op === '') continue;
+      if (op === '0') break;
+      if (op === '1') await visualizarAcervo();
+      else if (op === '2') await meusAlugueis();
+      else if (op === '3') await menuMeuPerfil();
     }
-    caixaOpcao('0', 'Sair', emoji.sair);
-    divisor();
-
-    const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), opcoes);
-    if (op === "") continue;
-    if (op === '0') break;
-
-    if (op === '1') await visualizarAcervo();
-    else if (op === '2') await gerenciarAlugueis(user.tipo === 'bibliotecario' ? 'todos' : 'meus');
-    else if (op === '3') await registrarAluguel();
-    else if (op === '4') await devolverLivro();
-    else if (op === '5') await cadastrarLivro();
   }
   token = null; user = null;
   return start();
 }
 
+// ============ 1. MENU INICIAL ============
+
 async function start() {
   limpar(); mostrarBanner(); divisor();
-  caixaOpcao('1', 'Login', '🔐');
-  caixaOpcao('2', 'Cadastro', '✍️');
-  caixaOpcao('0', 'Sair', emoji.sair);
+  opcao('1', 'Login');
+  opcao('2', 'Criar conta');
+  opcao('0', 'Sair');
   divisor();
 
-  const op = await obterOpcaoValida(colorir('\n> ', cores.amarelo + cores.bold), ['1', '2', '0', 'admin']);
+  const op = await obterOpcaoValida(colorir('\n> ', cores.amarelo + cores.bold), ['1', '2', '0']);
   if (op === '0') process.exit(0);
-  if (op === "") return start();
+  if (op === '') return start();
 
   const email = await pergunta(`${emoji.email} Email: `);
   const senha = await pergunta(`${emoji.senha} Senha: `);
 
   try {
     let res;
-    if (op === '2' || op === 'admin') {
+    if (op === '2') {
       const nome = await pergunta(`${emoji.usuario} Nome: `);
-      res = await api.post('/auth/registrar', { nome, email, senha, tipo: op === 'admin' ? 'bibliotecario' : 'usuario' });
+      res = await api.post('/auth/registrar', { nome, email, senha, tipo: 'usuario' });
     } else {
       res = await api.post('/auth/login', { email, senha });
     }
-    token = res.data.token; user = res.data.usuario;
+    token = res.data.token;
+    user = res.data.usuario;
     await menu();
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error || 'Erro'}`, cores.vermelho));

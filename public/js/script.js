@@ -4,20 +4,35 @@
 // ═══════════════════════════════════════════════════════
 
 const API_URL = 'http://127.0.0.1:3000/api';
-let token       = null;
+let token = null;
 let currentUser = null;
+
+// ─── Tema dark/light ─────────────────────────────────
+function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('btnTheme').textContent = isDark ? '🌙' : '☀️';
+    localStorage.setItem('luizateca_theme', isDark ? 'light' : 'dark');
+}
+
+function restoreTheme() {
+    const saved = localStorage.getItem('luizateca_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('btnTheme').textContent = saved === 'dark' ? '🌙' : '☀️';
+}
 
 // ─── Sessão ──────────────────────────────────────────
 function saveSession() {
     sessionStorage.setItem('luizateca_token', token);
-    sessionStorage.setItem('luizateca_user',  JSON.stringify(currentUser));
+    sessionStorage.setItem('luizateca_user', JSON.stringify(currentUser));
 }
 
 function restoreSession() {
     const t = sessionStorage.getItem('luizateca_token');
     const u = sessionStorage.getItem('luizateca_user');
     if (t && u) {
-        token       = t;
+        token = t;
         currentUser = JSON.parse(u);
         updateNavbar();
         loadMenu();
@@ -27,8 +42,7 @@ function restoreSession() {
 
 function clearSession() {
     sessionStorage.clear();
-    token       = null;
-    currentUser = null;
+    token = null; currentUser = null;
 }
 
 // ─── Navegação ───────────────────────────────────────
@@ -49,11 +63,11 @@ function closeModal(id) {
 }
 
 function showConfirm({ icon = '⚠️', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
-    document.getElementById('confirmIcon').textContent  = icon;
+    document.getElementById('confirmIcon').textContent = icon;
     document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMsg').textContent   = msg;
+    document.getElementById('confirmMsg').textContent = msg;
     document.getElementById('confirmOkBtn').textContent = okLabel;
-    document.getElementById('confirmOkBtn').onclick     = () => { closeConfirm(); onOk(); };
+    document.getElementById('confirmOkBtn').onclick = () => { closeConfirm(); onOk(); };
     document.getElementById('confirmDialog').classList.add('active');
 }
 
@@ -64,13 +78,13 @@ function closeConfirm() {
 // ─── Toast ───────────────────────────────────────────
 function showAlert(message, type = 'success') {
     const icons = { success: '✓', danger: '✕', warning: '⚠' };
-    const el    = document.createElement('div');
+    const el = document.createElement('div');
     el.className = `toast toast-${type}`;
     el.innerHTML = `<span class="toast-icon">${icons[type] ?? '•'}</span><span class="toast-msg">${message}</span>`;
     document.getElementById('alertContainer').appendChild(el);
     setTimeout(() => {
-        el.style.cssText += 'opacity:0;transform:translateX(40px);transition:0.35s ease';
-        setTimeout(() => el.remove(), 360);
+        el.style.cssText += 'opacity:0;transform:translateX(36px);transition:0.32s ease';
+        setTimeout(() => el.remove(), 340);
     }, 3400);
 }
 
@@ -78,7 +92,7 @@ function showAlert(message, type = 'success') {
 async function api(endpoint, options = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res  = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+    const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || data.message || 'Erro na requisição');
     return data;
@@ -86,19 +100,16 @@ async function api(endpoint, options = {}) {
 
 // ─── Helpers ─────────────────────────────────────────
 function esc(str) {
-    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-
 function fmtDate(iso) {
     if (!iso) return '—';
     try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; }
 }
-
 function setLoading(tbodyId, cols) {
     document.getElementById(tbodyId).innerHTML =
         `<tr class="loading-row"><td colspan="${cols}"><span class="spinner"></span>Carregando…</td></tr>`;
 }
-
 function setEmpty(tbodyId, cols, msg = 'Nenhum registro encontrado.') {
     document.getElementById(tbodyId).innerHTML =
         `<tr><td colspan="${cols}" class="table-empty">${msg}</td></tr>`;
@@ -118,16 +129,10 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
                 senha: document.getElementById('loginPassword').value
             })
         });
-        token       = data.token;
-        currentUser = data.usuario;
-        saveSession();
-        updateNavbar();
-        loadMenu();
-        showScreen('menuScreen');
-        e.target.reset();
-    } catch (err) {
-        showAlert(err.message, 'danger');
-    }
+        token = data.token; currentUser = data.usuario;
+        saveSession(); updateNavbar(); loadMenu();
+        showScreen('menuScreen'); e.target.reset();
+    } catch (err) { showAlert(err.message, 'danger'); }
 });
 
 document.getElementById('registerForm').addEventListener('submit', async e => {
@@ -136,74 +141,75 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
         const data = await api('/auth/registrar', {
             method: 'POST',
             body: JSON.stringify({
-                nome:  document.getElementById('regNome').value,
+                nome: document.getElementById('regNome').value,
                 email: document.getElementById('regEmail').value,
                 senha: document.getElementById('regSenha').value,
-                tipo:  document.getElementById('regTipo').value
+                tipo: 'usuario'
             })
         });
-        token       = data.token;
-        currentUser = data.usuario;
-        saveSession();
-        updateNavbar();
-        loadMenu();
-        showScreen('menuScreen');
-        e.target.reset();
-    } catch (err) {
-        showAlert(err.message, 'danger');
-    }
+        token = data.token; currentUser = data.usuario;
+        saveSession(); updateNavbar(); loadMenu();
+        showScreen('menuScreen'); e.target.reset();
+    } catch (err) { showAlert(err.message, 'danger'); }
 });
 
 function logout() {
     showConfirm({
         icon: '🚪', title: 'Encerrar sessão',
         msg: 'Deseja realmente sair?', okLabel: 'Sair',
-        onOk() {
-            clearSession();
-            updateNavbar();
-            showScreen('loginScreen');
-        }
+        onOk() { clearSession(); updateNavbar(); showScreen('loginScreen'); }
     });
 }
 
 function updateNavbar() {
     const show = !!currentUser;
-    document.getElementById('navUser').style.display   = show ? 'flex'        : 'none';
-    document.getElementById('btnLogout').style.display = show ? 'inline-flex' : 'none';
-    if (show) {
-        document.getElementById('navUserName').textContent = currentUser.nome;
-        document.getElementById('navUserRole').textContent = currentUser.tipo;
-    }
+    const btn = document.getElementById('btnLogout');
+    if (btn) btn.style.display = show ? 'inline-flex' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════
-//  MENU
+//  MENU PRINCIPAL
 // ═══════════════════════════════════════════════════════
+
 function loadMenu() {
     document.getElementById('menuUserName').textContent = currentUser.nome;
-
     const isBib = currentUser.tipo === 'bibliotecario';
-    const grid  = document.getElementById('menuGrid');
+    const grid = document.getElementById('menuGrid');
     grid.innerHTML = '';
 
     const items = [
-        { icon:'📚', title:'Acervo de Livros', desc:'Consultar livros',
-          action() { loadLivros(); showScreen('livrosScreen'); } }
+        {
+            icon: '📚', title: 'Acervo de Livros', desc: 'Consultar livros',
+            action() { loadLivros(); showScreen('livrosScreen'); }
+        }
     ];
 
     if (isBib) {
         items.push(
-            { icon:'📋', title:'Empréstimos', desc:'Gerenciar aluguéis',
-              action() { loadAlugueis(); showScreen('alugueisScreen'); } },
-            { icon:'👥', title:'Usuários',    desc:'Gerenciar cadastros',
-              action() { loadUsuarios(); showScreen('usuariosScreen'); } }
+            {
+                icon: '📋', title: 'Empréstimos', desc: 'Gerenciar aluguéis',
+                action() { showScreen('emprestimosMenuScreen'); }
+            },
+            {
+                icon: '👥', title: 'Usuários', desc: 'Gerenciar cadastros',
+                action() { loadUsuarios(); showScreen('usuariosScreen'); }
+            }
         );
     } else {
         items.push(
-            { icon:'📖', title:'Meus Empréstimos', desc:'Seus livros alugados',
-              action() { loadMeusAlugueis(); showScreen('alugueisScreen'); } }
+            {
+                icon: '📖', title: 'Meus Empréstimos', desc: 'Seus livros alugados',
+                action() { loadMeusAlugueis(); showScreen('alugueisScreen'); }
+            }
         );
     }
+
+    items.push(
+        {
+            icon: '🪪', title: 'Meu Perfil', desc: 'Ver e editar seus dados',
+            action() { loadPerfil(); showScreen('perfilScreen'); }
+        }
+    );
 
     items.forEach(item => {
         const card = document.createElement('div');
@@ -216,12 +222,11 @@ function loadMenu() {
         grid.appendChild(card);
     });
 
-    document.getElementById('btnAddLivro').style.display   = isBib ? 'inline-flex' : 'none';
-    document.getElementById('btnAddAluguel').style.display = isBib ? 'inline-flex' : 'none';
+    document.getElementById('btnAddLivro').style.display = isBib ? 'inline-flex' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════
-//  LIVROS
+//  2. LIVROS
 // ═══════════════════════════════════════════════════════
 
 async function loadLivros() {
@@ -230,15 +235,15 @@ async function loadLivros() {
         const data = await api('/livros');
         const tbody = document.getElementById('livrosTbody');
         tbody.innerHTML = '';
-        if (!data.length) { setEmpty('livrosTbody', 6); return; }
+        if (!data.length) { setEmpty('livrosTbody', 6, 'Nenhum livro cadastrado.'); return; }
         data.forEach(livro => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="color:var(--parchment-faint)">${esc(livro.id)}</td>
+                <td style="color:var(--text-faint)">${esc(livro.id)}</td>
                 <td><strong>${esc(livro.titulo)}</strong></td>
                 <td>${esc(livro.autor)}</td>
                 <td>${esc(livro.genero)}</td>
-                <td style="font-family:'Cinzel',serif;font-size:0.78rem;color:var(--parchment-dim)">${esc(livro.corredor)}-${esc(livro.prateleira)}</td>
+                <td style="color:var(--text-dim)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
                 <td>${badgeStatus(livro.status)}</td>`;
             tbody.appendChild(tr);
         });
@@ -254,25 +259,27 @@ document.getElementById('addLivroForm').addEventListener('submit', async e => {
         await api('/livros', {
             method: 'POST',
             body: JSON.stringify({
-                titulo:         document.getElementById('livroTitulo').value,
-                autor:          document.getElementById('livroAutor').value,
+                titulo: document.getElementById('livroTitulo').value,
+                autor: document.getElementById('livroAutor').value,
                 ano_lancamento: parseInt(document.getElementById('livroAno').value),
-                genero:         document.getElementById('livroGenero').value,
-                isbn:           document.getElementById('livroIsbn').value || null
+                genero: document.getElementById('livroGenero').value,
+                isbn: document.getElementById('livroIsbn').value || null
             })
         });
         showAlert('Livro cadastrado!');
-        closeModal('addLivroModal');
-        e.target.reset();
-        loadLivros();
-    } catch (err) {
-        showAlert(err.message, 'danger');
-    }
+        closeModal('addLivroModal'); e.target.reset(); loadLivros();
+    } catch (err) { showAlert(err.message, 'danger'); }
 });
 
 // ═══════════════════════════════════════════════════════
-//  ALUGUÉIS
+//  3. EMPRÉSTIMOS
 // ═══════════════════════════════════════════════════════
+
+// Voltar: bibliotecário → sub-menu; usuário → menu principal
+function voltarAlugueis() {
+    const destino = currentUser.tipo === 'bibliotecario' ? 'emprestimosMenuScreen' : 'menuScreen';
+    showScreen(destino);
+}
 
 async function loadAlugueis() {
     document.getElementById('alugueisTitle').innerHTML = `📋 <span>Empréstimos</span>`;
@@ -301,19 +308,24 @@ async function loadMeusAlugueis() {
 function renderAlugueis(data, showDevolver) {
     const tbody = document.getElementById('alugueisTbody');
     tbody.innerHTML = '';
-    if (!data.length) { setEmpty('alugueisTbody', 7); return; }
+    if (!data.length) {
+        setEmpty('alugueisTbody', 7, 'Nenhum empréstimo encontrado.');
+        return;
+    }
     data.forEach(a => {
         const tr = document.createElement('tr');
+        const status = a.status || a['Situação'] || '—';
         tr.innerHTML = `
-            <td style="color:var(--parchment-faint)">${esc(a.id)}</td>
-            <td>${esc(a.usuario)}</td>
-            <td><strong>${esc(a.titulo)}</strong></td>
-            <td style="font-size:0.88rem;color:var(--parchment-dim)">${fmtDate(a.data_aluguel)}</td>
-            <td style="font-size:0.88rem;color:var(--parchment-dim)">${fmtDate(a.data_prevista_devolucao)}</td>
-            <td>${badgeStatus(a.status)}</td>
+            <td style="color:var(--text-faint)">${esc(a.id)}</td>
+            <td>${esc(a.usuario || a['Usuário'] || '—')}</td>
+            <td><strong>${esc(a.titulo || a['Livro'] || '—')}</strong></td>
+            <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
+            <td style="color:var(--text-dim)">${fmtDate(a.data_prevista_devolucao || a['Prazo'])}</td>
+            <td>${badgeStatus(status)}</td>
             <td>${showDevolver && a.status === 'ativo'
                 ? `<button class="btn btn-success btn-sm" onclick="devolverLivro(${a.id})">Devolver</button>`
-                : `<span style="color:var(--parchment-faint);font-size:0.8rem">—</span>`}</td>`;
+                : `<span style="color:var(--text-faint);font-size:.8rem">—</span>`
+            }</td>`;
         tbody.appendChild(tr);
     });
 }
@@ -328,12 +340,10 @@ async function prepareAluguelModal() {
         const selU = document.getElementById('aluguelUsuario');
         selL.innerHTML = '<option value="">Selecione um livro…</option>';
         selU.innerHTML = '<option value="">Selecione um usuário…</option>';
-        livros.forEach(l   => selL.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)}</option>`);
+        livros.forEach(l => selL.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)}</option>`);
         usuarios.forEach(u => selU.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`);
         openModal('addAluguelModal');
-    } catch (err) {
-        showAlert(err.message, 'danger');
-    }
+    } catch (err) { showAlert(err.message, 'danger'); }
 }
 
 document.getElementById('addAluguelForm').addEventListener('submit', async e => {
@@ -342,17 +352,24 @@ document.getElementById('addAluguelForm').addEventListener('submit', async e => 
         await api('/alugueis', {
             method: 'POST',
             body: JSON.stringify({
-                livro_id:   parseInt(document.getElementById('aluguelLivro').value),
+                livro_id: parseInt(document.getElementById('aluguelLivro').value),
                 usuario_id: parseInt(document.getElementById('aluguelUsuario').value)
             })
         });
         showAlert('Empréstimo registrado!');
-        closeModal('addAluguelModal');
-        e.target.reset();
-        loadAlugueis();
-    } catch (err) {
-        showAlert(err.message, 'danger');
-    }
+        closeModal('addAluguelModal'); e.target.reset();
+        loadAlugueis(); showScreen('alugueisScreen');
+    } catch (err) { showAlert(err.message, 'danger'); }
+});
+
+document.getElementById('devolverForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('devolverAluguelId').value;
+    try {
+        const res = await api(`/alugueis/${id}/devolver`, { method: 'PUT' });
+        showAlert(res.message || 'Livro devolvido!');
+        closeModal('devolverModal'); e.target.reset();
+    } catch (err) { showAlert(err.message, 'danger'); }
 });
 
 function devolverLivro(id) {
@@ -362,17 +379,14 @@ function devolverLivro(id) {
         async onOk() {
             try {
                 await api(`/alugueis/${id}/devolver`, { method: 'PUT' });
-                showAlert('Livro devolvido!');
-                loadAlugueis();
-            } catch (err) {
-                showAlert(err.message, 'danger');
-            }
+                showAlert('Livro devolvido!'); loadAlugueis();
+            } catch (err) { showAlert(err.message, 'danger'); }
         }
     });
 }
 
 // ═══════════════════════════════════════════════════════
-//  USUÁRIOS
+//  4. USUÁRIOS
 // ═══════════════════════════════════════════════════════
 
 async function loadUsuarios() {
@@ -381,13 +395,13 @@ async function loadUsuarios() {
         const data = await api('/usuarios');
         const tbody = document.getElementById('usuariosTbody');
         tbody.innerHTML = '';
-        if (!data.length) { setEmpty('usuariosTbody', 5); return; }
+        if (!data.length) { setEmpty('usuariosTbody', 5, 'Nenhum usuário cadastrado.'); return; }
         data.forEach(u => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="color:var(--parchment-faint)">${esc(u.id)}</td>
+                <td style="color:var(--text-faint)">${esc(u.id)}</td>
                 <td><strong>${esc(u.nome)}</strong></td>
-                <td style="color:var(--parchment-dim)">${esc(u.email)}</td>
+                <td style="color:var(--text-dim)">${esc(u.email)}</td>
                 <td>${badgeTipo(u.tipo)}</td>
                 <td>
                     <div class="td-actions">
@@ -404,10 +418,10 @@ async function loadUsuarios() {
 }
 
 function editarUsuario(u) {
-    document.getElementById('editUsuarioId').value    = u.id;
-    document.getElementById('editUsuarioNome').value  = u.nome;
+    document.getElementById('editUsuarioId').value = u.id;
+    document.getElementById('editUsuarioNome').value = u.nome;
     document.getElementById('editUsuarioEmail').value = u.email;
-    document.getElementById('editUsuarioTipo').value  = u.tipo;
+    document.getElementById('editUsuarioTipo').value = u.tipo;
     openModal('editUsuarioModal');
 }
 
@@ -418,42 +432,78 @@ document.getElementById('editUsuarioForm').addEventListener('submit', async e =>
         await api(`/usuarios/${id}`, {
             method: 'PUT',
             body: JSON.stringify({
-                nome:  document.getElementById('editUsuarioNome').value,
+                nome: document.getElementById('editUsuarioNome').value,
                 email: document.getElementById('editUsuarioEmail').value,
-                tipo:  document.getElementById('editUsuarioTipo').value
+                tipo: document.getElementById('editUsuarioTipo').value
             })
         });
         showAlert('Usuário atualizado!');
-        closeModal('editUsuarioModal');
-        loadUsuarios();
-    } catch (err) {
-        showAlert(err.message, 'danger');
-    }
+        closeModal('editUsuarioModal'); loadUsuarios();
+    } catch (err) { showAlert(err.message, 'danger'); }
 });
 
 function excluirUsuario(id, nome) {
     showConfirm({
         icon: '🗑️', title: 'Excluir usuário',
-        msg: `Excluir "${nome}"? Ação irreversível.`, okLabel: 'Excluir',
+        msg: `Excluir "${nome}"? Esta ação é irreversível.`, okLabel: 'Excluir',
         async onOk() {
             try {
                 await api(`/usuarios/${id}`, { method: 'DELETE' });
-                showAlert('Usuário excluído!');
-                loadUsuarios();
-            } catch (err) {
-                showAlert(err.message, 'danger');
-            }
+                showAlert('Usuário excluído!'); loadUsuarios();
+            } catch (err) { showAlert(err.message, 'danger'); }
         }
     });
 }
 
-// ─── Badges: apenas mapeiam strings da API para HTML ─
+// ═══════════════════════════════════════════════════════
+//  5. MEU PERFIL
+// ═══════════════════════════════════════════════════════
+
+function loadPerfil() {
+    document.getElementById('perfilNome').value = currentUser.nome;
+    document.getElementById('perfilEmail').value = currentUser.email;
+    document.getElementById('perfilSenha').value = '';
+
+    document.getElementById('perfilInfo').innerHTML = `
+        <div class="perfil-field">
+            <div class="perfil-field-label">Nome</div>
+            <div class="perfil-field-value">${esc(currentUser.nome)}</div>
+        </div>
+        <div class="perfil-field">
+            <div class="perfil-field-label">Email</div>
+            <div class="perfil-field-value" style="color:var(--text-dim)">${esc(currentUser.email)}</div>
+        </div>
+        <div class="perfil-field">
+            <div class="perfil-field-label">Tipo</div>
+            <div class="perfil-field-value" style="margin-top:4px">${badgeTipo(currentUser.tipo)}</div>
+        </div>`;
+}
+
+document.getElementById('editPerfilForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const nome = document.getElementById('perfilNome').value;
+    const email = document.getElementById('perfilEmail').value;
+    const senha = document.getElementById('perfilSenha').value;
+    const body = { nome, email };
+    if (senha) body.senha = senha;
+    try {
+        const data = await api('/auth/perfil', { method: 'PUT', body: JSON.stringify(body) });
+        currentUser.nome = data.usuario.nome;
+        currentUser.email = data.usuario.email;
+        saveSession(); updateNavbar(); loadPerfil();
+        showAlert(data.message || 'Perfil atualizado!');
+    } catch (err) { showAlert(err.message, 'danger'); }
+});
+
+// ─── Badges ──────────────────────────────────────────
 function badgeStatus(status) {
     const map = {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
-        alugado:    `<span class="badge badge-danger"><span class="badge-dot"></span>Alugado</span>`,
-        ativo:      `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
-        devolvido:  `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
+        alugado: `<span class="badge badge-danger"><span class="badge-dot"></span>Alugado</span>`,
+        ativo: `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
+        devolvido: `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
+        '🟡 PENDENTE': `<span class="badge badge-warning"><span class="badge-dot"></span>Pendente</span>`,
+        '🟢 ENTREGUE': `<span class="badge badge-success"><span class="badge-dot"></span>Entregue</span>`,
     };
     return map[status] ?? `<span class="badge">${esc(status)}</span>`;
 }
@@ -461,7 +511,7 @@ function badgeStatus(status) {
 function badgeTipo(tipo) {
     const map = {
         bibliotecario: `<span class="badge badge-gold">Bibliotecário</span>`,
-        usuario: `<span class="badge" style="background:rgba(100,100,100,0.12);color:var(--parchment-dim);border-color:var(--border-s)">Usuário</span>`,
+        usuario: `<span class="badge" style="background:rgba(100,100,100,0.10);color:var(--text-dim);border-color:var(--border-s)">Usuário</span>`,
     };
     return map[tipo] ?? `<span class="badge">${esc(tipo)}</span>`;
 }
@@ -474,4 +524,5 @@ document.addEventListener('keydown', e => {
 });
 
 // ─── Init ─────────────────────────────────────────────
+restoreTheme();
 restoreSession();
