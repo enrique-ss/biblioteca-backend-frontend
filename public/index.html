@@ -103,7 +103,9 @@
                         <p>O que deseja fazer hoje?</p>
                     </div>
                     <div class="dashboard-stats" id="dashboardStats"></div>
-                    <div class="menu-grid" id="menuGrid"></div>
+                    <div class="menu-grid-wrap">
+                        <div class="menu-grid" id="menuGrid"></div>
+                    </div>
                     <div class="menu-logout">
                         <button class="btn btn-danger" onclick="logout()">Encerrar sessão</button>
                     </div>
@@ -122,7 +124,7 @@
                 </div>
                 <div class="search-bar">
                     <input type="text" id="buscaLivros" class="form-input"
-                        placeholder="Buscar por título, autor ou gênero…" oninput="loadLivros(this.value)">
+                        placeholder="Buscar por título, autor ou gênero…" oninput="loadLivrosDebounced(this.value)">
                 </div>
                 <div class="table-wrap">
                     <table class="data-table">
@@ -196,7 +198,7 @@
             <!-- ════ 5. MEU PERFIL ════ -->
             <section id="perfilScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title">🪪 <span>Meu</span> Perfil</h2>
+                    <h2 class="page-title">✏️ <span>Meu</span> Perfil</h2>
                     <div class="page-actions">
                         <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
                     </div>

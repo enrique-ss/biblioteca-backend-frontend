@@ -115,6 +115,16 @@ function setEmpty(tbodyId, cols, msg = 'Nenhum registro encontrado.') {
         `<tr><td colspan="${cols}" class="table-empty">${msg}</td></tr>`;
 }
 
+// Debounce: evita chamadas excessivas à API enquanto o usuário digita
+function debounce(fn, delay = 350) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
+const loadLivrosDebounced = debounce((busca) => loadLivros(busca));
+
 // ═══════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════
@@ -206,7 +216,7 @@ function loadMenu() {
 
     items.push(
         {
-            icon: '🪪', title: 'Meu Perfil',
+            icon: '✏️', title: 'Meu Perfil',
             action() { loadPerfil(); showScreen('perfilScreen'); }
         }
     );
@@ -256,11 +266,20 @@ async function loadDashboard() {
 //  2. LIVROS
 // ═══════════════════════════════════════════════════════
 
+let livrosAbortController = null;
+
 async function loadLivros(busca = '') {
+    // Cancela requisição anterior se ainda estiver pendente
+    if (livrosAbortController) livrosAbortController.abort();
+    livrosAbortController = new AbortController();
     setLoading('livrosTbody', 7);
     try {
         const endpoint = busca.trim() ? `/livros?busca=${encodeURIComponent(busca.trim())}` : '/livros';
-        const data = await api(endpoint);
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`${API_URL}${endpoint}`, { headers, signal: livrosAbortController.signal });
+        if (!res.ok) throw new Error((await res.json()).error);
+        const data = await res.json();
         const tbody = document.getElementById('livrosTbody');
         tbody.innerHTML = '';
         if (!data.length) { setEmpty('livrosTbody', 7, 'Nenhum livro encontrado.'); return; }
@@ -277,6 +296,7 @@ async function loadLivros(busca = '') {
             tbody.appendChild(tr);
         });
     } catch (err) {
+        if (err.name === 'AbortError') return; // requisição cancelada, ignora
         setEmpty('livrosTbody', 7, err.message);
         showAlert(err.message, 'danger');
     }
@@ -357,7 +377,7 @@ function renderAlugueisCompleto(data) {
             <td>${badgeStatus(a.status)}</td>
             <td>${a.pode_devolver
                 ? `<button class="btn btn-success btn-sm" onclick="devolverLivro(${a.id})">Devolver</button>`
-                : `<span style="color:var(--text-faint);font-size:.8rem">—</span>`
+                : `<span style="color:var(--text-faint)">—</span>`
             }</td>`;
         tbody.appendChild(tr);
     });

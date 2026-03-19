@@ -40,10 +40,12 @@ async function setup() {
       await db.schema.createTable('usuarios', (table) => {
         table.increments('id').primary();
         table.string('nome', 100).notNullable();
-        table.string('email', 100).notNullable().unique();
+        table.string('email', 100).notNullable().unique(); // unique já cria índice
         table.string('senha', 255).notNullable();
         table.enum('tipo', ['usuario', 'bibliotecario']).notNullable();
         table.timestamp('created_at').defaultTo(db.fn.now());
+        // Índice em tipo: filtro frequente (listar só usuários, só bibliotecários)
+        table.index(['tipo'], 'idx_usuarios_tipo');
       });
       console.log('✅ Tabela "usuarios" criada');
     }
@@ -77,10 +79,14 @@ async function setup() {
         table.integer('exemplares_disponiveis').unsigned().notNullable().defaultTo(1);
         table.enum('status', ['disponivel', 'alugado']).defaultTo('disponivel');
         table.timestamp('created_at').defaultTo(db.fn.now());
+        // Índices: status é filtrado em todo acervo; busca textual em título/autor
+        table.index(['status'], 'idx_livros_status');
+        table.index(['titulo'], 'idx_livros_titulo');
+        table.index(['autor'], 'idx_livros_autor');
       });
       console.log('✅ Tabela "livros" criada');
     } else {
-      // Migração segura para bancos existentes
+      // Migração segura: exemplares
       const temExemplares = await db.schema.hasColumn('livros', 'exemplares');
       if (!temExemplares) {
         await db.schema.table('livros', (table) => {
@@ -89,6 +95,15 @@ async function setup() {
         });
         console.log('✅ Colunas "exemplares" adicionadas à tabela "livros"');
       }
+      // Migração segura: índices (ignora se já existir)
+      try {
+        await db.schema.table('livros', (table) => {
+          table.index(['status'], 'idx_livros_status');
+          table.index(['titulo'], 'idx_livros_titulo');
+          table.index(['autor'], 'idx_livros_autor');
+        });
+        console.log('✅ Índices adicionados à tabela "livros"');
+      } catch { /* índices já existem */ }
     }
 
     // ── ALUGUÉIS ─────────────────────────────────────────
@@ -105,8 +120,22 @@ async function setup() {
         table.timestamp('created_at').defaultTo(db.fn.now());
         table.foreign('livro_id').references('id').inTable('livros').onDelete('CASCADE');
         table.foreign('usuario_id').references('id').inTable('usuarios').onDelete('CASCADE');
+        // Índices: as 3 colunas mais consultadas em conjunto
+        table.index(['status'], 'idx_alugueis_status');
+        table.index(['usuario_id', 'status'], 'idx_alugueis_usuario_status');
+        table.index(['data_prevista_devolucao'], 'idx_alugueis_prazo');
       });
       console.log('✅ Tabela "alugueis" criada');
+    } else {
+      // Migração segura: índices
+      try {
+        await db.schema.table('alugueis', (table) => {
+          table.index(['status'], 'idx_alugueis_status');
+          table.index(['usuario_id', 'status'], 'idx_alugueis_usuario_status');
+          table.index(['data_prevista_devolucao'], 'idx_alugueis_prazo');
+        });
+        console.log('✅ Índices adicionados à tabela "alugueis"');
+      } catch { /* índices já existem */ }
     }
 
     console.log('\n🎉 Configuração concluída com sucesso!');

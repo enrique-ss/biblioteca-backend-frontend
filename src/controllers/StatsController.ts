@@ -4,52 +4,57 @@ import db from '../database';
 
 export class StatsController {
 
-    // Estatísticas adaptadas ao perfil do usuário logado
     resumo = async (req: AuthRequest, res: Response) => {
         try {
             const isBib = req.usuario!.tipo === 'bibliotecario';
+            const usuario_id = req.usuario!.id;
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
             if (isBib) {
-                // ── Bibliotecário: visão geral da biblioteca ─────────
-                const [totalLivros] = await db('livros').count('id as total');
-                const [disponiveis] = await db('livros').where('exemplares_disponiveis', '>', 0).count('id as total');
-                const [ativos] = await db('alugueis').where({ status: 'ativo' }).count('id as total');
-                const [atrasados] = await db('alugueis')
-                    .where({ status: 'ativo' })
-                    .where('data_prevista_devolucao', '<', hoje)
-                    .count('id as total');
-                const [totalUsuarios] = await db('usuarios').where({ tipo: 'usuario' }).count('id as total');
+                // Uma única query com COUNT condicional — 1 roundtrip ao banco
+                const [livros, emprestimos, totalUsuarios] = await Promise.all([
+                    db('livros').select(
+                        db.raw('COUNT(*) as total'),
+                        db.raw('SUM(exemplares_disponiveis) as disponiveis')
+                    ).first(),
+
+                    db('alugueis').where({ status: 'ativo' }).select(
+                        db.raw('COUNT(*) as ativos'),
+                        db.raw(`SUM(CASE WHEN data_prevista_devolucao < ? THEN 1 ELSE 0 END) as atrasados`, [hoje])
+                    ).first(),
+
+                    db('usuarios').where({ tipo: 'usuario' }).count('id as total').first(),
+                ]);
 
                 res.json({
                     perfil: 'bibliotecario',
                     stats: [
-                        { label: 'Total de Livros', valor: totalLivros.total, cor: 'gold' },
-                        { label: 'Disponíveis', valor: disponiveis.total, cor: 'green' },
-                        { label: 'Empréstimos Ativos', valor: ativos.total, cor: 'gold' },
-                        { label: 'Em Atraso', valor: atrasados.total, cor: 'red' },
-                        { label: 'Usuários Cadastrados', valor: totalUsuarios.total, cor: '' },
+                        { label: 'Total de Livros', valor: livros?.total ?? 0, cor: 'gold' },
+                        { label: 'Disponíveis', valor: livros?.disponiveis ?? 0, cor: 'green' },
+                        { label: 'Empréstimos Ativos', valor: emprestimos?.ativos ?? 0, cor: 'gold' },
+                        { label: 'Em Atraso', valor: emprestimos?.atrasados ?? 0, cor: 'red' },
+                        { label: 'Usuários Cadastrados', valor: totalUsuarios?.total ?? 0, cor: '' },
                     ]
                 });
 
             } else {
-                // ── Usuário: visão dos próprios empréstimos ──────────
-                const usuario_id = req.usuario!.id;
+                // Uma query para o usuário — agrupa ativos e histórico juntos
+                const [resultado, historico] = await Promise.all([
+                    db('alugueis').where({ usuario_id, status: 'ativo' }).select(
+                        db.raw('COUNT(*) as ativos'),
+                        db.raw(`SUM(CASE WHEN data_prevista_devolucao < ? THEN 1 ELSE 0 END) as atrasados`, [hoje])
+                    ).first(),
 
-                const [ativos] = await db('alugueis').where({ usuario_id, status: 'ativo' }).count('id as total');
-                const [atrasados] = await db('alugueis')
-                    .where({ usuario_id, status: 'ativo' })
-                    .where('data_prevista_devolucao', '<', hoje)
-                    .count('id as total');
-                const [historico] = await db('alugueis').where({ usuario_id }).count('id as total');
+                    db('alugueis').where({ usuario_id }).count('id as total').first(),
+                ]);
 
                 res.json({
                     perfil: 'usuario',
                     stats: [
-                        { label: 'Livros com Você', valor: ativos.total, cor: 'gold' },
-                        { label: 'Em Atraso', valor: atrasados.total, cor: 'red' },
-                        { label: 'Total Emprestado', valor: historico.total, cor: '' },
+                        { label: 'Livros com Você', valor: resultado?.ativos ?? 0, cor: 'gold' },
+                        { label: 'Em Atraso', valor: resultado?.atrasados ?? 0, cor: 'red' },
+                        { label: 'Total Emprestado', valor: historico?.total ?? 0, cor: '' },
                     ]
                 });
             }
