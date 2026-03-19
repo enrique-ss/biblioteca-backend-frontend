@@ -1,5 +1,3 @@
-// ═══════════════════════════════════════════════════════
-
 const API_URL = 'http://127.0.0.1:3000/api';
 let token = null;
 let currentUser = null;
@@ -259,6 +257,7 @@ async function loadLivros(busca = '', page = 1) {
         if (!data.length) { setEmpty('livrosTbody', 7, 'Nenhum livro encontrado.'); }
         else data.forEach(livro => {
             const tr = document.createElement('tr');
+            const isBib = currentUser?.tipo === 'bibliotecario';
             tr.innerHTML = `
                 <td style="color:var(--text-faint)">${esc(livro.id)}</td>
                 <td><strong>${esc(livro.titulo)}</strong></td>
@@ -266,7 +265,11 @@ async function loadLivros(busca = '', page = 1) {
                 <td>${esc(livro.genero)}</td>
                 <td style="color:var(--text-dim)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
                 <td style="text-align:center">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)}</td>
-                <td>${badgeStatus(livro.status)}</td>`;
+                <td>${badgeStatus(livro.status)}</td>
+                <td>${isBib ? `<div class="td-actions">
+                    <button class="btn btn-ghost btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="removerLivro(${livro.id},'${esc(livro.titulo)}')">Remover</button>
+                </div>` : ''}</td>`;
             tbody.appendChild(tr);
         });
         renderPagination('livrosPagination', page, pages, (p) => loadLivros(busca, p));

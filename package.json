@@ -5,7 +5,8 @@
     "setup": "ts-node src/setup.ts",
     "dev": "npx kill-port 3000 && nodemon src/index.ts",
     "cli": "ts-node src/cli.ts",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "web": "ts-node public/index.html"
   },
   "dependencies": {
     "axios": "^1.6.2",

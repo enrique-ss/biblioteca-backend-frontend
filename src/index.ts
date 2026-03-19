@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-import authRoutes from './routes/AuthRoutes';
+import authRoutes from './routes/authRoutes';
 import livroRoutes from './routes/LivroRoutes';
-import aluguelRoutes from './routes/AluguelRoutes';
+import aluguelRoutes from './routes/aluguelRoutes';
 import usuarioRoutes from './routes/UsuarioRoutes';
 import statsRoutes from './routes/StatsRoutes';
 import quizRoutes from './routes/QuizRoutes';
@@ -51,13 +51,13 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`\n🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📍 http://localhost:${PORT}`);
-  console.log(`🌍 Ambiente: ${process.env.NODE_ENV || 'development'}\n`);
-  console.log('📚 Em outro terminal digite: npm run cli');
+  console.log(`\n🚀 Servidor iniciado na porta ${PORT}`);
+  console.log(`📍 Acesse: http://localhost:${PORT}`);
+  console.log(`🌍 Ambiente: ${process.env.NODE_ENV || 'desenvolvimento'}\n`);
+  console.log('📚 Em outro terminal execute: npm run cli');
 });
 
-process.on('SIGTERM', () => server.close(() => process.exit(0)));
-process.on('SIGINT', () => server.close(() => process.exit(0)));
+process.on('SIGTERM', () => { console.log('\n🔴 Encerrando servidor...'); server.close(() => process.exit(0)); });
+process.on('SIGINT', () => { console.log('\n🔴 Encerrando servidor...'); server.close(() => process.exit(0)); });
 
 export default app;

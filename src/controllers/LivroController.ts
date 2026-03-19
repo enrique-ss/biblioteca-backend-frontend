@@ -76,4 +76,61 @@ export class LivroController {
       res.status(500).json({ error: 'Erro ao cadastrar livro' });
     }
   };
+  // Editar livro
+  editar = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { titulo, autor, ano_lancamento, genero, isbn, exemplares } = req.body;
+
+      const livro = await db('livros').where({ id }).first();
+      if (!livro) return res.status(404).json({ error: 'Livro não encontrado' });
+
+      const dados: any = {};
+      if (titulo !== undefined) dados.titulo = titulo.trim();
+      if (autor !== undefined) dados.autor = autor.trim();
+      if (genero !== undefined) dados.genero = genero.trim() || 'Não Informado';
+      if (isbn !== undefined) dados.isbn = isbn.trim() || null;
+      if (ano_lancamento !== undefined) {
+        const ano = parseInt(ano_lancamento);
+        const anoAtual = new Date().getFullYear();
+        if (isNaN(ano) || ano < 500 || ano > anoAtual + 1)
+          return res.status(400).json({ error: `Ano inválido. Deve ser entre 500 e ${anoAtual + 1}` });
+        dados.ano_lancamento = ano;
+      }
+      if (exemplares !== undefined) {
+        const qtd = Math.min(999, Math.max(1, parseInt(exemplares) || 1));
+        // Ajusta exemplares_disponiveis proporcionalmente
+        const diff = qtd - livro.exemplares;
+        dados.exemplares = qtd;
+        dados.exemplares_disponiveis = Math.max(0, livro.exemplares_disponiveis + diff);
+        dados.status = dados.exemplares_disponiveis > 0 ? 'disponivel' : 'alugado';
+      }
+
+      if (Object.keys(dados).length > 0) await db('livros').where({ id }).update(dados);
+      const atualizado = await db('livros').where({ id }).first();
+      res.json({ message: '✅ Livro atualizado com sucesso!', livro: atualizado });
+    } catch (error) {
+      console.error('Erro ao editar livro:', error);
+      res.status(500).json({ error: 'Erro ao editar livro' });
+    }
+  };
+
+  // Remover livro
+  remover = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const livro = await db('livros').where({ id }).first();
+      if (!livro) return res.status(404).json({ error: 'Livro não encontrado' });
+
+      const [{ total }] = await db('alugueis').where({ livro_id: id, status: 'ativo' }).count('id as total');
+      if (Number(total) > 0)
+        return res.status(400).json({ error: `❌ Não é possível remover: ${total} exemplar(es) em empréstimo ativo.` });
+
+      await db('livros').where({ id }).del();
+      res.json({ message: '✅ Livro removido do acervo.' });
+    } catch (error) {
+      console.error('Erro ao remover livro:', error);
+      res.status(500).json({ error: 'Erro ao remover livro' });
+    }
+  };
 }

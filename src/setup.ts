@@ -20,7 +20,7 @@ async function setup() {
   try {
     const dbName = process.env.DB_NAME || 'biblioteca';
     await connection.raw(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
-    console.log(`✅ Banco de dados '${dbName}' criado/verificado`);
+    console.log(`✅ Banco '${dbName}' criado/verificado`);
     await connection.destroy();
 
     const db = knex({
@@ -47,7 +47,7 @@ async function setup() {
         // Índice em tipo: filtro frequente (listar só usuários, só bibliotecários)
         table.index(['tipo'], 'idx_usuarios_tipo');
       });
-      console.log('✅ Tabela "usuarios" criada');
+      console.log('✅ Tabela usuarios criada');
     }
 
     const adminEmail = 'admin@admin';
@@ -60,7 +60,7 @@ async function setup() {
         senha: senhaHash,
         tipo: 'bibliotecario'
       });
-      console.log(`⭐ Usuário ADMIN criado: ${adminEmail} | senha: admin123`);
+      console.log(`⭐ Admin criado: ${adminEmail} | senha: admin123`);
     }
 
     // ── LIVROS ───────────────────────────────────────────
@@ -84,7 +84,7 @@ async function setup() {
         table.index(['titulo'], 'idx_livros_titulo');
         table.index(['autor'], 'idx_livros_autor');
       });
-      console.log('✅ Tabela "livros" criada');
+      console.log('✅ Tabela livros criada');
     } else {
       // Migração segura: exemplares
       const temExemplares = await db.schema.hasColumn('livros', 'exemplares');
@@ -93,7 +93,7 @@ async function setup() {
           table.integer('exemplares').unsigned().notNullable().defaultTo(1).after('prateleira');
           table.integer('exemplares_disponiveis').unsigned().notNullable().defaultTo(1).after('exemplares');
         });
-        console.log('✅ Colunas "exemplares" adicionadas à tabela "livros"');
+        console.log('✅ Colunas exemplares adicionadas à tabela livros');
       }
       // Migração segura: índices (ignora se já existir)
       try {
@@ -102,7 +102,7 @@ async function setup() {
           table.index(['titulo'], 'idx_livros_titulo');
           table.index(['autor'], 'idx_livros_autor');
         });
-        console.log('✅ Índices adicionados à tabela "livros"');
+        console.log('✅ Índices adicionados à tabela livros');
       } catch { /* índices já existem */ }
     }
 
@@ -126,7 +126,7 @@ async function setup() {
         table.index(['usuario_id', 'status'], 'idx_alugueis_usuario_status');
         table.index(['data_prevista_devolucao'], 'idx_alugueis_prazo');
       });
-      console.log('✅ Tabela "alugueis" criada');
+      console.log('✅ Tabela alugueis criada');
     } else {
       // Migração segura: índices
       try {
@@ -135,15 +135,15 @@ async function setup() {
           table.index(['usuario_id', 'status'], 'idx_alugueis_usuario_status');
           table.index(['data_prevista_devolucao'], 'idx_alugueis_prazo');
         });
-        console.log('✅ Índices adicionados à tabela "alugueis"');
+        console.log('✅ Índices adicionados à tabela alugueis');
       } catch { /* índices já existem */ }
     }
 
-    console.log('\n🎉 Configuração concluída com sucesso!');
+    console.log('\n🎉 Banco de dados configurado com sucesso!');
     await db.destroy();
     process.exit(0);
   } catch (error) {
-    console.error('❌ Erro durante setup:', error);
+    console.error('❌ Erro ao configurar banco de dados:', error);
     process.exit(1);
   }
 }
