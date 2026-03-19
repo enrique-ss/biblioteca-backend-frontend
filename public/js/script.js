@@ -185,6 +185,10 @@ function loadMenu() {
             {
                 icon: '👥', title: 'Usuários',
                 action() { loadUsuarios(); showScreen('usuariosScreen'); }
+            },
+            {
+                icon: '📊', title: 'Estatísticas',
+                action() { showScreen('statsScreen'); loadStatsDetalhado(); }
             }
         );
     } else {
@@ -220,28 +224,8 @@ function loadMenu() {
     document.getElementById('btnAddLivro').style.display = isBib ? 'inline-flex' : 'none';
     document.getElementById('btnNovoAluguel').style.display = isBib ? 'inline-flex' : 'none';
 
-    loadDashboard();
 }
 
-async function loadDashboard() {
-    const container = document.getElementById('dashboardStats');
-    if (!container) return;
-    container.innerHTML = '<div class="dashboard-loading"><span class="spinner"></span></div>';
-    try {
-        const data = await api('/stats');
-        container.innerHTML = '';
-        data.stats.forEach(s => {
-            const card = document.createElement('div');
-            card.className = 'dash-card';
-            card.innerHTML = `
-                <div class="dash-label">${esc(s.label)}</div>
-                <div class="dash-valor ${esc(s.cor)}">${esc(String(s.valor))}</div>`;
-            container.appendChild(card);
-        });
-    } catch (err) {
-        container.innerHTML = '';
-    }
-}
 
 let livrosAbortController = null;
 
@@ -994,4 +978,160 @@ async function quizFinish() {
 
     quizUpdateStatus();
     quizShowPanel('quizResult');
+}
+
+
+
+// ═══════════════════════════════════════════════════════
+//  ESTATÍSTICAS DETALHADAS
+// ═══════════════════════════════════════════════════════
+
+let chartInstances = {};
+let statsRawData = null;
+
+const CHART_COLORS = [
+    'rgba(122,162,247,.80)', 'rgba(63,185,80,.80)', 'rgba(210,153,34,.80)',
+    'rgba(248,81,73,.80)', 'rgba(158,112,247,.80)', 'rgba(87,199,199,.80)',
+    'rgba(247,162,122,.80)', 'rgba(122,247,162,.80)',
+];
+const CHART_BORDERS = CHART_COLORS.map(c => c.replace('.80', '1'));
+
+function statsTextColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#e6edf3';
+}
+function statsDimColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim() || '#adbac7';
+}
+function statsSurface3() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--surface-3').trim() || '#243044';
+}
+
+function chartDefaults() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { labels: { color: statsTextColor(), font: { family: 'Crimson Pro', size: 13 }, boxWidth: 14, padding: 12 } },
+            tooltip: { backgroundColor: '#1c2333', titleColor: '#7aa2f7', bodyColor: '#e6edf3', borderColor: '#243044', borderWidth: 1 }
+        },
+        scales: {
+            x: { ticks: { color: statsDimColor(), font: { size: 11 } }, grid: { color: 'rgba(122,162,247,.06)' } },
+            y: { ticks: { color: statsDimColor(), font: { size: 11 } }, grid: { color: 'rgba(122,162,247,.06)' }, beginAtZero: true }
+        }
+    };
+}
+
+function buildChart(id, type, labels, values, label = '') {
+    const ctx = document.getElementById('chart-' + id);
+    if (!ctx) return;
+    if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+
+    const isPie = type === 'doughnut' || type === 'pie';
+    const cfg = chartDefaults();
+    if (isPie) { delete cfg.scales; }
+
+    chartInstances[id] = new Chart(ctx, {
+        type,
+        data: {
+            labels,
+            datasets: [{
+                label: label || '',
+                data: values,
+                backgroundColor: isPie ? CHART_COLORS.slice(0, labels.length) : CHART_COLORS[0],
+                borderColor: isPie ? CHART_BORDERS.slice(0, labels.length) : CHART_BORDERS[0],
+                borderWidth: 1.5,
+                tension: .4,
+                fill: type === 'line' ? 'origin' : false,
+                borderRadius: type === 'bar' ? 4 : 0,
+            }]
+        },
+        options: cfg
+    });
+}
+
+function switchChart(id, type) {
+    if (!statsRawData) return;
+    document.querySelectorAll(`[data-chart="${id}"] .stv`).forEach(b => {
+        b.classList.toggle('active', b.dataset.type === type);
+    });
+    renderChart(id, type);
+}
+
+function renderChart(id, type) {
+    const d = statsRawData;
+    const fmt = (arr) => ({ labels: arr.map(r => r.label), values: arr.map(r => Number(r.valor)) });
+
+    const map = {
+        generos: () => { const f = fmt(d.generosMaisEmprestados); buildChart('generos', type, f.labels, f.values, 'Empréstimos'); },
+        autores: () => { const f = fmt(d.autoresMaisEmprestados); buildChart('autores', type, f.labels, f.values, 'Empréstimos'); },
+        livros: () => { const f = fmt(d.livrosMaisEmprestados); buildChart('livros', type, f.labels, f.values, 'Empréstimos'); },
+        usuarios: () => { const f = fmt(d.usuariosMaisAtivos); buildChart('usuarios', type, f.labels, f.values, 'Empréstimos'); },
+        meses: () => { const f = fmt(d.emprestimosPorMes); buildChart('meses', type, f.labels, f.values, 'Empréstimos'); },
+        cadastros: () => { const f = fmt(d.cadastrosPorMes); buildChart('cadastros', type, f.labels, f.values, 'Usuários'); },
+        acervo: () => {
+            const labels = d.distribuicaoStatus.map(r => r.label === 'disponivel' ? 'Disponível' : 'Alugado');
+            const values = d.distribuicaoStatus.map(r => Number(r.valor));
+            buildChart('acervo', type, labels, values, 'Exemplares');
+        },
+        decadas: () => { const f = fmt(d.livrosPorAno); buildChart('decadas', type, f.labels, f.values, 'Livros'); },
+    };
+    if (map[id]) map[id]();
+}
+
+function renderKpis(d) {
+    const t = d.taxaAtraso || {};
+    const dev = d.tempoMedioDevolucao || {};
+    const total = Number(t.total) || 1;
+    const taxaPct = total > 0 ? Math.round(((Number(t.atrasados) + Number(t.devolvidos_atrasados)) / total) * 100) : 0;
+
+    const kpis = [
+        { label: 'Total de Empréstimos', val: t.total ?? 0, cls: 'blue' },
+        { label: 'Devolvidos no Prazo', val: t.devolvidos_prazo ?? 0, cls: 'green' },
+        { label: 'Devolvidos com Atraso', val: t.devolvidos_atrasados ?? 0, cls: 'amber' },
+        { label: 'Ativos em Atraso', val: t.atrasados ?? 0, cls: 'red' },
+        { label: 'Taxa de Atraso Geral', val: taxaPct + '%', cls: taxaPct > 20 ? 'red' : 'green' },
+        { label: 'Tempo Médio de Devolução', val: (dev.media_dias ?? '—') + (dev.media_dias ? ' dias' : ''), cls: 'blue' },
+        { label: 'Devolução Mais Rápida', val: (dev.min_dias ?? '—') + (dev.min_dias ? ' dias' : ''), cls: 'green' },
+        { label: 'Devolução Mais Lenta', val: (dev.max_dias ?? '—') + (dev.max_dias ? ' dias' : ''), cls: 'amber' },
+    ];
+
+    document.getElementById('statsKpiGrid').innerHTML = kpis.map(k => `
+        <div class="stats-kpi-card">
+            <div class="stats-kpi-label">${esc(k.label)}</div>
+            <div class="stats-kpi-val ${k.cls}">${esc(String(k.val))}</div>
+        </div>
+    `).join('');
+}
+
+async function loadStatsDetalhado() {
+    document.getElementById('statsLoading').style.display = 'block';
+    document.getElementById('statsContent').style.display = 'none';
+
+    // Load Chart.js lazily if not loaded
+    if (!window.Chart) {
+        await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+        });
+    }
+
+    try {
+        const data = await api('/stats/detalhado');
+        statsRawData = data;
+
+        renderKpis(data);
+
+        document.getElementById('statsLoading').style.display = 'none';
+        document.getElementById('statsContent').style.display = 'block';
+
+        // Render all charts with default types
+        const defaults = { generos: 'bar', autores: 'bar', livros: 'bar', usuarios: 'bar', meses: 'line', cadastros: 'line', acervo: 'doughnut', decadas: 'bar' };
+        Object.entries(defaults).forEach(([id, type]) => renderChart(id, type));
+
+    } catch (err) {
+        document.getElementById('statsLoading').textContent = 'Erro ao carregar estatísticas.';
+        showAlert(err.message, 'danger');
+    }
 }
