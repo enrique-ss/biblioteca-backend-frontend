@@ -116,12 +116,12 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Título</th>
-                                <th>Autor</th>
-                                <th>Gênero</th>
+                                <th class="sortable sort-asc" onclick="sortTable('livros','titulo')">Título</th>
+                                <th class="sortable" onclick="sortTable('livros','autor')">Autor</th>
+                                <th class="sortable" onclick="sortTable('livros','genero')">Gênero</th>
                                 <th>Localização</th>
                                 <th>Exemplares</th>
-                                <th>Status</th>
+                                <th class="sortable" onclick="sortTable('livros','status')">Status</th>
                             </tr>
                         </thead>
                         <tbody id="livrosTbody">
@@ -131,15 +131,52 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination" id="livrosPagination"></div>
             </section>
+
+            <section id="historicoScreen" class="screen">
+                <div class="page-header">
+                    <h2 class="page-title">📋 <span>Histórico</span> de Empréstimos</h2>
+                    <div class="page-actions">
+                        <button class="btn btn-success btn-sm" onclick="exportCSV()">⬇ CSV</button>
+                        <button class="btn btn-ghost" onclick="showScreen('alugueisScreen')">← Voltar</button>
+                    </div>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="buscaHistorico" class="form-input" placeholder="Filtrar por usuário (ID)..."
+                        oninput="loadHistorico(1, this.value)">
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th class="sortable" onclick="sortTable('historico','usuario')">Usuário ⇅</th>
+                                <th class="sortable" onclick="sortTable('historico','titulo')">Livro ⇅</th>
+                                <th>Empréstimo</th>
+                                <th>Prazo</th>
+                                <th>Devolução</th>
+                                <th>Renovações</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historicoTbody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="historicoPagination"></div>
+            </section>
+
             <section id="alugueisScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title" id="alugueisTitle">📋 <span>Empréstimos</span></h2>
                     <div class="page-actions">
+                        <button class="btn btn-ghost btn-sm" id="btnHistorico" style="display:none;"
+                            onclick="showScreen('historicoScreen'); loadHistorico();">📋 Histórico</button>
                         <button class="btn btn-success" id="btnNovoAluguel" style="display:none;"
                             onclick="prepareAluguelModal()">+ Novo Aluguel</button>
                         <button class="btn btn-ghost" onclick="voltarAlugueis()">← Voltar</button>
                     </div>
+                    <div id="atrasadosBanner" style="display:none;" class="atrasados-banner"></div>
                 </div>
                 <div class="stats-row" id="alugueisStats"></div>
                 <div class="table-wrap">
@@ -155,6 +192,10 @@
                     <div class="page-actions">
                         <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
                     </div>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="buscaUsuarios" class="form-input" placeholder="Buscar por nome ou email…"
+                        oninput="loadUsuariosDebounced(this.value)">
                 </div>
                 <div class="table-wrap">
                     <table class="data-table">
@@ -174,6 +215,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination" id="usuariosPagination"></div>
             </section>
             <section id="perfilScreen" class="screen">
                 <div class="page-header">

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/AuthRoutes';
 import livroRoutes from './routes/LivroRoutes';
 import aluguelRoutes from './routes/AluguelRoutes';
@@ -17,7 +18,16 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/auth', authRoutes);
+// Rate limiting: máx 20 tentativas de auth por IP em 15 minutos
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Muitas tentativas. Aguarde 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/livros', livroRoutes);
 app.use('/api/alugueis', aluguelRoutes);
 app.use('/api/usuarios', usuarioRoutes);

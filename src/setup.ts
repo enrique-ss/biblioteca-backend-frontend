@@ -117,6 +117,7 @@ async function setup() {
         table.date('data_prevista_devolucao').notNullable();
         table.timestamp('data_devolucao').nullable();
         table.enum('status', ['ativo', 'devolvido']).defaultTo('ativo');
+        table.integer('renovacoes').unsigned().notNullable().defaultTo(0);
         table.timestamp('created_at').defaultTo(db.fn.now());
         table.foreign('livro_id').references('id').inTable('livros').onDelete('CASCADE');
         table.foreign('usuario_id').references('id').inTable('usuarios').onDelete('CASCADE');

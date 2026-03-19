@@ -223,27 +223,41 @@ function loadMenu() {
 
     document.getElementById('btnAddLivro').style.display = isBib ? 'inline-flex' : 'none';
     document.getElementById('btnNovoAluguel').style.display = isBib ? 'inline-flex' : 'none';
+    const btnH = document.getElementById('btnHistorico'); if (btnH) btnH.style.display = isBib ? 'inline-flex' : 'none';
 
 }
 
 
 let livrosAbortController = null;
+let livrosSort = { col: 'titulo', dir: 'asc' };
 
-async function loadLivros(busca = '') {
+function sortTable(table, col) {
+    if (table === 'livros') {
+        livrosSort.dir = livrosSort.col === col && livrosSort.dir === 'asc' ? 'desc' : 'asc';
+        livrosSort.col = col;
+        document.querySelectorAll('#livrosScreen .sortable').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+        const th = document.querySelector(`[onclick="sortTable('livros','${col}')"]`);
+        if (th) th.classList.add(livrosSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        loadLivros(document.getElementById('buscaLivros')?.value || '', 1);
+    }
+}
+
+async function loadLivros(busca = '', page = 1) {
     if (livrosAbortController) livrosAbortController.abort();
     livrosAbortController = new AbortController();
     setLoading('livrosTbody', 7);
     try {
-        const endpoint = busca.trim() ? `/livros?busca=${encodeURIComponent(busca.trim())}` : '/livros';
+        const params = new URLSearchParams({ page, limit: 20, sort: livrosSort.col, order: livrosSort.dir });
+        if (busca.trim()) params.set('busca', busca.trim());
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(`${API_URL}${endpoint}`, { headers, signal: livrosAbortController.signal });
+        const res = await fetch(`${API_URL}/livros?${params}`, { headers, signal: livrosAbortController.signal });
         if (!res.ok) throw new Error((await res.json()).error);
-        const data = await res.json();
+        const { data, total, pages } = await res.json();
         const tbody = document.getElementById('livrosTbody');
         tbody.innerHTML = '';
-        if (!data.length) { setEmpty('livrosTbody', 7, 'Nenhum livro encontrado.'); return; }
-        data.forEach(livro => {
+        if (!data.length) { setEmpty('livrosTbody', 7, 'Nenhum livro encontrado.'); }
+        else data.forEach(livro => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="color:var(--text-faint)">${esc(livro.id)}</td>
@@ -255,12 +269,14 @@ async function loadLivros(busca = '') {
                 <td>${badgeStatus(livro.status)}</td>`;
             tbody.appendChild(tr);
         });
+        renderPagination('livrosPagination', page, pages, (p) => loadLivros(busca, p));
     } catch (err) {
-        if (err.name === 'AbortError') return; // requisição cancelada, ignora
+        if (err.name === 'AbortError') return;
         setEmpty('livrosTbody', 7, err.message);
         showAlert(err.message, 'danger');
     }
 }
+
 
 document.getElementById('addLivroForm').addEventListener('submit', async e => {
     e.preventDefault();
@@ -281,40 +297,44 @@ document.getElementById('addLivroForm').addEventListener('submit', async e => {
     } catch (err) { showAlert(err.message, 'danger'); }
 });
 
-function voltarAlugueis() {
-    showScreen('menuScreen');
-}
+function voltarAlugueis() { showScreen('menuScreen'); }
 
-function setHead(html) {
-    const el = document.getElementById('alugueisHead');
-    if (el) el.innerHTML = html;
-}
-
-async function loadAlugueis() {
+async function loadAlugueis(page = 1) {
     document.getElementById('alugueisTitle').innerHTML = `📋 <span>Empréstimos</span>`;
-    setHead(`<tr><th>#</th><th>Usuário</th><th>Livro</th><th>Empréstimo</th><th>Prazo</th><th>Status</th><th>Ações</th></tr>`);
+    document.getElementById('alugueisHead').innerHTML =
+        `<tr><th>#</th><th>Usuário</th><th>Livro</th><th>Empréstimo</th><th>Prazo</th><th>Status</th><th>Ações</th></tr>`;
     setLoading('alugueisTbody', 7);
     try {
-        const data = await api('/alugueis/todos');
-        renderAlugueisCompleto(data);
-    } catch (err) {
-        setEmpty('alugueisTbody', 7, err.message);
-        showAlert(err.message, 'danger');
-    }
+        const [res, atrasados] = await Promise.all([
+            api(`/alugueis/todos?page=${page}&limit=20`),
+            api('/alugueis/atrasados')
+        ]);
+        // Suporta resposta paginada { data, pages } e array direto (compatibilidade)
+        const rows = Array.isArray(res) ? res : (res.data ?? []);
+        const pages = Array.isArray(res) ? 1 : (res.pages ?? 1);
+        renderAlugueisCompleto(rows);
+        renderPagination('alugueisPagination', page, pages, loadAlugueis);
+        const banner = document.getElementById('atrasadosBanner');
+        if (atrasados.total > 0) {
+            banner.style.display = 'flex';
+            banner.innerHTML = `⚠️ ${atrasados.total} empréstimo(s) em atraso — <a href="#" style="color:inherit;margin-left:4px;" onclick="showScreen('historicoScreen');loadHistorico();">ver todos</a>`;
+        } else {
+            banner.style.display = 'none';
+        }
+    } catch (err) { setEmpty('alugueisTbody', 7, err.message); showAlert(err.message, 'danger'); }
 }
 
 async function loadMeusAlugueis() {
     document.getElementById('alugueisTitle').innerHTML = `📖 <span>Meus Empréstimos</span>`;
-    setHead(`<tr><th>#</th><th>Livro</th><th>Empréstimo</th><th>Prazo</th><th>Status</th></tr>`);
-    setLoading('alugueisTbody', 5);
+    document.getElementById('alugueisHead').innerHTML =
+        `<tr><th>#</th><th>Livro</th><th>Empréstimo</th><th>Prazo</th><th>Status</th><th>Ações</th></tr>`;
+    setLoading('alugueisTbody', 6);
     try {
         const data = await api('/alugueis/meus');
         renderAlugueisMeus(data);
-    } catch (err) {
-        setEmpty('alugueisTbody', 5, err.message);
-        showAlert(err.message, 'danger');
-    }
+    } catch (err) { setEmpty('alugueisTbody', 6, err.message); showAlert(err.message, 'danger'); }
 }
+
 
 function renderAlugueisCompleto(data) {
     const tbody = document.getElementById('alugueisTbody');
@@ -340,7 +360,7 @@ function renderAlugueisCompleto(data) {
 function renderAlugueisMeus(data) {
     const tbody = document.getElementById('alugueisTbody');
     tbody.innerHTML = '';
-    if (!data.length) { setEmpty('alugueisTbody', 5, 'Nenhum empréstimo encontrado.'); return; }
+    if (!data.length) { setEmpty('alugueisTbody', 6, 'Nenhum empréstimo encontrado.'); return; }
     data.forEach(a => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -348,7 +368,11 @@ function renderAlugueisMeus(data) {
             <td><strong>${esc(a.titulo ?? '—')}</strong></td>
             <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
             <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
-            <td>${badgeStatus(a.status)}</td>`;
+            <td>${badgeStatus(a.status)}</td>
+            <td>${a.pode_renovar
+                ? `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${a.id})">+14 dias</button>`
+                : `<span style="color:var(--text-faint)">—</span>`
+            }</td>`;
         tbody.appendChild(tr);
     });
 }
@@ -356,15 +380,17 @@ function renderAlugueisMeus(data) {
 async function prepareAluguelModal() {
     try {
         const [livros, usuarios] = await Promise.all([
-            api('/livros?status=disponivel'),
-            api('/usuarios')
+            api('/livros?status=disponivel&limit=1000'),
+            api('/usuarios?limit=1000')
         ]);
         const selL = document.getElementById('aluguelLivro');
         const selU = document.getElementById('aluguelUsuario');
         selL.innerHTML = '<option value="">Selecione um livro…</option>';
         selU.innerHTML = '<option value="">Selecione um usuário…</option>';
-        livros.forEach(l => selL.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)}</option>`);
-        usuarios.forEach(u => selU.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`);
+        const livrosData = livros.data ?? livros;
+        const usuariosData = usuarios.data ?? usuarios;
+        livrosData.forEach(l => selL.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)}</option>`);
+        usuariosData.forEach(u => selU.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`);
         openModal('addAluguelModal');
     } catch (err) { showAlert(err.message, 'danger'); }
 }
@@ -398,10 +424,14 @@ function devolverLivro(id) {
     });
 }
 
-async function loadUsuarios() {
+const loadUsuariosDebounced = debounce((busca) => loadUsuarios(1, busca));
+
+async function loadUsuarios(page = 1, busca = '') {
     setLoading('usuariosTbody', 5);
     try {
-        const data = await api('/usuarios');
+        const params = new URLSearchParams({ page, limit: 20 });
+        if (busca.trim()) params.set('busca', busca.trim());
+        const { data, pages } = await api(`/usuarios?${params}`);
         const tbody = document.getElementById('usuariosTbody');
         tbody.innerHTML = '';
         if (!data.length) { setEmpty('usuariosTbody', 5, 'Nenhum usuário cadastrado.'); return; }
@@ -412,19 +442,16 @@ async function loadUsuarios() {
                 <td><strong>${esc(u.nome)}</strong></td>
                 <td style="color:var(--text-dim)">${esc(u.email)}</td>
                 <td>${badgeTipo(u.tipo)}</td>
-                <td>
-                    <div class="td-actions">
-                        <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id}, '${esc(u.nome)}')">Excluir</button>
-                    </div>
-                </td>`;
+                <td><div class="td-actions">
+                    <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id},'${esc(u.nome)}')">Excluir</button>
+                </div></td>`;
             tbody.appendChild(tr);
         });
-    } catch (err) {
-        setEmpty('usuariosTbody', 5, err.message);
-        showAlert(err.message, 'danger');
-    }
+        renderPagination('usuariosPagination', page, pages, (p) => loadUsuarios(p, busca));
+    } catch (err) { setEmpty('usuariosTbody', 5, err.message); showAlert(err.message, 'danger'); }
 }
+
 
 function editarUsuario(u) {
     document.getElementById('editUsuarioId').value = u.id;
@@ -1134,4 +1161,76 @@ async function loadStatsDetalhado() {
         document.getElementById('statsLoading').textContent = 'Erro ao carregar estatísticas.';
         showAlert(err.message, 'danger');
     }
+}
+
+
+function renderPagination(containerId, page, pages, onPage) {
+    const el = document.getElementById(containerId);
+    if (!el || pages <= 1) { if (el) el.innerHTML = ''; return; }
+    let html = `<button class="pg-btn" ${page <= 1 ? 'disabled' : ''} onclick="(${onPage})(${page - 1})">‹</button>`;
+    const start = Math.max(1, page - 2), end = Math.min(pages, page + 2);
+    if (start > 1) html += `<button class="pg-btn" onclick="(${onPage})(1)">1</button>${start > 2 ? '<span class="pg-info">…</span>' : ''}`;
+    for (let i = start; i <= end; i++) html += `<button class="pg-btn ${i === page ? 'active' : ''}" onclick="(${onPage})(${i})">${i}</button>`;
+    if (end < pages) html += `${end < pages - 1 ? '<span class="pg-info">…</span>' : ''}<button class="pg-btn" onclick="(${onPage})(${pages})">${pages}</button>`;
+    html += `<button class="pg-btn" ${page >= pages ? 'disabled' : ''} onclick="(${onPage})(${page + 1})">›</button>`;
+    html += `<span class="pg-info">Pág. ${page} de ${pages}</span>`;
+    el.innerHTML = html;
+}
+
+function renovarEmprestimo(id) {
+    showConfirm({
+        icon: '📅', title: 'Renovar Empréstimo',
+        msg: 'Adicionar mais 14 dias ao prazo?', okLabel: 'Renovar',
+        async onOk() {
+            try {
+                const res = await api(`/alugueis/${id}/renovar`, { method: 'PUT' });
+                showAlert(res.message || 'Empréstimo renovado!');
+                loadMeusAlugueis();
+            } catch (err) { showAlert(err.message, 'danger'); }
+        }
+    });
+}
+
+let historicoPage = 1;
+
+async function loadHistorico(page = 1, usuarioId = '') {
+    historicoPage = page;
+    setLoading('historicoTbody', 8);
+    try {
+        const params = new URLSearchParams({ page, limit: 20 });
+        if (usuarioId.trim()) params.set('usuario_id', usuarioId.trim());
+        const { data, pages } = await api(`/alugueis/historico?${params}`);
+        const tbody = document.getElementById('historicoTbody');
+        tbody.innerHTML = '';
+        if (!data.length) { setEmpty('historicoTbody', 8, 'Nenhum registro encontrado.'); }
+        else data.forEach(a => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color:var(--text-faint)">${esc(a.id)}</td>
+                <td>${esc(a.usuario)}</td>
+                <td><strong>${esc(a.titulo)}</strong></td>
+                <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
+                <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
+                <td style="color:var(--text-dim)">${fmtDate(a.data_devolucao)}</td>
+                <td style="text-align:center">${esc(a.renovacoes ?? 0)}x</td>
+                <td>${badgeStatus(a.status)}</td>`;
+            tbody.appendChild(tr);
+        });
+        renderPagination('historicoPagination', page, pages, (p) => loadHistorico(p, usuarioId));
+    } catch (err) { setEmpty('historicoTbody', 8, err.message); showAlert(err.message, 'danger'); }
+}
+
+async function exportCSV() {
+    try {
+        const { data } = await api('/alugueis/historico?page=1&limit=10000');
+        const cols = ['id', 'usuario', 'titulo', 'data_aluguel', 'prazo', 'data_devolucao', 'renovacoes', 'status'];
+        const header = cols.join(',');
+        const rows = data.map(r => cols.map(c => `"${(r[c] ?? '').toString().replace(/"/g, '""')}"`).join(','));
+        const csv = [header, ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'historico_emprestimos.csv';
+        a.click(); URL.revokeObjectURL(url);
+        showAlert('CSV exportado!');
+    } catch (err) { showAlert(err.message, 'danger'); }
 }
