@@ -40,11 +40,10 @@ async function setup() {
       await db.schema.createTable('usuarios', (table) => {
         table.increments('id').primary();
         table.string('nome', 100).notNullable();
-        table.string('email', 100).notNullable().unique(); // unique já cria índice
+        table.string('email', 100).notNullable().unique();
         table.string('senha', 255).notNullable();
         table.enum('tipo', ['usuario', 'bibliotecario']).notNullable();
         table.timestamp('created_at').defaultTo(db.fn.now());
-        // Índice em tipo: filtro frequente (listar só usuários, só bibliotecários)
         table.index(['tipo'], 'idx_usuarios_tipo');
       });
       console.log('✅ Tabela usuarios criada');
@@ -75,18 +74,21 @@ async function setup() {
         table.string('isbn', 20).nullable();
         table.string('corredor', 10).notNullable();
         table.string('prateleira', 10).notNullable();
+        // exemplares e exemplares_disponiveis mantidos para compatibilidade
+        // e para exibir totais agregados sem precisar contar exemplares toda vez
         table.integer('exemplares').unsigned().notNullable().defaultTo(1);
         table.integer('exemplares_disponiveis').unsigned().notNullable().defaultTo(1);
         table.enum('status', ['disponivel', 'alugado']).defaultTo('disponivel');
+        table.timestamp('deleted_at').nullable();
         table.timestamp('created_at').defaultTo(db.fn.now());
-        // Índices: status é filtrado em todo acervo; busca textual em título/autor
         table.index(['status'], 'idx_livros_status');
         table.index(['titulo'], 'idx_livros_titulo');
         table.index(['autor'], 'idx_livros_autor');
+        table.index(['deleted_at'], 'idx_livros_deleted_at');
       });
       console.log('✅ Tabela livros criada');
     } else {
-      // Migração segura: exemplares
+      // Migration: exemplares
       const temExemplares = await db.schema.hasColumn('livros', 'exemplares');
       if (!temExemplares) {
         await db.schema.table('livros', (table) => {
@@ -95,7 +97,15 @@ async function setup() {
         });
         console.log('✅ Colunas exemplares adicionadas à tabela livros');
       }
-      // Migração segura: índices (ignora se já existir)
+      // Migration: soft delete
+      const temDeletedAt = await db.schema.hasColumn('livros', 'deleted_at');
+      if (!temDeletedAt) {
+        await db.schema.table('livros', (table) => {
+          table.timestamp('deleted_at').nullable().after('status');
+        });
+        console.log('✅ Coluna deleted_at adicionada à tabela livros');
+      }
+      // Migration: índices
       try {
         await db.schema.table('livros', (table) => {
           table.index(['status'], 'idx_livros_status');
@@ -104,6 +114,47 @@ async function setup() {
         });
         console.log('✅ Índices adicionados à tabela livros');
       } catch { /* índices já existem */ }
+      try {
+        await db.schema.table('livros', (table) => {
+          table.index(['deleted_at'], 'idx_livros_deleted_at');
+        });
+      } catch { /* índice já existe */ }
+    }
+
+    // ── EXEMPLARES ───────────────────────────────────────
+    // Cada cópia física de um livro tem seu próprio registro e status
+    const tabelaExemplares = await db.schema.hasTable('exemplares');
+    if (!tabelaExemplares) {
+      await db.schema.createTable('exemplares', (table) => {
+        table.increments('id').primary();
+        table.integer('livro_id').unsigned().notNullable();
+        // Código de identificação física (ex: etiqueta na lombada)
+        table.string('codigo', 50).nullable();
+        table.enum('status', ['disponivel', 'emprestado', 'danificado', 'perdido']).defaultTo('disponivel');
+        table.text('observacao').nullable(); // ex: "páginas rasgadas", "capa danificada"
+        table.timestamp('created_at').defaultTo(db.fn.now());
+        table.foreign('livro_id').references('id').inTable('livros').onDelete('CASCADE');
+        table.index(['livro_id', 'status'], 'idx_exemplares_livro_status');
+        table.index(['status'], 'idx_exemplares_status');
+      });
+      console.log('✅ Tabela exemplares criada');
+
+      // Migration de dados: para cada livro existente, cria N registros de exemplares
+      // correspondendo à quantidade atual de exemplares cadastrados
+      const livrosExistentes = await db('livros').select('id', 'exemplares', 'exemplares_disponiveis');
+      for (const livro of livrosExistentes) {
+        const emprestados = livro.exemplares - livro.exemplares_disponiveis;
+        const inserts = [];
+        for (let i = 0; i < livro.exemplares; i++) {
+          inserts.push({
+            livro_id: livro.id,
+            codigo: `EX-${livro.id}-${String(i + 1).padStart(3, '0')}`,
+            status: i < emprestados ? 'emprestado' : 'disponivel'
+          });
+        }
+        if (inserts.length > 0) await db('exemplares').insert(inserts);
+      }
+      console.log('✅ Exemplares migrados dos livros existentes');
     }
 
     // ── ALUGUÉIS ─────────────────────────────────────────
@@ -112,6 +163,7 @@ async function setup() {
       await db.schema.createTable('alugueis', (table) => {
         table.increments('id').primary();
         table.integer('livro_id').unsigned().notNullable();
+        table.integer('exemplar_id').unsigned().notNullable();
         table.integer('usuario_id').unsigned().notNullable();
         table.timestamp('data_aluguel').defaultTo(db.fn.now());
         table.date('data_prevista_devolucao').notNullable();
@@ -120,15 +172,48 @@ async function setup() {
         table.integer('renovacoes').unsigned().notNullable().defaultTo(0);
         table.timestamp('created_at').defaultTo(db.fn.now());
         table.foreign('livro_id').references('id').inTable('livros').onDelete('CASCADE');
+        table.foreign('exemplar_id').references('id').inTable('exemplares').onDelete('CASCADE');
         table.foreign('usuario_id').references('id').inTable('usuarios').onDelete('CASCADE');
-        // Índices: as 3 colunas mais consultadas em conjunto
         table.index(['status'], 'idx_alugueis_status');
         table.index(['usuario_id', 'status'], 'idx_alugueis_usuario_status');
         table.index(['data_prevista_devolucao'], 'idx_alugueis_prazo');
+        table.index(['exemplar_id'], 'idx_alugueis_exemplar');
       });
       console.log('✅ Tabela alugueis criada');
     } else {
-      // Migração segura: índices
+      // Migration: adiciona exemplar_id se não existir
+      const temExemplarId = await db.schema.hasColumn('alugueis', 'exemplar_id');
+      if (!temExemplarId) {
+        await db.schema.table('alugueis', (table) => {
+          // nullable por enquanto para não quebrar registros existentes
+          table.integer('exemplar_id').unsigned().nullable().after('livro_id');
+        });
+
+        // Preenche exemplar_id nos alugueis existentes:
+        // vincula cada aluguel ativo ao primeiro exemplar emprestado do livro
+        // e cada aluguel devolvido ao primeiro exemplar disponível do livro
+        const alugueis = await db('alugueis').select('id', 'livro_id', 'status');
+        for (const aluguel of alugueis) {
+          const exemplar = await db('exemplares')
+            .where({ livro_id: aluguel.livro_id })
+            .where('status', aluguel.status === 'ativo' ? 'emprestado' : 'disponivel')
+            .first();
+          if (exemplar) {
+            await db('alugueis').where({ id: aluguel.id }).update({ exemplar_id: exemplar.id });
+          }
+        }
+
+        // Adiciona FK após preencher os dados
+        try {
+          await db.schema.table('alugueis', (table) => {
+            table.foreign('exemplar_id').references('id').inTable('exemplares').onDelete('CASCADE');
+            table.index(['exemplar_id'], 'idx_alugueis_exemplar');
+          });
+        } catch { /* FK já existe */ }
+
+        console.log('✅ Coluna exemplar_id adicionada e migrada em alugueis');
+      }
+      // Migration: índices
       try {
         await db.schema.table('alugueis', (table) => {
           table.index(['status'], 'idx_alugueis_status');

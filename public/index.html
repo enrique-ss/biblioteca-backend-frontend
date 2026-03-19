@@ -9,7 +9,6 @@
 </head>
 
 <body>
-
     <div class="app-wrapper">
         <nav class="navbar">
             <a href="#" class="nav-brand" onclick="return false;">
@@ -30,7 +29,10 @@
                 <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" title="Alternar tema">🌙</button>
             </div>
         </nav>
+
         <div class="container" id="appContainer">
+
+            <!-- LOGIN -->
             <section id="loginScreen" class="screen active">
                 <div class="auth-wrap">
                     <div class="auth-card">
@@ -58,6 +60,8 @@
                     </div>
                 </div>
             </section>
+
+            <!-- REGISTRO -->
             <section id="registerScreen" class="screen">
                 <div class="auth-wrap">
                     <div class="auth-card">
@@ -80,12 +84,16 @@
                             </div>
                             <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px;">Criar
                                 conta</button>
-                            <div style="text-align:center;margin-top:8px;"><button type="button" class="btn btn-ghost"
-                                    onclick="showScreen('loginScreen')">← Voltar ao login</button></div>
+                            <div style="text-align:center;margin-top:8px;">
+                                <button type="button" class="btn btn-ghost" onclick="showScreen('loginScreen')">← Voltar
+                                    ao login</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </section>
+
+            <!-- MENU -->
             <section id="menuScreen" class="screen">
                 <div class="menu-screen-wrap">
                     <div class="menu-welcome">
@@ -98,6 +106,8 @@
                     </div>
                 </div>
             </section>
+
+            <!-- ACERVO -->
             <section id="livrosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">📚 <span>Acervo</span> de Livros</h2>
@@ -127,7 +137,7 @@
                         </thead>
                         <tbody id="livrosTbody">
                             <tr class="loading-row">
-                                <td colspan="7"><span class="spinner"></span>Carregando…</td>
+                                <td colspan="8"><span class="spinner"></span>Carregando…</td>
                             </tr>
                         </tbody>
                     </table>
@@ -135,6 +145,7 @@
                 <div class="pagination" id="livrosPagination"></div>
             </section>
 
+            <!-- HISTÓRICO -->
             <section id="historicoScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">📋 <span>Histórico</span> de Empréstimos</h2>
@@ -152,13 +163,14 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th class="sortable" onclick="sortTable('historico','usuario')">Usuário ⇅</th>
-                                <th class="sortable" onclick="sortTable('historico','titulo')">Livro ⇅</th>
+                                <th>Usuário</th>
+                                <th>Livro</th>
+                                <th>Exemplar</th>
+                                <th>Estado</th>
                                 <th>Empréstimo</th>
                                 <th>Prazo</th>
                                 <th>Devolução</th>
                                 <th>Renovações</th>
-                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="historicoTbody"></tbody>
@@ -167,6 +179,7 @@
                 <div class="pagination" id="historicoPagination"></div>
             </section>
 
+            <!-- EMPRÉSTIMOS -->
             <section id="alugueisScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title" id="alugueisTitle">📋 <span>Empréstimos</span></h2>
@@ -186,7 +199,10 @@
                         <tbody id="alugueisTbody"></tbody>
                     </table>
                 </div>
+                <div class="pagination" id="alugueisPagination"></div>
             </section>
+
+            <!-- USUÁRIOS -->
             <section id="usuariosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">👥 <span>Gerenciar</span> Usuários</h2>
@@ -218,6 +234,8 @@
                 </div>
                 <div class="pagination" id="usuariosPagination"></div>
             </section>
+
+            <!-- PERFIL -->
             <section id="perfilScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">✏️ <span>Meu</span> Perfil</h2>
@@ -253,6 +271,7 @@
                 </div>
             </section>
 
+            <!-- ESTATÍSTICAS -->
             <section id="statsScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">📊 <span>Estatísticas</span></h2>
@@ -260,151 +279,113 @@
                         <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
                     </div>
                 </div>
-
-                <div id="statsLoading" class="stats-loading">
-                    <span class="spinner"></span> Carregando estatísticas...
+                <div id="statsLoading" class="stats-loading"><span class="spinner"></span> Carregando estatísticas...
                 </div>
-
                 <div id="statsContent" style="display:none;">
-
-                    <!-- Cards de números rápidos -->
                     <div class="stats-kpi-grid" id="statsKpiGrid"></div>
-
-                    <!-- Gráficos -->
                     <div class="stats-charts-grid">
-
                         <div class="stats-chart-card" data-chart="generos">
                             <div class="stats-chart-header">
                                 <h3>Gêneros Mais Emprestados</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="bar"
-                                        onclick="switchChart('generos','bar')">▬</button>
-                                    <button class="stv" data-type="doughnut"
-                                        onclick="switchChart('generos','doughnut')">◉</button>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
+                                        onclick="switchChart('generos','bar')">▬</button><button class="stv"
+                                        data-type="doughnut" onclick="switchChart('generos','doughnut')">◉</button>
                                 </div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-generos"></canvas></div>
                         </div>
-
                         <div class="stats-chart-card" data-chart="autores">
                             <div class="stats-chart-header">
                                 <h3>Autores Mais Emprestados</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="bar"
-                                        onclick="switchChart('autores','bar')">▬</button>
-                                    <button class="stv" data-type="doughnut"
-                                        onclick="switchChart('autores','doughnut')">◉</button>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
+                                        onclick="switchChart('autores','bar')">▬</button><button class="stv"
+                                        data-type="doughnut" onclick="switchChart('autores','doughnut')">◉</button>
                                 </div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-autores"></canvas></div>
                         </div>
-
                         <div class="stats-chart-card stats-chart-wide" data-chart="meses">
                             <div class="stats-chart-header">
                                 <h3>Empréstimos por Mês</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="line"
-                                        onclick="switchChart('meses','line')">╱</button>
-                                    <button class="stv" data-type="bar" onclick="switchChart('meses','bar')">▬</button>
-                                </div>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="line"
+                                        onclick="switchChart('meses','line')">╱</button><button class="stv"
+                                        data-type="bar" onclick="switchChart('meses','bar')">▬</button></div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-meses"></canvas></div>
                         </div>
-
                         <div class="stats-chart-card" data-chart="livros">
                             <div class="stats-chart-header">
                                 <h3>Livros Mais Emprestados</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="bar"
-                                        onclick="switchChart('livros','bar')">▬</button>
-                                    <button class="stv" data-type="doughnut"
-                                        onclick="switchChart('livros','doughnut')">◉</button>
-                                </div>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
+                                        onclick="switchChart('livros','bar')">▬</button><button class="stv"
+                                        data-type="doughnut" onclick="switchChart('livros','doughnut')">◉</button></div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-livros"></canvas></div>
                         </div>
-
                         <div class="stats-chart-card" data-chart="usuarios">
                             <div class="stats-chart-header">
                                 <h3>Usuários Mais Ativos</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="bar"
-                                        onclick="switchChart('usuarios','bar')">▬</button>
-                                    <button class="stv" data-type="doughnut"
-                                        onclick="switchChart('usuarios','doughnut')">◉</button>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
+                                        onclick="switchChart('usuarios','bar')">▬</button><button class="stv"
+                                        data-type="doughnut" onclick="switchChart('usuarios','doughnut')">◉</button>
                                 </div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-usuarios"></canvas></div>
                         </div>
-
                         <div class="stats-chart-card" data-chart="acervo">
                             <div class="stats-chart-header">
                                 <h3>Status do Acervo</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="doughnut"
-                                        onclick="switchChart('acervo','doughnut')">◉</button>
-                                    <button class="stv" data-type="bar" onclick="switchChart('acervo','bar')">▬</button>
-                                </div>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="doughnut"
+                                        onclick="switchChart('acervo','doughnut')">◉</button><button class="stv"
+                                        data-type="bar" onclick="switchChart('acervo','bar')">▬</button></div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-acervo"></canvas></div>
                         </div>
-
                         <div class="stats-chart-card stats-chart-wide" data-chart="decadas">
                             <div class="stats-chart-header">
                                 <h3>Acervo por Década de Publicação</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="bar"
-                                        onclick="switchChart('decadas','bar')">▬</button>
-                                    <button class="stv" data-type="line"
-                                        onclick="switchChart('decadas','line')">╱</button>
-                                </div>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
+                                        onclick="switchChart('decadas','bar')">▬</button><button class="stv"
+                                        data-type="line" onclick="switchChart('decadas','line')">╱</button></div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-decadas"></canvas></div>
                         </div>
-
                         <div class="stats-chart-card stats-chart-wide" data-chart="cadastros">
                             <div class="stats-chart-header">
                                 <h3>Novos Usuários por Mês</h3>
-                                <div class="stats-view-toggle">
-                                    <button class="stv active" data-type="line"
-                                        onclick="switchChart('cadastros','line')">╱</button>
-                                    <button class="stv" data-type="bar"
-                                        onclick="switchChart('cadastros','bar')">▬</button>
-                                </div>
+                                <div class="stats-view-toggle"><button class="stv active" data-type="line"
+                                        onclick="switchChart('cadastros','line')">╱</button><button class="stv"
+                                        data-type="bar" onclick="switchChart('cadastros','bar')">▬</button></div>
                             </div>
                             <div class="stats-canvas-wrap"><canvas id="chart-cadastros"></canvas></div>
                         </div>
-
                     </div>
                 </div>
             </section>
 
+            <!-- QUIZ -->
             <section id="quizScreen" class="screen">
                 <div id="quizAgeSelect">
                     <div class="page-header">
                         <h2 class="page-title">🎓 <span>Quiz</span> Literário</h2>
-                        <div class="page-actions">
-                            <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
-                        </div>
+                        <div class="page-actions"><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
+                                Voltar</button></div>
                     </div>
                     <p style="color:var(--text-dim);margin-bottom:24px;">Selecione sua faixa etária para começar:</p>
                     <div class="quiz-age-grid">
-                        <div class="quiz-age-card" onclick="quizSelectAge('infantil')">
-                            <span class="quiz-age-icon">🌱</span>
-                            <h3>Infantil</h3>
-                            <span class="quiz-age-range">6 a 8 anos</span>
+                        <div class="quiz-age-card" onclick="quizSelectAge('infantil')"><span
+                                class="quiz-age-icon">🌱</span>
+                            <h3>Infantil</h3><span class="quiz-age-range">6 a 8 anos</span>
                             <p>Primeiros passos no mundo das histórias!</p>
                         </div>
-                        <div class="quiz-age-card" onclick="quizSelectAge('infantojuvenil')">
-                            <span class="quiz-age-icon">📖</span>
-                            <h3>Infanto-Juvenil</h3>
-                            <span class="quiz-age-range">9 a 11 anos</span>
+                        <div class="quiz-age-card" onclick="quizSelectAge('infantojuvenil')"><span
+                                class="quiz-age-icon">📖</span>
+                            <h3>Infanto-Juvenil</h3><span class="quiz-age-range">9 a 11 anos</span>
                             <p>Explorando autores e gêneros literários!</p>
                         </div>
-                        <div class="quiz-age-card" onclick="quizSelectAge('preadolescente')">
-                            <span class="quiz-age-icon">🔭</span>
-                            <h3>Pré-Adolescente</h3>
-                            <span class="quiz-age-range">11 a 14 anos</span>
+                        <div class="quiz-age-card" onclick="quizSelectAge('preadolescente')"><span
+                                class="quiz-age-icon">🔭</span>
+                            <h3>Pré-Adolescente</h3><span class="quiz-age-range">11 a 14 anos</span>
                             <p>Mergulhando na teoria e na literatura mundial!</p>
                         </div>
                     </div>
@@ -412,62 +393,51 @@
                 <div id="quizHome" style="display:none;">
                     <div class="page-header">
                         <h2 class="page-title" id="quizHomeTitle">🎓 <span>Quiz</span> Literário</h2>
-                        <div class="page-actions">
-                            <button class="btn btn-ghost" onclick="quizChangeAge()">↩ Faixa etária</button>
-                            <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Menu</button>
-                        </div>
+                        <div class="page-actions"><button class="btn btn-ghost" onclick="quizChangeAge()">↩ Faixa
+                                etária</button><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
+                                Menu</button></div>
                     </div>
                     <div class="quiz-status-bar">
-                        <div class="quiz-stat">
-                            <span class="quiz-stat-label">Nível</span>
-                            <span class="quiz-stat-val" id="quizLevelVal">1</span>
-                        </div>
+                        <div class="quiz-stat"><span class="quiz-stat-label">Nível</span><span class="quiz-stat-val"
+                                id="quizLevelVal">1</span></div>
                         <div class="quiz-xp-wrap">
                             <div class="quiz-xp-track">
                                 <div class="quiz-xp-fill" id="quizXpFill"></div>
-                            </div>
-                            <span class="quiz-xp-text" id="quizXpText">0 XP</span>
+                            </div><span class="quiz-xp-text" id="quizXpText">0 XP</span>
                         </div>
-                        <div class="quiz-stat">
-                            <span class="quiz-stat-label">Vidas</span>
-                            <span class="quiz-stat-val" id="quizHpVal">❤️❤️❤️❤️❤️</span>
-                        </div>
+                        <div class="quiz-stat"><span class="quiz-stat-label">Vidas</span><span class="quiz-stat-val"
+                                id="quizHpVal">❤️❤️❤️❤️❤️</span></div>
                     </div>
                     <div class="quiz-cat-grid" id="quizCatGrid"></div>
                 </div>
                 <div id="quizLessons" style="display:none;">
                     <div class="page-header">
                         <h2 class="page-title" id="quizLessonCatTitle">Categoria</h2>
-                        <div class="page-actions">
-                            <button class="btn btn-ghost" onclick="quizShowPanel('quizHome')">← Voltar</button>
-                        </div>
+                        <div class="page-actions"><button class="btn btn-ghost" onclick="quizShowPanel('quizHome')">←
+                                Voltar</button></div>
                     </div>
                     <div class="quiz-lesson-list" id="quizLessonList"></div>
                 </div>
                 <div id="quizContent" style="display:none;">
                     <div class="page-header">
                         <h2 class="page-title" id="quizContentTitle">Lição</h2>
-                        <div class="page-actions">
-                            <button class="btn btn-ghost" onclick="quizShowPanel('quizLessons')">← Voltar</button>
-                        </div>
+                        <div class="page-actions"><button class="btn btn-ghost" onclick="quizShowPanel('quizLessons')">←
+                                Voltar</button></div>
                     </div>
                     <div class="quiz-content-card-wrap">
                         <div class="quiz-content-card">
                             <div id="quizContentBody"></div>
-                            <div style="text-align:center;margin-top:24px;">
-                                <button class="btn btn-primary btn-action" onclick="quizStartQuiz()">Estou Pronto!
-                                    🎯</button>
-                            </div>
+                            <div style="text-align:center;margin-top:24px;"><button class="btn btn-primary btn-action"
+                                    onclick="quizStartQuiz()">Estou Pronto! 🎯</button></div>
                         </div>
                     </div>
                 </div>
                 <div id="quizQuestions" style="display:none;">
-                    <div class="quiz-q-header">
-                        <button class="btn btn-ghost btn-sm" onclick="quizShowPanel('quizContent')">← Voltar</button>
+                    <div class="quiz-q-header"><button class="btn btn-ghost btn-sm"
+                            onclick="quizShowPanel('quizContent')">← Voltar</button>
                         <div class="quiz-progress-track">
                             <div class="quiz-progress-fill" id="quizProgressFill"></div>
-                        </div>
-                        <span class="quiz-step-text" id="quizStepText">1/3</span>
+                        </div><span class="quiz-step-text" id="quizStepText">1/3</span>
                     </div>
                     <div class="quiz-question-card">
                         <h3 id="quizQuestion"></h3>
@@ -487,17 +457,19 @@
                             <div class="quiz-reward-badge">⭐ +<span id="quizXpGain">0</span> XP</div>
                             <div class="quiz-reward-badge">❤️ +<span id="quizHpGain">0</span> Vidas</div>
                         </div>
-                        <div class="btn-pair">
-                            <button class="btn btn-gold" onclick="quizShowPanel('quizHome')">Voltar ao Quiz</button>
-                            <button class="btn btn-ghost" onclick="showScreen('menuScreen')">Sair do Quiz</button>
-                        </div>
+                        <div class="btn-pair"><button class="btn btn-gold" onclick="quizShowPanel('quizHome')">Voltar ao
+                                Quiz</button><button class="btn btn-ghost" onclick="showScreen('menuScreen')">Sair do
+                                Quiz</button></div>
                     </div>
                 </div>
-
             </section>
 
-        </div>
-    </div>
+        </div><!-- /container -->
+    </div><!-- /app-wrapper -->
+
+    <!-- ── MODAIS ──────────────────────────────────────────────────────────────── -->
+
+    <!-- Cadastrar Livro -->
     <div id="addLivroModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('addLivroModal')"></div>
         <div class="modal-box">
@@ -524,6 +496,8 @@
             </form>
         </div>
     </div>
+
+    <!-- Editar Livro -->
     <div id="editLivroModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('editLivroModal')"></div>
         <div class="modal-box">
@@ -551,6 +525,40 @@
             </form>
         </div>
     </div>
+
+    <!-- Exemplares Individuais -->
+    <div id="exemplareModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal('exemplareModal')"></div>
+        <div class="modal-box" style="max-width:780px;">
+            <h2 class="modal-title">📋 Exemplares</h2>
+            <p class="modal-subtitle" id="exemplaresTitulo">—</p>
+            <input type="hidden" id="exemplaresLivroId">
+            <div class="table-wrap" style="max-height:50vh;overflow-y:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Código</th>
+                            <th>Estado</th>
+                            <th>Observação</th>
+                            <th>Último Aluguel</th>
+                            <th>Alterar Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exemplaresTbody">
+                        <tr class="loading-row">
+                            <td colspan="6"><span class="spinner"></span>Carregando…</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="btn-group" style="margin-top:16px;">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('exemplareModal')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registrar Empréstimo -->
     <div id="addAluguelModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('addAluguelModal')"></div>
         <div class="modal-box">
@@ -573,6 +581,8 @@
             </form>
         </div>
     </div>
+
+    <!-- Editar Usuário -->
     <div id="editUsuarioModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('editUsuarioModal')"></div>
         <div class="modal-box">
@@ -599,6 +609,8 @@
             </form>
         </div>
     </div>
+
+    <!-- Confirmação -->
     <div id="confirmDialog">
         <div class="confirm-backdrop"></div>
         <div class="confirm-box">
@@ -613,7 +625,6 @@
     </div>
 
     <div id="alertContainer"></div>
-
     <script src="js/script.js"></script>
 </body>
 

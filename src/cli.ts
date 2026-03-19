@@ -17,17 +17,15 @@ api.interceptors.request.use((config) => {
 
 const limpar = () => console.clear();
 
-// ============ ESTILIZAÇÃO ============
+// ── ESTILO ────────────────────────────────────────────────────────────────────
+
 const cores = {
   reset: '\x1b[0m', bold: '\x1b[1m', dim: '\x1b[2m',
   vermelho: '\x1b[31m', verde: '\x1b[32m', amarelo: '\x1b[33m',
   azul: '\x1b[34m', magenta: '\x1b[35m', ciano: '\x1b[36m', branco: '\x1b[37m',
 };
 
-const emoji = {
-  check: '✅', erro: '❌',
-  email: '📧', senha: '🔒', usuario: '👤', admin: '👨‍💼',
-};
+const emoji = { check: '✅', erro: '❌', email: '📧', senha: '🔒', usuario: '👤', admin: '👨‍💼' };
 
 function colorir(texto: string, cor: string): string { return `${cor}${texto}${cores.reset}`; }
 
@@ -47,26 +45,33 @@ function mostrarBanner() {
   ${cores.azul}███████╗╚██████╔╝██║███████╗██║  ██║   ██║   ███████╗╚██████╗██║  ██║${cores.reset}
   ${cores.azul}╚══════╝ ╚═════╝ ╚═╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝${cores.reset}
   `);
-  console.log(colorir('           Sistema de Gerenciamento de Biblioteca v1.0.0', cores.dim));
+  console.log(colorir('           Sistema de Gerenciamento de Biblioteca v2.0.0', cores.dim));
 }
 
 function divisor(cor: string = cores.ciano): void { console.log(colorir('─'.repeat(70), cor)); }
-
-function opcao(numero: string, texto: string): void {
-  console.log(`  ${colorir(numero, cores.amarelo + cores.bold)}  ${texto}`);
-}
+function opcao(numero: string, texto: string): void { console.log(`  ${colorir(numero, cores.amarelo + cores.bold)}  ${texto}`); }
 
 async function obterOpcaoValida(msg: string, opcoes: string[]): Promise<string> {
   const op = await pergunta(msg);
   if (!opcoes.includes(op)) {
-    console.log(colorir(`\nOpcao "${op}" invalida! Tente: ${opcoes.join(', ')}`, cores.vermelho + cores.bold));
-    await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+    console.log(colorir(`\nOpção "${op}" inválida! Tente: ${opcoes.join(', ')}`, cores.vermelho + cores.bold));
+    await pergunta(colorir('\nPressione Enter...', cores.dim));
     return '';
   }
   return op;
 }
 
-// ============ 2. CONSULTAR ACERVO ============
+function badgeExemplarCLI(status: string): string {
+  const map: Record<string, string> = {
+    disponivel: colorir('● Disponível', cores.verde),
+    emprestado: colorir('● Emprestado', cores.amarelo),
+    danificado: colorir('● Danificado', cores.vermelho),
+    perdido: colorir('● Perdido', cores.dim),
+  };
+  return map[status] ?? status;
+}
+
+// ── ACERVO ────────────────────────────────────────────────────────────────────
 
 async function visualizarAcervo() {
   limpar();
@@ -75,7 +80,16 @@ async function visualizarAcervo() {
   try {
     const endpoint = busca.trim() ? `/livros?busca=${encodeURIComponent(busca.trim())}` : '/livros';
     const res = await api.get(endpoint);
-    res.data.length === 0 ? console.log('\nNenhum livro encontrado.') : console.table(res.data);
+    const livros = res.data.data ?? res.data;
+    if (!livros.length) {
+      console.log('\nNenhum livro encontrado.');
+    } else {
+      console.log('');
+      livros.forEach((l: any) => {
+        const disp = colorir(`${l.exemplares_disponiveis}/${l.exemplares}`, l.exemplares_disponiveis > 0 ? cores.verde : cores.vermelho);
+        console.log(`  [${colorir(String(l.id), cores.dim)}] ${colorir(l.titulo, cores.branco + cores.bold)} — ${l.autor} | ${l.genero} | ${disp} exemplares`);
+      });
+    }
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
@@ -83,12 +97,14 @@ async function visualizarAcervo() {
   if (user.tipo === 'bibliotecario') {
     divisor();
     opcao('1', 'Adicionar Livro');
+    opcao('2', 'Ver exemplares de um livro');
     opcao('0', 'Voltar');
     divisor();
-    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '0']);
+    const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '2', '0']);
     if (op === '1') await cadastrarLivro();
+    else if (op === '2') await menuExemplares();
   } else {
-    await pergunta(colorir(`\nPressione Enter para voltar...`, cores.dim));
+    await pergunta(colorir('\nPressione Enter para voltar...', cores.dim));
   }
 }
 
@@ -96,11 +112,11 @@ async function cadastrarLivro() {
   limpar();
   titulo('NOVO LIVRO', cores.verde);
   const body = {
-    titulo: await pergunta('Titulo: '),
+    titulo: await pergunta('Título: '),
     autor: await pergunta('Autor: '),
     ano_lancamento: parseInt(await pergunta('Ano: ')),
-    genero: await pergunta('Genero: '),
-    exemplares: parseInt(await pergunta('Exemplares [1]: ') || '1'),
+    genero: await pergunta('Gênero: '),
+    exemplares: parseInt((await pergunta('Exemplares [1]: ')) || '1'),
   };
   try {
     const res = await api.post('/livros', body);
@@ -109,48 +125,152 @@ async function cadastrarLivro() {
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
-// ============ 3. EMPRESTIMOS (BIBLIOTECARIO) ============
+// ── EXEMPLARES INDIVIDUAIS ────────────────────────────────────────────────────
+
+async function menuExemplares() {
+  limpar();
+  titulo('EXEMPLARES DE UM LIVRO', cores.ciano);
+  const livroId = await pergunta('ID do livro: ');
+  if (!livroId.trim()) return;
+
+  try {
+    const res = await api.get(`/livros/${livroId}/exemplares`);
+    const { livro, exemplares } = res.data;
+
+    limpar();
+    titulo(`EXEMPLARES — ${livro.titulo}`, cores.ciano);
+    console.log(colorir(`  Autor: ${livro.autor}\n`, cores.dim));
+
+    if (!exemplares.length) {
+      console.log('  Nenhum exemplar cadastrado.');
+    } else {
+      exemplares.forEach((ex: any) => {
+        const ult = ex.ultimo_aluguel;
+        const emMaos = ult && ult.status_aluguel === 'ativo'
+          ? colorir(` → Em mãos de: ${ult.usuario}`, cores.amarelo)
+          : '';
+        console.log(
+          `  [${colorir(String(ex.id), cores.dim)}] ${colorir(ex.codigo ?? '—', cores.ciano)}  ${badgeExemplarCLI(ex.status)}${emMaos}`
+        );
+        if (ex.observacao) console.log(colorir(`       Obs: ${ex.observacao}`, cores.dim));
+        if (ult && ult.status_aluguel !== 'ativo') {
+          console.log(colorir(`       Último aluguel: ${ult.usuario} em ${new Date(ult.data_aluguel).toLocaleDateString('pt-BR')}`, cores.dim));
+        }
+      });
+    }
+
+    divisor();
+    opcao('1', 'Alterar estado de um exemplar');
+    opcao('0', 'Voltar');
+    divisor();
+
+    const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '0']);
+    if (op === '1') await alterarExemplar(Number(livroId), exemplares);
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error || 'Erro ao buscar exemplares'}`, cores.vermelho));
+    await pergunta(colorir('\nPressione Enter...', cores.dim));
+  }
+}
+
+async function alterarExemplar(livroId: number, exemplares: any[]) {
+  const exemplarId = await pergunta('ID do exemplar: ');
+  const exemplar = exemplares.find(e => String(e.id) === exemplarId.trim());
+  if (!exemplar) {
+    console.log(colorir('\nExemplar não encontrado na lista.', cores.vermelho));
+    await pergunta(colorir('\nPressione Enter...', cores.dim));
+    return;
+  }
+
+  console.log(`\n  Estado atual: ${badgeExemplarCLI(exemplar.status)}`);
+  console.log(colorir('\n  Novos estados disponíveis:', cores.dim));
+  opcao('1', 'disponivel');
+  opcao('2', 'danificado');
+  opcao('3', 'perdido');
+  opcao('0', 'Cancelar');
+  divisor();
+
+  const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
+  if (op === '0') return;
+
+  const statusMap: Record<string, string> = { '1': 'disponivel', '2': 'danificado', '3': 'perdido' };
+  const novoStatus = statusMap[op];
+
+  let observacao = '';
+  if (novoStatus === 'danificado' || novoStatus === 'perdido') {
+    observacao = await pergunta('Observação (opcional): ');
+  }
+
+  try {
+    await api.patch(`/livros/${livroId}/exemplares/${exemplarId}`, { status: novoStatus, observacao });
+    console.log(colorir(`\n${emoji.check} Exemplar atualizado para: ${novoStatus}`, cores.verde));
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
+}
+
+// ── EMPRÉSTIMOS ───────────────────────────────────────────────────────────────
 
 async function menuEmprestimos() {
   while (true) {
     limpar();
-    titulo('EMPRESTIMOS', cores.azul);
-    opcao('1', 'Ver todos os emprestimos');
+    titulo('EMPRÉSTIMOS', cores.azul);
+    opcao('1', 'Ver todos os empréstimos');
     opcao('2', 'Novo aluguel');
     opcao('3', 'Devolver livro');
+    opcao('4', 'Ver histórico (devolvidos)');
     opcao('0', 'Voltar');
     divisor();
 
-    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
+    const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '2', '3', '4', '0']);
     if (op === '') continue;
     if (op === '0') break;
     if (op === '1') await listarTodosAlugueis();
     else if (op === '2') await registrarAluguel();
     else if (op === '3') await devolverLivro();
+    else if (op === '4') await verHistorico();
   }
 }
 
 async function listarTodosAlugueis() {
   limpar();
-  titulo('TODOS OS EMPRESTIMOS', cores.azul);
+  titulo('TODOS OS EMPRÉSTIMOS ATIVOS', cores.azul);
   try {
     const res = await api.get('/alugueis/todos');
-    res.data.length === 0 ? console.log('\nNenhum emprestimo ativo.') : console.table(res.data);
+    const rows = res.data.data ?? res.data;
+    if (!rows.length) {
+      console.log('\nNenhum empréstimo ativo.');
+    } else {
+      console.log('');
+      rows.forEach((a: any) => {
+        const status = a.status === 'atrasado'
+          ? colorir('ATRASADO', cores.vermelho + cores.bold)
+          : colorir('ativo', cores.verde);
+        console.log(
+          `  [${colorir(String(a.id), cores.dim)}] ${colorir(a.titulo, cores.branco + cores.bold)} ` +
+          `| ${colorir(a.exemplar_codigo ?? '—', cores.ciano)} ` +
+          `| Leitor: ${a.usuario} ` +
+          `| Prazo: ${new Date(a.prazo).toLocaleDateString('pt-BR')} ` +
+          `| ${status}`
+        );
+      });
+    }
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
 async function registrarAluguel() {
   limpar();
   titulo('NOVO ALUGUEL', cores.verde);
+  // O backend seleciona o exemplar automaticamente — frontend só envia livro_id e usuario_id
   const dados = {
     livro_id: await pergunta('ID do Livro: '),
-    usuario_id: await pergunta('ID do Usuario: '),
+    usuario_id: await pergunta('ID do Usuário: '),
   };
   try {
     const res = await api.post('/alugueis', dados);
@@ -159,7 +279,7 @@ async function registrarAluguel() {
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
 async function devolverLivro() {
@@ -169,39 +289,86 @@ async function devolverLivro() {
   try {
     const res = await api.put(`/alugueis/${id}/devolver`);
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
+    console.log(colorir('   Para marcar o exemplar como danificado ou perdido, use a opção "Ver exemplares" no Acervo.', cores.dim));
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
-// ============ 3. MEUS EMPRESTIMOS (USUARIO) ============
+async function verHistorico() {
+  limpar();
+  titulo('HISTÓRICO DE EMPRÉSTIMOS', cores.azul);
+  const usuarioId = await pergunta('Filtrar por ID de usuário (Enter para todos): ');
+  try {
+    const params: any = { page: 1, limit: 30 };
+    if (usuarioId.trim()) params.usuario_id = usuarioId.trim();
+    const res = await api.get('/alugueis/historico', { params });
+    const rows = res.data.data ?? [];
+    if (!rows.length) {
+      console.log('\nNenhum registro encontrado.');
+    } else {
+      console.log('');
+      rows.forEach((a: any) => {
+        // exemplar_status mostra o estado atual do exemplar — permite ver se voltou danificado
+        const estadoExemplar = a.exemplar_status !== 'disponivel'
+          ? colorir(` [exemplar: ${a.exemplar_status}]`, cores.vermelho)
+          : '';
+        console.log(
+          `  [${colorir(String(a.id), cores.dim)}] ${colorir(a.titulo, cores.branco + cores.bold)} ` +
+          `| ${colorir(a.exemplar_codigo ?? '—', cores.ciano)}${estadoExemplar} ` +
+          `| ${a.usuario} ` +
+          `| Dev: ${a.data_devolucao ? new Date(a.data_devolucao).toLocaleDateString('pt-BR') : '—'}`
+        );
+      });
+    }
+  } catch (e: any) {
+    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
+  }
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
+}
+
+// ── MEUS EMPRÉSTIMOS ──────────────────────────────────────────────────────────
 
 async function meusAlugueis() {
   limpar();
-  titulo('MEUS EMPRESTIMOS', cores.azul);
+  titulo('MEUS EMPRÉSTIMOS', cores.azul);
   try {
     const res = await api.get('/alugueis/meus');
-    res.data.length === 0 ? console.log('\nNenhum emprestimo encontrado.') : console.table(res.data);
+    const rows = res.data;
+    if (!rows.length) {
+      console.log('\nNenhum empréstimo encontrado.');
+    } else {
+      console.log('');
+      rows.forEach((a: any) => {
+        const renovar = a.pode_renovar ? colorir(' [pode renovar]', cores.verde) : '';
+        console.log(
+          `  [${colorir(String(a.id), cores.dim)}] ${colorir(a.titulo, cores.branco + cores.bold)} ` +
+          `| ${colorir(a.exemplar_codigo ?? '—', cores.ciano)} ` +
+          `| Prazo: ${new Date(a.prazo).toLocaleDateString('pt-BR')} ` +
+          `| ${a.status}${renovar}`
+        );
+      });
+    }
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
-// ============ 4. USUARIOS (BIBLIOTECARIO) ============
+// ── USUÁRIOS ──────────────────────────────────────────────────────────────────
 
 async function menuUsuarios() {
   while (true) {
     limpar();
-    titulo('USUARIOS', cores.ciano);
-    opcao('1', 'Listar usuarios');
-    opcao('2', 'Atualizar usuario');
-    opcao('3', 'Deletar usuario');
+    titulo('USUÁRIOS', cores.ciano);
+    opcao('1', 'Listar usuários');
+    opcao('2', 'Atualizar usuário');
+    opcao('3', 'Deletar usuário');
     opcao('0', 'Voltar');
     divisor();
 
-    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
+    const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
     if (op === '') continue;
     if (op === '0') break;
     if (op === '1') await listarUsuarios();
@@ -212,20 +379,20 @@ async function menuUsuarios() {
 
 async function listarUsuarios() {
   limpar();
-  titulo('LISTA DE USUARIOS', cores.ciano);
+  titulo('LISTA DE USUÁRIOS', cores.ciano);
   try {
     const res = await api.get('/usuarios');
-    res.data.length === 0 ? console.log('\nNenhum usuario.') : console.table(res.data);
-  } catch (e: any) {
-    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
-  }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+    const rows = res.data.data ?? res.data;
+    if (!rows.length) { console.log('\nNenhum usuário.'); }
+    else { console.log(''); rows.forEach((u: any) => console.log(`  [${colorir(String(u.id), cores.dim)}] ${colorir(u.nome, cores.branco + cores.bold)} | ${u.email} | ${u.tipo}`)); }
+  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
 async function atualizarUsuario() {
   limpar();
-  titulo('ATUALIZAR USUARIO', cores.amarelo);
-  const id = await pergunta('ID do usuario: ');
+  titulo('ATUALIZAR USUÁRIO', cores.amarelo);
+  const id = await pergunta('ID do usuário: ');
   const nome = await pergunta('Novo nome  (Enter para manter): ');
   const email = await pergunta('Novo email (Enter para manter): ');
   const tipo = await pergunta('Novo tipo [usuario/bibliotecario] (Enter para manter): ');
@@ -236,26 +403,22 @@ async function atualizarUsuario() {
   try {
     const res = await api.put(`/usuarios/${id}`, body);
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
-  } catch (e: any) {
-    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
-  }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
 async function deletarUsuario() {
   limpar();
-  titulo('DELETAR USUARIO', cores.vermelho);
-  const id = await pergunta('ID do usuario: ');
+  titulo('DELETAR USUÁRIO', cores.vermelho);
+  const id = await pergunta('ID do usuário: ');
   try {
     const res = await api.delete(`/usuarios/${id}`);
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
-  } catch (e: any) {
-    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
-  }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
-// ============ 5. MEU PERFIL ============
+// ── PERFIL ────────────────────────────────────────────────────────────────────
 
 async function menuMeuPerfil() {
   while (true) {
@@ -269,7 +432,7 @@ async function menuMeuPerfil() {
     opcao('0', 'Voltar');
     divisor();
 
-    const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '0']);
+    const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '0']);
     if (op === '') continue;
     if (op === '0') break;
     if (op === '1') await editarPerfil();
@@ -291,13 +454,11 @@ async function editarPerfil() {
     if (nome) user.nome = nome;
     if (email) user.email = email;
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
-  } catch (e: any) {
-    console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
-  }
-  await pergunta(colorir(`\nPressione Enter...`, cores.dim));
+  } catch (e: any) { console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho)); }
+  await pergunta(colorir('\nPressione Enter...', cores.dim));
 }
 
-// ============ DASHBOARD ============
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
 
 async function mostrarDashboard() {
   try {
@@ -305,13 +466,12 @@ async function mostrarDashboard() {
     const stats = res.data.stats;
     console.log('');
     stats.forEach((s: any) => {
-      const linha = `  ${s.label.padEnd(26)} ${colorir(String(s.valor).padStart(5), cores.amarelo + cores.bold)}`;
-      console.log(linha);
+      console.log(`  ${s.label.padEnd(26)} ${colorir(String(s.valor).padStart(5), cores.amarelo + cores.bold)}`);
     });
-  } catch { /* silencioso se falhar */ }
+  } catch { /* silencioso */ }
 }
 
-// ============ MENU PRINCIPAL ============
+// ── MENU PRINCIPAL ────────────────────────────────────────────────────────────
 
 async function menu() {
   while (true) {
@@ -324,28 +484,27 @@ async function menu() {
 
     if (user.tipo === 'bibliotecario') {
       opcao('1', 'Consultar Acervo');
-      opcao('2', 'Emprestimos');
-      opcao('3', 'Usuarios');
+      opcao('2', 'Empréstimos');
+      opcao('3', 'Usuários');
       opcao('4', 'Meu Perfil');
       opcao('0', 'Sair');
       divisor();
 
-      const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '4', '0']);
+      const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '2', '3', '4', '0']);
       if (op === '') continue;
       if (op === '0') break;
       if (op === '1') await visualizarAcervo();
       else if (op === '2') await menuEmprestimos();
       else if (op === '3') await menuUsuarios();
       else if (op === '4') await menuMeuPerfil();
-
     } else {
       opcao('1', 'Consultar Acervo');
-      opcao('2', 'Meus Emprestimos');
+      opcao('2', 'Meus Empréstimos');
       opcao('3', 'Meu Perfil');
       opcao('0', 'Sair');
       divisor();
 
-      const op = await obterOpcaoValida(colorir('\nOpcao: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
+      const op = await obterOpcaoValida(colorir('\nOpção: ', cores.amarelo + cores.bold), ['1', '2', '3', '0']);
       if (op === '') continue;
       if (op === '0') break;
       if (op === '1') await visualizarAcervo();
@@ -357,7 +516,7 @@ async function menu() {
   return start();
 }
 
-// ============ 1. MENU INICIAL ============
+// ── INÍCIO ────────────────────────────────────────────────────────────────────
 
 async function start() {
   limpar(); mostrarBanner(); divisor();
