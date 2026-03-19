@@ -6,6 +6,7 @@ import livroRoutes from './routes/LivroRoutes';
 import aluguelRoutes from './routes/AluguelRoutes';
 import usuarioRoutes from './routes/UsuarioRoutes';
 import statsRoutes from './routes/StatsRoutes';
+import quizRoutes from './routes/QuizRoutes';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/api/livros', livroRoutes);
 app.use('/api/alugueis', aluguelRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/quiz', quizRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: '📚 API Biblioteca Online', version: '1.0.0', status: 'online' });
