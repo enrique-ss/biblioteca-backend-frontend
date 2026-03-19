@@ -276,89 +276,108 @@
                 <div class="page-header">
                     <h2 class="page-title">📊 <span>Estatísticas</span></h2>
                     <div class="page-actions">
+                        <button class="btn btn-success btn-sm" onclick="exportStatsCSV()">⬇ CSV</button>
                         <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
                     </div>
                 </div>
                 <div id="statsLoading" class="stats-loading"><span class="spinner"></span> Carregando estatísticas...
                 </div>
                 <div id="statsContent" style="display:none;">
+
+                    <!-- KPIs -->
                     <div class="stats-kpi-grid" id="statsKpiGrid"></div>
+
+                    <!-- Grade de gráficos: cada card = canvas à esquerda + lista à direita -->
                     <div class="stats-charts-grid">
-                        <div class="stats-chart-card" data-chart="generos">
+
+                        <!-- Gêneros -->
+                        <div class="stats-chart-card">
                             <div class="stats-chart-header">
                                 <h3>Gêneros Mais Emprestados</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
-                                        onclick="switchChart('generos','bar')">▬</button><button class="stv"
-                                        data-type="doughnut" onclick="switchChart('generos','doughnut')">◉</button>
-                                </div>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-generos"></canvas></div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap"><canvas id="chart-generos"></canvas></div>
+                                <div class="stats-list" id="list-generos"></div>
+                            </div>
                         </div>
-                        <div class="stats-chart-card" data-chart="autores">
+
+                        <!-- Autores -->
+                        <div class="stats-chart-card">
                             <div class="stats-chart-header">
                                 <h3>Autores Mais Emprestados</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
-                                        onclick="switchChart('autores','bar')">▬</button><button class="stv"
-                                        data-type="doughnut" onclick="switchChart('autores','doughnut')">◉</button>
-                                </div>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-autores"></canvas></div>
-                        </div>
-                        <div class="stats-chart-card stats-chart-wide" data-chart="meses">
-                            <div class="stats-chart-header">
-                                <h3>Empréstimos por Mês</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="line"
-                                        onclick="switchChart('meses','line')">╱</button><button class="stv"
-                                        data-type="bar" onclick="switchChart('meses','bar')">▬</button></div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap"><canvas id="chart-autores"></canvas></div>
+                                <div class="stats-list" id="list-autores"></div>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-meses"></canvas></div>
                         </div>
-                        <div class="stats-chart-card" data-chart="livros">
+
+                        <!-- Livros -->
+                        <div class="stats-chart-card">
                             <div class="stats-chart-header">
                                 <h3>Livros Mais Emprestados</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
-                                        onclick="switchChart('livros','bar')">▬</button><button class="stv"
-                                        data-type="doughnut" onclick="switchChart('livros','doughnut')">◉</button></div>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-livros"></canvas></div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap"><canvas id="chart-livros"></canvas></div>
+                                <div class="stats-list" id="list-livros"></div>
+                            </div>
                         </div>
-                        <div class="stats-chart-card" data-chart="usuarios">
+
+                        <!-- Usuários -->
+                        <div class="stats-chart-card">
                             <div class="stats-chart-header">
                                 <h3>Usuários Mais Ativos</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
-                                        onclick="switchChart('usuarios','bar')">▬</button><button class="stv"
-                                        data-type="doughnut" onclick="switchChart('usuarios','doughnut')">◉</button>
-                                </div>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-usuarios"></canvas></div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap"><canvas id="chart-usuarios"></canvas></div>
+                                <div class="stats-list" id="list-usuarios"></div>
+                            </div>
                         </div>
-                        <div class="stats-chart-card" data-chart="acervo">
+
+                        <!-- Empréstimos por Mês — wide -->
+                        <div class="stats-chart-card stats-chart-wide">
                             <div class="stats-chart-header">
-                                <h3>Status do Acervo</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="doughnut"
-                                        onclick="switchChart('acervo','doughnut')">◉</button><button class="stv"
-                                        data-type="bar" onclick="switchChart('acervo','bar')">▬</button></div>
+                                <h3>Empréstimos por Mês</h3>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-acervo"></canvas></div>
-                        </div>
-                        <div class="stats-chart-card stats-chart-wide" data-chart="decadas">
-                            <div class="stats-chart-header">
-                                <h3>Acervo por Década de Publicação</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="bar"
-                                        onclick="switchChart('decadas','bar')">▬</button><button class="stv"
-                                        data-type="line" onclick="switchChart('decadas','line')">╱</button></div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap"><canvas id="chart-meses"></canvas></div>
+                                <div class="stats-list" id="list-meses"></div>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-decadas"></canvas></div>
                         </div>
-                        <div class="stats-chart-card stats-chart-wide" data-chart="cadastros">
+
+                        <!-- Cadastros por Mês — wide -->
+                        <div class="stats-chart-card stats-chart-wide">
                             <div class="stats-chart-header">
                                 <h3>Novos Usuários por Mês</h3>
-                                <div class="stats-view-toggle"><button class="stv active" data-type="line"
-                                        onclick="switchChart('cadastros','line')">╱</button><button class="stv"
-                                        data-type="bar" onclick="switchChart('cadastros','bar')">▬</button></div>
                             </div>
-                            <div class="stats-canvas-wrap"><canvas id="chart-cadastros"></canvas></div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap"><canvas id="chart-cadastros"></canvas></div>
+                                <div class="stats-list" id="list-cadastros"></div>
+                            </div>
                         </div>
+
+                        <!-- Acervo por Década — wide -->
+                        <div class="stats-chart-card stats-chart-wide">
+                            <div class="stats-chart-header">
+                                <h3>Acervo por Década de Publicação</h3>
+                            </div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap"><canvas id="chart-decadas"></canvas></div>
+                                <div class="stats-list" id="list-decadas"></div>
+                            </div>
+                        </div>
+
+                        <!-- Status do Acervo -->
+                        <div class="stats-chart-card">
+                            <div class="stats-chart-header">
+                                <h3>Status do Acervo</h3>
+                            </div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap stats-canvas-sm"><canvas id="chart-acervo"></canvas></div>
+                                <div class="stats-list" id="list-acervo"></div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </section>
