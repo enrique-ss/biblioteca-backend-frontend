@@ -206,7 +206,7 @@ function loadMenu() {
 
     items.push(
         {
-            icon: '✏️', title: 'Meu Perfil',
+            icon: '🪪', title: 'Meu Perfil',
             action() { loadPerfil(); showScreen('perfilScreen'); }
         }
     );
@@ -280,12 +280,18 @@ function voltarAlugueis() {
     showScreen('menuScreen');
 }
 
+function setHead(html) {
+    const el = document.getElementById('alugueisHead');
+    if (el) el.innerHTML = html;
+}
+
 async function loadAlugueis() {
     document.getElementById('alugueisTitle').innerHTML = `📋 <span>Empréstimos</span>`;
+    setHead(`<tr><th>#</th><th>Usuário</th><th>Livro</th><th>Empréstimo</th><th>Prazo</th><th>Status</th><th>Ações</th></tr>`);
     setLoading('alugueisTbody', 7);
     try {
         const data = await api('/alugueis/todos');
-        renderAlugueis(data, true);
+        renderAlugueisCompleto(data);
     } catch (err) {
         setEmpty('alugueisTbody', 7, err.message);
         showAlert(err.message, 'danger');
@@ -294,23 +300,22 @@ async function loadAlugueis() {
 
 async function loadMeusAlugueis() {
     document.getElementById('alugueisTitle').innerHTML = `📖 <span>Meus Empréstimos</span>`;
-    setLoading('alugueisTbody', 7);
+    setHead(`<tr><th>#</th><th>Livro</th><th>Empréstimo</th><th>Prazo</th><th>Status</th></tr>`);
+    setLoading('alugueisTbody', 5);
     try {
         const data = await api('/alugueis/meus');
-        renderAlugueis(data, false);
+        renderAlugueisMeus(data);
     } catch (err) {
-        setEmpty('alugueisTbody', 7, err.message);
+        setEmpty('alugueisTbody', 5, err.message);
         showAlert(err.message, 'danger');
     }
 }
 
-function renderAlugueis(data, showDevolver) {
+// Bibliotecário — renderiza o que o backend mandou, incluindo pode_devolver
+function renderAlugueisCompleto(data) {
     const tbody = document.getElementById('alugueisTbody');
     tbody.innerHTML = '';
-    if (!data.length) {
-        setEmpty('alugueisTbody', 7, 'Nenhum empréstimo encontrado.');
-        return;
-    }
+    if (!data.length) { setEmpty('alugueisTbody', 7, 'Nenhum empréstimo encontrado.'); return; }
     data.forEach(a => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -320,10 +325,27 @@ function renderAlugueis(data, showDevolver) {
             <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
             <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
             <td>${badgeStatus(a.status)}</td>
-            <td>${showDevolver && a.status === 'ativo'
+            <td>${a.pode_devolver
                 ? `<button class="btn btn-success btn-sm" onclick="devolverLivro(${a.id})">Devolver</button>`
                 : `<span style="color:var(--text-faint);font-size:.8rem">—</span>`
             }</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// Usuário — só visualiza, sem coluna de usuário nem ações
+function renderAlugueisMeus(data) {
+    const tbody = document.getElementById('alugueisTbody');
+    tbody.innerHTML = '';
+    if (!data.length) { setEmpty('alugueisTbody', 5, 'Nenhum empréstimo encontrado.'); return; }
+    data.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="color:var(--text-faint)">${esc(a.id)}</td>
+            <td><strong>${esc(a.titulo ?? '—')}</strong></td>
+            <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
+            <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
+            <td>${badgeStatus(a.status)}</td>`;
         tbody.appendChild(tr);
     });
 }

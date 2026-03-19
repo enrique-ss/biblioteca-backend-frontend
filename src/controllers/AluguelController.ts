@@ -35,7 +35,7 @@ export class AluguelController {
     }
   };
 
-  // ✅ PASSO 8: Listar todos — campos em camelCase, consistentes com o frontend
+  // ✅ PASSO 8: Listar todos — backend decide o que pode ser devolvido
   listarTodos = async (req: AuthRequest, res: Response) => {
     try {
       const alugueis = await db('alugueis')
@@ -44,14 +44,17 @@ export class AluguelController {
         .where('alugueis.status', 'ativo')
         .select(
           'alugueis.id',
-          'usuarios.nome    as usuario',
-          'livros.titulo    as titulo',
+          'usuarios.nome as usuario',
+          'livros.titulo as titulo',
           'alugueis.data_aluguel',
           'alugueis.data_prevista_devolucao as prazo',
           'alugueis.status'
         );
 
-      res.json(alugueis);
+      // Todos os registros retornados são 'ativo', portanto podem ser devolvidos
+      const resultado = alugueis.map(a => ({ ...a, pode_devolver: true }));
+
+      res.json(resultado);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao listar empréstimos' });
     }
