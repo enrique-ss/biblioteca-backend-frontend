@@ -223,19 +223,47 @@ function loadMenu() {
 
     document.getElementById('btnAddLivro').style.display = isBib ? 'inline-flex' : 'none';
     document.getElementById('btnNovoAluguel').style.display = isBib ? 'inline-flex' : 'none';
+
+    // Carrega dashboard em paralelo sem bloquear o menu
+    loadDashboard();
+}
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════
+
+async function loadDashboard() {
+    const container = document.getElementById('dashboardStats');
+    if (!container) return;
+    container.innerHTML = '<div class="dashboard-loading"><span class="spinner"></span></div>';
+    try {
+        const data = await api('/stats');
+        container.innerHTML = '';
+        data.stats.forEach(s => {
+            const card = document.createElement('div');
+            card.className = 'dash-card';
+            card.innerHTML = `
+                <div class="dash-label">${esc(s.label)}</div>
+                <div class="dash-valor ${esc(s.cor)}">${esc(String(s.valor))}</div>`;
+            container.appendChild(card);
+        });
+    } catch (err) {
+        container.innerHTML = '';
+    }
 }
 
 // ═══════════════════════════════════════════════════════
 //  2. LIVROS
 // ═══════════════════════════════════════════════════════
 
-async function loadLivros() {
-    setLoading('livrosTbody', 6);
+async function loadLivros(busca = '') {
+    setLoading('livrosTbody', 7);
     try {
-        const data = await api('/livros');
+        const endpoint = busca.trim() ? `/livros?busca=${encodeURIComponent(busca.trim())}` : '/livros';
+        const data = await api(endpoint);
         const tbody = document.getElementById('livrosTbody');
         tbody.innerHTML = '';
-        if (!data.length) { setEmpty('livrosTbody', 6, 'Nenhum livro cadastrado.'); return; }
+        if (!data.length) { setEmpty('livrosTbody', 7, 'Nenhum livro encontrado.'); return; }
         data.forEach(livro => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -244,11 +272,12 @@ async function loadLivros() {
                 <td>${esc(livro.autor)}</td>
                 <td>${esc(livro.genero)}</td>
                 <td style="color:var(--text-dim)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
+                <td style="text-align:center">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)}</td>
                 <td>${badgeStatus(livro.status)}</td>`;
             tbody.appendChild(tr);
         });
     } catch (err) {
-        setEmpty('livrosTbody', 6, err.message);
+        setEmpty('livrosTbody', 7, err.message);
         showAlert(err.message, 'danger');
     }
 }
@@ -263,7 +292,8 @@ document.getElementById('addLivroForm').addEventListener('submit', async e => {
                 autor: document.getElementById('livroAutor').value,
                 ano_lancamento: parseInt(document.getElementById('livroAno').value),
                 genero: document.getElementById('livroGenero').value,
-                isbn: document.getElementById('livroIsbn').value || null
+                isbn: document.getElementById('livroIsbn').value || null,
+                exemplares: parseInt(document.getElementById('livroExemplares').value) || 1
             })
         });
         showAlert('Livro cadastrado!');
@@ -512,6 +542,7 @@ function badgeStatus(status) {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
         alugado: `<span class="badge badge-danger"><span class="badge-dot"></span>Alugado</span>`,
         ativo: `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
+        atrasado: `<span class="badge badge-danger"><span class="badge-dot"></span>Atrasado</span>`,
         devolvido: `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
         '🟡 PENDENTE': `<span class="badge badge-warning"><span class="badge-dot"></span>Pendente</span>`,
         '🟢 ENTREGUE': `<span class="badge badge-success"><span class="badge-dot"></span>Entregue</span>`,

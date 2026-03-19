@@ -717,6 +717,107 @@ body::before {
     font-size: var(--fs-base);
 }
 
+
+
+/* ═══════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════ */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.dashboard-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+}
+
+.dash-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-s);
+    border-radius: var(--r-lg);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.2s;
+}
+
+.dash-card:hover {
+    border-color: var(--border-m);
+}
+
+.dash-label {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    line-height: 1.3;
+}
+
+.dash-valor {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+}
+
+.dash-valor.gold {
+    color: var(--gold);
+}
+
+.dash-valor.green {
+    color: #7fcca0;
+}
+
+.dash-valor.red {
+    color: #e07868;
+}
+
+[data-theme="light"] .dash-valor.green {
+    color: var(--success);
+}
+
+[data-theme="light"] .dash-valor.red {
+    color: var(--crimson);
+}
+
+@media (max-width: 680px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .dash-valor {
+        font-size: 1.6rem;
+    }
+}
+
+/* ═══════════════════════════════════
+   SEARCH BAR
+═══════════════════════════════════ */
+.search-bar {
+    margin-bottom: 16px;
+}
+
+.search-bar .form-input {
+    background: var(--surface-2);
+    border-color: var(--border-m);
+    padding: 10px 16px;
+    font-size: var(--fs-base);
+}
+
+.search-bar .form-input:focus {
+    border-color: var(--border-l);
+}
+
 /* ═══════════════════════════════════
    BADGES
 ═══════════════════════════════════ */
@@ -1109,6 +1210,107 @@ body::before {
     color: var(--text);
 }
 
+
+
+
+/* ═══════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════ */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.dashboard-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+}
+
+.dash-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-s);
+    border-radius: var(--r-lg);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.2s;
+}
+
+.dash-card:hover {
+    border-color: var(--border-m);
+}
+
+.dash-label {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    line-height: 1.3;
+}
+
+.dash-valor {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+}
+
+.dash-valor.gold {
+    color: var(--gold);
+}
+
+.dash-valor.green {
+    color: #7fcca0;
+}
+
+.dash-valor.red {
+    color: #e07868;
+}
+
+[data-theme="light"] .dash-valor.green {
+    color: var(--success);
+}
+
+[data-theme="light"] .dash-valor.red {
+    color: var(--crimson);
+}
+
+@media (max-width: 680px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .dash-valor {
+        font-size: 1.6rem;
+    }
+}
+
+/* ═══════════════════════════════════
+   SEARCH BAR
+═══════════════════════════════════ */
+.search-bar {
+    margin-bottom: 16px;
+}
+
+.search-bar .form-input {
+    background: var(--surface-2);
+    border-color: var(--border-m);
+    padding: 10px 16px;
+    font-size: var(--fs-base);
+}
+
+.search-bar .form-input:focus {
+    border-color: var(--border-l);
+}
 
 /* ═══════════════════════════════════
    BADGES — light mode overrides

@@ -4,7 +4,7 @@ import db from '../database';
 
 export class AluguelController {
 
-  // ✅ PASSO 7: Criar Aluguel
+  // ✅ PASSO 7: Criar Aluguel — decrementa exemplares_disponiveis
   criar = async (req: AuthRequest, res: Response) => {
     try {
       const { livro_id, usuario_id } = req.body;
@@ -13,7 +13,11 @@ export class AluguelController {
       data_prevista.setDate(data_aluguel.getDate() + 14);
 
       await db.transaction(async (trx) => {
-        const livro = await trx('livros').where({ id: livro_id, status: 'disponivel' }).first();
+        const livro = await trx('livros')
+          .where({ id: livro_id })
+          .where('exemplares_disponiveis', '>', 0)
+          .first();
+
         if (!livro) throw new Error('Livro não disponível para empréstimo.');
 
         await trx('alugueis').insert({
@@ -23,7 +27,11 @@ export class AluguelController {
           status: 'ativo'
         });
 
-        await trx('livros').where({ id: livro_id }).update({ status: 'alugado' });
+        const novosDisponiveis = livro.exemplares_disponiveis - 1;
+        await trx('livros').where({ id: livro_id }).update({
+          exemplares_disponiveis: novosDisponiveis,
+          status: novosDisponiveis === 0 ? 'alugado' : 'disponivel'
+        });
       });
 
       res.status(201).json({
@@ -35,9 +43,12 @@ export class AluguelController {
     }
   };
 
-  // ✅ PASSO 8: Listar todos — backend decide o que pode ser devolvido
+  // ✅ PASSO 8: Listar todos — calcula atraso no backend
   listarTodos = async (req: AuthRequest, res: Response) => {
     try {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
       const alugueis = await db('alugueis')
         .join('livros', 'alugueis.livro_id', 'livros.id')
         .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
@@ -51,8 +62,16 @@ export class AluguelController {
           'alugueis.status'
         );
 
-      // Todos os registros retornados são 'ativo', portanto podem ser devolvidos
-      const resultado = alugueis.map(a => ({ ...a, pode_devolver: true }));
+      const resultado = alugueis.map((a) => {
+        const prazo = new Date(a.prazo);
+        prazo.setHours(0, 0, 0, 0);
+        const atrasado = prazo < hoje;
+        return {
+          ...a,
+          status: atrasado ? 'atrasado' : 'ativo',
+          pode_devolver: true
+        };
+      });
 
       res.json(resultado);
     } catch (error) {
@@ -60,10 +79,12 @@ export class AluguelController {
     }
   };
 
-  // ✅ PASSO 8: Meus Empréstimos — campos em camelCase
+  // ✅ PASSO 8: Meus Empréstimos — calcula atraso também
   meus = async (req: AuthRequest, res: Response) => {
     try {
       const usuario_id = req.usuario!.id;
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
 
       const alugueis = await db('alugueis')
         .join('livros', 'alugueis.livro_id', 'livros.id')
@@ -76,19 +97,30 @@ export class AluguelController {
           'alugueis.status'
         );
 
-      res.json(alugueis);
+      const resultado = alugueis.map((a) => {
+        if (a.status === 'devolvido') return a;
+        const prazo = new Date(a.prazo);
+        prazo.setHours(0, 0, 0, 0);
+        return { ...a, status: prazo < hoje ? 'atrasado' : 'ativo' };
+      });
+
+      res.json(resultado);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao buscar seus dados' });
     }
   };
 
-  // ✅ PASSO 9: Devolver
+  // ✅ PASSO 9: Devolver — incrementa exemplares_disponiveis
   devolver = async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
 
       await db.transaction(async (trx) => {
-        const aluguel = await trx('alugueis').where({ id, status: 'ativo' }).first();
+        const aluguel = await trx('alugueis')
+          .where({ id })
+          .whereIn('status', ['ativo', 'atrasado'])
+          .first();
+
         if (!aluguel) throw new Error('Registro de aluguel ativo não encontrado.');
 
         await trx('alugueis').where({ id }).update({
@@ -96,7 +128,12 @@ export class AluguelController {
           data_devolucao: new Date()
         });
 
-        await trx('livros').where({ id: aluguel.livro_id }).update({ status: 'disponivel' });
+        const livro = await trx('livros').where({ id: aluguel.livro_id }).first();
+        const novosDisponiveis = livro.exemplares_disponiveis + 1;
+        await trx('livros').where({ id: aluguel.livro_id }).update({
+          exemplares_disponiveis: novosDisponiveis,
+          status: 'disponivel'
+        });
       });
 
       res.json({ message: 'Livro devolvido e disponível no acervo!' });

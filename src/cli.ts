@@ -71,9 +71,11 @@ async function obterOpcaoValida(msg: string, opcoes: string[]): Promise<string> 
 async function visualizarAcervo() {
   limpar();
   titulo('ACERVO DE LIVROS', cores.magenta);
+  const busca = await pergunta('Buscar (Enter para listar tudo): ');
   try {
-    const res = await api.get('/livros');
-    res.data.length === 0 ? console.log('\nNenhum livro cadastrado.') : console.table(res.data);
+    const endpoint = busca.trim() ? `/livros?busca=${encodeURIComponent(busca.trim())}` : '/livros';
+    const res = await api.get(endpoint);
+    res.data.length === 0 ? console.log('\nNenhum livro encontrado.') : console.table(res.data);
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
@@ -98,10 +100,12 @@ async function cadastrarLivro() {
     autor: await pergunta('Autor: '),
     ano_lancamento: parseInt(await pergunta('Ano: ')),
     genero: await pergunta('Genero: '),
+    exemplares: parseInt(await pergunta('Exemplares [1]: ') || '1'),
   };
   try {
     const res = await api.post('/livros', body);
     console.log(colorir(`\n${emoji.check} ${res.data.message}`, cores.verde));
+    if (res.data.info) console.log(colorir(`   ${res.data.info}`, cores.dim));
   } catch (e: any) {
     console.log(colorir(`\n${emoji.erro} ${e.response?.data?.error}`, cores.vermelho));
   }
@@ -293,6 +297,20 @@ async function editarPerfil() {
   await pergunta(colorir(`\nPressione Enter...`, cores.dim));
 }
 
+// ============ DASHBOARD ============
+
+async function mostrarDashboard() {
+  try {
+    const res = await api.get('/stats');
+    const stats = res.data.stats;
+    console.log('');
+    stats.forEach((s: any) => {
+      const linha = `  ${s.label.padEnd(26)} ${colorir(String(s.valor).padStart(5), cores.amarelo + cores.bold)}`;
+      console.log(linha);
+    });
+  } catch { /* silencioso se falhar */ }
+}
+
 // ============ MENU PRINCIPAL ============
 
 async function menu() {
@@ -301,6 +319,7 @@ async function menu() {
     mostrarBanner();
     const cor = user.tipo === 'bibliotecario' ? cores.magenta : cores.ciano;
     console.log(colorir(`\n  ${user.tipo === 'bibliotecario' ? emoji.admin : emoji.usuario}  ${user.nome.toUpperCase()} (${user.tipo})`, cor + cores.bold));
+    await mostrarDashboard();
     divisor();
 
     if (user.tipo === 'bibliotecario') {

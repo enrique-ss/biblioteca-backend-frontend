@@ -1,6 +1,6 @@
 import knex from 'knex';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs'; // Adicionado para a senha do admin
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -34,7 +34,7 @@ async function setup() {
       }
     });
 
-    // --- CRIAÇÃO DAS TABELAS (USUÁRIOS) ---
+    // ── USUÁRIOS ─────────────────────────────────────────
     const tabelaUsuarios = await db.schema.hasTable('usuarios');
     if (!tabelaUsuarios) {
       await db.schema.createTable('usuarios', (table) => {
@@ -48,10 +48,8 @@ async function setup() {
       console.log('✅ Tabela "usuarios" criada');
     }
 
-    // --- INSERÇÃO DO ADMIN (LOGICA NOVA) ---
     const adminEmail = 'admin@admin';
     const adminExiste = await db('usuarios').where({ email: adminEmail }).first();
-
     if (!adminExiste) {
       const senhaHash = await bcrypt.hash('admin123', 10);
       await db('usuarios').insert({
@@ -63,7 +61,7 @@ async function setup() {
       console.log(`⭐ Usuário ADMIN criado: ${adminEmail} | senha: admin123`);
     }
 
-    // --- CRIAÇÃO DAS TABELAS (LIVROS) ---
+    // ── LIVROS ───────────────────────────────────────────
     const tabelaLivros = await db.schema.hasTable('livros');
     if (!tabelaLivros) {
       await db.schema.createTable('livros', (table) => {
@@ -75,13 +73,25 @@ async function setup() {
         table.string('isbn', 20).nullable();
         table.string('corredor', 10).notNullable();
         table.string('prateleira', 10).notNullable();
+        table.integer('exemplares').unsigned().notNullable().defaultTo(1);
+        table.integer('exemplares_disponiveis').unsigned().notNullable().defaultTo(1);
         table.enum('status', ['disponivel', 'alugado']).defaultTo('disponivel');
         table.timestamp('created_at').defaultTo(db.fn.now());
       });
       console.log('✅ Tabela "livros" criada');
+    } else {
+      // Migração segura para bancos existentes
+      const temExemplares = await db.schema.hasColumn('livros', 'exemplares');
+      if (!temExemplares) {
+        await db.schema.table('livros', (table) => {
+          table.integer('exemplares').unsigned().notNullable().defaultTo(1).after('prateleira');
+          table.integer('exemplares_disponiveis').unsigned().notNullable().defaultTo(1).after('exemplares');
+        });
+        console.log('✅ Colunas "exemplares" adicionadas à tabela "livros"');
+      }
     }
 
-    // --- CRIAÇÃO DAS TABELAS (ALUGUÉIS) ---
+    // ── ALUGUÉIS ─────────────────────────────────────────
     const tabelaAlugueis = await db.schema.hasTable('alugueis');
     if (!tabelaAlugueis) {
       await db.schema.createTable('alugueis', (table) => {

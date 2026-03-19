@@ -4,45 +4,32 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/AuthRoutes';
 import livroRoutes from './routes/LivroRoutes';
 import aluguelRoutes from './routes/AluguelRoutes';
-import usuarioRoutes from './routes/usuarioRoutes';
+import usuarioRoutes from './routes/UsuarioRoutes';
+import statsRoutes from './routes/StatsRoutes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true
-}));
+app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/livros', livroRoutes);
 app.use('/api/alugueis', aluguelRoutes);
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/stats', statsRoutes);
 
-// Rota de teste
 app.get('/', (req, res) => {
-  res.json({
-    message: '📚 API Biblioteca Online',
-    version: '1.0.0',
-    status: 'online'
-  });
+  res.json({ message: '📚 API Biblioteca Online', version: '1.0.0', status: 'online' });
 });
 
-// Rota 404
 app.use((req, res) => {
-  res.status(404).json({
-    error: 'Rota não encontrada',
-    path: req.path
-  });
+  res.status(404).json({ error: 'Rota não encontrada', path: req.path });
 });
 
-// Middleware de erro global
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Erro não tratado:', err);
   res.status(500).json({
@@ -51,7 +38,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// Iniciar servidor
 const server = app.listen(PORT, () => {
   console.log(`\n🚀 Servidor rodando na porta ${PORT}`);
   console.log(`📍 http://localhost:${PORT}`);
@@ -59,21 +45,7 @@ const server = app.listen(PORT, () => {
   console.log('📚 Em outro terminal digite: npm run cli');
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM recebido, fechando servidor...');
-  server.close(() => {
-    console.log('Servidor fechado');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('\nSIGINT recebido, fechando servidor...');
-  server.close(() => {
-    console.log('Servidor fechado');
-    process.exit(0);
-  });
-});
+process.on('SIGTERM', () => server.close(() => process.exit(0)));
+process.on('SIGINT', () => server.close(() => process.exit(0)));
 
 export default app;

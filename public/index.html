@@ -102,6 +102,7 @@
                         <h2>Bem-vindo, <span id="menuUserName"></span></h2>
                         <p>O que deseja fazer hoje?</p>
                     </div>
+                    <div class="dashboard-stats" id="dashboardStats"></div>
                     <div class="menu-grid" id="menuGrid"></div>
                     <div class="menu-logout">
                         <button class="btn btn-danger" onclick="logout()">Encerrar sessão</button>
@@ -119,7 +120,10 @@
                         <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
                     </div>
                 </div>
-                <div class="stats-row" id="livrosStats"></div>
+                <div class="search-bar">
+                    <input type="text" id="buscaLivros" class="form-input"
+                        placeholder="Buscar por título, autor ou gênero…" oninput="loadLivros(this.value)">
+                </div>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead>
@@ -129,12 +133,13 @@
                                 <th>Autor</th>
                                 <th>Gênero</th>
                                 <th>Localização</th>
+                                <th>Exemplares</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="livrosTbody">
                             <tr class="loading-row">
-                                <td colspan="6"><span class="spinner"></span>Carregando…</td>
+                                <td colspan="7"><span class="spinner"></span>Carregando…</td>
                             </tr>
                         </tbody>
                     </table>
@@ -244,6 +249,8 @@
                 <div class="form-group"><label class="form-label">ISBN <span
                             style="opacity:.5">(opcional)</span></label><input type="text" id="livroIsbn"
                         class="form-input" placeholder="978-3-16-148410-0"></div>
+                <div class="form-group"><label class="form-label">Exemplares</label><input type="number"
+                        id="livroExemplares" class="form-input" min="1" max="999" value="1" required></div>
                 <div class="btn-group">
                     <button type="submit" class="btn btn-success">Cadastrar</button>
                     <button type="button" class="btn btn-ghost" onclick="closeModal('addLivroModal')">Cancelar</button>
