@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+/* ── TOKENS DARK ── */
+:root {
+    --bg: #0d1117;
+    --surface-1: #161b22;
+    --surface-2: #1c2333;
+    --surface-3: #243044;
+    --surface-4: #2d3a55;
+    --text: #e6edf3;
+    --text-dim: #adbac7;
+    --text-faint: #768390;
+    --gold: #7aa2f7;
+    --gold-dim: #3d5a8a;
+    --crimson: #f85149;
+    --crimson-dim: rgba(248, 81, 73, 0.18);
+    --success: #3fb950;
+    --success-dim: rgba(63, 185, 80, 0.15);
+    --warning: #d29922;
+    --warning-dim: rgba(210, 153, 34, 0.18);
+    --border-s: rgba(122, 162, 247, 0.08);
+    --border-m: rgba(122, 162, 247, 0.18);
+    --border-l: rgba(122, 162, 247, 0.35);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.70);
+    --nav-bg: rgba(13, 17, 23, 0.95);
+    --r-sm: 4px;
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-xl: 26px;
+    --r-pill: 999px;
+    --fs-xs: .72rem;
+    --fs-sm: .85rem;
+    --fs-base: 1rem;
+    --fs-md: 1.1rem;
+    --fs-lg: 1.3rem;
+    --fs-xl: 1.6rem;
+    --lh: 1.65;
+}
+
+/* ── TOKENS LIGHT ── */
+[data-theme="light"] {
+    --bg: #faf8f5;
+    --surface-1: #f0ece6;
+    --surface-2: #e8e2da;
+    --surface-3: #ddd6cc;
+    --surface-4: #cfc7bb;
+    --text: #1a1a1a;
+    --text-dim: #3b3b3b;
+    --text-faint: #626262;
+    --gold: #3451b2;
+    --gold-dim: #1e3a8a;
+    --crimson: #c0392b;
+    --crimson-dim: rgba(192, 57, 43, 0.10);
+    --success: #1a7a36;
+    --success-dim: rgba(26, 122, 54, 0.12);
+    --warning: #9a6200;
+    --warning-dim: rgba(154, 98, 0, 0.12);
+    --border-s: rgba(0, 0, 0, 0.08);
+    --border-m: rgba(0, 0, 0, 0.15);
+    --border-l: rgba(0, 0, 0, 0.28);
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+    --nav-bg: rgba(250, 248, 245, 0.96);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: var(--fs-base);
+    line-height: var(--lh);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    transition: background .3s, color .3s;
+}
+
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--surface-1); }
+::-webkit-scrollbar-thumb { background: var(--surface-4); border-radius: var(--r-pill); }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* ── LAYOUT ── */
+.app-wrapper {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+    flex: 1;
+}
+
+/* ── NAVBAR ── */
+.navbar {
+    width: 100%;
+    background: var(--nav-bg);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border-s);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    gap: 12px;
+    transition: background .3s;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+}
+
+.nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+.nav-brand-icon { font-size: 1.4rem; filter: sepia(.6) brightness(.7); }
+.nav-brand-name { font-family: 'Cinzel', serif; font-size: var(--fs-md); font-weight: 700; color: var(--gold); letter-spacing: .08em; line-height: 1; }
+.nav-brand-sub { font-size: var(--fs-xs); color: var(--text-dim); letter-spacing: .12em; text-transform: uppercase; display: block; line-height: 1; margin-top: 3px; }
+.nav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.btn-theme {
+    background: var(--surface-3);
+    border: 1px solid var(--border-m);
+    color: var(--text-dim);
+    border-radius: var(--r-sm);
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem;
+    transition: all .2s; flex-shrink: 0;
+}
+.btn-theme:hover { background: var(--surface-4); color: var(--text); }
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; animation: screenIn .32s cubic-bezier(.22,1,.36,1); }
+@keyframes screenIn {
+    from { opacity: 0; transform: translateY(12px) }
+    to   { opacity: 1; transform: translateY(0) }
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 20px;
+    border-bottom: 1px solid var(--border-s);
+    margin-bottom: 24px;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+.page-title { font-family: 'Cinzel', serif; font-size: var(--fs-lg); font-weight: 700; color: var(--text); letter-spacing: .04em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-title span { color: var(--gold); }
+.page-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: nowrap; }
+.page-actions .btn { white-space: nowrap; }
+
+/* ── SEARCH ── */
+.search-bar { margin-bottom: 16px; }
+.search-bar .form-input { background: var(--surface-2); border-color: var(--border-m); padding: 10px 16px; }
+
+/* ── SPINNER ── */
+.spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--border-m);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: 7px;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+
+/* ── RESPONSIVE BASE ── */
+@media (max-width: 680px) {
+    .container { padding: 0 14px 40px; }
+    .page-header { padding: 20px 0 16px; }
+    .page-title { font-size: var(--fs-base); }
+    .page-actions .btn { padding: 7px 12px; font-size: .66rem; }
+}
+@media (max-width: 400px) {
+    .nav-brand-name { font-size: var(--fs-base); }
+    .page-title { font-size: var(--fs-sm); }
+}
