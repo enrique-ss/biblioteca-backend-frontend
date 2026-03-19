@@ -11,8 +11,6 @@
 <body>
 
     <div class="app-wrapper">
-
-        <!-- ── NAVBAR ── -->
         <nav class="navbar">
             <a href="#" class="nav-brand" onclick="return false;">
                 <span class="nav-brand-icon">📚</span>
@@ -32,11 +30,7 @@
                 <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" title="Alternar tema">🌙</button>
             </div>
         </nav>
-
-        <!-- ── MAIN ── -->
         <div class="container" id="appContainer">
-
-            <!-- ════ 1. LOGIN ════ -->
             <section id="loginScreen" class="screen active">
                 <div class="auth-wrap">
                     <div class="auth-card">
@@ -64,8 +58,6 @@
                     </div>
                 </div>
             </section>
-
-            <!-- ════ 1. CRIAR CONTA ════ -->
             <section id="registerScreen" class="screen">
                 <div class="auth-wrap">
                     <div class="auth-card">
@@ -94,8 +86,6 @@
                     </div>
                 </div>
             </section>
-
-            <!-- ════ MENU PRINCIPAL ════ -->
             <section id="menuScreen" class="screen">
                 <div class="menu-screen-wrap">
                     <div class="menu-welcome">
@@ -111,8 +101,6 @@
                     </div>
                 </div>
             </section>
-
-            <!-- ════ 2. ACERVO ════ -->
             <section id="livrosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">📚 <span>Acervo</span> de Livros</h2>
@@ -147,8 +135,6 @@
                     </table>
                 </div>
             </section>
-
-            <!-- ════ 3. EMPRÉSTIMOS ════ -->
             <section id="alugueisScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title" id="alugueisTitle">📋 <span>Empréstimos</span></h2>
@@ -166,8 +152,6 @@
                     </table>
                 </div>
             </section>
-
-            <!-- ════ 4. USUÁRIOS ════ -->
             <section id="usuariosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">👥 <span>Gerenciar</span> Usuários</h2>
@@ -194,8 +178,6 @@
                     </table>
                 </div>
             </section>
-
-            <!-- ════ 5. MEU PERFIL ════ -->
             <section id="perfilScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title">✏️ <span>Meu</span> Perfil</h2>
@@ -230,12 +212,7 @@
                     </div>
                 </div>
             </section>
-
-
-            <!-- ════ QUIZ ════ -->
             <section id="quizScreen" class="screen">
-
-                <!-- SELEÇÃO DE FAIXA ETÁRIA -->
                 <div id="quizAgeSelect">
                     <div class="page-header">
                         <h2 class="page-title">🎓 <span>Quiz</span> Literário</h2>
@@ -265,8 +242,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- MENU DO QUIZ -->
                 <div id="quizHome" style="display:none;">
                     <div class="page-header">
                         <h2 class="page-title" id="quizHomeTitle">🎓 <span>Quiz</span> Literário</h2>
@@ -293,8 +268,6 @@
                     </div>
                     <div class="quiz-cat-grid" id="quizCatGrid"></div>
                 </div>
-
-                <!-- LISTA DE LIÇÕES -->
                 <div id="quizLessons" style="display:none;">
                     <div class="page-header">
                         <h2 class="page-title" id="quizLessonCatTitle">Categoria</h2>
@@ -304,8 +277,6 @@
                     </div>
                     <div class="quiz-lesson-list" id="quizLessonList"></div>
                 </div>
-
-                <!-- CONTEÚDO DA LIÇÃO -->
                 <div id="quizContent" style="display:none;">
                     <div class="page-header">
                         <h2 class="page-title" id="quizContentTitle">Lição</h2>
@@ -323,8 +294,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- QUESTÕES DO QUIZ -->
                 <div id="quizQuestions" style="display:none;">
                     <div class="quiz-q-header">
                         <button class="btn btn-ghost btn-sm" onclick="quizShowPanel('quizContent')">← Voltar</button>
@@ -338,8 +307,6 @@
                         <div class="quiz-options" id="quizOptions"></div>
                     </div>
                 </div>
-
-                <!-- RESULTADO -->
                 <div id="quizResult" style="display:none;">
                     <div class="quiz-result-card">
                         <div class="quiz-result-icon" id="quizResultIcon">🏆</div>
@@ -362,10 +329,8 @@
 
             </section>
 
-        </div><!-- /container -->
-    </div><!-- /app-wrapper -->
-
-    <!-- ════ MODAL: NOVO LIVRO ════ -->
+        </div>
+    </div>
     <div id="addLivroModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('addLivroModal')"></div>
         <div class="modal-box">
@@ -392,8 +357,6 @@
             </form>
         </div>
     </div>
-
-    <!-- ════ MODAL: NOVO ALUGUEL ════ -->
     <div id="addAluguelModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('addAluguelModal')"></div>
         <div class="modal-box">
@@ -416,9 +379,6 @@
             </form>
         </div>
     </div>
-
-
-    <!-- ════ MODAL: EDITAR USUÁRIO ════ -->
     <div id="editUsuarioModal" class="modal">
         <div class="modal-backdrop" onclick="closeModal('editUsuarioModal')"></div>
         <div class="modal-box">
@@ -445,8 +405,6 @@
             </form>
         </div>
     </div>
-
-    <!-- ════ CONFIRM ════ -->
     <div id="confirmDialog">
         <div class="confirm-backdrop"></div>
         <div class="confirm-box">

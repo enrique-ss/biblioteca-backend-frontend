@@ -1,13 +1,9 @@
 // ═══════════════════════════════════════════════════════
-//  LuizaTeca — script.js
-//  Frontend puro: chama API, renderiza resposta. Sem regras de negócio.
-// ═══════════════════════════════════════════════════════
 
 const API_URL = 'http://127.0.0.1:3000/api';
 let token = null;
 let currentUser = null;
 
-// ─── Tema dark/light ─────────────────────────────────
 function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.getAttribute('data-theme') === 'dark';
@@ -22,7 +18,6 @@ function restoreTheme() {
     document.getElementById('btnTheme').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
 
-// ─── Sessão ──────────────────────────────────────────
 function saveSession() {
     sessionStorage.setItem('luizateca_token', token);
     sessionStorage.setItem('luizateca_user', JSON.stringify(currentUser));
@@ -45,7 +40,6 @@ function clearSession() {
     token = null; currentUser = null;
 }
 
-// ─── Navegação ───────────────────────────────────────
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -75,7 +69,6 @@ function closeConfirm() {
     document.getElementById('confirmDialog').classList.remove('active');
 }
 
-// ─── Toast ───────────────────────────────────────────
 function showAlert(message, type = 'success') {
     const icons = { success: '✓', danger: '✕', warning: '⚠' };
     const el = document.createElement('div');
@@ -88,7 +81,6 @@ function showAlert(message, type = 'success') {
     }, 3400);
 }
 
-// ─── API helper ──────────────────────────────────────
 async function api(endpoint, options = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -98,7 +90,6 @@ async function api(endpoint, options = {}) {
     return data;
 }
 
-// ─── Helpers ─────────────────────────────────────────
 function esc(str) {
     return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -115,7 +106,6 @@ function setEmpty(tbodyId, cols, msg = 'Nenhum registro encontrado.') {
         `<tr><td colspan="${cols}" class="table-empty">${msg}</td></tr>`;
 }
 
-// Debounce: evita chamadas excessivas à API enquanto o usuário digita
 function debounce(fn, delay = 350) {
     let timer;
     return (...args) => {
@@ -124,10 +114,6 @@ function debounce(fn, delay = 350) {
     };
 }
 const loadLivrosDebounced = debounce((busca) => loadLivros(busca));
-
-// ═══════════════════════════════════════════════════════
-//  AUTH
-// ═══════════════════════════════════════════════════════
 
 document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
@@ -176,10 +162,6 @@ function updateNavbar() {
     const btn = document.getElementById('btnLogout');
     if (btn) btn.style.display = show ? 'inline-flex' : 'none';
 }
-
-// ═══════════════════════════════════════════════════════
-//  MENU PRINCIPAL
-// ═══════════════════════════════════════════════════════
 
 function loadMenu() {
     document.getElementById('menuUserName').textContent = currentUser.nome;
@@ -238,13 +220,8 @@ function loadMenu() {
     document.getElementById('btnAddLivro').style.display = isBib ? 'inline-flex' : 'none';
     document.getElementById('btnNovoAluguel').style.display = isBib ? 'inline-flex' : 'none';
 
-    // Carrega dashboard em paralelo sem bloquear o menu
     loadDashboard();
 }
-
-// ═══════════════════════════════════════════════════════
-//  DASHBOARD
-// ═══════════════════════════════════════════════════════
 
 async function loadDashboard() {
     const container = document.getElementById('dashboardStats');
@@ -266,14 +243,9 @@ async function loadDashboard() {
     }
 }
 
-// ═══════════════════════════════════════════════════════
-//  2. LIVROS
-// ═══════════════════════════════════════════════════════
-
 let livrosAbortController = null;
 
 async function loadLivros(busca = '') {
-    // Cancela requisição anterior se ainda estiver pendente
     if (livrosAbortController) livrosAbortController.abort();
     livrosAbortController = new AbortController();
     setLoading('livrosTbody', 7);
@@ -325,11 +297,6 @@ document.getElementById('addLivroForm').addEventListener('submit', async e => {
     } catch (err) { showAlert(err.message, 'danger'); }
 });
 
-// ═══════════════════════════════════════════════════════
-//  3. EMPRÉSTIMOS
-// ═══════════════════════════════════════════════════════
-
-// Voltar: bibliotecário → sub-menu; usuário → menu principal
 function voltarAlugueis() {
     showScreen('menuScreen');
 }
@@ -365,7 +332,6 @@ async function loadMeusAlugueis() {
     }
 }
 
-// Bibliotecário — renderiza o que o backend mandou, incluindo pode_devolver
 function renderAlugueisCompleto(data) {
     const tbody = document.getElementById('alugueisTbody');
     tbody.innerHTML = '';
@@ -387,7 +353,6 @@ function renderAlugueisCompleto(data) {
     });
 }
 
-// Usuário — só visualiza, sem coluna de usuário nem ações
 function renderAlugueisMeus(data) {
     const tbody = document.getElementById('alugueisTbody');
     tbody.innerHTML = '';
@@ -436,7 +401,6 @@ document.getElementById('addAluguelForm').addEventListener('submit', async e => 
     } catch (err) { showAlert(err.message, 'danger'); }
 });
 
-
 function devolverLivro(id) {
     showConfirm({
         icon: '📖', title: 'Confirmar devolução',
@@ -449,10 +413,6 @@ function devolverLivro(id) {
         }
     });
 }
-
-// ═══════════════════════════════════════════════════════
-//  4. USUÁRIOS
-// ═══════════════════════════════════════════════════════
 
 async function loadUsuarios() {
     setLoading('usuariosTbody', 5);
@@ -520,10 +480,6 @@ function excluirUsuario(id, nome) {
     });
 }
 
-// ═══════════════════════════════════════════════════════
-//  5. MEU PERFIL
-// ═══════════════════════════════════════════════════════
-
 function loadPerfil() {
     document.getElementById('perfilNome').value = currentUser.nome;
     document.getElementById('perfilEmail').value = currentUser.email;
@@ -560,7 +516,6 @@ document.getElementById('editPerfilForm').addEventListener('submit', async e => 
     } catch (err) { showAlert(err.message, 'danger'); }
 });
 
-// ─── Badges ──────────────────────────────────────────
 function badgeStatus(status) {
     const map = {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
@@ -582,20 +537,14 @@ function badgeTipo(tipo) {
     return map[tipo] ?? `<span class="badge">${esc(tipo)}</span>`;
 }
 
-// ─── ESC fecha modais ─────────────────────────────────
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     document.querySelectorAll('.modal.active').forEach(m => closeModal(m.id));
     closeConfirm();
 });
 
-// ─── Init ─────────────────────────────────────────────
 restoreTheme();
 restoreSession();
-
-// ═══════════════════════════════════════════════════════
-//  QUIZ — motor completo integrado ao LuizaTeca
-// ═══════════════════════════════════════════════════════
 
 const QUIZ_XP_PER_LEVEL = [0, 100, 250, 450, 700, 1000, 1400, 1850, 2350, 2900, 3500];
 
@@ -611,7 +560,6 @@ let quizState = {
 
 let quizData = null;
 
-// Dados das lições (conteúdo completo do Outro Nível)
 const QUIZ_DATA = {
     infantil: {
         greeting: 'Infantil (6–8 anos)',
@@ -847,10 +795,7 @@ const QUIZ_DATA = {
     }
 };
 
-// ── Funções do quiz ──────────────────────────────────
-
 function quizInit() {
-    // Se já tem faixa etária selecionada, vai direto pro menu
     if (quizState.ageGroup) {
         quizShowPanel('quizHome');
     } else {
@@ -869,7 +814,6 @@ async function quizSelectAge(group) {
     quizState.ageGroup = group;
     quizData = QUIZ_DATA[group];
 
-    // Carrega progresso do backend
     try {
         const progress = await api('/quiz');
         quizState.xp = progress.xp ?? 0;
@@ -1012,13 +956,11 @@ async function quizFinish() {
         quizState.completedLessons.push(quizState.currentLesson.id);
     }
 
-    // Recalcula nível
     for (let i = QUIZ_XP_PER_LEVEL.length - 1; i >= 0; i--) {
         if (quizState.xp >= QUIZ_XP_PER_LEVEL[i]) { quizState.level = i + 1; break; }
     }
     const leveledUp = quizState.level > oldLevel;
 
-    // Salva no backend
     try {
         await api('/quiz', {
             method: 'POST',
