@@ -11,7 +11,6 @@ function toggleTheme() {
     document.getElementById('btnTheme').textContent = isDark ? '🌙' : '☀️';
     localStorage.setItem('luizateca_theme', isDark ? 'light' : 'dark');
 }
-
 function restoreTheme() {
     const saved = localStorage.getItem('luizateca_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
@@ -23,23 +22,16 @@ function saveSession() {
     sessionStorage.setItem('luizateca_token', token);
     sessionStorage.setItem('luizateca_user', JSON.stringify(currentUser));
 }
-
 function restoreSession() {
     const t = sessionStorage.getItem('luizateca_token');
     const u = sessionStorage.getItem('luizateca_user');
     if (t && u) {
-        token = t;
-        currentUser = JSON.parse(u);
-        updateNavbar();
-        loadMenu();
-        showScreen('menuScreen');
+        token = t; currentUser = JSON.parse(u);
+        updateNavbar(); loadMenu(); showScreen('menuScreen');
     }
 }
-
 function clearSession() {
-    sessionStorage.clear();
-    token = null;
-    currentUser = null;
+    sessionStorage.clear(); token = null; currentUser = null;
 }
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────────────────────
@@ -54,7 +46,6 @@ function openModal(id) {
     document.getElementById(id).classList.add('active');
     document.body.style.overflow = 'hidden';
 }
-
 function closeModal(id) {
     document.getElementById(id).classList.remove('active');
     document.body.style.overflow = '';
@@ -69,12 +60,11 @@ function showConfirm({ icon = '⚠️', title = 'Confirmar', msg = '', okLabel =
     document.getElementById('confirmOkBtn').onclick = () => { closeConfirm(); onOk(); };
     document.getElementById('confirmDialog').classList.add('active');
 }
-
 function closeConfirm() {
     document.getElementById('confirmDialog').classList.remove('active');
 }
 
-// ── ALERTS (TOASTS) ───────────────────────────────────────────────────────────
+// ── ALERTS ────────────────────────────────────────────────────────────────────
 function showAlert(message, type = 'success') {
     const icons = { success: '✓', danger: '✕', warning: '⚠' };
     const el = document.createElement('div');
@@ -99,24 +89,20 @@ async function api(endpoint, options = {}) {
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function esc(str) {
-    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-
 function fmtDate(iso) {
     if (!iso) return '—';
     try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; }
 }
-
 function setLoading(tbodyId, cols) {
     document.getElementById(tbodyId).innerHTML =
         `<tr class="loading-row"><td colspan="${cols}"><span class="spinner"></span>Carregando…</td></tr>`;
 }
-
 function setEmpty(tbodyId, cols, msg = 'Nenhum registro encontrado.') {
     document.getElementById(tbodyId).innerHTML =
         `<tr><td colspan="${cols}" class="table-empty">${msg}</td></tr>`;
 }
-
 function debounce(fn, delay = 350) {
     let timer;
     return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
@@ -126,10 +112,10 @@ function debounce(fn, delay = 350) {
 function badgeStatus(status) {
     const map = {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
-        alugado:    `<span class="badge badge-danger"><span class="badge-dot"></span>Alugado</span>`,
-        ativo:      `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
-        atrasado:   `<span class="badge badge-danger"><span class="badge-dot"></span>Atrasado</span>`,
-        devolvido:  `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
+        alugado: `<span class="badge badge-danger"><span class="badge-dot"></span>Alugado</span>`,
+        ativo: `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
+        atrasado: `<span class="badge badge-danger"><span class="badge-dot"></span>Atrasado</span>`,
+        devolvido: `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
     };
     return map[status] ?? `<span class="badge">${esc(status)}</span>`;
 }
@@ -137,7 +123,7 @@ function badgeStatus(status) {
 function badgeTipo(tipo) {
     const map = {
         bibliotecario: `<span class="badge badge-gold">Bibliotecário</span>`,
-        usuario: `<span class="badge" style="background:rgba(100,100,100,0.10);color:var(--text-dim);border-color:var(--border-s)">Usuário</span>`,
+        usuario: `<span class="badge" style="background:rgba(100,100,100,.10);color:var(--text-dim);border-color:var(--border-s)">Usuário</span>`,
     };
     return map[tipo] ?? `<span class="badge">${esc(tipo)}</span>`;
 }
@@ -147,9 +133,41 @@ function badgeExemplar(status) {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
         emprestado: `<span class="badge badge-warning"><span class="badge-dot"></span>Emprestado</span>`,
         danificado: `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`,
-        perdido:    `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
+        perdido: `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
     };
     return map[status] ?? `<span class="badge">${esc(status)}</span>`;
+}
+
+// Condição resumida de um livro (mapa de contagens por condição)
+function badgeCondicao(condicao = {}) {
+    if (!condicao || !Object.keys(condicao).length) return '<span style="color:var(--text-faint)">—</span>';
+    const parts = [];
+    if (condicao.danificado > 0)
+        parts.push(`<span class="badge badge-danger" title="${condicao.danificado} danificado(s)">${condicao.danificado} danif.</span>`);
+    if (condicao.perdido > 0)
+        parts.push(`<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)" title="${condicao.perdido} perdido(s)">${condicao.perdido} perd.</span>`);
+    if (!parts.length)
+        return `<span class="badge badge-success">Bom estado</span>`;
+    return parts.join(' ');
+}
+
+// Badge de disponibilidade de um exemplar individual
+function badgeDisponibilidade(disp) {
+    if (disp === 'disponivel' || !disp)
+        return `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`;
+    if (disp === 'emprestado')
+        return `<span class="badge badge-warning"><span class="badge-dot"></span>Emprestado</span>`;
+    return `<span class="badge"><span class="badge-dot"></span>${esc(disp)}</span>`;
+}
+
+function badgeCondicao2(cond) {
+    if (cond === 'bom' || !cond)
+        return `<span class="badge badge-success"><span class="badge-dot"></span>Bom</span>`;
+    if (cond === 'danificado')
+        return `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`;
+    if (cond === 'perdido')
+        return `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`;
+    return `<span class="badge"><span class="badge-dot"></span>${esc(cond)}</span>`;
 }
 
 // ── PAGINAÇÃO ─────────────────────────────────────────────────────────────────

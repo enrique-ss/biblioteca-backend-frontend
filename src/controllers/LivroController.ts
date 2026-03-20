@@ -13,7 +13,22 @@ export class LivroController {
     };
   }
 
-  // Listar com busca, filtro, paginação e ordenação
+  // Recalcula exemplares_disponiveis e status do livro com base nos exemplares reais
+  private recalcularContadores = async (livro_id: number) => {
+    // Conta todos os exemplares exceto perdidos para o total físico
+    // Disponíveis = disponibilidade='disponivel' (independente da condição)
+    const [{ total }, { disponiveis }] = await Promise.all([
+      db('exemplares').where({ livro_id }).whereNot({ condicao: 'perdido' }).count('id as total').first() as Promise<any>,
+      db('exemplares').where({ livro_id, disponibilidade: 'disponivel' }).count('id as disponiveis').first() as Promise<any>
+    ]);
+    await db('livros').where({ id: livro_id }).update({
+      exemplares: Number(total),
+      exemplares_disponiveis: Number(disponiveis),
+      status: Number(disponiveis) > 0 ? 'disponivel' : 'alugado'
+    });
+  };
+
+  // Listar com busca, filtro, paginação, ordenação e condição dos exemplares
   listar = async (req: AuthRequest, res: Response) => {
     try {
       const { status, busca, page: p, limit: l, sort = 'titulo', order = 'asc' } = req.query;
@@ -25,7 +40,6 @@ export class LivroController {
       const col = allowed.includes(String(sort)) ? String(sort) : 'titulo';
       const dir = order === 'desc' ? 'desc' : 'asc';
 
-      // Nunca exibe livros com soft delete
       let query = db('livros').whereNull('deleted_at');
 
       if (status === 'disponivel') query = query.where('exemplares_disponiveis', '>', 0);
@@ -45,7 +59,30 @@ export class LivroController {
         query.clone().count('id as total')
       ]);
 
-      res.json({ data: rows, total, page, limit, pages: Math.ceil(Number(total) / limit) });
+      // Enriquece cada livro com contagem de exemplares por condição física
+      // Enriquece com condição física dos exemplares (independente da disponibilidade)
+      const livroIds = (rows as any[]).map((r: any) => r.id);
+      let condicoes: any[] = [];
+      if (livroIds.length > 0) {
+        condicoes = await db('exemplares')
+          .whereIn('livro_id', livroIds)
+          .select('livro_id', 'condicao')
+          .count('id as qtd')
+          .groupBy('livro_id', 'condicao');
+      }
+
+      const condicaoMap: Record<number, any> = {};
+      for (const c of condicoes) {
+        if (!condicaoMap[c.livro_id]) condicaoMap[c.livro_id] = {};
+        condicaoMap[c.livro_id][c.condicao] = Number(c.qtd);
+      }
+
+      const data = (rows as any[]).map((r: any) => ({
+        ...r,
+        condicao: condicaoMap[r.id] ?? {}
+      }));
+
+      res.json({ data, total, page, limit, pages: Math.ceil(Number(total) / limit) });
     } catch (error) {
       console.error('Erro ao listar livros:', error);
       res.status(500).json({ error: 'Erro ao listar livros' });
@@ -62,10 +99,9 @@ export class LivroController {
 
       const exemplares = await db('exemplares')
         .where({ livro_id: id })
-        .select('id', 'codigo', 'status', 'observacao', 'created_at')
+        .select('id', 'codigo', 'disponibilidade', 'condicao', 'observacao', 'created_at')
         .orderBy('id', 'asc');
 
-      // Para cada exemplar, busca o último aluguel e quem está com ele
       const exemplariesComHistorico = await Promise.all(
         exemplares.map(async (ex) => {
           const ultimoAluguel = await db('alugueis')
@@ -81,7 +117,6 @@ export class LivroController {
             )
             .orderBy('alugueis.id', 'desc')
             .first();
-
           return { ...ex, ultimo_aluguel: ultimoAluguel || null };
         })
       );
@@ -93,30 +128,38 @@ export class LivroController {
     }
   };
 
-  // Atualizar status de um exemplar individual (danificado, perdido, etc.)
+  // Atualizar status de um exemplar individual
   atualizarExemplar = async (req: AuthRequest, res: Response) => {
     try {
       const { exemplar_id } = req.params;
       const { status, observacao } = req.body;
 
-      const statusPermitidos = ['disponivel', 'emprestado', 'danificado', 'perdido'];
-      if (!statusPermitidos.includes(status))
-        return res.status(400).json({ error: `Status inválido. Use: ${statusPermitidos.join(', ')}` });
+      // Aceita atualização de condicao (bom/danificado/perdido) OU disponibilidade (disponivel/emprestado)
+      const { condicao } = req.body;
+      const condicoesValidas = ['bom', 'danificado', 'perdido'];
+      const disponibilidades = ['disponivel', 'emprestado'];
 
       const exemplar = await db('exemplares').where({ id: exemplar_id }).first();
       if (!exemplar) return res.status(404).json({ error: 'Exemplar não encontrado' });
 
-      // Não permite alterar manualmente um exemplar emprestado para disponivel
-      // sem passar pelo fluxo de devolução
-      if (exemplar.status === 'emprestado' && status === 'disponivel')
-        return res.status(400).json({ error: 'Use o fluxo de devolução para marcar como disponível' });
+      const atualizacao: any = { observacao: observacao?.trim() || null };
 
-      await db('exemplares').where({ id: exemplar_id }).update({
-        status,
-        observacao: observacao?.trim() || null
-      });
+      if (condicao !== undefined) {
+        if (!condicoesValidas.includes(condicao))
+          return res.status(400).json({ error: `Condição inválida. Use: ${condicoesValidas.join(', ')}` });
+        atualizacao.condicao = condicao;
+      }
 
-      // Recalcula contadores do livro
+      if (status !== undefined) {
+        if (!disponibilidades.includes(status))
+          return res.status(400).json({ error: `Disponibilidade inválida. Use: ${disponibilidades.join(', ')}` });
+        if (exemplar.disponibilidade === 'emprestado' && status === 'disponivel')
+          return res.status(400).json({ error: 'Use o fluxo de devolução para marcar como disponível' });
+        atualizacao.disponibilidade = status;
+      }
+
+      await db('exemplares').where({ id: exemplar_id }).update(atualizacao);
+
       await this.recalcularContadores(exemplar.livro_id);
 
       const atualizado = await db('exemplares').where({ id: exemplar_id }).first();
@@ -125,20 +168,6 @@ export class LivroController {
       console.error('Erro ao atualizar exemplar:', error);
       res.status(500).json({ error: 'Erro ao atualizar exemplar' });
     }
-  };
-
-  // Recalcula exemplares_disponiveis e status do livro com base nos exemplares reais
-  private recalcularContadores = async (livro_id: number) => {
-    const [{ total }, { disponiveis }] = await Promise.all([
-      db('exemplares').where({ livro_id }).count('id as total').first() as Promise<any>,
-      db('exemplares').where({ livro_id, status: 'disponivel' }).count('id as disponiveis').first() as Promise<any>
-    ]);
-
-    await db('livros').where({ id: livro_id }).update({
-      exemplares: Number(total),
-      exemplares_disponiveis: Number(disponiveis),
-      status: Number(disponiveis) > 0 ? 'disponivel' : 'alugado'
-    });
   };
 
   // Cadastrar
@@ -159,29 +188,23 @@ export class LivroController {
 
       await db.transaction(async (trx) => {
         const [livro_id] = await trx('livros').insert({
-          titulo: titulo.trim(),
-          autor: autor.trim(),
-          ano_lancamento: ano,
-          genero: genero?.trim() || 'Não Informado',
-          isbn: isbn?.trim() || null,
-          corredor,
-          prateleira,
-          exemplares: qtd,
-          exemplares_disponiveis: qtd,
-          status: 'disponivel',
-          deleted_at: null
+          titulo: titulo.trim(), autor: autor.trim(), ano_lancamento: ano,
+          genero: genero?.trim() || 'Não Informado', isbn: isbn?.trim() || null,
+          corredor, prateleira, exemplares: qtd, exemplares_disponiveis: qtd,
+          status: 'disponivel', deleted_at: null
         });
 
-        // Cria um registro individual para cada exemplar físico
         const inserts = Array.from({ length: qtd }, (_, i) => ({
           livro_id,
           codigo: `EX-${livro_id}-${String(i + 1).padStart(3, '0')}`,
-          status: 'disponivel'
+          disponibilidade: 'disponivel',
+          condicao: 'bom'
         }));
         await trx('exemplares').insert(inserts);
       });
 
-      const livro = await db('livros').where({ titulo: titulo.trim(), autor: autor.trim() })
+      const livro = await db('livros')
+        .where({ titulo: titulo.trim(), autor: autor.trim() })
         .orderBy('id', 'desc').first();
 
       res.status(201).json({
@@ -222,25 +245,18 @@ export class LivroController {
         const diff = qtd - livro.exemplares;
 
         if (diff > 0) {
-          // Adiciona novos exemplares físicos
-          const ultimoCodigo = await db('exemplares')
-            .where({ livro_id: id })
-            .count('id as total')
-            .first() as any;
-          const base = Number(ultimoCodigo.total);
-
+          const { total: base } = await db('exemplares').where({ livro_id: id }).count('id as total').first() as any;
           const inserts = Array.from({ length: diff }, (_, i) => ({
             livro_id: Number(id),
-            codigo: `EX-${id}-${String(base + i + 1).padStart(3, '0')}`,
-            status: 'disponivel'
+            codigo: `EX-${id}-${String(Number(base) + i + 1).padStart(3, '0')}`,
+            disponibilidade: 'disponivel',
+            condicao: 'bom'
           }));
           await db('exemplares').insert(inserts);
         } else if (diff < 0) {
-          // Remove exemplares disponíveis excedentes (nunca os emprestados)
           const paraRemover = await db('exemplares')
-            .where({ livro_id: id, status: 'disponivel' })
-            .limit(Math.abs(diff))
-            .select('id');
+            .where({ livro_id: id, disponibilidade: 'disponivel' })
+            .limit(Math.abs(diff)).select('id');
 
           if (paraRemover.length < Math.abs(diff))
             return res.status(400).json({
@@ -250,7 +266,6 @@ export class LivroController {
           await db('exemplares').whereIn('id', paraRemover.map(e => e.id)).del();
         }
 
-        // Recalcula contadores a partir dos exemplares reais
         await this.recalcularContadores(Number(id));
       }
 
@@ -264,7 +279,7 @@ export class LivroController {
     }
   };
 
-  // Soft delete — livro some do acervo mas histórico permanece intacto
+  // Soft delete
   remover = async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
@@ -272,16 +287,13 @@ export class LivroController {
       const livro = await db('livros').where({ id }).whereNull('deleted_at').first();
       if (!livro) return res.status(404).json({ error: 'Livro não encontrado' });
 
-      // Bloqueia remoção se houver exemplares ativamente emprestados ou atrasados
       const [{ total }] = await db('alugueis')
         .where({ livro_id: id })
         .whereIn('status', ['ativo', 'atrasado'])
         .count('id as total');
 
       if (Number(total) > 0)
-        return res.status(400).json({
-          error: `❌ Não é possível remover: ${total} exemplar(es) em empréstimo ativo.`
-        });
+        return res.status(400).json({ error: `❌ Não é possível remover: ${total} exemplar(es) em empréstimo ativo.` });
 
       await db('livros').where({ id }).update({ deleted_at: new Date() });
       res.json({ message: '✅ Livro removido do acervo.' });

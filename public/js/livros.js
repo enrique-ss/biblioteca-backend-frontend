@@ -9,7 +9,7 @@ function sortTable(table, col) {
     if (table === 'livros') {
         livrosSort.dir = livrosSort.col === col && livrosSort.dir === 'asc' ? 'desc' : 'asc';
         livrosSort.col = col;
-        document.querySelectorAll('#livrosScreen .sortable').forEach(th => th.classList.remove('sort-asc','sort-desc'));
+        document.querySelectorAll('#livrosScreen .sortable').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
         const th = document.querySelector(`[onclick="sortTable('livros','${col}')"]`);
         if (th) th.classList.add(livrosSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
         loadLivros(document.getElementById('buscaLivros')?.value || '', 1);
@@ -42,8 +42,9 @@ async function loadLivros(busca = '', page = 1) {
                 <td style="color:var(--text-dim)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
                 <td style="text-align:center">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)}</td>
                 <td>${badgeStatus(livro.status)}</td>
+                <td>${badgeCondicao(livro.condicao)}</td>
                 <td>${isBib ? `<div class="td-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">📋 Exemplares</button>
+                    <button class="btn btn-ghost btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
                     <button class="btn btn-ghost btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
                     <button class="btn btn-danger btn-sm" onclick="removerLivro(${livro.id},'${esc(livro.titulo)}')">Remover</button>
                 </div>` : ''}</td>`;
@@ -77,12 +78,12 @@ document.getElementById('addLivroForm').addEventListener('submit', async e => {
 });
 
 function editarLivro(livro) {
-    document.getElementById('editLivroId').value        = livro.id;
-    document.getElementById('editLivroTitulo').value    = livro.titulo;
-    document.getElementById('editLivroAutor').value     = livro.autor;
-    document.getElementById('editLivroAno').value       = livro.ano_lancamento;
-    document.getElementById('editLivroGenero').value    = livro.genero;
-    document.getElementById('editLivroIsbn').value      = livro.isbn || '';
+    document.getElementById('editLivroId').value = livro.id;
+    document.getElementById('editLivroTitulo').value = livro.titulo;
+    document.getElementById('editLivroAutor').value = livro.autor;
+    document.getElementById('editLivroAno').value = livro.ano_lancamento;
+    document.getElementById('editLivroGenero').value = livro.genero;
+    document.getElementById('editLivroIsbn').value = livro.isbn || '';
     document.getElementById('editLivroExemplares').value = livro.exemplares;
     openModal('editLivroModal');
 }
@@ -110,7 +111,7 @@ document.getElementById('editLivroForm').addEventListener('submit', async e => {
 
 function removerLivro(id, titulo) {
     showConfirm({
-        icon: '🗑️', title: 'Remover livro',
+        icon: '', title: 'Remover livro',
         msg: `Remover "${titulo}" do acervo? Esta ação é irreversível.`,
         okLabel: 'Remover',
         async onOk() {
@@ -149,18 +150,18 @@ async function carregarExemplares(livroId) {
                 <td style="color:var(--text-dim);font-size:var(--fs-xs)">${esc(ex.observacao ?? '—')}</td>
                 <td style="font-size:var(--fs-xs)">
                     ${ult
-                        ? `<strong>${esc(ult.usuario)}</strong><br>
+                    ? `<strong>${esc(ult.usuario)}</strong><br>
                            <span style="color:var(--text-dim)">${fmtDate(ult.data_aluguel)}</span>
                            ${ult.status_aluguel === 'ativo' ? `<span class="badge badge-warning" style="margin-left:4px;font-size:.55rem">em mãos</span>` : ''}`
-                        : `<span style="color:var(--text-faint)">Nunca alugado</span>`}
+                    : `<span style="color:var(--text-faint)">Nunca alugado</span>`}
                 </td>
                 <td>
                     <select class="form-select" style="font-size:var(--fs-xs);padding:5px 28px 5px 8px;"
                         onchange="atualizarExemplar(${livroId}, ${ex.id}, this.value, this)">
-                        <option value="disponivel" ${ex.status==='disponivel'?'selected':''}>Disponível</option>
-                        <option value="emprestado" ${ex.status==='emprestado'?'selected':''} disabled>Emprestado</option>
-                        <option value="danificado" ${ex.status==='danificado'?'selected':''}>Danificado</option>
-                        <option value="perdido"    ${ex.status==='perdido'?'selected':''}>Perdido</option>
+                        <option value="disponivel" ${ex.status === 'disponivel' ? 'selected' : ''}>Disponível</option>
+                        <option value="emprestado" ${ex.status === 'emprestado' ? 'selected' : ''} disabled>Emprestado</option>
+                        <option value="danificado" ${ex.status === 'danificado' ? 'selected' : ''}>Danificado</option>
+                        <option value="perdido"    ${ex.status === 'perdido' ? 'selected' : ''}>Perdido</option>
                     </select>
                 </td>`;
             tbody.appendChild(tr);
@@ -172,9 +173,8 @@ async function carregarExemplares(livroId) {
 }
 
 async function atualizarExemplar(livroId, exemplarId, novoStatus) {
-    const observacao = (novoStatus === 'danificado' || novoStatus === 'perdido')
-        ? prompt('Observação sobre o exemplar (opcional):') ?? ''
-        : '';
+    const precisaObs = novoStatus === 'danificado' || novoStatus === 'perdido';
+    const observacao = precisaObs ? (prompt('Observação sobre o exemplar (opcional):') ?? '') : '';
     try {
         await api(`/livros/${livroId}/exemplares/${exemplarId}`, {
             method: 'PATCH',

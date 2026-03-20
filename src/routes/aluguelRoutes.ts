@@ -8,11 +8,14 @@ const controller = new AluguelController();
 router.use(verificarToken);
 
 router.get('/meus', controller.meus);
+router.get('/multas/minhas', controller.minhasMultas);
 router.get('/todos', verificarBibliotecario, controller.listarTodos);
 router.get('/historico', verificarBibliotecario, controller.historico);
 router.get('/atrasados', verificarBibliotecario, controller.atrasados);
+router.get('/multas/:usuario_id', verificarBibliotecario, controller.listarMultas);
 router.post('/', verificarBibliotecario, controller.criar);
 router.put('/:id/devolver', verificarBibliotecario, controller.devolver);
 router.put('/:id/renovar', controller.renovar);
+router.put('/multas/:usuario_id/pagar', verificarBibliotecario, controller.pagarMulta);
 
 export default router;
