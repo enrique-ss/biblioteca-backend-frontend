@@ -5,7 +5,12 @@ const loadUsuariosDebounced = debounce((busca) => loadUsuarios(1, busca));
 async function loadUsuarios(page = 1, busca = '') {
     setLoading('usuariosTbody', 5);
     try {
-        const params = new URLSearchParams({ page, limit: 20 });
+        const params = new URLSearchParams({ 
+            page, 
+            limit: 20,
+            sort: sortState.usuarios.col,
+            order: sortState.usuarios.dir
+        });
         if (busca.trim()) params.set('busca', busca.trim());
         const { data, pages } = await api(`/usuarios?${params}`);
         const tbody = document.getElementById('usuariosTbody');
@@ -15,9 +20,11 @@ async function loadUsuarios(page = 1, busca = '') {
             const tr = document.createElement('tr');
             const multaBadge = u.multa_pendente
                 ? `<span class="badge badge-danger" style="margin-left:6px;font-size:.55rem">multa</span>` : '';
+            const bloqueadoBadge = u.bloqueado
+                ? `<span class="badge badge-warning" style="margin-left:6px;font-size:.55rem">bloqueado</span>` : '';
             tr.innerHTML = `
                 <td style="color:var(--text-faint)">${esc(u.id)}</td>
-                <td><strong>${esc(u.nome)}</strong>${multaBadge}</td>
+                <td><strong>${esc(u.nome)}</strong>${multaBadge}${bloqueadoBadge}</td>
                 <td style="color:var(--text-dim)">${esc(u.email)}</td>
                 <td>${badgeTipo(u.tipo)}</td>
                 <td><div class="td-actions">
@@ -25,11 +32,21 @@ async function loadUsuarios(page = 1, busca = '') {
                     ${u.multa_pendente
                     ? `<button class="btn btn-warning btn-sm" onclick="verMultasUsuario(${u.id},'${esc(u.nome)}')">Multas</button>`
                     : ''}
+                    ${u.bloqueado
+                    ? `<button class="btn btn-success btn-sm" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`
+                    : `<button class="btn btn-warning btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`}
                     <button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id},'${esc(u.nome)}')">Excluir</button>
                 </div></td>`;
             tbody.appendChild(tr);
         });
         renderPagination('usuariosPagination', page, pages, (p) => loadUsuarios(p, busca));
+        
+        // Atualiza classes de ordenação
+        document.querySelectorAll('#usuariosScreen .sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+        });
+        const currentTh = document.querySelector(`#usuariosScreen [onclick="sortTable('usuarios','${sortState.usuarios.col}')"]`);
+        if (currentTh) currentTh.classList.add(sortState.usuarios.dir === 'asc' ? 'sort-asc' : 'sort-desc');
     } catch (err) { setEmpty('usuariosTbody', 5, err.message); showAlert(err.message, 'danger'); }
 }
 
@@ -108,6 +125,48 @@ async function carregarMultasUsuario(id) {
             document.getElementById('btnQuitarMultas').style.display = 'none';
         }
     } catch (err) { setEmpty('multasTbody', 5, err.message); }
+}
+
+async function bloquearUsuario(id, nome) {
+    showConfirm({
+        icon: '🔒',
+        title: 'Bloquear Usuário',
+        msg: `Bloquear o usuário "${nome}"? Ele não poderá mais realizar empréstimos.`,
+        okLabel: 'Bloquear',
+        onOk: async () => {
+            const motivo = prompt('Motivo do bloqueio:');
+            if (!motivo?.trim()) return;
+            
+            try {
+                await api(`/usuarios/${id}/bloquear`, {
+                    method: 'POST',
+                    body: JSON.stringify({ motivo: motivo.trim() })
+                });
+                showAlert('Usuário bloqueado com sucesso!', 'success');
+                loadUsuarios();
+            } catch (err) {
+                showAlert(err.message, 'danger');
+            }
+        }
+    });
+}
+
+async function desbloquearUsuario(id, nome) {
+    showConfirm({
+        icon: '🔓',
+        title: 'Desbloquear Usuário',
+        msg: `Desbloquear o usuário "${nome}"? Ele poderá voltar a realizar empréstimos.`,
+        okLabel: 'Desbloquear',
+        onOk: async () => {
+            try {
+                await api(`/usuarios/${id}/desbloquear`, { method: 'POST' });
+                showAlert('Usuário desbloqueado com sucesso!', 'success');
+                loadUsuarios();
+            } catch (err) {
+                showAlert(err.message, 'danger');
+            }
+        }
+    });
 }
 
 async function quitarMultasUsuario() {

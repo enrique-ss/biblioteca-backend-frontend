@@ -134,10 +134,10 @@ export class LivroController {
       const { exemplar_id } = req.params;
       const { status, observacao } = req.body;
 
-      // Aceita atualização de condicao (bom/danificado/perdido) OU disponibilidade (disponivel/emprestado)
+      // Aceita atualização de condicao (bom/danificado/perdido) OU disponibilidade (disponivel/emprestado/indisponivel)
       const { condicao } = req.body;
       const condicoesValidas = ['bom', 'danificado', 'perdido'];
-      const disponibilidades = ['disponivel', 'emprestado'];
+      const disponibilidades = ['disponivel', 'emprestado', 'indisponivel', 'perdido'];
 
       const exemplar = await db('exemplares').where({ id: exemplar_id }).first();
       if (!exemplar) return res.status(404).json({ error: 'Exemplar não encontrado' });
@@ -148,6 +148,11 @@ export class LivroController {
         if (!condicoesValidas.includes(condicao))
           return res.status(400).json({ error: `Condição inválida. Use: ${condicoesValidas.join(', ')}` });
         atualizacao.condicao = condicao;
+        
+        // Se a condição for "perdido", automaticamente muda disponibilidade para "perdido"
+        if (condicao === 'perdido') {
+          atualizacao.disponibilidade = 'perdido';
+        }
       }
 
       if (status !== undefined) {
@@ -155,6 +160,9 @@ export class LivroController {
           return res.status(400).json({ error: `Disponibilidade inválida. Use: ${disponibilidades.join(', ')}` });
         if (exemplar.disponibilidade === 'emprestado' && status === 'disponivel')
           return res.status(400).json({ error: 'Use o fluxo de devolução para marcar como disponível' });
+        // Não permite deixar como "disponível" se a condição for "perdido"
+        if (status === 'disponivel' && exemplar.condicao === 'perdido')
+          return res.status(400).json({ error: 'Exemplar perdido não pode ficar disponível' });
         atualizacao.disponibilidade = status;
       }
 

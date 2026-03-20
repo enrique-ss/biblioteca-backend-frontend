@@ -1,21 +1,30 @@
 // ── ALUGUÉIS ──────────────────────────────────────────────────────────────────
 
+const loadAlugueisDebounced = debounce((busca) => loadAlugueis(1, busca));
+
 function voltarAlugueis() { showScreen('menuScreen'); }
 
-async function loadAlugueis(page = 1) {
+async function loadAlugueis(page = 1, busca = '') {
     document.getElementById('alugueisTitle').innerHTML = `<span>Empréstimos</span>`;
     document.getElementById('alugueisHead').innerHTML =
-        `<tr><th>#</th><th>Usuário</th><th>Livro</th><th>Exemplar</th><th>Empréstimo</th><th>Prazo</th><th>Atraso</th><th>Status</th><th>Ações</th></tr>`;
+        `<tr><th>#</th><th class="sortable" onclick="sortTable('alugueis','usuario')">Usuário <span class="sort-indicator"></span></th><th class="sortable" onclick="sortTable('alugueis','titulo')">Livro <span class="sort-indicator"></span></th><th>Exemplar</th><th class="sortable" onclick="sortTable('alugueis','data_aluguel')">Empréstimo <span class="sort-indicator"></span></th><th class="sortable" onclick="sortTable('alugueis','prazo')">Prazo <span class="sort-indicator"></span></th><th class="sortable" onclick="sortTable('alugueis','dias_atraso')">Atraso <span class="sort-indicator"></span></th><th>Status</th><th>Ações</th></tr>`;
     setLoading('alugueisTbody', 9);
     try {
+        const params = new URLSearchParams({ 
+            page, 
+            limit: 20,
+            sort: sortState.alugueis.col,
+            order: sortState.alugueis.dir
+        });
+        if (busca.trim()) params.set('busca', busca.trim());
         const [res, atrasados] = await Promise.all([
-            api(`/alugueis/todos?page=${page}&limit=20`),
+            api(`/alugueis/todos?${params}`),
             api('/alugueis/atrasados')
         ]);
         const rows = Array.isArray(res) ? res : (res.data ?? []);
         const pages = Array.isArray(res) ? 1 : (res.pages ?? 1);
         renderAlugueisCompleto(rows);
-        renderPagination('alugueisPagination', page, pages, loadAlugueis);
+        renderPagination('alugueisPagination', page, pages, (p) => loadAlugueis(p, busca));
         const banner = document.getElementById('atrasadosBanner');
         if (atrasados.total > 0) {
             banner.style.display = 'flex';
@@ -23,6 +32,13 @@ async function loadAlugueis(page = 1) {
         } else {
             banner.style.display = 'none';
         }
+        
+        // Atualiza classes de ordenação
+        document.querySelectorAll('#alugueisScreen .sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+        });
+        const currentTh = document.querySelector(`#alugueisScreen [onclick="sortTable('alugueis','${sortState.alugueis.col}')"]`);
+        if (currentTh) currentTh.classList.add(sortState.alugueis.dir === 'asc' ? 'sort-asc' : 'sort-desc');
     } catch (err) { setEmpty('alugueisTbody', 9, err.message); showAlert(err.message, 'danger'); }
 }
 
@@ -102,10 +118,41 @@ async function prepareAluguelModal() {
         ]);
         const selL = document.getElementById('aluguelLivro');
         const selU = document.getElementById('aluguelUsuario');
+        const selE = document.getElementById('aluguelExemplar');
+        
         selL.innerHTML = '<option value="">Selecione um livro…</option>';
         selU.innerHTML = '<option value="">Selecione um usuário…</option>';
+        selE.innerHTML = '<option value="">Selecione um livro primeiro…</option>';
+        
         (livros.data ?? livros).forEach(l => selL.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)} (${esc(l.exemplares_disponiveis)} disp.)</option>`);
         (usuarios.data ?? usuarios).forEach(u => selU.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`);
+        
+        // Adicionar evento para carregar exemplares quando livro for selecionado
+        selL.onchange = async () => {
+            const livroId = selL.value;
+            if (!livroId) {
+                selE.innerHTML = '<option value="">Selecione um livro primeiro…</option>';
+                return;
+            }
+            
+            try {
+                const { exemplares } = await api(`/livros/${livroId}/exemplares`);
+                const disponiveis = exemplares.filter(ex => ex.disponibilidade === 'disponivel' && ex.condicao !== 'perdido');
+                
+                selE.innerHTML = '<option value="">Selecione um exemplar…</option>';
+                disponiveis.forEach(ex => {
+                    const condicaoText = ex.condicao === 'bom' ? 'Bom' : ex.condicao === 'danificado' ? 'Danificado' : ex.condicao;
+                    selE.innerHTML += `<option value="${ex.id}">${esc(ex.codigo || `#${ex.id}`)} - ${condicaoText}</option>`;
+                });
+                
+                if (disponiveis.length === 0) {
+                    selE.innerHTML = '<option value="">Nenhum exemplar disponível</option>';
+                }
+            } catch (err) {
+                selE.innerHTML = '<option value="">Erro ao carregar exemplares</option>';
+            }
+        };
+        
         openModal('addAluguelModal');
     } catch (err) { showAlert(err.message, 'danger'); }
 }
@@ -113,12 +160,24 @@ async function prepareAluguelModal() {
 document.getElementById('addAluguelForm').addEventListener('submit', async e => {
     e.preventDefault();
     try {
+        const livroId = parseInt(document.getElementById('aluguelLivro').value);
+        const usuarioId = parseInt(document.getElementById('aluguelUsuario').value);
+        const exemplarId = document.getElementById('aluguelExemplar').value ? 
+            parseInt(document.getElementById('aluguelExemplar').value) : null;
+            
+        const requestBody = {
+            livro_id: livroId,
+            usuario_id: usuarioId
+        };
+        
+        // Só adiciona exemplar_id se foi selecionado
+        if (exemplarId) {
+            requestBody.exemplar_id = exemplarId;
+        }
+        
         await api('/alugueis', {
             method: 'POST',
-            body: JSON.stringify({
-                livro_id: parseInt(document.getElementById('aluguelLivro').value),
-                usuario_id: parseInt(document.getElementById('aluguelUsuario').value)
-            })
+            body: JSON.stringify(requestBody)
         });
         showAlert('Empréstimo registrado!');
         closeModal('addAluguelModal'); e.target.reset();
@@ -154,8 +213,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ estado_exemplar: estado, observacao: obs })
             });
             closeModal('devolucaoModal');
-            if (res.aviso) showAlert(res.aviso, 'warning');
-            else showAlert(res.message || 'Livro devolvido!');
+            if (res.aviso) {
+                showAlert(res.aviso, 'warning');
+                if (res.multas && res.multas.length > 0) {
+                    const multasText = res.multas.map(m => 
+                        `${m.tipo === 'atraso' ? `Atraso: ${m.dias} dias` : 'Perda do exemplar'}: R$ ${m.valor.toFixed(2)}`
+                    ).join('\n');
+                    setTimeout(() => {
+                        showAlert(`Multas geradas:\n${multasText}\nTotal: R$ ${res.total_multa.toFixed(2)}`, 'info');
+                    }, 2000);
+                }
+            } else {
+                showAlert(res.message || 'Livro devolvido!');
+            }
             loadAlugueis();
         } catch (err) { showAlert(err.message, 'danger'); }
     });
@@ -180,7 +250,12 @@ function renovarEmprestimo(id) {
 async function loadHistorico(page = 1, usuarioId = '') {
     setLoading('historicoTbody', 9);
     try {
-        const params = new URLSearchParams({ page, limit: 20 });
+        const params = new URLSearchParams({ 
+            page, 
+            limit: 20,
+            sort: sortState.historico.col,
+            order: sortState.historico.dir
+        });
         if (String(usuarioId).trim()) params.set('usuario_id', String(usuarioId).trim());
         const { data, pages } = await api(`/alugueis/historico?${params}`);
         const tbody = document.getElementById('historicoTbody');
@@ -201,6 +276,13 @@ async function loadHistorico(page = 1, usuarioId = '') {
             tbody.appendChild(tr);
         });
         renderPagination('historicoPagination', page, pages, (p) => loadHistorico(p, usuarioId));
+        
+        // Atualiza classes de ordenação
+        document.querySelectorAll('#historicoScreen .sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+        });
+        const currentTh = document.querySelector(`#historicoScreen [onclick="sortTable('historico','${sortState.historico.col}')"]`);
+        if (currentTh) currentTh.classList.add(sortState.historico.dir === 'asc' ? 'sort-asc' : 'sort-desc');
     } catch (err) { setEmpty('historicoTbody', 9, err.message); showAlert(err.message, 'danger'); }
 }
 

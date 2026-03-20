@@ -11,5 +11,7 @@ router.use(verificarToken, verificarBibliotecario);
 router.get('/', controller.listar);
 router.put('/:id', controller.atualizar);
 router.delete('/:id', controller.excluir);
+router.post('/:id/bloquear', controller.bloquear);
+router.post('/:id/desbloquear', controller.desbloquear);
 
 export default router;

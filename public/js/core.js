@@ -3,12 +3,43 @@ const API_URL = 'http://127.0.0.1:3000/api';
 let token = null;
 let currentUser = null;
 
+// ── SISTEMA DE ORDENAÇÃO ───────────────────────────────────────────
+const sortState = {
+    livros: { col: 'titulo', dir: 'asc' },
+    usuarios: { col: 'nome', dir: 'asc' },
+    alugueis: { col: 'data_aluguel', dir: 'desc' },
+    historico: { col: 'data_devolucao', dir: 'desc' }
+};
+
+function sortTable(table, col) {
+    const state = sortState[table];
+    if (!state) return;
+    
+    state.dir = state.col === col && state.dir === 'asc' ? 'desc' : 'asc';
+    state.col = col;
+    
+    // Atualiza classes visuais
+    document.querySelectorAll(`#${table}Screen .sortable`).forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+    });
+    const th = document.querySelector(`[onclick="sortTable('${table}','${col}')"]`);
+    if (th) th.classList.add(state.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+    
+    // Recarrega os dados da tabela específica
+    switch(table) {
+        case 'livros': loadLivros(document.getElementById('buscaLivros')?.value || '', 1); break;
+        case 'usuarios': loadUsuarios(1, document.getElementById('buscaUsuarios')?.value || ''); break;
+        case 'alugueis': loadAlugueis(1); break;
+        case 'historico': loadHistorico(1, document.getElementById('buscaHistorico')?.value || ''); break;
+    }
+}
+
 // ── TEMA ──────────────────────────────────────────────────────────────────────
 function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.getAttribute('data-theme') === 'dark';
     html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-    document.getElementById('btnTheme').textContent = isDark ? '🌙' : '☀️';
+    document.getElementById('btnTheme').textContent = isDark ? '☀️' : '🌙';
     localStorage.setItem('luizateca_theme', isDark ? 'light' : 'dark');
 }
 function restoreTheme() {
@@ -112,7 +143,7 @@ function debounce(fn, delay = 350) {
 function badgeStatus(status) {
     const map = {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
-        alugado: `<span class="badge badge-danger"><span class="badge-dot"></span>Alugado</span>`,
+        alugado: `<span class="badge badge-danger"><span class="badge-dot"></span>Indisponível</span>`,
         ativo: `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
         atrasado: `<span class="badge badge-danger"><span class="badge-dot"></span>Atrasado</span>`,
         devolvido: `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
@@ -131,8 +162,8 @@ function badgeTipo(tipo) {
 function badgeExemplar(status) {
     const map = {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
-        emprestado: `<span class="badge badge-warning"><span class="badge-dot"></span>Emprestado</span>`,
-        danificado: `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`,
+        indisponivel: `<span class="badge badge-danger"><span class="badge-dot"></span>Indisponível</span>`,
+        emprestado: `<span class="badge badge-info"><span class="badge-dot"></span>Emprestado</span>`,
         perdido: `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
     };
     return map[status] ?? `<span class="badge">${esc(status)}</span>`;
@@ -151,23 +182,14 @@ function badgeCondicao(condicao = {}) {
     return parts.join(' ');
 }
 
-// Badge de disponibilidade de um exemplar individual
-function badgeDisponibilidade(disp) {
-    if (disp === 'disponivel' || !disp)
-        return `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`;
-    if (disp === 'emprestado')
-        return `<span class="badge badge-warning"><span class="badge-dot"></span>Emprestado</span>`;
-    return `<span class="badge"><span class="badge-dot"></span>${esc(disp)}</span>`;
-}
-
-function badgeCondicao2(cond) {
-    if (cond === 'bom' || !cond)
-        return `<span class="badge badge-success"><span class="badge-dot"></span>Bom</span>`;
-    if (cond === 'danificado')
-        return `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`;
-    if (cond === 'perdido')
-        return `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`;
-    return `<span class="badge"><span class="badge-dot"></span>${esc(cond)}</span>`;
+// Badge de condição de um exemplar individual
+function badgeCondicaoExemplar(condicao) {
+    const map = {
+        bom: `<span class="badge badge-success"><span class="badge-dot"></span>Bom</span>`,
+        danificado: `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`,
+        perdido: `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
+    };
+    return map[condicao] ?? `<span class="badge">${esc(condicao)}</span>`;
 }
 
 // ── PAGINAÇÃO ─────────────────────────────────────────────────────────────────

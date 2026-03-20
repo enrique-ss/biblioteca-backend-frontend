@@ -9,10 +9,13 @@ export class AluguelController {
 
   criar = async (req: AuthRequest, res: Response) => {
     try {
-      const { livro_id, usuario_id } = req.body;
+      const { livro_id, usuario_id, exemplar_id } = req.body;
 
       const usuario = await db('usuarios').where({ id: usuario_id }).first();
       if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado.' });
+      if (usuario.bloqueado) {
+        return res.status(400).json({ error: `Usuário bloqueado. Motivo: ${usuario.motivo_bloqueio || 'Não informado'}` });
+      }
       if (usuario.multa_pendente) {
         const multas = await db('multas').where({ usuario_id, status: 'pendente' }).select('valor');
         const total = multas.reduce((s: number, m: any) => s + Number(m.valor), 0);
@@ -24,14 +27,22 @@ export class AluguelController {
       data_prevista.setDate(data_aluguel.getDate() + 14);
 
       await db.transaction(async (trx) => {
-        // Busca exemplar disponível (disponibilidade='disponivel' e condição != perdido)
-        const exemplar = await trx('exemplares')
-          .where({ livro_id, disponibilidade: 'disponivel' })
-          .whereNot({ condicao: 'perdido' })
-          .orderBy('id', 'asc')
-          .first();
-
-        if (!exemplar) throw new Error('Livro não disponível para empréstimo.');
+        // Busca exemplar específico se informado, senão o primeiro disponível
+        let exemplar;
+        if (exemplar_id) {
+          exemplar = await trx('exemplares')
+            .where({ id: exemplar_id, livro_id, disponibilidade: 'disponivel' })
+            .whereNot({ condicao: 'perdido' })
+            .first();
+          if (!exemplar) throw new Error('Exemplar específico não encontrado ou não está disponível.');
+        } else {
+          exemplar = await trx('exemplares')
+            .where({ livro_id, disponibilidade: 'disponivel' })
+            .whereNot({ condicao: 'perdido' })
+            .orderBy('id', 'asc')
+            .first();
+          if (!exemplar) throw new Error('Livro não disponível para empréstimo.');
+        }
 
         const livro = await trx('livros').where({ id: livro_id }).first();
         const novosDisponiveis = livro.exemplares_disponiveis - 1;
@@ -100,10 +111,11 @@ export class AluguelController {
           await trx('usuarios').where({ id: registro.usuario_id }).update({ multa_pendente: true });
 
         // Atualização do exemplar:
-        // disponibilidade volta pra 'disponivel' SEMPRE (até perdido — para não bloquear o campo)
-        // condicao registra o estado físico real — independente da disponibilidade
-        // Se perdido: NÃO incrementa exemplares_disponiveis do livro
+        // Se perdido: disponibilidade = 'perdido', NÃO volta ao acervo
+        // Se danificado ou bom: disponibilidade = 'disponivel'
+        // condicao sempre registra o estado físico real
         const voltaAcervo = estado_exemplar !== 'perdido';
+        const disponibilidadeFinal = estado_exemplar === 'perdido' ? 'perdido' : 'disponivel';
         const novosDisponiveis = voltaAcervo
           ? registro.exemplares_disponiveis + 1
           : registro.exemplares_disponiveis;
@@ -113,7 +125,7 @@ export class AluguelController {
             status: 'devolvido', data_devolucao: new Date(), estado_devolucao: estado_exemplar
           }),
           trx('exemplares').where({ id: registro.exemplar_id }).update({
-            disponibilidade: 'disponivel',
+            disponibilidade: disponibilidadeFinal,
             condicao: estado_exemplar,
             observacao: observacao?.trim() || null
           }),
@@ -186,15 +198,30 @@ export class AluguelController {
   listarTodos = async (req: AuthRequest, res: Response) => {
     try {
       const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-      const page = Math.max(1, parseInt(String(req.query.page || 1)));
-      const limit = Math.min(50, parseInt(String(req.query.limit || 20)));
+      const { page: p, limit: l, busca, sort, order } = req.query;
+      const page = Math.max(1, parseInt(String(p || 1)));
+      const limit = Math.min(50, parseInt(String(l || 20)));
       const offset = (page - 1) * limit;
 
-      const base = db('alugueis')
+      // Configuração de ordenação
+      const allowedSorts = ['usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao', 'alugueis.dias_atraso'];
+      const sortCol = allowedSorts.includes(String(sort)) ? String(sort) : 'alugueis.data_aluguel';
+      const sortDir = order === 'desc' ? 'desc' : 'asc';
+
+      let base = db('alugueis')
         .join('livros', 'alugueis.livro_id', 'livros.id')
         .join('exemplares', 'alugueis.exemplar_id', 'exemplares.id')
         .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
         .where('alugueis.status', 'ativo');
+
+      if (busca && String(busca).trim()) {
+        const termo = `%${String(busca).trim()}%`;
+        base = base.where(b => 
+          b.whereILike('usuarios.nome', termo)
+            .orWhereILike('livros.titulo', termo)
+            .orWhereILike('exemplares.codigo', termo)
+        );
+      }
 
       const [rows, [{ total }]] = await Promise.all([
         base.clone().select(
@@ -206,7 +233,7 @@ export class AluguelController {
           db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) as dias_atraso`),
           db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) * ${MULTA_DIA} as multa_acumulada`),
           db.raw('TRUE as pode_devolver'), db.raw('TRUE as pode_renovar')
-        ).limit(limit).offset(offset),
+        ).orderBy(sortCol, sortDir).limit(limit).offset(offset),
         base.clone().count('alugueis.id as total')
       ]);
 
@@ -244,6 +271,12 @@ export class AluguelController {
       const limit = Math.min(50, parseInt(String(req.query.limit || 20)));
       const offset = (page - 1) * limit;
       const usuario_id = req.query.usuario_id ? Number(req.query.usuario_id) : null;
+      const { sort, order } = req.query;
+
+      // Configuração de ordenação
+      const allowedSorts = ['usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao', 'alugueis.data_devolucao', 'alugueis.estado_devolucao'];
+      const sortCol = allowedSorts.includes(String(sort)) ? String(sort) : 'alugueis.data_devolucao';
+      const sortDir = order === 'desc' ? 'desc' : 'asc';
 
       const base = db('alugueis')
         .join('livros', 'alugueis.livro_id', 'livros.id')
@@ -262,7 +295,7 @@ export class AluguelController {
           'alugueis.data_devolucao', 'alugueis.estado_devolucao',
           db.raw('COALESCE(alugueis.renovacoes,0) as renovacoes'),
           db.raw(`'devolvido' as status`)
-        ).orderBy('alugueis.data_devolucao', 'desc').limit(limit).offset(offset),
+        ).orderBy(sortCol, sortDir).limit(limit).offset(offset),
         base.clone().count('alugueis.id as total')
       ]);
 

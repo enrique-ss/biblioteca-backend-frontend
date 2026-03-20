@@ -4,15 +4,20 @@ import { AuthRequest } from '../middlewares/auth';
 
 export class UsuarioController {
 
-  // Listar com busca e paginação
+  // Listar com busca, paginação e ordenação
   listar = async (req: AuthRequest, res: Response) => {
     try {
-      const { busca, page: p, limit: l } = req.query;
+      const { busca, page: p, limit: l, sort, order } = req.query;
       const page = Math.max(1, parseInt(String(p || 1)));
       const limit = Math.min(100, parseInt(String(l || 20)));
       const offset = (page - 1) * limit;
 
-      let query = db('usuarios').select('id', 'nome', 'email', 'tipo', 'created_at');
+      // Configuração de ordenação
+      const allowedSorts = ['nome', 'email', 'tipo', 'created_at'];
+      const sortCol = allowedSorts.includes(String(sort)) ? String(sort) : 'nome';
+      const sortDir = order === 'desc' ? 'desc' : 'asc';
+
+      let query = db('usuarios').select('id', 'nome', 'email', 'tipo', 'multa_pendente', 'bloqueado', 'motivo_bloqueio', 'created_at');
 
       if (busca && String(busca).trim()) {
         const termo = `%${String(busca).trim()}%`;
@@ -20,7 +25,7 @@ export class UsuarioController {
       }
 
       const [rows, [{ total }]] = await Promise.all([
-        query.clone().orderBy('nome').limit(limit).offset(offset),
+        query.clone().orderBy(sortCol, sortDir).limit(limit).offset(offset),
         db('usuarios').modify(q => {
           if (busca && String(busca).trim()) {
             const termo = `%${String(busca).trim()}%`;
@@ -90,6 +95,59 @@ export class UsuarioController {
     } catch (error) {
       console.error('Erro ao excluir usuário:', error);
       res.status(500).json({ error: 'Erro ao excluir usuário' });
+    }
+  };
+
+  // Bloquear usuário
+  bloquear = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { motivo } = req.body;
+
+      if (!motivo?.trim()) {
+        return res.status(400).json({ error: 'Motivo do bloqueio é obrigatório' });
+      }
+
+      const usuario = await db('usuarios').where({ id }).first();
+      if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+      if (usuario.bloqueado) {
+        return res.status(400).json({ error: 'Usuário já está bloqueado' });
+      }
+
+      await db('usuarios').where({ id }).update({
+        bloqueado: true,
+        motivo_bloqueio: motivo.trim()
+      });
+
+      res.json({ message: '✅ Usuário bloqueado com sucesso' });
+    } catch (error) {
+      console.error('Erro ao bloquear usuário:', error);
+      res.status(500).json({ error: 'Erro ao bloquear usuário' });
+    }
+  };
+
+  // Desbloquear usuário
+  desbloquear = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const usuario = await db('usuarios').where({ id }).first();
+      if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+      if (!usuario.bloqueado) {
+        return res.status(400).json({ error: 'Usuário não está bloqueado' });
+      }
+
+      await db('usuarios').where({ id }).update({
+        bloqueado: false,
+        motivo_bloqueio: null
+      });
+
+      res.json({ message: '✅ Usuário desbloqueado com sucesso' });
+    } catch (error) {
+      console.error('Erro ao desbloquear usuário:', error);
+      res.status(500).json({ error: 'Erro ao desbloquear usuário' });
     }
   };
 }

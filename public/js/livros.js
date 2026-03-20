@@ -1,27 +1,20 @@
 // ── LIVROS ────────────────────────────────────────────────────────────────────
 
 let livrosAbortController = null;
-let livrosSort = { col: 'titulo', dir: 'asc' };
 
 const loadLivrosDebounced = debounce((busca) => loadLivros(busca));
-
-function sortTable(table, col) {
-    if (table === 'livros') {
-        livrosSort.dir = livrosSort.col === col && livrosSort.dir === 'asc' ? 'desc' : 'asc';
-        livrosSort.col = col;
-        document.querySelectorAll('#livrosScreen .sortable').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
-        const th = document.querySelector(`[onclick="sortTable('livros','${col}')"]`);
-        if (th) th.classList.add(livrosSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
-        loadLivros(document.getElementById('buscaLivros')?.value || '', 1);
-    }
-}
 
 async function loadLivros(busca = '', page = 1) {
     if (livrosAbortController) livrosAbortController.abort();
     livrosAbortController = new AbortController();
     setLoading('livrosTbody', 8);
     try {
-        const params = new URLSearchParams({ page, limit: 20, sort: livrosSort.col, order: livrosSort.dir });
+        const params = new URLSearchParams({ 
+            page, 
+            limit: 20,
+            sort: sortState.livros.col,
+            order: sortState.livros.dir
+        });
         if (busca.trim()) params.set('busca', busca.trim());
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -42,7 +35,6 @@ async function loadLivros(busca = '', page = 1) {
                 <td style="color:var(--text-dim)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
                 <td style="text-align:center">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)}</td>
                 <td>${badgeStatus(livro.status)}</td>
-                <td>${badgeCondicao(livro.condicao)}</td>
                 <td>${isBib ? `<div class="td-actions">
                     <button class="btn btn-ghost btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
                     <button class="btn btn-ghost btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
@@ -51,6 +43,13 @@ async function loadLivros(busca = '', page = 1) {
             tbody.appendChild(tr);
         });
         renderPagination('livrosPagination', page, pages, (p) => loadLivros(busca, p));
+        
+        // Atualiza classes de ordenação
+        document.querySelectorAll('#livrosScreen .sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+        });
+        const currentTh = document.querySelector(`#livrosScreen [onclick="sortTable('livros','${sortState.livros.col}')"]`);
+        if (currentTh) currentTh.classList.add(sortState.livros.dir === 'asc' ? 'sort-asc' : 'sort-desc');
     } catch (err) {
         if (err.name === 'AbortError') return;
         setEmpty('livrosTbody', 8, err.message);
@@ -134,19 +133,20 @@ async function verExemplares(livroId, titulo) {
 }
 
 async function carregarExemplares(livroId) {
-    setLoading('exemplaresTbody', 6);
+    setLoading('exemplaresTbody', 7);
     try {
         const { exemplares } = await api(`/livros/${livroId}/exemplares`);
         const tbody = document.getElementById('exemplaresTbody');
         tbody.innerHTML = '';
-        if (!exemplares.length) { setEmpty('exemplaresTbody', 6, 'Nenhum exemplar cadastrado.'); return; }
+        if (!exemplares.length) { setEmpty('exemplaresTbody', 7, 'Nenhum exemplar cadastrado.'); return; }
         exemplares.forEach(ex => {
             const tr = document.createElement('tr');
             const ult = ex.ultimo_aluguel;
             tr.innerHTML = `
                 <td style="color:var(--text-faint)">${esc(ex.id)}</td>
                 <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(ex.codigo ?? '—')}</code></td>
-                <td>${badgeExemplar(ex.status)}</td>
+                <td>${badgeExemplar(ex.disponibilidade)}</td>
+                <td>${badgeCondicaoExemplar(ex.condicao || 'bom')}</td>
                 <td style="color:var(--text-dim);font-size:var(--fs-xs)">${esc(ex.observacao ?? '—')}</td>
                 <td style="font-size:var(--fs-xs)">
                     ${ult
@@ -156,35 +156,82 @@ async function carregarExemplares(livroId) {
                     : `<span style="color:var(--text-faint)">Nunca alugado</span>`}
                 </td>
                 <td>
-                    <select class="form-select" style="font-size:var(--fs-xs);padding:5px 28px 5px 8px;"
-                        onchange="atualizarExemplar(${livroId}, ${ex.id}, this.value, this)">
-                        <option value="disponivel" ${ex.status === 'disponivel' ? 'selected' : ''}>Disponível</option>
-                        <option value="emprestado" ${ex.status === 'emprestado' ? 'selected' : ''} disabled>Emprestado</option>
-                        <option value="danificado" ${ex.status === 'danificado' ? 'selected' : ''}>Danificado</option>
-                        <option value="perdido"    ${ex.status === 'perdido' ? 'selected' : ''}>Perdido</option>
-                    </select>
+                    <div class="exemplar-actions">
+                        ${ex.disponibilidade === 'emprestado' 
+                            ? '<span style="color:var(--text-faint);font-size:var(--fs-xs)">Emprestado</span>'
+                            : ex.condicao === 'perdido'
+                            ? `
+                                <select class="form-select exemplar-status-select" 
+                                        onchange="atualizarCondicao(${livroId}, ${ex.id}, this.value)"
+                                        data-current="${ex.condicao || 'bom'}">
+                                    <option value="">Condição: Perdido</option>
+                                    <option value="bom">Achado - Bom</option>
+                                    <option value="danificado">Achado - Danificado</option>
+                                </select>
+                            `
+                            : `
+                                <select class="form-select exemplar-status-select" 
+                                        onchange="atualizarDisponibilidade(${livroId}, ${ex.id}, this.value)"
+                                        data-current="${ex.disponibilidade}">
+                                    <option value="">Disponível</option>
+                                    <option value="indisponivel" ${ex.disponibilidade === 'indisponivel' ? 'selected' : ''}>Tornar Indisponível</option>
+                                </select>
+                                <select class="form-select exemplar-status-select" 
+                                        onchange="atualizarCondicao(${livroId}, ${ex.id}, this.value)"
+                                        data-current="${ex.condicao || 'bom'}">
+                                    <option value="">Condição: ${ex.condicao || 'bom'}</option>
+                                    <option value="danificado">Danificado</option>
+                                    <option value="perdido">Perdido</option>
+                                </select>
+                            `
+                        }
+                    </div>
                 </td>`;
             tbody.appendChild(tr);
         });
     } catch (err) {
-        setEmpty('exemplaresTbody', 6, err.message);
+        setEmpty('exemplaresTbody', 7, err.message);
         showAlert(err.message, 'danger');
     }
 }
 
-async function atualizarExemplar(livroId, exemplarId, novoStatus) {
-    const precisaObs = novoStatus === 'danificado' || novoStatus === 'perdido';
-    const observacao = precisaObs ? (prompt('Observação sobre o exemplar (opcional):') ?? '') : '';
+async function atualizarDisponibilidade(livroId, exemplarId, novaDisponibilidade) {
+    if (!novaDisponibilidade || novaDisponibilidade === '') return;
+    
     try {
         await api(`/livros/${livroId}/exemplares/${exemplarId}`, {
             method: 'PATCH',
-            body: JSON.stringify({ status: novoStatus, observacao })
+            body: JSON.stringify({ 
+                status: novaDisponibilidade
+            })
         });
-        showAlert('Exemplar atualizado!');
+        showAlert(`Disponibilidade alterada com sucesso!`);
         await carregarExemplares(livroId);
         loadLivros(document.getElementById('buscaLivros')?.value || '');
     } catch (err) {
         showAlert(err.message, 'danger');
+    }
+}
+
+async function atualizarCondicao(livroId, exemplarId, novaCondicao) {
+    if (!novaCondicao || novaCondicao === '') return;
+    
+    const observacao = novaCondicao === 'danificado' || novaCondicao === 'perdido' 
+        ? (prompt('Observação sobre a condição:') ?? '') 
+        : '';
+    
+    try {
+        await api(`/livros/${livroId}/exemplares/${exemplarId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ 
+                condicao: novaCondicao,
+                observacao: observacao || null
+            })
+        });
+        showAlert(`Condição alterada com sucesso!`);
         await carregarExemplares(livroId);
+        loadLivros(document.getElementById('buscaLivros')?.value || '');
+    } catch (err) {
+        showAlert(err.message, 'danger');
     }
 }

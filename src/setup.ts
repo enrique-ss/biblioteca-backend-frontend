@@ -42,6 +42,8 @@ async function setup() {
       t.string('senha', 255).notNullable();
       t.enum('tipo', ['usuario', 'bibliotecario']).notNullable();
       t.boolean('multa_pendente').notNullable().defaultTo(false);
+      t.boolean('bloqueado').notNullable().defaultTo(false);
+      t.text('motivo_bloqueio').nullable();
       t.timestamp('created_at').defaultTo(db.fn.now());
       t.index(['tipo'], 'idx_usuarios_tipo');
     });
@@ -80,14 +82,14 @@ async function setup() {
     console.log('✅ Tabela livros criada');
 
     // ── EXEMPLARES ───────────────────────────────────────
-    // disponibilidade: disponivel / emprestado  (muda no aluguel/devolução)
+    // disponibilidade: disponivel / emprestado / indisponivel / perdido (muda no aluguel/devolução)
     // condicao:        bom / danificado / perdido  (muda quando o estado físico muda)
     // As duas são independentes — um exemplar pode ser danificado E disponível
     await db.schema.createTable('exemplares', (t) => {
       t.increments('id').primary();
       t.integer('livro_id').unsigned().notNullable();
       t.string('codigo', 50).nullable();
-      t.enum('disponibilidade', ['disponivel', 'emprestado']).notNullable().defaultTo('disponivel');
+      t.enum('disponibilidade', ['disponivel', 'emprestado', 'indisponivel', 'perdido']).notNullable().defaultTo('disponivel');
       t.enum('condicao', ['bom', 'danificado', 'perdido']).notNullable().defaultTo('bom');
       t.text('observacao').nullable();
       t.timestamp('created_at').defaultTo(db.fn.now());

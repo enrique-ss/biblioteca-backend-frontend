@@ -24,6 +24,21 @@
                 </span>
             </a>
             <div class="nav-right">
+                <div class="nav-notifications" id="navNotifications" style="display:none;">
+                    <button class="nav-notifications-btn" onclick="toggleNotifications()" title="Notificações">
+                        <span class="nav-notifications-icon">🔔</span>
+                        <span class="nav-notifications-badge" id="notificationsBadge">0</span>
+                    </button>
+                    <div class="nav-notifications-dropdown" id="notificationsDropdown">
+                        <div class="notifications-header">
+                            <h3>Notificações</h3>
+                            <button class="btn-close" onclick="toggleNotifications()">×</button>
+                        </div>
+                        <div class="notifications-body" id="notificationsBody">
+                            <div class="notifications-loading">Carregando...</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="nav-user" id="navUser" style="display:none;">
                     <div class="nav-user-avatar">📖</div>
                     <div class="nav-user-info">
@@ -113,7 +128,6 @@
                                 <th>Localização</th>
                                 <th>Exemplares</th>
                                 <th class="sortable" onclick="sortTable('livros','status')">Disponib.</th>
-                                <th>Condição</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -142,13 +156,13 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Usuário</th>
-                                <th>Livro</th>
+                                <th class="sortable" onclick="sortTable('historico','usuario')">Usuário <span class="sort-indicator"></span></th>
+                                <th class="sortable" onclick="sortTable('historico','titulo')">Livro <span class="sort-indicator"></span></th>
                                 <th>Exemplar</th>
-                                <th>Estado</th>
-                                <th>Empréstimo</th>
-                                <th>Prazo</th>
-                                <th>Devolução</th>
+                                <th class="sortable" onclick="sortTable('historico','estado_devolucao')">Estado <span class="sort-indicator"></span></th>
+                                <th class="sortable" onclick="sortTable('historico','data_aluguel')">Empréstimo <span class="sort-indicator"></span></th>
+                                <th class="sortable" onclick="sortTable('historico','prazo')">Prazo <span class="sort-indicator"></span></th>
+                                <th class="sortable" onclick="sortTable('historico','data_devolucao')">Devolução <span class="sort-indicator"></span></th>
                                 <th>Renovações</th>
                             </tr>
                         </thead>
@@ -168,8 +182,10 @@
                             onclick="prepareAluguelModal()">+ Novo Aluguel</button>
                         <button class="btn btn-ghost" onclick="voltarAlugueis()">← Voltar</button>
                     </div>
-                    <div id="atrasadosBanner" style="display:none;" class="atrasados-banner"></div>
                 </div>
+                <div class="search-bar"><input type="text" id="buscaAlugueis" class="form-input"
+                        placeholder="Buscar por usuário, livro ou exemplar…" oninput="loadAlugueisDebounced(this.value)"></div>
+                <div id="atrasadosBanner" style="display:none;" class="atrasados-banner"></div>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead id="alugueisHead"></thead>
@@ -192,9 +208,9 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Tipo</th>
+                                <th class="sortable" onclick="sortTable('usuarios','nome')">Nome <span class="sort-indicator"></span></th>
+                                <th class="sortable" onclick="sortTable('usuarios','email')">Email <span class="sort-indicator"></span></th>
+                                <th class="sortable" onclick="sortTable('usuarios','tipo')">Tipo <span class="sort-indicator"></span></th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -497,16 +513,16 @@
                         <tr>
                             <th>#</th>
                             <th>Código</th>
-                            <th>Disponib.</th>
+                            <th>Status</th>
                             <th>Condição</th>
                             <th>Observação</th>
                             <th>Último Aluguel</th>
-                            <th>Alterar Condição</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="exemplaresTbody">
                         <tr class="loading-row">
-                            <td colspan="6"><span class="spinner"></span>Carregando…</td>
+                            <td colspan="7"><span class="spinner"></span>Carregando…</td>
                         </tr>
                     </tbody>
                 </table>
@@ -553,6 +569,10 @@
                 <div class="form-group"><label class="form-label">Livro disponível</label><select id="aluguelLivro"
                         class="form-select" required>
                         <option value="">Selecione um livro…</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Exemplar (opcional)</label><select id="aluguelExemplar"
+                        class="form-select">
+                        <option value="">Selecione um livro primeiro…</option>
                     </select></div>
                 <div class="form-group"><label class="form-label">Usuário</label><select id="aluguelUsuario"
                         class="form-select" required>
@@ -645,6 +665,7 @@
 
     <script src="js/core.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/notifications.js"></script>
     <script src="js/menu.js"></script>
     <script src="js/livros.js"></script>
     <script src="js/alugueis.js"></script>

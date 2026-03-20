@@ -263,8 +263,53 @@ async function novoEmprestimo() {
   clr(); h('NOVO EMPRÉSTIMO', c.g);
   const livro_id = await ask('ID do livro: ');
   const usuario_id = await ask('ID do usuário: ');
+  
   try {
-    const { data } = await api.post('/alugueis', { livro_id: parseInt(livro_id), usuario_id: parseInt(usuario_id) });
+    // Primeiro, busca exemplares disponíveis do livro
+    const response = await api.get(`/livros/${livro_id}/exemplares`);
+    const exemplares = response.data.exemplares || response.data;
+    const disponiveis = exemplares.filter((ex: any) => 
+      ex.disponibilidade === 'disponivel' && ex.condicao !== 'perdido'
+    );
+    
+    if (disponiveis.length === 0) {
+      err('Nenhum exemplar disponível para este livro.');
+      await enter();
+      return;
+    }
+    
+    // Mostra exemplares disponíveis
+    console.log(cl('\n  Exemplares disponíveis:', c.w));
+    disponiveis.forEach((ex: any, i: number) => {
+      const condText = ex.condicao === 'bom' ? 'Bom' : 
+                     ex.condicao === 'danificado' ? 'Danificado' : ex.condicao;
+      console.log(`    ${i + 1}. ${cl(ex.codigo || `#${ex.id}`, c.ci)} - ${cl(condText, ex.condicao === 'bom' ? c.g : c.y)}`);
+    });
+    
+    // Pergunta qual exemplar usar (ou vazio para automático)
+    const exemplar_input = await ask(cl('\n  ID do exemplar (Enter para automático): ', c.y));
+    const exemplar_id = exemplar_input.trim() ? 
+      parseInt(exemplar_input) : null;
+    
+    // Valida se o exemplar escolhido está disponível
+    if (exemplar_id) {
+      const escolhido = disponiveis.find((ex: any) => ex.id === exemplar_id);
+      if (!escolhido) {
+        err('Exemplar escolhido não está disponível.');
+        await enter();
+        return;
+      }
+      console.log(cl(`\n  ✓ Exemplar ${escolhido.codigo || `#${escolhido.id}`} selecionado.`, c.g));
+    } else {
+      console.log(cl('\n  ✓ Usando primeiro exemplar disponível.', c.g));
+    }
+    
+    const requestBody: any = { livro_id: parseInt(livro_id), usuario_id: parseInt(usuario_id) };
+    if (exemplar_id) {
+      requestBody.exemplar_id = exemplar_id;
+    }
+    
+    const { data } = await api.post('/alugueis', requestBody);
     ok(data.message);
     console.log(cl(`  Prazo: ${data.prazo}`, c.dim));
   } catch (e: any) { err(e); }
