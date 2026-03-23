@@ -331,6 +331,42 @@ export class AluguelController {
   };
 
   /**
+   * Permite que o próprio usuário quite suas multas pendentes.
+   */
+  pagarMinhasMultas = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+      const usuarioId = req.usuario!.id;
+      
+      const multasEmAberto = await db('multas')
+        .where({ usuario_id: usuarioId, status: 'pendente' })
+        .select('id', 'valor');
+      
+      if (!multasEmAberto.length) {
+        return res.status(404).json({ error: 'Você não possui multas pendentes para pagar.' });
+      }
+
+      const totalPago = multasEmAberto.reduce((sum, m) => sum + Number(m.valor), 0);
+
+      await db.transaction(async (trx) => {
+        // Marca todas como pagas
+        await trx('multas')
+          .whereIn('id', multasEmAberto.map(m => m.id))
+          .update({ status: 'paga', pago_em: new Date() });
+          
+        // Libera o usuário para novos empréstimos
+        await trx('usuarios').where({ id: usuarioId }).update({ multa_pendente: false });
+      });
+
+      res.json({ 
+        message: '✅ Pagamento das multas processado com sucesso!', 
+        total_pago: totalPago 
+      });
+    } catch { 
+      res.status(500).json({ error: 'Erro ao processar o auto-pagamento das multas.' }); 
+    }
+  };
+
+  /**
    * Listagem mestre de todos os empréstimos ativos (Para o Painel Administrativo).
    */
   listarTodos = async (req: RequisicaoAutenticada, res: Response) => {

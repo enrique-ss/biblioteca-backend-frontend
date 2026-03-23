@@ -434,3 +434,72 @@ async function exportarHistoricoCSV() {
         exibirAlerta(erro.message, 'danger'); 
     }
 }
+
+// --- Gestão de Multas para o Usuário (Área do Aluno) ---
+
+async function carregarMinhasMultas() {
+    definirCarregando('minhasMultasTbody', 6);
+    try {
+        const { multas, total_pendente } = await api('/alugueis/multas/minhas');
+        const tbody = document.getElementById('minhasMultasTbody');
+        tbody.innerHTML = '';
+        
+        if (!multas.length) { 
+            definirVazio('minhasMultasTbody', 6, 'Você não possui multas registradas no sistema.'); 
+            document.getElementById('minhasMultasTotal').textContent = '';
+            document.getElementById('btnPagarMinhasMultas').style.display = 'none';
+            return; 
+        }
+
+        multas.forEach(m => {
+            const tr = document.createElement('tr');
+            const classeBadge = m.status === 'pendente' ? 'badge-danger' : 'badge-success';
+            
+            tr.innerHTML = `
+                <td>${badgeTipoMulta(m.tipo)}</td>
+                <td><strong>${esc(m.livro)}</strong></td>
+                <td style="color:#f85149;font-weight:600">R$ ${Number(m.valor).toFixed(2)}</td>
+                <td style="color:var(--text-dim)">${m.dias_atraso > 0 ? `${m.dias_atraso} dias` : '—'}</td>
+                <td><span class="badge ${classeBadge}">${esc(m.status)}</span></td>
+                <td style="color:var(--text-dim)">${formatarData(m.created_at)}</td>`;
+            
+            tbody.appendChild(tr);
+        });
+
+        const totalEl = document.getElementById('minhasMultasTotal');
+        if (total_pendente > 0) {
+            totalEl.innerHTML = `Total a pagar: <strong style="color:#f85149">R$ ${total_pendente.toFixed(2)}</strong>`;
+            document.getElementById('btnPagarMinhasMultas').style.display = 'inline-flex';
+        } else {
+            totalEl.textContent = 'Você está em dia com a biblioteca. Parabéns!';
+            document.getElementById('btnPagarMinhasMultas').style.display = 'none';
+        }
+    } catch (erro) { 
+        definirVazio('minhasMultasTbody', 6, erro.message); 
+    }
+}
+
+async function pagarMinhasMultas() {
+    exibirConfirmacao({
+        icon: '💳',
+        title: 'Quitar Débitos',
+        msg: 'Deseja processar o pagamento de todas as multas pendentes?',
+        okLabel: 'Sim, Pagar Agora',
+        async onOk() {
+            try {
+                const resultado = await api('/alugueis/multas/pagar/mim', { method: 'PUT' });
+                exibirAlerta(resultado.message, 'success');
+                await carregarMinhasMultas();
+                
+                // Atualiza o estado do usuário (remover indicação de multa)
+                if (currentUser) {
+                    currentUser.multa_pendente = false;
+                    salvarSessao();
+                    atualizarNavbar();
+                }
+            } catch (erro) { 
+                exibirAlerta(erro.message, 'danger'); 
+            }
+        }
+    });
+}

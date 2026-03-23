@@ -64,6 +64,14 @@ function carregarMenu() {
                     carregarMeusAlugueis(); 
                     mostrarTela('alugueisScreen'); 
                 } 
+            },
+            { 
+                icon: '💸', 
+                title: 'Minhas Multas', 
+                action() { 
+                    carregarMinhasMultas(); 
+                    mostrarTela('multasUsuarioScreen'); 
+                } 
             }
         );
     }

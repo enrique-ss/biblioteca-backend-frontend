@@ -14,6 +14,7 @@ router.use(verificarToken);
 // --- Rotas para Alunos (Usuários Comuns) ---
 router.get('/meus', controller.meus);
 router.get('/multas/minhas', controller.minhasMultas);
+router.put('/multas/pagar/mim', controller.pagarMinhasMultas);
 router.put('/:id/renovar', controller.renovar);
 
 // --- Rotas Administrativas (Apenas Bibliotecários) ---

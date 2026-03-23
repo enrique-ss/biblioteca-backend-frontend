@@ -236,13 +236,3 @@ async function quitarMultasUsuario() {
         exibirAlerta(erro.message, 'danger'); 
     }
 }
-
-function badgeTipoMulta(tipo) {
-    if (tipo === 'atraso') {
-        return `<span class="badge badge-warning">Atraso</span>`;
-    }
-    if (tipo === 'perda') {
-        return `<span class="badge badge-danger">Perda</span>`;
-    }
-    return `<span class="badge">${esc(tipo)}</span>`;
-}

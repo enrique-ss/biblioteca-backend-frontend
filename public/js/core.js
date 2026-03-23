@@ -289,6 +289,14 @@ function badgeCondicaoExemplar(condicao) {
     return mapas[condicao] || `<span class="badge">${esc(condicao)}</span>`;
 }
 
+function badgeTipoMulta(tipo) {
+    const mapas = {
+        atraso: `<span class="badge badge-warning">Atraso</span>`,
+        perda: `<span class="badge badge-danger">Perda</span>`,
+    };
+    return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
+}
+
 // Renderização de Paginação Dinâmica
 function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagina) {
     const el = document.getElementById(idContainer);
