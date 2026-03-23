@@ -1,53 +1,88 @@
-// ── USUÁRIOS ──────────────────────────────────────────────────────────────────
+// Gerenciamento de Usuários
 
-const loadUsuariosDebounced = debounce((busca) => loadUsuarios(1, busca));
+const carregarUsuariosDebounced = debounce((busca) => carregarUsuarios(1, busca));
 
-async function loadUsuarios(page = 1, busca = '') {
-    setLoading('usuariosTbody', 5);
+async function carregarUsuarios(pagina = 1, busca = '') {
+    definirCarregando('usuariosTbody', 5);
     try {
-        const params = new URLSearchParams({ 
-            page, 
+        const parametros = new URLSearchParams({ 
+            page: pagina, 
             limit: 20,
             sort: sortState.usuarios.col,
             order: sortState.usuarios.dir
         });
-        if (busca.trim()) params.set('busca', busca.trim());
-        const { data, pages } = await api(`/usuarios?${params}`);
+        
+        if (busca.trim()) {
+            parametros.set('busca', busca.trim());
+        }
+
+        const { data, pages } = await api(`/usuarios?${parametros}`);
         const tbody = document.getElementById('usuariosTbody');
         tbody.innerHTML = '';
-        if (!data.length) { setEmpty('usuariosTbody', 5, 'Nenhum usuário cadastrado.'); return; }
+        
+        if (!data.length) { 
+            definirVazio('usuariosTbody', 5, 'Nenhum usuário cadastrado.'); 
+            return; 
+        }
+
         data.forEach(u => {
             const tr = document.createElement('tr');
-            const multaBadge = u.multa_pendente
-                ? `<span class="badge badge-danger" style="margin-left:6px;font-size:.55rem">multa</span>` : '';
-            const bloqueadoBadge = u.bloqueado
-                ? `<span class="badge badge-warning" style="margin-left:6px;font-size:.55rem">bloqueado</span>` : '';
+            
+            // Badges indicativos de multas ou bloqueios
+            let badgesDestaque = '';
+            if (u.multa_pendente) {
+                badgesDestaque += `<span class="badge badge-danger" style="margin-left:6px;font-size:.55rem">multa</span>`;
+            }
+            if (u.bloqueado) {
+                badgesDestaque += `<span class="badge badge-warning" style="margin-left:6px;font-size:.55rem">bloqueado</span>`;
+            }
+
+            // Define botões de ação (bloquear/desbloquear)
+            let botaoBloqueio = '';
+            if (u.bloqueado) {
+                botaoBloqueio = `<button class="btn btn-ghost btn-sm" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`;
+            } else {
+                botaoBloqueio = `<button class="btn btn-ghost btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`;
+            }
+
+            // Adiciona botão de multas se houver
+            let botaoMultas = '';
+            if (u.multa_pendente) {
+                botaoMultas = `<button class="btn btn-warning btn-sm" onclick="verMultasUsuario(${u.id},'${esc(u.nome)}')">Multas</button>`;
+            }
+
             tr.innerHTML = `
                 <td style="color:var(--text-faint)">${esc(u.id)}</td>
-                <td><strong>${esc(u.nome)}</strong>${multaBadge}${bloqueadoBadge}</td>
+                <td><strong>${esc(u.nome)}</strong>${badgesDestaque}</td>
                 <td style="color:var(--text-dim)">${esc(u.email)}</td>
                 <td>${badgeTipo(u.tipo)}</td>
                 <td><div class="td-actions">
                     <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
-                    ${u.multa_pendente
-                    ? `<button class="btn btn-warning btn-sm" onclick="verMultasUsuario(${u.id},'${esc(u.nome)}')">Multas</button>`
-                    : ''}
-                    ${u.bloqueado
-                    ? `<button class="btn btn-ghost btn-sm" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`
-                    : `<button class="btn btn-ghost btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`}
+                    ${botaoMultas}
+                    ${botaoBloqueio}
                     <button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id},'${esc(u.nome)}')">Excluir</button>
                 </div></td>`;
+            
             tbody.appendChild(tr);
         });
-        renderPagination('usuariosPagination', page, pages, (p) => loadUsuarios(p, busca));
+
+        renderizarPaginacao('usuariosPagination', pagina, pages, (p) => carregarUsuarios(p, busca));
         
-        // Atualiza classes de ordenação
-        document.querySelectorAll('#usuariosScreen .sortable').forEach(th => {
+        // Atualiza visualmente as classes de ordenação nas colunas
+        const thsSelector = '#usuariosScreen .sortable';
+        document.querySelectorAll(thsSelector).forEach(th => {
             th.classList.remove('sort-asc', 'sort-desc');
         });
-        const currentTh = document.querySelector(`#usuariosScreen [onclick="sortTable('usuarios','${sortState.usuarios.col}')"]`);
-        if (currentTh) currentTh.classList.add(sortState.usuarios.dir === 'asc' ? 'sort-asc' : 'sort-desc');
-    } catch (err) { setEmpty('usuariosTbody', 5, err.message); showAlert(err.message, 'danger'); }
+        
+        const thAtual = document.querySelector(`#usuariosScreen [onclick="sortTable('usuarios','${sortState.usuarios.col}')"]`);
+        if (thAtual) {
+            const classe = sortState.usuarios.dir === 'asc' ? 'sort-asc' : 'sort-desc';
+            thAtual.classList.add(classe);
+        }
+    } catch (erro) { 
+        definirVazio('usuariosTbody', 5, erro.message); 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 }
 
 function editarUsuario(u) {
@@ -55,10 +90,10 @@ function editarUsuario(u) {
     document.getElementById('editUsuarioNome').value = u.nome;
     document.getElementById('editUsuarioEmail').value = u.email;
     document.getElementById('editUsuarioTipo').value = u.tipo;
-    openModal('editUsuarioModal');
+    abrirModal('editUsuarioModal');
 }
 
-document.getElementById('editUsuarioForm').addEventListener('submit', async e => {
+document.getElementById('editUsuarioForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('editUsuarioId').value;
     try {
@@ -70,52 +105,66 @@ document.getElementById('editUsuarioForm').addEventListener('submit', async e =>
                 tipo: document.getElementById('editUsuarioTipo').value,
             })
         });
-        showAlert('Usuário atualizado!');
-        closeModal('editUsuarioModal');
-        loadUsuarios();
-    } catch (err) { showAlert(err.message, 'danger'); }
+        exibirAlerta('Usuário atualizado com sucesso!');
+        fecharModal('editUsuarioModal');
+        carregarUsuarios();
+    } catch (erro) { 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 });
 
 function excluirUsuario(id, nome) {
-    showConfirm({
-        icon: '', title: 'Excluir usuário',
-        msg: `Excluir "${nome}" permanentemente?`, okLabel: 'Excluir',
+    exibirConfirmacao({
+        icon: '🗑️',
+        title: 'Excluir usuário',
+        msg: `Deseja realmente excluir "${nome}" permanentemente?`,
+        okLabel: 'Excluir',
         async onOk() {
             try {
                 await api(`/usuarios/${id}`, { method: 'DELETE' });
-                showAlert('Usuário excluído!');
-                loadUsuarios();
-            } catch (err) { showAlert(err.message, 'danger'); }
+                exibirAlerta('Usuário excluído!');
+                carregarUsuarios();
+            } catch (erro) { 
+                exibirAlerta(erro.message, 'danger'); 
+            }
         }
     });
 }
 
 async function verMultasUsuario(id, nome) {
-    openModal('multasModal');
+    abrirModal('multasModal');
     document.getElementById('multasUsuarioNome').textContent = nome;
     document.getElementById('multasUsuarioId').value = id;
     await carregarMultasUsuario(id);
 }
 
 async function carregarMultasUsuario(id) {
-    setLoading('multasTbody', 5);
+    definirCarregando('multasTbody', 5);
     try {
         const { multas, total_pendente } = await api(`/alugueis/multas/${id}`);
         const tbody = document.getElementById('multasTbody');
         tbody.innerHTML = '';
-        if (!multas.length) { setEmpty('multasTbody', 5, 'Nenhuma multa.'); return; }
+        
+        if (!multas.length) { 
+            definirVazio('multasTbody', 5, 'Nenhuma multa registrada.'); 
+            return; 
+        }
+
         multas.forEach(m => {
             const tr = document.createElement('tr');
-            const cor = m.status === 'pendente' ? 'badge-danger' : 'badge-success';
+            const classeBadge = m.status === 'pendente' ? 'badge-danger' : 'badge-success';
+            
             tr.innerHTML = `
-                <td>${badgeTipo2(m.tipo)}</td>
+                <td>${badgeTipoMulta(m.tipo)}</td>
                 <td><strong>${esc(m.livro)}</strong></td>
                 <td style="color:#f85149;font-weight:600">R$ ${Number(m.valor).toFixed(2)}</td>
                 <td style="color:var(--text-dim)">${m.dias_atraso > 0 ? `${m.dias_atraso} dias` : '—'}</td>
-                <td><span class="badge ${cor}">${esc(m.status)}</span></td>
-                <td style="color:var(--text-dim)">${fmtDate(m.created_at)}</td>`;
+                <td><span class="badge ${classeBadge}">${esc(m.status)}</span></td>
+                <td style="color:var(--text-dim)">${formatarData(m.created_at)}</td>`;
+            
             tbody.appendChild(tr);
         });
+
         const totalEl = document.getElementById('multasTotalPendente');
         if (total_pendente > 0) {
             totalEl.innerHTML = `Total pendente: <strong style="color:#f85149">R$ ${total_pendente.toFixed(2)}</strong>`;
@@ -124,35 +173,42 @@ async function carregarMultasUsuario(id) {
             totalEl.textContent = 'Sem multas pendentes.';
             document.getElementById('btnQuitarMultas').style.display = 'none';
         }
-    } catch (err) { setEmpty('multasTbody', 5, err.message); }
+    } catch (erro) { 
+        definirVazio('multasTbody', 5, erro.message); 
+    }
 }
 
 async function bloquearUsuario(id, nome) {
-    showConfirm({
+    exibirConfirmacao({
         icon: '🔒',
         title: 'Bloquear Usuário',
         msg: `Bloquear o usuário "${nome}"? Ele não poderá mais realizar empréstimos.`,
         okLabel: 'Bloquear',
         onOk: async () => {
             const motivo = prompt('Motivo do bloqueio:');
-            if (!motivo?.trim()) return;
+            if (!motivo) {
+                return;
+            }
+            if (motivo.trim() === '') {
+                return;
+            }
             
             try {
                 await api(`/usuarios/${id}/bloquear`, {
                     method: 'POST',
                     body: JSON.stringify({ motivo: motivo.trim() })
                 });
-                showAlert('Usuário bloqueado com sucesso!', 'success');
-                loadUsuarios();
-            } catch (err) {
-                showAlert(err.message, 'danger');
+                exibirAlerta('Usuário bloqueado com sucesso!', 'success');
+                carregarUsuarios();
+            } catch (erro) {
+                exibirAlerta(erro.message, 'danger');
             }
         }
     });
 }
 
 async function desbloquearUsuario(id, nome) {
-    showConfirm({
+    exibirConfirmacao({
         icon: '🔓',
         title: 'Desbloquear Usuário',
         msg: `Desbloquear o usuário "${nome}"? Ele poderá voltar a realizar empréstimos.`,
@@ -160,10 +216,10 @@ async function desbloquearUsuario(id, nome) {
         onOk: async () => {
             try {
                 await api(`/usuarios/${id}/desbloquear`, { method: 'POST' });
-                showAlert('Usuário desbloqueado com sucesso!', 'success');
-                loadUsuarios();
-            } catch (err) {
-                showAlert(err.message, 'danger');
+                exibirAlerta('Usuário desbloqueado com sucesso!', 'success');
+                carregarUsuarios();
+            } catch (erro) {
+                exibirAlerta(erro.message, 'danger');
             }
         }
     });
@@ -172,15 +228,21 @@ async function desbloquearUsuario(id, nome) {
 async function quitarMultasUsuario() {
     const id = document.getElementById('multasUsuarioId').value;
     try {
-        const res = await api(`/alugueis/multas/${id}/pagar`, { method: 'PUT' });
-        showAlert(res.message);
+        const resultado = await api(`/alugueis/multas/${id}/pagar`, { method: 'PUT' });
+        exibirAlerta(resultado.message);
         await carregarMultasUsuario(id);
-        loadUsuarios();
-    } catch (err) { showAlert(err.message, 'danger'); }
+        carregarUsuarios();
+    } catch (erro) { 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 }
 
-function badgeTipo2(tipo) {
-    if (tipo === 'atraso') return `<span class="badge badge-warning">Atraso</span>`;
-    if (tipo === 'perda') return `<span class="badge badge-danger">Perda</span>`;
+function badgeTipoMulta(tipo) {
+    if (tipo === 'atraso') {
+        return `<span class="badge badge-warning">Atraso</span>`;
+    }
+    if (tipo === 'perda') {
+        return `<span class="badge badge-danger">Perda</span>`;
+    }
     return `<span class="badge">${esc(tipo)}</span>`;
 }

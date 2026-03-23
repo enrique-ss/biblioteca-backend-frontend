@@ -1,59 +1,75 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middlewares/auth';
+import { RequisicaoAutenticada } from '../middlewares/auth';
 import db from '../database';
 
+/**
+ * Controlador do Quiz: Gerencia a gamificação e o progresso de aprendizado dos usuários.
+ */
 export class QuizController {
 
-    // Busca o progresso do usuário logado
-    buscarProgresso = async (req: AuthRequest, res: Response) => {
+    // Recupera a ficha de progresso do aluno logado
+    buscarProgresso = async (req: RequisicaoAutenticada, res: Response) => {
         try {
-            const usuario_id = req.usuario!.id;
-            const progresso = await db('quiz_progresso')
-                .where({ usuario_id })
+            const usuarioId = req.usuario!.id;
+            
+            const registro = await db('quiz_progresso')
+                .where({ usuario_id: usuarioId })
                 .first();
 
-            if (!progresso) {
-                return res.json({ xp: 0, level: 1, hp: 5, completedLessons: [] });
+            // Se não houver registro (primeiro acesso), retorna valores padrão de iniciante
+            if (!registro) {
+                return res.json({ 
+                    xp: 0, 
+                    level: 1, 
+                    hp: 5, 
+                    lessons: [] 
+                });
             }
 
             res.json({
-                xp: progresso.xp,
-                level: progresso.level,
-                hp: progresso.hp,
-                completedLessons: JSON.parse(progresso.completed_lessons || '[]'),
+                xp: registro.xp,
+                level: registro.level,
+                hp: registro.hp,
+                lessons: JSON.parse(registro.completed_lessons || '[]'),
             });
-        } catch (error) {
-            console.error('Erro ao buscar progresso:', error);
-            res.status(500).json({ error: 'Erro ao buscar progresso do quiz' });
+        } catch (erro) {
+            console.error('Erro ao buscar progresso do quiz:', erro);
+            res.status(500).json({ error: 'Não foi possível carregar seu progresso no quiz.' });
         }
     };
 
-    // Salva o progresso do usuário logado
-    salvarProgresso = async (req: AuthRequest, res: Response) => {
+    // Salva ou atualiza a pontuação e lições completadas pelo aluno
+    salvarProgresso = async (req: RequisicaoAutenticada, res: Response) => {
         try {
-            const usuario_id = req.usuario!.id;
-            const { xp, level, hp, completedLessons } = req.body;
+            const usuarioId = req.usuario!.id;
+            const { xp, level, hp, lessons } = req.body;
 
-            const existe = await db('quiz_progresso').where({ usuario_id }).first();
+            const registroExistente = await db('quiz_progresso')
+                .where({ usuario_id: usuarioId })
+                .first();
 
-            const dados = {
+            const novosDados = {
                 xp: xp ?? 0,
                 level: level ?? 1,
                 hp: hp ?? 5,
-                completed_lessons: JSON.stringify(completedLessons ?? []),
+                completed_lessons: JSON.stringify(lessons ?? []),
                 updated_at: db.fn.now(),
             };
 
-            if (existe) {
-                await db('quiz_progresso').where({ usuario_id }).update(dados);
+            // Realiza Insert ou Update dependendo da existência prévia do perfil de quiz
+            if (registroExistente) {
+                await db('quiz_progresso').where({ usuario_id: usuarioId }).update(novosDados);
             } else {
-                await db('quiz_progresso').insert({ usuario_id, ...dados });
+                await db('quiz_progresso').insert({ 
+                    usuario_id: usuarioId, 
+                    ...novosDados 
+                });
             }
 
-            res.json({ message: 'Progresso salvo!' });
-        } catch (error) {
-            console.error('Erro ao salvar progresso:', error);
-            res.status(500).json({ error: 'Erro ao salvar progresso do quiz' });
+            res.json({ message: '✅ Progresso sincronizado com sucesso!' });
+        } catch (erro) {
+            console.error('Erro ao salvar progresso do quiz:', erro);
+            res.status(500).json({ error: 'Falha ao salvar as alterações do quiz.' });
         }
     };
 }

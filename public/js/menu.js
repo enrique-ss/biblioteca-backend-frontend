@@ -1,43 +1,110 @@
-// ── MENU ──────────────────────────────────────────────────────────────────────
+// Gerenciamento dos Menus de Navegação e Sidebar
 
-function loadMenu() {
-    document.getElementById('menuUserName').textContent = currentUser.nome;
-    const isBib = currentUser.tipo === 'bibliotecario';
+function carregarMenu() {
+    // Define o nome do usuário na tela de boas-vindas do menu
+    const elementoNome = document.getElementById('menuUserName');
+    if (elementoNome) {
+        elementoNome.textContent = currentUser.nome;
+    }
+
+    const ehBibliotecario = currentUser.tipo === 'bibliotecario';
     
-    const sideNav = document.getElementById('sidebarNav');
-    sideNav.innerHTML = ''; // Limpa links dinâmicos
+    const navLateral = document.getElementById('sidebarNav');
+    if (navLateral) {
+        navLateral.innerHTML = ''; // Limpa os itens anteriores para reconstrução
+    }
 
-    const items = [
-        { icon: '📚', title: 'Acervo', action() { loadLivros(); showScreen('livrosScreen'); } }
+    // Define os itens do menu baseados nas permissões do usuário
+    const itensMenu = [
+        { 
+            icon: '📚', 
+            title: 'Acervo', 
+            action() { 
+                loadLivros(); 
+                mostrarTela('livrosScreen'); 
+            } 
+        }
     ];
 
-    if (isBib) {
-        items.push(
-            { icon: '📋', title: 'Empréstimos',  action() { loadAlugueis(); showScreen('alugueisScreen'); } },
-            { icon: '👥', title: 'Usuários',     action() { loadUsuarios(); showScreen('usuariosScreen'); } },
-            { icon: '📊', title: 'Estatísticas', action() { showScreen('statsScreen'); loadStatsDetalhado(); } }
+    if (ehBibliotecario) {
+        // Opções exclusivas para bibliotecários
+        itensMenu.push(
+            { 
+                icon: '📋', 
+                title: 'Empréstimos',  
+                action() { 
+                    loadAlugueis(); 
+                    mostrarTela('alugueisScreen'); 
+                } 
+            },
+            { 
+                icon: '👥', 
+                title: 'Usuários',     
+                action() { 
+                    carregarUsuarios(); 
+                    mostrarTela('usuariosScreen'); 
+                } 
+            },
+            { 
+                icon: '📊', 
+                title: 'Estatísticas', 
+                action() { 
+                    mostrarTela('statsScreen'); 
+                    carregarEstatisticasDetalhadas(); 
+                } 
+            }
         );
     } else {
-        items.push(
-            { icon: '📖', title: 'Meus Livros', action() { loadMeusAlugueis(); showScreen('alugueisScreen'); } }
+        // Opções para usuários comuns
+        itensMenu.push(
+            { 
+                icon: '📖', 
+                title: 'Meus Livros', 
+                action() { 
+                    loadMeusAlugueis(); 
+                    mostrarTela('alugueisScreen'); 
+                } 
+            }
         );
     }
 
-    items.push(
-        { icon: '🎓', title: 'Quiz Literário', action() { showScreen('quizScreen'); quizInit(); } }
-    );
-
-    items.forEach(item => {
-        const btn = document.createElement('button');
-        btn.className = 'side-btn';
-        btn.title = item.title;
-        btn.onclick = item.action;
-        btn.innerHTML = `<span class="side-icon">${item.icon}</span><span class="side-text">${item.title}</span>`;
-        sideNav.appendChild(btn);
+    // Item comum a todos
+    itensMenu.push({ 
+        icon: '🎓', 
+        title: 'Quiz Literário', 
+        action() { 
+            mostrarTela('quizScreen'); 
+            inicializarQuiz(); 
+        } 
     });
 
-    document.getElementById('btnAddLivro').style.display    = isBib ? 'inline-flex' : 'none';
-    document.getElementById('btnNovoAluguel').style.display = isBib ? 'inline-flex' : 'none';
-    const btnH = document.getElementById('btnHistorico');
-    if (btnH) btnH.style.display = isBib ? 'inline-flex' : 'none';
+    // Cria visualmente cada botão no menu lateral (sidebar)
+    if (navLateral) {
+        itensMenu.forEach(item => {
+            const botao = document.createElement('button');
+            botao.className = 'side-btn';
+            botao.title = item.title;
+            botao.onclick = item.action;
+            botao.innerHTML = `<span class="side-icon">${item.icon}</span><span class="side-text">${item.title}</span>`;
+            navLateral.appendChild(botao);
+        });
+    }
+
+    // Gerencia a visibilidade de botões de ação rápida dependendo do tipo de usuário
+    const displayBib = ehBibliotecario ? 'inline-flex' : 'none';
+    
+    const btnAddLivro = document.getElementById('btnAddLivro');
+    if (btnAddLivro) {
+        btnAddLivro.style.display = displayBib;
+    }
+
+    const btnNovoAluguel = document.getElementById('btnNovoAluguel');
+    if (btnNovoAluguel) {
+        btnNovoAluguel.style.display = displayBib;
+    }
+
+    const btnHistorico = document.getElementById('btnHistorico');
+    if (btnHistorico) {
+        btnHistorico.style.display = displayBib;
+    }
 }

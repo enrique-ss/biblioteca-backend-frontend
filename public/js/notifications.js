@@ -1,180 +1,191 @@
-// ── NOTIFICAÇÕES ─────────────────────────────────────────────────────────────
+// Central de Notificações e Alertas do Sistema
 
-let notificationsData = [];
-// Dropdown logic removed. Alertas now use a full screen.
+let dadosNotificacoes = [];
 
-async function loadNotificationsFull() {
-    await loadNotifications();
-    renderNotificationsFullScreen();
+// Carrega e renderiza as notificações na tela cheia
+async function carregarNotificacoesCompleto() {
+    await buscarNotificacoes();
+    renderizarNotificacoesTelaCheia();
 }
 
-async function loadNotifications() {
-    if (!currentUser) return;
+// Busca as notificações do servidor baseadas no tipo de usuário
+async function buscarNotificacoes() {
+    if (!currentUser) {
+        return;
+    }
     
     try {
-        const notificationsBody = document.getElementById('notificationsFullScreenBody');
-        if (notificationsBody) notificationsBody.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gold);">Carregando...</div>';
-        
-        // Carrega notificações baseadas no tipo de usuário
-        const promises = [];
-        
-        if (currentUser.tipo === 'bibliotecario') {
-            promises.push(loadAdminNotifications());
-        } else {
-            promises.push(loadUserNotifications());
+        const corpoNotificacoes = document.getElementById('notificationsFullScreenBody');
+        if (corpoNotificacoes) {
+            corpoNotificacoes.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gold);">Carregando alertas...</div>';
         }
         
-        const allNotifications = await Promise.all(promises);
-        notificationsData = allNotifications.flat();
+        const promessas = [];
         
-        renderNotifications();
-        updateNotificationBadge();
-    } catch (err) {
-        const body = document.getElementById('notificationsFullScreenBody');
-        if (body) body.innerHTML = '<div style="text-align:center; padding:40px; color:var(--crimson);">Erro ao carregar notificações</div>';
+        // Bibliotecários veem alertas do sistema, usuários veem alertas pessoais
+        if (currentUser.tipo === 'bibliotecario') {
+            promessas.push(carregarNotificacoesAdmin());
+        } else {
+            promessas.push(carregarNotificacoesUsuario());
+        }
+        
+        const resultados = await Promise.all(promessas);
+        dadosNotificacoes = resultados.flat();
+        
+        renderizarNotificacoesTelaCheia();
+        atualizarBadgeNotificacoes();
+    } catch (erro) {
+        const corpo = document.getElementById('notificationsFullScreenBody');
+        if (corpo) {
+            corpo.innerHTML = '<div style="text-align:center; padding:40px; color:var(--crimson);">Erro ao carregar notificações</div>';
+        }
     }
 }
 
-async function loadAdminNotifications() {
-    const notifications = [];
+// Lógica de busca para Administradores (Bibliotecários)
+async function carregarNotificacoesAdmin() {
+    const lista = [];
     
     try {
-        // Buscar empréstimos atrasados
+        // Alerta: Empréstimos com prazo vencido
         const { data: atrasados } = await api('/alugueis/atrasados');
         if (atrasados.total > 0) {
-            notifications.push({
+            lista.push({
                 type: 'warning',
                 title: 'Empréstimos Atrasados',
-                message: `${atrasados.total} empréstimo(s) em atraso precisam de atenção.`,
+                message: `${atrasados.total} empréstimo(s) em atraso precisam de atenção da biblioteca.`,
                 count: atrasados.total
             });
         }
         
-        // Buscar usuários com multas pendentes
+        // Alerta: Usuários que possuem multas não pagas
         const { data: usuarios } = await api('/usuarios?limit=100');
         const usuariosComMulta = usuarios.filter(u => u.multa_pendente);
         if (usuariosComMulta.length > 0) {
-            notifications.push({
+            lista.push({
                 type: 'danger',
                 title: 'Multas Pendentes',
-                message: `${usuariosComMulta.length} usuário(s) com multas pendentes.`,
+                message: `${usuariosComMulta.length} usuário(s) possuem multas pendentes no sistema.`,
                 count: usuariosComMulta.length
             });
         }
         
-        // Buscar usuários bloqueados
+        // Alerta: Contas que foram bloqueadas manualmente ou por regras
         const usuariosBloqueados = usuarios.filter(u => u.bloqueado);
         if (usuariosBloqueados.length > 0) {
-            notifications.push({
+            lista.push({
                 type: 'info',
                 title: 'Usuários Bloqueados',
-                message: `${usuariosBloqueados.length} usuário(s) bloqueados no sistema.`,
+                message: `${usuariosBloqueados.length} usuário(s) estão bloqueados atualmente.`,
                 count: usuariosBloqueados.length
             });
         }
-        
-    } catch (err) {
-        console.error('Erro ao carregar notificações admin:', err);
+    } catch (erro) {
+        console.error('Erro ao carregar notificações administrativas:', erro);
     }
     
-    return notifications;
+    return lista;
 }
 
-async function loadUserNotifications() {
-    const notifications = [];
+// Lógica de busca para Usuários Comuns
+async function carregarNotificacoesUsuario() {
+    const lista = [];
     
     try {
-        // Buscar multas do usuário
+        // Alerta: Dívidas pendentes do próprio usuário
         const { data: multas } = await api('/alugueis/multas/minhas');
         const multasPendentes = multas.filter(m => m.status === 'pendente');
         
         if (multasPendentes.length > 0) {
-            const total = multasPendentes.reduce((sum, m) => sum + Number(m.valor), 0);
-            notifications.push({
+            const total = multasPendentes.reduce((soma, m) => soma + Number(m.valor), 0);
+            lista.push({
                 type: 'danger',
                 title: 'Multas Pendentes',
-                message: `Você tem ${multasPendentes.length} multa(s) no valor total de R$ ${total.toFixed(2)}.`,
+                message: `Você possui ${multasPendentes.length} multa(s) no valor total de R$ ${total.toFixed(2)}.`,
                 count: multasPendentes.length
             });
         }
         
-        // Buscar empréstimos atrasados do usuário
+        // Alerta: Seus livros que já passaram da data de entrega
         const { data: meusAlugueis } = await api('/alugueis/meus');
         const atrasados = meusAlugueis.filter(a => a.status === 'atrasado');
         
         if (atrasados.length > 0) {
-            notifications.push({
+            lista.push({
                 type: 'warning',
-                title: 'Empréstimos Atrasados',
-                message: `Você tem ${atrasados.length} empréstimo(s) atrasado(s).`,
+                title: 'Livros Atrasados',
+                message: `Você tem ${atrasados.length} livro(s) com a entrega atrasada. Por favor, devolva-os o quanto antes.`,
                 count: atrasados.length
             });
         }
-        
-    } catch (err) {
-        console.error('Erro ao carregar notificações usuário:', err);
+    } catch (erro) {
+        console.error('Erro ao carregar notificações do usuário:', erro);
     }
     
-    return notifications;
+    return lista;
 }
 
-function renderNotificationsFullScreen() {
-    const body = document.getElementById('notificationsFullScreenBody');
-    if (!body) return;
-    
-    if (notificationsData.length === 0) {
-        body.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: var(--text-faint); font-style: italic; font-size: var(--fs-md);">
-                Nenhum alerta pendente no momento. Tudo tranquilo!
-            </div>
-        `;
+// Renderiza a lista de notificações na interface principal
+function renderizarNotificacoesTelaCheia() {
+    const corpo = document.getElementById('notificationsFullScreenBody');
+    if (!corpo) {
         return;
     }
     
-    body.innerHTML = notificationsData.map(notification => `
-        <div style="padding: 24px; border-bottom: 1px solid var(--border-m); margin-bottom: 8px; transition: background 0.3s; border-radius: var(--r-md);" onmouseover="this.style.background='var(--gold-bg-subtle)'" onmouseleave="this.style.background='transparent'">
+    if (dadosNotificacoes.length === 0) {
+        corpo.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-faint); font-style: italic; font-size: var(--fs-md);">
+                Nenhum alerta pendente no momento. Tudo tranquilo!
+            </div>`;
+        return;
+    }
+    
+    corpo.innerHTML = dadosNotificacoes.map(notif => `
+        <div class="notification-item" style="padding: 24px; border-bottom: 1px solid var(--border-m); margin-bottom: 8px; border-radius: var(--r-md); transition: background 0.3s;" onmouseover="this.style.background='var(--gold-bg-subtle)'" onmouseleave="this.style.background='transparent'">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <strong style="color: var(--gold); font-family: 'Cinzel', serif; font-size: var(--fs-md); letter-spacing: 0.05em;">
-                    <span class="notification-type ${notification.type}" style="font-family: 'Crimson Pro', serif; font-size: 0.7em; margin-right: 8px; vertical-align: middle;">${notification.type.toUpperCase()}</span> 
-                    ${notification.title}
+                    <span class="notification-type ${notif.type}" style="font-family: 'Crimson Pro', serif; font-size: 0.7em; margin-right: 8px; vertical-align: middle;">${notif.type.toUpperCase()}</span> 
+                    ${notif.title}
                 </strong>
                 <span style="color: var(--text-dim); font-size: var(--fs-xs); font-style: italic;">Agora</span>
             </div>
-            <div style="color: var(--text); font-size: var(--fs-base); line-height: 1.6;">${notification.message}</div>
-        </div>
-    `).join('');
+            <div style="color: var(--text); font-size: var(--fs-base); line-height: 1.6;">${notif.message}</div>
+        </div>`).join('');
 }
 
-function updateNotificationBadge() {
+// Atualiza a bolinha vermelha na navbar com a contagem de alertas
+function atualizarBadgeNotificacoes() {
     const badge = document.getElementById('notificationsBadge');
-    const count = notificationsData.length;
+    const total = dadosNotificacoes.length;
     
-    if (count > 0) {
-        badge.textContent = count > 99 ? '99+' : count;
+    if (total > 0) {
+        badge.textContent = total > 99 ? '99+' : total;
         badge.classList.add('show');
     } else {
         badge.classList.remove('show');
     }
 }
 
-// Evento de click fora da tela dropdown removido pois agora é tela cheia
-
-// Atualizar navbar para mostrar notificações
-function updateNotificationsVisibility() {
-    const notificationsEl = document.getElementById('navNotifications');
-    if (notificationsEl) {
-        notificationsEl.style.display = currentUser ? 'block' : 'none';
+// Controla a visibilidade do ícone na barra de navegação
+function gerenciarVisibilidadeNotificacoes() {
+    const elementoNav = document.getElementById('navNotifications');
+    if (elementoNav) {
+        elementoNav.style.display = currentUser ? 'block' : 'none';
     }
 }
 
-// Sobrescrever updateNavbar para incluir notificações
-const originalUpdateNavbar = window.updateNavbar;
+// Estende a funcionalidade global de atualização da navbar
+const atualizarNavbarOriginal = window.updateNavbar;
 window.updateNavbar = function() {
-    if (originalUpdateNavbar) originalUpdateNavbar();
-    updateNotificationsVisibility();
+    // Chama a lógica original se existir
+    if (atualizarNavbarOriginal) {
+        atualizarNavbarOriginal();
+    }
+
+    gerenciarVisibilidadeNotificacoes();
     
-    // Carregar notificações se estiver logado
+    // Se o usuário estiver logado, busca alertas automaticamente
     if (currentUser) {
-        loadNotifications();
+        buscarNotificacoes();
     }
 };

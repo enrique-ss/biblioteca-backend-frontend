@@ -3,129 +3,170 @@ import bcrypt from 'bcryptjs';
 import db from '../database';
 import { gerarToken, AuthRequest } from '../middlewares/auth';
 
+/**
+ * Controlador responsável pelos processos de autenticação e gestão de perfil.
+ */
 export class AuthController {
-  // ✅ PASSO 1: CRIAR CONTA
+  
+  // Registro de novos usuários no sistema
   registrar = async (req: Request, res: Response) => {
     try {
       const { nome, email, senha, tipo } = req.body;
 
+      // Validação básica de nome
       if (!nome || nome.trim().length < 3) {
-        return res.status(400).json({ error: 'Nome deve ter pelo menos 3 caracteres' });
+        return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
       }
 
+      // Validação rigurosa de formato de e-mail
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email || !emailRegex.test(email)) {
-        return res.status(400).json({ error: 'Formato de email inválido (exemplo@email.com)' });
+        return res.status(400).json({ error: 'Formato de e-mail inválido (exemplo: usuario@dominio.com).' });
       }
 
+      // Validação de força de senha
       if (!senha || senha.length < 8) {
-        return res.status(400).json({ error: 'A senha deve ter pelo menos 8 caracteres' });
+        return res.status(400).json({ error: 'A senha deve conter no mínimo 8 caracteres.' });
       }
 
+      // Validação de papéis de usuário permitidos
       if (!['usuario', 'bibliotecario'].includes(tipo)) {
-        return res.status(400).json({ error: 'Tipo de conta deve ser "usuario" ou "bibliotecario"' });
+        return res.status(400).json({ error: 'Tipo de conta inválido. Escolha entre "usuario" ou "bibliotecario".' });
       }
 
-      const emailExistente = await db('usuarios').where({ email: email.toLowerCase().trim() }).first();
-      if (emailExistente) {
-        return res.status(400).json({ error: 'Este email já está sendo utilizado' });
+      // Verifica se o e-mail já está cadastrado para evitar duplicidade
+      const emaisFormatado = email.toLowerCase().trim();
+      const usuarioExistente = await db('usuarios').where({ email: emaisFormatado }).first();
+      
+      if (usuarioExistente) {
+        return res.status(400).json({ error: 'Este endereço de e-mail já está em uso por outra conta.' });
       }
 
-      const senhaHash = await bcrypt.hash(senha, 10);
+      // Criptografia da senha antes de salvar no banco
+      const senhaCriptografada = await bcrypt.hash(senha, 10);
 
-      const [id] = await db('usuarios').insert({
+      // Insere o novo usuário e recupera o ID gerado
+      const [novoId] = await db('usuarios').insert({
         nome: nome.trim(),
-        email: email.toLowerCase().trim(),
-        senha: senhaHash,
+        email: emaisFormatado,
+        senha: senhaCriptografada,
         tipo
       });
 
-      const usuario = await db('usuarios').where({ id }).first();
+      const usuarioCriado = await db('usuarios').where({ id: novoId }).first();
 
-      const token = gerarToken({ id: usuario.id, email: usuario.email, tipo: usuario.tipo });
+      // Gera o token de acesso (JWT) para o novo usuário
+      const tokenAcesso = gerarToken({ 
+        id: usuarioCriado.id, 
+        email: usuarioCriado.email, 
+        tipo: usuarioCriado.tipo 
+      });
 
       res.status(201).json({
-        message: '✅ Cadastro realizado com sucesso!',
-        token,
-        usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, tipo: usuario.tipo }
+        message: '✅ Conta criada com sucesso! Bem-vindo(a) à Luizateca.',
+        token: tokenAcesso,
+        usuario: { 
+          id: usuarioCriado.id, 
+          nome: usuarioCriado.nome, 
+          email: usuarioCriado.email, 
+          tipo: usuarioCriado.tipo 
+        }
       });
-    } catch (error) {
-      console.error('Erro no registro:', error);
-      res.status(500).json({ error: 'Erro ao realizar cadastro' });
+    } catch (erro) {
+      console.error('Erro ao registrar usuário:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro interno ao realizar o cadastro.' });
     }
   }
 
-  // ✅ PASSO 2: FAZER LOGIN
+  // Autenticação de usuários existentes
   login = async (req: Request, res: Response) => {
     try {
       const { email, senha } = req.body;
 
       if (!email || !senha) {
-        return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+        return res.status(400).json({ error: 'E-mail e senha são campos obrigatórios.' });
       }
 
-      const usuario = await db('usuarios').where({ email: email.toLowerCase().trim() }).first();
+      const emailFormatado = email.toLowerCase().trim();
+      const usuarioEncontrado = await db('usuarios').where({ email: emailFormatado }).first();
 
-      if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
-        return res.status(401).json({ error: 'Email ou senha incorretos' });
+      // Verifica se o usuário existe e se a senha coincide com o hash salvo
+      if (!usuarioEncontrado || !(await bcrypt.compare(senha, usuarioEncontrado.senha))) {
+        return res.status(401).json({ error: 'Credenciais inválidas. Verifique seu e-mail e senha.' });
       }
 
-      const token = gerarToken({ id: usuario.id, email: usuario.email, tipo: usuario.tipo });
+      const tokenAcesso = gerarToken({ 
+        id: usuarioEncontrado.id, 
+        email: usuarioEncontrado.email, 
+        tipo: usuarioEncontrado.tipo 
+      });
 
       res.json({
         message: '✅ Login realizado com sucesso!',
-        token,
-        usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, tipo: usuario.tipo }
+        token: tokenAcesso,
+        usuario: { 
+          id: usuarioEncontrado.id, 
+          nome: usuarioEncontrado.nome, 
+          email: usuarioEncontrado.email, 
+          tipo: usuarioEncontrado.tipo 
+        }
       });
-    } catch (error) {
-      console.error('Erro no login:', error);
-      res.status(500).json({ error: 'Erro ao realizar login' });
+    } catch (erro) {
+      console.error('Erro ao realizar login:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro interno ao tentar autenticar.' });
     }
   }
 
-  // ✅ PASSO PERFIL: EDITAR PRÓPRIO PERFIL (qualquer usuário autenticado)
+  // Permite que qualquer usuário autenticado edite suas próprias informações
   editarPerfil = async (req: AuthRequest, res: Response) => {
     try {
-      const id = req.usuario!.id;
+      // O ID vem do token decodificado pelo middleware de autenticação
+      const usuarioId = req.usuario!.id;
       const { nome, email, senha } = req.body;
 
-      const dadosAtualizacao: any = {};
+      const mudancas: any = {};
 
       if (nome !== undefined) {
         if (nome.trim().length < 3) {
-          return res.status(400).json({ error: 'O nome deve ter pelo menos 3 caracteres' });
+          return res.status(400).json({ error: 'O nome precisa ter ao menos 3 caracteres.' });
         }
-        dadosAtualizacao.nome = nome.trim();
+        mudancas.nome = nome.trim();
       }
 
       if (email !== undefined) {
+        const emailFormatado = email.toLowerCase().trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          return res.status(400).json({ error: 'Formato de email inválido' });
+        
+        if (!emailRegex.test(emailFormatado)) {
+          return res.status(400).json({ error: 'O formato do novo e-mail é inválido.' });
         }
-        const emailExistente = await db('usuarios')
-          .where({ email: email.toLowerCase().trim() })
-          .whereNot({ id })
+
+        // Garante que o novo e-mail não pertença a outra pessoa
+        const outroUsuarioComEmail = await db('usuarios')
+          .where({ email: emailFormatado })
+          .whereNot({ id: usuarioId })
           .first();
-        if (emailExistente) {
-          return res.status(400).json({ error: 'Este email já está sendo utilizado por outro usuário' });
+        
+        if (outroUsuarioComEmail) {
+          return res.status(400).json({ error: 'Este e-mail já está sendo utilizado por outro cadastro.' });
         }
-        dadosAtualizacao.email = email.toLowerCase().trim();
+        mudancas.email = emailFormatado;
       }
 
       if (senha !== undefined) {
         if (senha.length < 8) {
-          return res.status(400).json({ error: 'A senha deve ter pelo menos 8 caracteres' });
+          return res.status(400).json({ error: 'A nova senha deve ter no mínimo 8 caracteres.' });
         }
-        dadosAtualizacao.senha = await bcrypt.hash(senha, 10);
+        mudancas.senha = await bcrypt.hash(senha, 10);
       }
 
-      if (Object.keys(dadosAtualizacao).length > 0) {
-        await db('usuarios').where({ id }).update(dadosAtualizacao);
+      // Só executa o update se houver algo para mudar
+      if (Object.keys(mudancas).length > 0) {
+        await db('usuarios').where({ id: usuarioId }).update(mudancas);
       }
 
       const usuarioAtualizado = await db('usuarios')
-        .where({ id })
+        .where({ id: usuarioId })
         .select('id', 'nome', 'email', 'tipo')
         .first();
 
@@ -133,9 +174,9 @@ export class AuthController {
         message: '✅ Perfil atualizado com sucesso!',
         usuario: usuarioAtualizado
       });
-    } catch (error) {
-      console.error('Erro ao editar perfil:', error);
-      res.status(500).json({ error: 'Erro ao editar perfil' });
+    } catch (erro) {
+      console.error('Erro ao atualizar perfil:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro ao tentar salvar as alterações no perfil.' });
     }
   }
 }

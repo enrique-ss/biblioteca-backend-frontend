@@ -1,176 +1,212 @@
-// ── ALUGUÉIS ──────────────────────────────────────────────────────────────────
+// Gerenciamento de Empréstimos e Histórico
 
-const loadAlugueisDebounced = debounce((busca) => loadAlugueis(1, busca));
+const carregarAlugueisDebounced = debounce((busca) => carregarAlugueis(1, busca));
 
-function voltarAlugueis() { showScreen('menuScreen'); }
+function voltarParaMenu() { 
+    mostrarTela('menuScreen'); 
+}
 
-async function loadAlugueis(page = 1, busca = '') {
-    document.getElementById('alugueisTitle').innerHTML = `<span>Empréstimos</span>`;
-    document.getElementById('alugueisHead').innerHTML =
-        `<tr><th>#</th><th class="sortable" onclick="sortTable('alugueis','usuario')">Usuário <span class="sort-indicator"></span></th><th class="sortable" onclick="sortTable('alugueis','titulo')">Livro <span class="sort-indicator"></span></th><th>Exemplar</th><th class="sortable" onclick="sortTable('alugueis','data_aluguel')">Empréstimo <span class="sort-indicator"></span></th><th class="sortable" onclick="sortTable('alugueis','prazo')">Prazo <span class="sort-indicator"></span></th><th class="sortable" onclick="sortTable('alugueis','dias_atraso')">Atraso <span class="sort-indicator"></span></th><th>Status</th><th>Ações</th></tr>`;
-    setLoading('alugueisTbody', 9);
+async function carregarAlugueis(pagina = 1, busca = '') {
+    // Define o título e cabeçalho da tabela de controle geral
+    document.getElementById('alugueisTitle').innerHTML = `<span>Controle de Empréstimos</span>`;
+    document.getElementById('alugueisHead').innerHTML = `
+        <tr>
+            <th>#</th>
+            <th class="sortable" onclick="sortTable('alugueis','usuario')">Usuário <span class="sort-indicator"></span></th>
+            <th class="sortable" onclick="sortTable('alugueis','titulo')">Livro <span class="sort-indicator"></span></th>
+            <th>Exemplar</th>
+            <th class="sortable" onclick="sortTable('alugueis','data_aluguel')">Empréstimo <span class="sort-indicator"></span></th>
+            <th class="sortable" onclick="sortTable('alugueis','prazo')">Prazo <span class="sort-indicator"></span></th>
+            <th class="sortable" onclick="sortTable('alugueis','dias_atraso')">Atraso <span class="sort-indicator"></span></th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>`;
+
+    definirCarregando('alugueisTbody', 9);
+
     try {
-        const params = new URLSearchParams({ 
-            page, 
+        const parametros = new URLSearchParams({ 
+            page: pagina, 
             limit: 20,
             sort: sortState.alugueis.col,
             order: sortState.alugueis.dir
         });
-        if (busca.trim()) params.set('busca', busca.trim());
-        const [res, atrasados] = await Promise.all([
-            api(`/alugueis/todos?${params}`),
+
+        if (busca.trim()) {
+            parametros.set('busca', busca.trim());
+        }
+
+        // Busca dados de empréstimos e resumo de atrasados simultaneamente
+        const [resposta, atrasados] = await Promise.all([
+            api(`/alugueis/todos?${parametros}`),
             api('/alugueis/atrasados')
         ]);
-        const rows = Array.isArray(res) ? res : (res.data ?? []);
-        const pages = Array.isArray(res) ? 1 : (res.pages ?? 1);
-        renderAlugueisCompleto(rows);
-        renderPagination('alugueisPagination', page, pages, (p) => loadAlugueis(p, busca));
+
+        const linhas = Array.isArray(resposta) ? resposta : (resposta.data ?? []);
+        const totalPaginas = Array.isArray(resposta) ? 1 : (resposta.pages ?? 1);
+
+        renderizarTabelaAlugueisCompleta(linhas);
+        renderizarPaginacao('alugueisPagination', pagina, totalPaginas, (p) => carregarAlugueis(p, busca));
+
+        // Gerencia o banner de aviso de atrasos no topo da tela
         const banner = document.getElementById('atrasadosBanner');
         if (atrasados.total > 0) {
             banner.style.display = 'flex';
-            banner.innerHTML = `${atrasados.total} empréstimo(s) em atraso — <a href="#" style="color:inherit;margin-left:4px;" onclick="showScreen('historicoScreen');loadHistorico();">ver todos</a>`;
+            banner.innerHTML = `
+                ${atrasados.total} empréstimo(s) em atraso — 
+                <a href="#" style="color:inherit;margin-left:4px;text-decoration:underline" onclick="mostrarTela('historicoScreen');carregarHistorico();">ver detalhes</a>`;
         } else {
             banner.style.display = 'none';
         }
         
-        // Atualiza classes de ordenação
+        // Atualiza visualmente a ordenação nas colunas
         document.querySelectorAll('#alugueisScreen .sortable').forEach(th => {
             th.classList.remove('sort-asc', 'sort-desc');
         });
-        const currentTh = document.querySelector(`#alugueisScreen [onclick="sortTable('alugueis','${sortState.alugueis.col}')"]`);
-        if (currentTh) currentTh.classList.add(sortState.alugueis.dir === 'asc' ? 'sort-asc' : 'sort-desc');
-    } catch (err) { setEmpty('alugueisTbody', 9, err.message); showAlert(err.message, 'danger'); }
+        
+        const thAtual = document.querySelector(`#alugueisScreen [onclick="sortTable('alugueis','${sortState.alugueis.col}')"]`);
+        if (thAtual) {
+            const classe = sortState.alugueis.dir === 'asc' ? 'sort-asc' : 'sort-desc';
+            thAtual.classList.add(classe);
+        }
+
+    } catch (erro) { 
+        definirVazio('alugueisTbody', 9, erro.message); 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 }
 
 async function loadMeusAlugueis() {
-    document.getElementById('alugueisTitle').innerHTML = `<span>Meus Empréstimos</span>`;
-    document.getElementById('alugueisHead').innerHTML =
-        `<tr><th>#</th><th>Livro</th><th>Exemplar</th><th>Empréstimo</th><th>Prazo</th><th>Atraso / Multa</th><th>Status</th><th>Ações</th></tr>`;
-    setLoading('alugueisTbody', 8);
+    document.getElementById('alugueisTitle').innerHTML = `<span>Meus Livros Alugados</span>`;
+    document.getElementById('alugueisHead').innerHTML = `
+        <tr>
+            <th>#</th>
+            <th>Livro</th>
+            <th>Exemplar</th>
+            <th>Empréstimo</th>
+            <th>Prazo Para Entrega</th>
+            <th>Atraso / Multa</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>`;
+
+    definirCarregando('alugueisTbody', 8);
+
     try {
-        const data = await api('/alugueis/meus');
-        renderAlugueisMeus(data);
-    } catch (err) { setEmpty('alugueisTbody', 8, err.message); showAlert(err.message, 'danger'); }
+        const dados = await api('/alugueis/meus');
+        renderizarTabelaAlugueisUsuario(dados);
+    } catch (erro) { 
+        definirVazio('alugueisTbody', 8, erro.message); 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 }
 
-/*
- * Função Didática: Exibe em vermelho os dias e o custo financeiro 
- * da multa atual, ou exibe apenas "—" (traço) se o livro estiver dentro do prazo.
+/**
+ * Função Didática: Exibe em destaque (vermelho) o tempo de atraso e o valor da multa acumulada.
  */
-function renderAlertaAtraso(diasAtraso, multaAcumulada) {
+function renderizarAlertaAtraso(diasAtraso, multaAcumulada) {
     if (diasAtraso > 0) {
-        return `<span style="color:#f85149;font-weight:600">${diasAtraso}d — R$&nbsp;${multaAcumulada.toFixed(2)}</span>`;
+        return `<span style="color:#f85149;font-weight:600">${diasAtraso}d — R$ ${multaAcumulada.toFixed(2)}</span>`;
     }
     return `<span style="color:var(--text-faint)">—</span>`;
 }
 
-/*
- * Função Didática: Determina os botões de ação na tabela de Controle Geral.
- */
-function renderAcoesAluguel(id, podeDevolver) {
-    if (podeDevolver) {
-        return `<button class="btn btn-success btn-sm" onclick="abrirModalDevolucao(${id})">Devolver</button>`;
-    }
-    return `<span style="color:var(--text-faint)">—</span>`;
-}
-
-function renderAlugueisCompleto(data) {
+function renderizarTabelaAlugueisCompleta(lista) {
     const tbody = document.getElementById('alugueisTbody');
-    tbody.innerHTML = ''; // Limpa a tabela
+    tbody.innerHTML = '';
 
-    if (!data.length) { 
-        setEmpty('alugueisTbody', 9, 'Nenhum empréstimo encontrado.'); 
+    if (!lista.length) { 
+        definirVazio('alugueisTbody', 9, 'Nenhum empréstimo ativo encontrado.'); 
         return; 
     }
 
-    data.forEach(a => {
-        const diasAtraso = Number(a.dias_atraso ?? 0);
-        const multaAcum = Number(a.multa_acumulada ?? 0);
-
+    lista.forEach(item => {
+        const diasAtraso = Number(item.dias_atraso ?? 0);
+        const multaAcum = Number(item.multa_acumulada ?? 0);
         const tr = document.createElement('tr');
         
-        // Vamos usar variáveis claras para avisar sobre multa pendente passada
-        const badgeMulta = a.multa_pendente 
-            ? ' <span class="badge badge-danger" style="font-size:.55rem;vertical-align:middle">multa pendente</span>' 
+        const badgeInadimplente = item.multa_pendente 
+            ? ' <span class="badge badge-danger" style="font-size:.55rem;vertical-align:middle">débito pendente</span>' 
             : '';
 
         tr.innerHTML = `
-            <td style="color:var(--text-faint)">${esc(a.id)}</td>
-            <td>${esc(a.usuario ?? '—')} ${badgeMulta}</td>
-            <td><strong>${esc(a.titulo ?? '—')}</strong></td>
-            <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(a.exemplar_codigo ?? '—')}</code></td>
-            <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
-            <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
-            <td>${renderAlertaAtraso(diasAtraso, multaAcum)}</td>
-            <td>${badgeStatus(a.status)}</td>
-            <td>${renderAcoesAluguel(a.id, a.pode_devolver)}</td>
-        `;
+            <td style="color:var(--text-faint)">${esc(item.id)}</td>
+            <td>${esc(item.usuario ?? '—')} ${badgeInadimplente}</td>
+            <td><strong>${esc(item.titulo ?? '—')}</strong></td>
+            <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
+            <td style="color:var(--text-dim)">${formatarData(item.data_aluguel)}</td>
+            <td style="color:var(--text-dim)">${formatarData(item.prazo)}</td>
+            <td>${renderizarAlertaAtraso(diasAtraso, multaAcum)}</td>
+            <td>${badgeStatus(item.status)}</td>
+            <td>
+                ${item.pode_devolver ? `<button class="btn btn-success btn-sm" onclick="abrirModalDevolucao(${item.id})">Devolver</button>` : '<span style="color:var(--text-faint)">—</span>'}
+            </td>`;
         
         tbody.appendChild(tr);
     });
 }
 
-/*
- * Função Didática: Representa o botão de Extender/Renovar o Prazo (+14 dias)
- * na visão do aluno autenticado (Meus Empréstimos). 
- */
-function renderAcoesMeusAlugueis(id, podeRenovar) {
-    if (podeRenovar) {
-        return `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${id})">+14 dias</button>`;
-    }
-    return `<span style="color:var(--text-faint)">—</span>`;
-}
-
-function renderAlugueisMeus(data) {
+function renderizarTabelaAlugueisUsuario(lista) {
     const tbody = document.getElementById('alugueisTbody');
-    tbody.innerHTML = ''; // Limpa a tabela
+    tbody.innerHTML = '';
     
-    if (!data.length) { 
-        setEmpty('alugueisTbody', 8, 'Nenhum empréstimo encontrado.'); 
+    if (!lista.length) { 
+        definirVazio('alugueisTbody', 8, 'Você não possui empréstimos ativos.'); 
         return; 
     }
     
-    data.forEach(a => {
-        const diasAtraso = Number(a.dias_atraso ?? 0);
-        const multaAcum = Number(a.multa_acumulada ?? 0);
-
+    lista.forEach(item => {
+        const diasAtraso = Number(item.dias_atraso ?? 0);
+        const multaAcum = Number(item.multa_acumulada ?? 0);
         const tr = document.createElement('tr');
+
         tr.innerHTML = `
-            <td style="color:var(--text-faint)">${esc(a.id)}</td>
-            <td><strong>${esc(a.titulo ?? '—')}</strong></td>
-            <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(a.exemplar_codigo ?? '—')}</code></td>
-            <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
-            <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
-            <td>${renderAlertaAtraso(diasAtraso, multaAcum)}</td>
-            <td>${badgeStatus(a.status)}</td>
-            <td>${renderAcoesMeusAlugueis(a.id, a.pode_renovar)}</td>
-        `;
+            <td style="color:var(--text-faint)">${esc(item.id)}</td>
+            <td><strong>${esc(item.titulo ?? '—')}</strong></td>
+            <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
+            <td style="color:var(--text-dim)">${formatarData(item.data_aluguel)}</td>
+            <td style="color:var(--text-dim)">${formatarData(item.prazo)}</td>
+            <td>${renderizarAlertaAtraso(diasAtraso, multaAcum)}</td>
+            <td>${badgeStatus(item.status)}</td>
+            <td>
+                ${item.pode_renovar ? `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${item.id})">+14 dias</button>` : '<span style="color:var(--text-faint)">—</span>'}
+            </td>`;
+            
         tbody.appendChild(tr);
     });
 }
 
-async function prepareAluguelModal() {
+// Prepara o modal para registrar um novo empréstimo manualmente (Bibliotecário)
+async function prepararModalNovoAluguel() {
     try {
         const [livros, usuarios] = await Promise.all([
             api('/livros?status=disponivel&limit=1000'),
             api('/usuarios?limit=1000')
         ]);
-        const selL = document.getElementById('aluguelLivro');
-        const selU = document.getElementById('aluguelUsuario');
-        const selE = document.getElementById('aluguelExemplar');
+
+        const selLivro = document.getElementById('aluguelLivro');
+        const selUsuario = document.getElementById('aluguelUsuario');
+        const selExemplar = document.getElementById('aluguelExemplar');
         
-        selL.innerHTML = '<option value="">Selecione um livro…</option>';
-        selU.innerHTML = '<option value="">Selecione um usuário…</option>';
-        selE.innerHTML = '<option value="">Selecione um livro primeiro…</option>';
+        selLivro.innerHTML = '<option value="">Selecione um livro…</option>';
+        selUsuario.innerHTML = '<option value="">Selecione um usuário…</option>';
+        selExemplar.innerHTML = '<option value="">Selecione um livro primeiro…</option>';
         
-        (livros.data ?? livros).forEach(l => selL.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)} (${esc(l.exemplares_disponiveis)} disp.)</option>`);
-        (usuarios.data ?? usuarios).forEach(u => selU.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`);
+        const listaLivros = livros.data ?? livros;
+        listaLivros.forEach(l => {
+            selLivro.innerHTML += `<option value="${l.id}">${esc(l.titulo)} — ${esc(l.autor)} (${esc(l.exemplares_disponiveis)} disponívels)</option>`;
+        });
+
+        const listaUsuarios = usuarios.data ?? usuarios;
+        listaUsuarios.forEach(u => {
+            selUsuario.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`;
+        });
         
-        // Adicionar evento para carregar exemplares quando livro for selecionado
-        selL.onchange = async () => {
-            const livroId = selL.value;
+        // Evento dinâmico para carregar exemplares específicos do livro escolhido
+        selLivro.onchange = async () => {
+            const livroId = selLivro.value;
             if (!livroId) {
-                selE.innerHTML = '<option value="">Selecione um livro primeiro…</option>';
+                selExemplar.innerHTML = '<option value="">Selecione um livro primeiro…</option>';
                 return;
             }
             
@@ -178,162 +214,223 @@ async function prepareAluguelModal() {
                 const { exemplares } = await api(`/livros/${livroId}/exemplares`);
                 const disponiveis = exemplares.filter(ex => ex.disponibilidade === 'disponivel');
                 
-                selE.innerHTML = '<option value="">Selecione um exemplar…</option>';
+                selExemplar.innerHTML = '<option value="">Selecione o exemplar físico…</option>';
                 disponiveis.forEach(ex => {
-                    const condicaoText = ex.condicao === 'bom' ? 'Bom' : ex.condicao === 'danificado' ? 'Danificado' : ex.condicao;
-                    selE.innerHTML += `<option value="${ex.id}">${esc(ex.codigo || `#${ex.id}`)} - ${condicaoText}</option>`;
+                    const textoCondicao = ex.condicao === 'bom' ? 'Bom' : 'Danificado';
+                    selExemplar.innerHTML += `<option value="${ex.id}">${esc(ex.codigo || `#${ex.id}`)} [${textoCondicao}]</option>`;
                 });
                 
                 if (disponiveis.length === 0) {
-                    selE.innerHTML = '<option value="">Nenhum exemplar disponível</option>';
+                    selExemplar.innerHTML = '<option value="">Nenhum exemplar disponível para este livro</option>';
                 }
-            } catch (err) {
-                selE.innerHTML = '<option value="">Erro ao carregar exemplares</option>';
+            } catch (erro) {
+                selExemplar.innerHTML = '<option value="">Erro ao carregar exemplares</option>';
             }
         };
         
-        openModal('addAluguelModal');
-    } catch (err) { showAlert(err.message, 'danger'); }
+        abrirModal('addAluguelModal');
+    } catch (erro) { 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 }
 
-document.getElementById('addAluguelForm').addEventListener('submit', async e => {
+// Processa o envio do formulário de novo empréstimo
+document.getElementById('addAluguelForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
         const livroId = parseInt(document.getElementById('aluguelLivro').value);
         const usuarioId = parseInt(document.getElementById('aluguelUsuario').value);
-        const exemplarId = document.getElementById('aluguelExemplar').value ? 
-            parseInt(document.getElementById('aluguelExemplar').value) : null;
+        const exemplarIdStr = document.getElementById('aluguelExemplar').value;
+        const exemplarId = exemplarIdStr ? parseInt(exemplarIdStr) : null;
             
-        const requestBody = {
+        const payload = {
             livro_id: livroId,
             usuario_id: usuarioId
         };
         
-        // Só adiciona exemplar_id se foi selecionado
         if (exemplarId) {
-            requestBody.exemplar_id = exemplarId;
+            payload.exemplar_id = exemplarId;
         }
         
         await api('/alugueis', {
             method: 'POST',
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(payload)
         });
-        showAlert('Empréstimo registrado!');
-        closeModal('addAluguelModal'); e.target.reset();
-        loadAlugueis(); showScreen('alugueisScreen');
-    } catch (err) { showAlert(err.message, 'danger'); }
+
+        exibirAlerta('Empréstimo registrado com sucesso!');
+        fecharModal('addAluguelModal');
+        e.target.reset();
+        
+        carregarAlugueis(); 
+        mostrarTela('alugueisScreen');
+    } catch (erro) { 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 });
 
-// ── DEVOLUÇÃO COM ESTADO ───────────────────────────────────────────────────────
+// --- Processo de Devolução ---
 
 function abrirModalDevolucao(aluguelId) {
     document.getElementById('devolucaoAluguelId').value = aluguelId;
     document.getElementById('devolucaoEstado').value = 'bom';
     document.getElementById('devolucaoObs').value = '';
     document.getElementById('devolucaoObsWrap').style.display = 'none';
-    openModal('devolucaoModal');
+    abrirModal('devolucaoModal');
 }
 
+// Listener para exibir campo de observação apenas se o estado for ruim
 document.addEventListener('DOMContentLoaded', () => {
-    const sel = document.getElementById('devolucaoEstado');
-    if (sel) sel.addEventListener('change', () => {
-        const precisaObs = sel.value === 'danificado' || sel.value === 'perdido';
-        document.getElementById('devolucaoObsWrap').style.display = precisaObs ? 'block' : 'none';
-    });
+    const seletorEstado = document.getElementById('devolucaoEstado');
+    if (seletorEstado) {
+        seletorEstado.addEventListener('change', () => {
+            const ehRuim = seletorEstado.value === 'danificado' || seletorEstado.value === 'perdido';
+            document.getElementById('devolucaoObsWrap').style.display = ehRuim ? 'block' : 'none';
+        });
+    }
 
-    document.getElementById('devolucaoForm')?.addEventListener('submit', async e => {
+    document.getElementById('devolucaoForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('devolucaoAluguelId').value;
         const estado = document.getElementById('devolucaoEstado').value;
         const obs = document.getElementById('devolucaoObs').value;
+
         try {
-            const res = await api(`/alugueis/${id}/devolver`, {
+            const resultado = await api(`/alugueis/${id}/devolver`, {
                 method: 'PUT',
-                body: JSON.stringify({ estado_exemplar: estado, observacao: obs })
+                body: JSON.stringify({ 
+                    estado_exemplar: estado, 
+                    observacao: obs 
+                })
             });
-            closeModal('devolucaoModal');
-            if (res.aviso) {
-                showAlert(res.aviso, 'warning');
-                if (res.multas && res.multas.length > 0) {
-                    const multasText = res.multas.map(m => 
-                        `${m.tipo === 'atraso' ? `Atraso: ${m.dias} dias` : 'Perda do exemplar'}: R$ ${m.valor.toFixed(2)}`
-                    ).join('\n');
+
+            fecharModal('devolucaoModal');
+
+            if (resultado.aviso) {
+                exibirAlerta(resultado.aviso, 'warning');
+                
+                // Exibe detalhes das multas geradas se houver atraso ou perda
+                if (resultado.multas && resultado.multas.length > 0) {
+                    const textoMultas = resultado.multas.map(m => {
+                        const motivo = m.tipo === 'atraso' ? `Atraso (${m.dias} dias)` : 'Perda do exemplar';
+                        return `${motivo}: R$ ${m.valor.toFixed(2)}`;
+                    }).join(' | ');
+
                     setTimeout(() => {
-                        showAlert(`Multas geradas:\n${multasText}\nTotal: R$ ${res.total_multa.toFixed(2)}`, 'info');
+                        exibirAlerta(`Multas: ${textoMultas} | Total: R$ ${resultado.total_multa.toFixed(2)}`, 'info');
                     }, 2000);
                 }
             } else {
-                showAlert(res.message || 'Livro devolvido!');
+                exibirAlerta(resultado.message || 'Livro devolvido com sucesso!');
             }
-            loadAlugueis();
-        } catch (err) { showAlert(err.message, 'danger'); }
+
+            carregarAlugueis();
+        } catch (erro) { 
+            exibirAlerta(erro.message, 'danger'); 
+        }
     });
 });
 
 function renovarEmprestimo(id) {
-    showConfirm({
-        icon: '', title: 'Renovar Empréstimo',
-        msg: 'Adicionar mais 14 dias ao prazo?', okLabel: 'Renovar',
+    exibirConfirmacao({
+        icon: '🔄',
+        title: 'Renovar Empréstimo',
+        msg: 'Deseja adicionar mais 14 dias ao prazo de entrega atual?',
+        okLabel: 'Renovar (+14 dias)',
         async onOk() {
             try {
-                const res = await api(`/alugueis/${id}/renovar`, { method: 'PUT' });
-                showAlert(res.message || 'Empréstimo renovado!');
+                const resposta = await api(`/alugueis/${id}/renovar`, { method: 'PUT' });
+                exibirAlerta(resposta.message || 'Empréstimo renovado!');
                 loadMeusAlugueis();
-            } catch (err) { showAlert(err.message, 'danger'); }
+            } catch (erro) { 
+                exibirAlerta(erro.message, 'danger'); 
+            }
         }
     });
 }
 
-// ── HISTÓRICO ─────────────────────────────────────────────────────────────────
+// --- Histórico Detalhado ---
 
-async function loadHistorico(page = 1, usuarioId = '') {
-    setLoading('historicoTbody', 9);
+async function carregarHistorico(pagina = 1, usuarioId = '') {
+    definirCarregando('historicoTbody', 9);
     try {
-        const params = new URLSearchParams({ 
-            page, 
+        const parametros = new URLSearchParams({ 
+            page: pagina, 
             limit: 20,
             sort: sortState.historico.col,
             order: sortState.historico.dir
         });
-        if (String(usuarioId).trim()) params.set('usuario_id', String(usuarioId).trim());
-        const { data, pages } = await api(`/alugueis/historico?${params}`);
+
+        if (String(usuarioId).trim()) {
+            parametros.set('usuario_id', String(usuarioId).trim());
+        }
+
+        const { data, pages } = await api(`/alugueis/historico?${parametros}`);
         const tbody = document.getElementById('historicoTbody');
         tbody.innerHTML = '';
-        if (!data.length) { setEmpty('historicoTbody', 9, 'Nenhum registro encontrado.'); return; }
-        data.forEach(a => {
+
+        if (!data.length) { 
+            definirVazio('historicoTbody', 9, 'Nenhum registro de histórico encontrado.'); 
+            return; 
+        }
+
+        data.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="color:var(--text-faint)">${esc(a.id)}</td>
-                <td>${esc(a.usuario)}</td>
-                <td><strong>${esc(a.titulo)}</strong></td>
-                <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(a.exemplar_codigo ?? '—')}</code></td>
-                <td>${badgeExemplar(a.estado_devolucao ?? a.exemplar_status ?? 'disponivel')}</td>
-                <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
-                <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
-                <td style="color:var(--text-dim)">${fmtDate(a.data_devolucao)}</td>
-                <td style="text-align:center">${esc(a.renovacoes ?? 0)}x</td>`;
+                <td style="color:var(--text-faint)">${esc(item.id)}</td>
+                <td>${esc(item.usuario)}</td>
+                <td><strong>${esc(item.titulo)}</strong></td>
+                <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
+                <td>${badgeExemplar(item.estado_devolucao ?? item.exemplar_status ?? 'disponivel')}</td>
+                <td style="color:var(--text-dim)">${formatarData(item.data_aluguel)}</td>
+                <td style="color:var(--text-dim)">${formatarData(item.prazo)}</td>
+                <td style="color:var(--text-dim)">${formatarData(item.data_devolucao)}</td>
+                <td style="text-align:center">${esc(item.renovacoes ?? 0)}x</td>`;
+            
             tbody.appendChild(tr);
         });
-        renderPagination('historicoPagination', page, pages, (p) => loadHistorico(p, usuarioId));
+
+        renderizarPaginacao('historicoPagination', pagina, pages, (p) => carregarHistorico(p, usuarioId));
         
-        // Atualiza classes de ordenação
+        // Atualiza indicadores de ordenação no histórico
         document.querySelectorAll('#historicoScreen .sortable').forEach(th => {
             th.classList.remove('sort-asc', 'sort-desc');
         });
-        const currentTh = document.querySelector(`#historicoScreen [onclick="sortTable('historico','${sortState.historico.col}')"]`);
-        if (currentTh) currentTh.classList.add(sortState.historico.dir === 'asc' ? 'sort-asc' : 'sort-desc');
-    } catch (err) { setEmpty('historicoTbody', 9, err.message); showAlert(err.message, 'danger'); }
+        const thAtual = document.querySelector(`#historicoScreen [onclick="sortTable('historico','${sortState.historico.col}')"]`);
+        if (thAtual) {
+            thAtual.classList.add(sortState.historico.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+    } catch (erro) { 
+        definirVazio('historicoTbody', 9, erro.message); 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 }
 
-async function exportCSV() {
+async function exportarHistoricoCSV() {
     try {
+        // Busca um volume maior para o CSV (limitado a 10.000 registros para segurança)
         const { data } = await api('/alugueis/historico?page=1&limit=10000');
-        const cols = ['id', 'usuario', 'titulo', 'exemplar_codigo', 'estado_devolucao', 'data_aluguel', 'prazo', 'data_devolucao', 'renovacoes'];
-        const csv = [cols.join(','), ...data.map(r => cols.map(c => `"${(r[c] ?? '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        a.download = 'historico_emprestimos.csv';
-        a.click();
-        showAlert('CSV exportado!');
-    } catch (err) { showAlert(err.message, 'danger'); }
+        
+        const colunas = ['id', 'usuario', 'titulo', 'exemplar_codigo', 'estado_devolucao', 'data_aluguel', 'prazo', 'data_devolucao', 'renovacoes'];
+        
+        // Constrói o conteúdo CSV
+        const header = colunas.join(',');
+        const linhas = data.map(registro => {
+            return colunas.map(col => {
+                const valor = (registro[col] ?? '').toString().replace(/"/g, '""');
+                return `"${valor}"`;
+            }).join(',');
+        });
+
+        const csvString = [header, ...linhas].join('\n');
+        
+        // Cria e dispara o download do arquivo
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' }));
+        link.download = `historico_biblioteca_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        
+        exibirAlerta('Histórico exportado com sucesso!');
+    } catch (erro) { 
+        exibirAlerta(erro.message, 'danger'); 
+    }
 }

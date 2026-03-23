@@ -1,9 +1,9 @@
-// ── ESTADO GLOBAL ─────────────────────────────────────────────────────────────
+// Configurações Globais
 const API_URL = 'http://127.0.0.1:3000/api';
 let token = null;
 let currentUser = null;
 
-// ── SISTEMA DE ORDENAÇÃO ───────────────────────────────────────────
+// Sistema de Ordenação de Tabelas
 const sortState = {
     livros: { col: 'titulo', dir: 'asc' },
     usuarios: { col: 'nome', dir: 'asc' },
@@ -11,229 +11,329 @@ const sortState = {
     historico: { col: 'data_devolucao', dir: 'desc' }
 };
 
+// Gerencia a ordenação de uma tabela
 function sortTable(table, col) {
     const state = sortState[table];
-    if (!state) return;
+    if (!state) {
+        return;
+    }
     
-    state.dir = state.col === col && state.dir === 'asc' ? 'desc' : 'asc';
+    // Inverte a direção se clicar na mesma coluna
+    if (state.col === col && state.dir === 'asc') {
+        state.dir = 'desc';
+    } else {
+        state.dir = 'asc';
+    }
     state.col = col;
     
-    // Atualiza classes visuais
-    document.querySelectorAll(`#${table}Screen .sortable`).forEach(th => {
+    // Atualiza visualmente os indicadores de ordenação no HTML
+    const thsSelector = `#${table}Screen .sortable`;
+    document.querySelectorAll(thsSelector).forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
     });
-    const th = document.querySelector(`[onclick="sortTable('${table}','${col}')"]`);
-    if (th) th.classList.add(state.dir === 'asc' ? 'sort-asc' : 'sort-desc');
     
-    // Recarrega os dados da tabela específica
-    switch(table) {
-        case 'livros': loadLivros(document.getElementById('buscaLivros')?.value || '', 1); break;
-        case 'usuarios': loadUsuarios(1, document.getElementById('buscaUsuarios')?.value || ''); break;
-        case 'alugueis': loadAlugueis(1); break;
-        case 'historico': loadHistorico(1, document.getElementById('buscaHistorico')?.value || ''); break;
+    const thCliqueado = document.querySelector(`[onclick="sortTable('${table}','${col}')"]`);
+    if (thCliqueado) {
+        const classe = state.dir === 'asc' ? 'sort-asc' : 'sort-desc';
+        thCliqueado.classList.add(classe);
+    }
+    
+    // Recarrega os dados da tabela específica com a nova ordenação
+    if (table === 'livros') {
+        const busca = document.getElementById('buscaLivros')?.value || '';
+        loadLivros(busca, 1);
+    } else if (table === 'usuarios') {
+        const busca = document.getElementById('buscaUsuarios')?.value || '';
+        loadUsuarios(1, busca);
+    } else if (table === 'alugueis') {
+        loadAlugueis(1);
+    } else if (table === 'historico') {
+        const busca = document.getElementById('buscaHistorico')?.value || '';
+        loadHistorico(1, busca);
     }
 }
 
-// ── TEMA ──────────────────────────────────────────────────────────────────────
+// Gerenciamento de Tema (Claro/Escuro)
 function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.getAttribute('data-theme') === 'dark';
-    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    const novoTema = isDark ? 'light' : 'dark';
+    
+    html.setAttribute('data-theme', novoTema);
     document.getElementById('btnThemeIcon').textContent = isDark ? '☀️' : '🌙';
-    localStorage.setItem('luizateca_theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('luizateca_theme', novoTema);
 }
+
 function restoreTheme() {
     const saved = localStorage.getItem('luizateca_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
     document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
 
-// ── SESSION ───────────────────────────────────────────────────────────────────
-function saveSession() {
+// Gerenciamento de Sessão do Usuário
+function salvarSessao() {
     sessionStorage.setItem('luizateca_token', token);
     sessionStorage.setItem('luizateca_user', JSON.stringify(currentUser));
 }
-function restoreSession() {
+
+function restaurarSessao() {
     const t = sessionStorage.getItem('luizateca_token');
     const u = sessionStorage.getItem('luizateca_user');
     if (t && u) {
-        token = t; currentUser = JSON.parse(u);
-        updateNavbar(); loadMenu(); showScreen('menuScreen');
+        token = t; 
+        currentUser = JSON.parse(u);
+        atualizarNavbar(); 
+        carregarMenu(); 
+        mostrarTela('menuScreen');
     }
 }
-function clearSession() {
-    sessionStorage.clear(); token = null; currentUser = null;
+
+function limparSessao() {
+    sessionStorage.clear(); 
+    token = null; 
+    currentUser = null;
 }
 
-// ── NAVEGAÇÃO ─────────────────────────────────────────────────────────────────
-function showScreen(id) {
+// Navegação entre Telas do Sistema
+function mostrarTela(id) {
+    // Esconde todas as telas
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    
+    // Mostra a tela desejada
+    const elementoTela = document.getElementById(id);
+    if (elementoTela) {
+        elementoTela.classList.add('active');
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    // Dispara animação GSAP da página caso a função via animations.js esteja disponível
-    if (typeof animateScreenTransition === 'function') {
-        animateScreenTransition(id);
+    // Dispara animação de transição se disponível
+    if (typeof animarTransicaoTela === 'function') {
+        animarTransicaoTela(id);
     }
 }
 
-// ── MODAL ─────────────────────────────────────────────────────────────────────
-function openModal(id) {
-    document.getElementById(id).classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
-    document.body.style.overflow = '';
+// Controle de Janelas Modais
+function abrirModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
-// ── CONFIRM ───────────────────────────────────────────────────────────────────
-function showConfirm({ icon = '⚠️', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
+function fecharModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// Diálogo de Confirmação Personalizado
+function exibirConfirmacao({ icon = '⚠️', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
     document.getElementById('confirmIcon').textContent = icon;
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMsg').textContent = msg;
     document.getElementById('confirmOkBtn').textContent = okLabel;
-    document.getElementById('confirmOkBtn').onclick = () => { closeConfirm(); onOk(); };
+    
+    document.getElementById('confirmOkBtn').onclick = () => { 
+        fecharConfirmacao(); 
+        onOk(); 
+    };
+    
     document.getElementById('confirmDialog').classList.add('active');
 }
-function closeConfirm() {
+
+function fecharConfirmacao() {
     document.getElementById('confirmDialog').classList.remove('active');
 }
 
-// ── ALERTS ────────────────────────────────────────────────────────────────────
-function showAlert(message, type = 'success') {
-    const icons = { success: '✓', danger: '✕', warning: '⚠' };
+// Sistema de Notificações (Toasts)
+function exibirAlerta(mensagem, tipo = 'success') {
+    const icones = { success: '✓', danger: '✕', warning: '⚠' };
     const el = document.createElement('div');
-    el.className = `toast toast-${type}`;
-    el.innerHTML = `<span class="toast-icon">${icons[type] ?? '•'}</span><span class="toast-msg">${message}</span>`;
+    el.className = `toast toast-${tipo}`;
+    
+    const icone = icones[tipo] || '•';
+    el.innerHTML = `<span class="toast-icon">${icone}</span><span class="toast-msg">${mensagem}</span>`;
+    
     document.getElementById('alertContainer').appendChild(el);
+    
+    // Remove o alerta após alguns segundos
     setTimeout(() => {
         el.style.cssText += 'opacity:0;transform:translateX(36px);transition:0.32s ease';
         setTimeout(() => el.remove(), 340);
     }, 3400);
 }
 
-// ── API ───────────────────────────────────────────────────────────────────────
-// Função central que fará todas as requisições HTTP cruzando do Frontend para o Backend.
-// Ela já injeta automaticamente o token de segurança para não repetirmos código por todo o site.
+// Função central para requisições na API
 async function api(endpoint, options = {}) {
-    // Definimos que estamos conversando através de texto no formato JSON
+    // Configura cabeçalhos padrão
     const headers = { 'Content-Type': 'application/json' };
     
-    // Se o usuário já fez login (e tem um token na memória), adicionamos no cabeçalho criptografado
+    // Adiciona token de autorização se o usuário estiver logado
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // Dispara a requisição HTTP para o servidor local (ou nuvem) e espera a resposta
-    const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+    // Realiza a chamada fetch
+    const resposta = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
     
-    // Transforma a resposta de texto do servidor em um objeto Javascript manipulável
-    const data = await res.json();
+    // Converte resposta para JSON
+    const dados = await resposta.json();
     
-    // Se o status HTTP da resposta apontar um erro (ex: 400 Bad Request, 500 Internal Error)
-    if (!res.ok) {
-        // Encerramos a execução disparando um Alerta formatado para a tela do usuário
-        throw new Error(data.error || data.message || 'Erro inesperado na requisição');
+    // Verifica se a resposta foi bem-sucedida
+    if (!resposta.ok) {
+        const mensagemErro = dados.error || dados.message || 'Erro inesperado na requisição';
+        throw new Error(mensagemErro);
     }
     
-    return data;
+    return dados;
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function esc(str) {
-    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// Utilitários de Formatação e Interface
+function esc(texto) {
+    return String(texto ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
-function fmtDate(iso) {
+
+function formatarData(iso) {
     if (!iso) return '—';
-    try { return new Date(iso).toLocaleDateString('pt-BR'); } catch { return iso; }
-}
-function setLoading(tbodyId, cols) {
-    document.getElementById(tbodyId).innerHTML =
-        `<tr class="loading-row"><td colspan="${cols}"><span class="spinner"></span>Carregando…</td></tr>`;
-}
-function setEmpty(tbodyId, cols, msg = 'Nenhum registro encontrado.') {
-    document.getElementById(tbodyId).innerHTML =
-        `<tr><td colspan="${cols}" class="table-empty">${msg}</td></tr>`;
-}
-function debounce(fn, delay = 350) {
-    let timer;
-    return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+    try { 
+        return new Date(iso).toLocaleDateString('pt-BR'); 
+    } catch { 
+        return iso; 
+    }
 }
 
-// ── BADGES ────────────────────────────────────────────────────────────────────
+function definirCarregando(idTbody, colunas) {
+    const tbody = document.getElementById(idTbody);
+    if (tbody) {
+        tbody.innerHTML = `<tr class="loading-row"><td colspan="${colunas}"><span class="spinner"></span>Carregando…</td></tr>`;
+    }
+}
+
+function definirVazio(idTbody, colunas, msg = 'Nenhum registro encontrado.') {
+    const tbody = document.getElementById(idTbody);
+    if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="${colunas}" class="table-empty">${msg}</td></tr>`;
+    }
+}
+
+function debounce(funcao, atraso = 350) {
+    let cronometro;
+    return (...argumentos) => { 
+        clearTimeout(cronometro); 
+        cronometro = setTimeout(() => funcao(...argumentos), atraso); 
+    };
+}
+
+// Badges de Status e Tipos (Visual)
 function badgeStatus(status) {
-    const map = {
+    const mapas = {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
         alugado: `<span class="badge badge-danger"><span class="badge-dot"></span>Indisponível</span>`,
         ativo: `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
         atrasado: `<span class="badge badge-danger"><span class="badge-dot"></span>Atrasado</span>`,
         devolvido: `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
     };
-    return map[status] ?? `<span class="badge">${esc(status)}</span>`;
+    return mapas[status] || `<span class="badge">${esc(status)}</span>`;
 }
 
 function badgeTipo(tipo) {
-    const map = {
+    const mapas = {
         bibliotecario: `<span class="badge badge-gold">Bibliotecário</span>`,
         usuario: `<span class="badge" style="background:rgba(100,100,100,.10);color:var(--text-dim);border-color:var(--border-s)">Usuário</span>`,
     };
-    return map[tipo] ?? `<span class="badge">${esc(tipo)}</span>`;
+    return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
 }
 
 function badgeExemplar(status) {
-    const map = {
+    const mapas = {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
         indisponivel: `<span class="badge badge-danger"><span class="badge-dot"></span>Indisponível</span>`,
         emprestado: `<span class="badge badge-info"><span class="badge-dot"></span>Emprestado</span>`,
         perdido: `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
     };
-    return map[status] ?? `<span class="badge">${esc(status)}</span>`;
+    return mapas[status] || `<span class="badge">${esc(status)}</span>`;
 }
 
-// Condição resumida de um livro (mapa de contagens por condição)
 function badgeCondicao(condicao = {}) {
-    if (!condicao || !Object.keys(condicao).length) return '<span style="color:var(--text-faint)">—</span>';
-    const parts = [];
-    if (condicao.danificado > 0)
-        parts.push(`<span class="badge badge-danger" title="${condicao.danificado} danificado(s)">${condicao.danificado} danif.</span>`);
-    if (condicao.perdido > 0)
-        parts.push(`<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)" title="${condicao.perdido} perdido(s)">${condicao.perdido} perd.</span>`);
-    if (!parts.length)
+    if (!condicao || !Object.keys(condicao).length) {
+        return '<span style="color:var(--text-faint)">—</span>';
+    }
+    
+    const partes = [];
+    if (condicao.danificado > 0) {
+        partes.push(`<span class="badge badge-danger" title="${condicao.danificado} danificado(s)">${condicao.danificado} danif.</span>`);
+    }
+    if (condicao.perdido > 0) {
+        partes.push(`<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)" title="${condicao.perdido} perdido(s)">${condicao.perdido} perd.</span>`);
+    }
+    
+    if (partes.length === 0) {
         return `<span class="badge badge-success">Bom estado</span>`;
-    return parts.join(' ');
+    }
+    return partes.join(' ');
 }
 
-// Badge de condição de um exemplar individual
 function badgeCondicaoExemplar(condicao) {
-    const map = {
+    const mapas = {
         bom: `<span class="badge badge-success"><span class="badge-dot"></span>Bom</span>`,
         danificado: `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`,
         perdido: `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
     };
-    return map[condicao] ?? `<span class="badge">${esc(condicao)}</span>`;
+    return mapas[condicao] || `<span class="badge">${esc(condicao)}</span>`;
 }
 
-// ── PAGINAÇÃO ─────────────────────────────────────────────────────────────────
-function renderPagination(containerId, page, pages, onPage) {
-    const el = document.getElementById(containerId);
-    if (!el || pages <= 1) { if (el) el.innerHTML = ''; return; }
-    let html = `<button class="pg-btn" ${page <= 1 ? 'disabled' : ''} onclick="(${onPage})(${page - 1})">‹</button>`;
-    const start = Math.max(1, page - 2), end = Math.min(pages, page + 2);
-    if (start > 1) html += `<button class="pg-btn" onclick="(${onPage})(1)">1</button>${start > 2 ? '<span class="pg-info">…</span>' : ''}`;
-    for (let i = start; i <= end; i++) html += `<button class="pg-btn ${i === page ? 'active' : ''}" onclick="(${onPage})(${i})">${i}</button>`;
-    if (end < pages) html += `${end < pages - 1 ? '<span class="pg-info">…</span>' : ''}<button class="pg-btn" onclick="(${onPage})(${pages})">${pages}</button>`;
-    html += `<button class="pg-btn" ${page >= pages ? 'disabled' : ''} onclick="(${onPage})(${page + 1})">›</button>`;
-    html += `<span class="pg-info">Pág. ${page} de ${pages}</span>`;
+// Renderização de Paginação Dinâmica
+function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagina) {
+    const el = document.getElementById(idContainer);
+    if (!el || totalPaginas <= 1) { 
+        if (el) el.innerHTML = ''; 
+        return; 
+    }
+    
+    let html = `<button class="pg-btn" ${paginaAtual <= 1 ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual - 1})">‹</button>`;
+    
+    const inicio = Math.max(1, paginaAtual - 2);
+    const fim = Math.min(totalPaginas, paginaAtual + 2);
+    
+    if (inicio > 1) {
+        html += `<button class="pg-btn" onclick="(${aoMudarPagina})(1)">1</button>`;
+        if (inicio > 2) {
+            html += `<span class="pg-info">…</span>`;
+        }
+    }
+    
+    for (let i = inicio; i <= fim; i++) {
+        const classeAtiva = i === paginaAtual ? 'active' : '';
+        html += `<button class="pg-btn ${classeAtiva}" onclick="(${aoMudarPagina})(${i})">${i}</button>`;
+    }
+    
+    if (fim < totalPaginas) {
+        if (fim < totalPaginas - 1) {
+            html += `<span class="pg-info">…</span>`;
+        }
+        html += `<button class="pg-btn" onclick="(${aoMudarPagina})(${totalPaginas})">${totalPaginas}</button>`;
+    }
+    
+    html += `<button class="pg-btn" ${paginaAtual >= totalPaginas ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual + 1})">›</button>`;
+    html += `<span class="pg-info">Pág. ${paginaAtual} de ${totalPaginas}</span>`;
     el.innerHTML = html;
 }
 
-// ── TECLADO ───────────────────────────────────────────────────────────────────
+// Atatalhos de Teclado (Esc para fechar modais)
 document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
-    document.querySelectorAll('.modal.active').forEach(m => closeModal(m.id));
-    closeConfirm();
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.active').forEach(m => fecharModal(m.id));
+        fecharConfirmacao();
+    }
 });
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// Inicialização Inicial
 restoreTheme();

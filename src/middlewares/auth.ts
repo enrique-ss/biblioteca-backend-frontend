@@ -1,51 +1,69 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sua-chave-secreta-super-segura';
+// Carrega a chave secreta das variáveis de ambiente
+const SEGREDO_JWT = process.env.JWT_SECRET || 'luizateca-chave-secreta-2024';
 
-// Definindo a estrutura do que vai dentro do Token conforme Passo 2
-export interface TokenPayload {
+/**
+ * Estrutura de dados contida dentro do Token de Autenticação.
+ */
+export interface PayloadToken {
   id: number;
   email: string;
-  tipo: 'usuario' | 'bibliotecario'; // Regra: Só pode ser um desses dois
+  tipo: 'usuario' | 'bibliotecario';
 }
 
-export interface AuthRequest extends Request {
-  usuario?: TokenPayload;
+/**
+ * Interface estendida da requisição Express para incluir os dados do usuário logado.
+ */
+export interface RequisicaoAutenticada extends Request {
+  usuario?: PayloadToken;
 }
 
-// ✅ PASSO 2: Gera a "chave de acesso" (Token)
-export function gerarToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+/**
+ * Gera um novo Token JWT (JSON Web Token) com validade de 7 dias.
+ */
+export function gerarToken(dados: PayloadToken): string {
+  return jwt.sign(dados, SEGREDO_JWT, { expiresIn: '7d' });
 }
 
-// ✅ PROTEÇÃO GERAL: Verifica se a pessoa está logada
-export function verificarToken(req: AuthRequest, res: Response, next: NextFunction) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+/**
+ * Middleware para verificar se o usuário está autenticado via cabeçalho Authorization.
+ */
+export function verificarToken(req: RequisicaoAutenticada, res: Response, next: NextFunction) {
+  // O token geralmente vem no formato "Bearer [token]"
+  const tokenHeader = req.headers.authorization?.replace('Bearer ', '');
 
-  if (!token) {
-    return res.status(401).json({ error: 'Acesso negado. Token não fornecido.' });
+  if (!tokenHeader) {
+    return res.status(401).json({ error: 'Acesso negado. Nenhum token de autenticação foi fornecido.' });
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-    req.usuario = decoded; // Salva os dados do usuário na requisição
+    const dadosDecodificados = jwt.verify(tokenHeader, SEGREDO_JWT) as PayloadToken;
+    
+    // Anexa os dados do usuário à requisição para acesso nos controladores
+    req.usuario = dadosDecodificados; 
+    
     next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Sua sessão expirou ou o token é inválido. Faça login novamente.' });
+  } catch (erro) {
+    return res.status(401).json({ 
+      error: 'Sua sessão expirou ou o acesso é inválido. Por favor, realize o login novamente.' 
+    });
   }
 }
 
-// ✅ DIFERENÇA DE PODERES: Regra para funções exclusivas de Bibliotecário
-export function verificarBibliotecario(req: AuthRequest, res: Response, next: NextFunction) {
-  // O middleware verificarToken deve ser chamado ANTES deste nas rotas
+/**
+ * Middleware de restrição por cargo: Garante que apenas Bibliotecários acessem certas rotas.
+ * IMPORTANTE: Deve ser usado sempre APÓS o middleware 'verificarToken'.
+ */
+export function verificarBibliotecario(req: RequisicaoAutenticada, res: Response, next: NextFunction) {
   if (!req.usuario) {
-    return res.status(401).json({ error: 'Usuário não autenticado.' });
+    return res.status(401).json({ error: 'Autenticação necessária para esta ação.' });
   }
 
   if (req.usuario.tipo !== 'bibliotecario') {
     return res.status(403).json({
-      error: '❌ Acesso Negado: Esta função é exclusiva para Bibliotecários.'
+      error: '❌ Acesso Negado: Esta funcionalidade é exclusiva para Administradores (Bibliotecários).'
     });
   }
 

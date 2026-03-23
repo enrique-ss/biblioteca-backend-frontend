@@ -1,64 +1,102 @@
-// ── AUTH ──────────────────────────────────────────────────────────────────────
+// Lógica de Autenticação (Login e Registro)
 
-document.getElementById('loginForm').addEventListener('submit', async e => {
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
-        const data = await api('/auth/login', {
+        const payload = {
+            email: document.getElementById('loginEmail').value,
+            senha: document.getElementById('loginPassword').value
+        };
+
+        const dados = await api('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({
-                email: document.getElementById('loginEmail').value,
-                senha: document.getElementById('loginPassword').value
-            })
+            body: JSON.stringify(payload)
         });
-        token = data.token;
-        currentUser = data.usuario;
-        saveSession(); updateNavbar(); loadMenu();
-        showScreen('menuScreen'); e.target.reset();
-    } catch (err) { showAlert(err.message, 'danger'); }
+
+        token = dados.token;
+        currentUser = dados.usuario;
+
+        salvarSessao();
+        atualizarNavbar();
+        carregarMenu();
+        
+        mostrarTela('menuScreen');
+        e.target.reset();
+    } catch (erro) {
+        exibirAlerta(erro.message, 'danger');
+    }
 });
 
-document.getElementById('registerForm').addEventListener('submit', async e => {
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
-        const data = await api('/auth/registrar', {
+        const payload = {
+            nome: document.getElementById('regNome').value,
+            email: document.getElementById('regEmail').value,
+            senha: document.getElementById('regSenha').value,
+            tipo: 'usuario'
+        };
+
+        const dados = await api('/auth/registrar', {
             method: 'POST',
-            body: JSON.stringify({
-                nome: document.getElementById('regNome').value,
-                email: document.getElementById('regEmail').value,
-                senha: document.getElementById('regSenha').value,
-                tipo: 'usuario'
-            })
+            body: JSON.stringify(payload)
         });
-        token = data.token;
-        currentUser = data.usuario;
-        saveSession(); updateNavbar(); loadMenu();
-        showScreen('menuScreen'); e.target.reset();
-    } catch (err) { showAlert(err.message, 'danger'); }
+
+        token = dados.token;
+        currentUser = dados.usuario;
+
+        salvarSessao();
+        atualizarNavbar();
+        carregarMenu();
+
+        mostrarTela('menuScreen');
+        e.target.reset();
+    } catch (erro) {
+        exibirAlerta(erro.message, 'danger');
+    }
 });
 
+// Encerra a sessão do usuário
 function logout() {
-    showConfirm({
-        icon: '🚪', title: 'Encerrar sessão',
-        msg: 'Deseja realmente sair?', okLabel: 'Sair',
-        onOk() { clearSession(); updateNavbar(); showScreen('loginScreen'); }
+    exibirConfirmacao({
+        icon: '🚪',
+        title: 'Encerrar sessão',
+        msg: 'Deseja realmente sair do sistema?',
+        okLabel: 'Sair',
+        onOk() {
+            limparSessao();
+            atualizarNavbar();
+            mostrarTela('loginScreen');
+        }
     });
 }
 
-function updateNavbar() {
-    const isLogged = !!currentUser;
-    const btn = document.getElementById('btnLogout');
-    if (btn) btn.style.display = isLogged ? 'inline-flex' : 'none';
+// Atualiza a visibilidade dos elementos da barra lateral conforme o login
+function atualizarNavbar() {
+    const estaLogado = !!currentUser;
 
-    const sidebarNav = document.getElementById('sidebarNav');
-    if (sidebarNav) sidebarNav.style.display = isLogged ? 'flex' : 'none';
+    // Atualiza botões básicos
+    const btnSair = document.getElementById('btnLogout');
+    if (btnSair) {
+        btnSair.style.display = estaLogado ? 'inline-flex' : 'none';
+    }
 
-    const navNotifications = document.getElementById('navNotifications');
-    if (navNotifications) navNotifications.style.display = isLogged ? 'block' : 'none';
+    const navegaçãoLateral = document.getElementById('sidebarNav');
+    if (navegaçãoLateral) {
+        navegaçãoLateral.style.display = estaLogado ? 'flex' : 'none';
+    }
 
-    const navUser = document.getElementById('navUser');
-    if (navUser) navUser.style.display = isLogged ? 'flex' : 'none';
+    const centralNotificacoes = document.getElementById('navNotifications');
+    if (centralNotificacoes) {
+        centralNotificacoes.style.display = estaLogado ? 'block' : 'none';
+    }
 
-    if (isLogged) {
-        // Name and Role removed from sidebar as per UI refinement
+    const botaoPerfil = document.getElementById('navUser');
+    if (botaoPerfil) {
+        botaoPerfil.style.display = estaLogado ? 'flex' : 'none';
+    }
+
+    if (estaLogado) {
+        // Nome e Tipo de usuário removidos da sidebar conforme refinamento de UI
     }
 }

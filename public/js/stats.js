@@ -1,174 +1,285 @@
-// ── ESTATÍSTICAS ──────────────────────────────────────────────────────────────
+// Gerenciamento de Estatísticas e Gráficos
 
-let chartInstances = {};
-let statsRawData   = null;
+let instanciasGraficos = {};
+let dadosBrutosStats = null;
 
-const CHART_COLORS  = ['rgba(122,162,247,.85)','rgba(63,185,80,.85)','rgba(210,153,34,.85)','rgba(248,81,73,.85)','rgba(158,112,247,.85)','rgba(87,199,199,.85)','rgba(247,162,122,.85)','rgba(122,247,162,.85)'];
-const CHART_BORDERS = CHART_COLORS.map(c => c.replace('.85','1'));
+// Paleta de cores para os gráficos (estilo moderno e harmonioso)
+const CORES_GRAFICOS = [
+    'rgba(122,162,247, 0.85)', // Azul
+    'rgba(63,185,80, 0.85)',   // Verde
+    'rgba(210,153,34, 0.85)',  // Âmbar
+    'rgba(248,81,73, 0.85)',   // Vermelho
+    'rgba(158,112,247, 0.85)', // Roxo
+    'rgba(87,199,199, 0.85)',  // Ciano
+    'rgba(247,162,122, 0.85)', // Laranja
+    'rgba(122,247,162, 0.85)'  // Lima
+];
 
-function statsTextColor() { return getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#e6edf3'; }
-function statsDimColor()  { return getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim() || '#adbac7'; }
+// Bordas com 100% de opacidade baseadas nas cores acima
+const BORDAS_GRAFICOS = CORES_GRAFICOS.map(cor => cor.replace('0.85', '1'));
 
-function chartDefaults(isHorizontal = false) {
-    const base = {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: { backgroundColor:'rgba(22,27,34,.96)', titleColor:'#7aa2f7', bodyColor:'#e6edf3', borderColor:'rgba(122,162,247,.18)', borderWidth:1, padding:10, cornerRadius:6 }
-        },
-        scales: {
-            x: { ticks:{ color:statsDimColor(), font:{size:10} }, grid:{ color:'rgba(122,162,247,.05)' } },
-            y: { ticks:{ color:statsDimColor(), font:{size:10} }, grid:{ color:'rgba(122,162,247,.05)' }, beginAtZero:true }
-        }
-    };
-    if (isHorizontal) { base.indexAxis = 'y'; base.scales.x.ticks.maxTicksLimit = 5; delete base.scales.y.beginAtZero; }
-    return base;
+// Recupera cores do tema CSS para manter consistência nos gráficos
+function obterCorTexto() {
+    const estilo = getComputedStyle(document.documentElement);
+    return estilo.getPropertyValue('--text').trim() || '#e6edf3';
 }
 
-function buildChartWithList(id, type, labels, values, unit = '') {
-    const ctx = document.getElementById('chart-' + id);
-    if (!ctx) return;
-    if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+function obterCorTextoSuave() {
+    const estilo = getComputedStyle(document.documentElement);
+    return estilo.getPropertyValue('--text-dim').trim() || '#adbac7';
+}
 
-    const isPie        = type === 'doughnut';
-    const isHorizontal = type === 'bar-h';
-    const chartType    = isHorizontal ? 'bar' : type;
-    const cfg          = chartDefaults(isHorizontal);
-    if (isPie) { delete cfg.scales; }
+// Configurações padrão para o Chart.js
+function configurarPadraoGrafico(ehHorizontal = false) {
+    const configuracao = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(22,27,34, 0.96)',
+                titleColor: '#7aa2f7',
+                bodyColor: '#e6edf3',
+                borderColor: 'rgba(122,162,247, 0.18)',
+                borderWidth: 1,
+                padding: 10,
+                cornerRadius: 6
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: obterCorTextoSuave(), font: { size: 10 } },
+                grid: { color: 'rgba(122,162,247, 0.05)' }
+            },
+            y: {
+                ticks: { color: obterCorTextoSuave(), font: { size: 10 } },
+                grid: { color: 'rgba(122,162,247, 0.05)' },
+                beginAtZero: true
+            }
+        }
+    };
 
-    chartInstances[id] = new Chart(ctx, {
-        type: chartType,
+    if (ehHorizontal) {
+        configuracao.indexAxis = 'y';
+        configuracao.scales.x.ticks.maxTicksLimit = 5;
+        delete configuracao.scales.y.beginAtZero;
+    }
+
+    return configuracao;
+}
+
+// Constrói um gráfico e sua respectiva lista lateral de detalhes
+function montarGraficoComLista(id, tipo, rotulos, valores, unidade = '') {
+    const elementoCtx = document.getElementById('chart-' + id);
+    if (!elementoCtx) {
+        return;
+    }
+
+    // Limpa instância anterior se existir para evitar bugs de hover
+    if (instanciasGraficos[id]) {
+        instanciasGraficos[id].destroy();
+        delete instanciasGraficos[id];
+    }
+
+    const ehPizza = tipo === 'doughnut';
+    const ehHorizontal = tipo === 'bar-h';
+    const tipoGraficoJS = ehHorizontal ? 'bar' : tipo;
+    
+    const opcoes = configurarPadraoGrafico(ehHorizontal);
+    if (ehPizza) {
+        delete opcoes.scales;
+    }
+
+    instanciasGraficos[id] = new Chart(elementoCtx, {
+        type: tipoGraficoJS,
         data: {
-            labels,
+            labels: rotulos,
             datasets: [{
-                data: values,
-                backgroundColor: isPie ? CHART_COLORS.slice(0, labels.length) : CHART_COLORS[0],
-                borderColor:     isPie ? CHART_BORDERS.slice(0, labels.length) : CHART_BORDERS[0],
-                borderWidth: 1.5, tension: .35,
-                fill: type === 'line' ? 'origin' : false,
-                borderRadius: chartType === 'bar' ? 3 : 0,
-                pointRadius: type === 'line' ? 3 : 0,
-                pointHoverRadius: type === 'line' ? 5 : 0,
+                data: valores,
+                backgroundColor: ehPizza ? CORES_GRAFICOS.slice(0, rotulos.length) : CORES_GRAFICOS[0],
+                borderColor: ehPizza ? BORDAS_GRAFICOS.slice(0, rotulos.length) : BORDAS_GRAFICOS[0],
+                borderWidth: 1.5,
+                tension: 0.35,
+                fill: tipo === 'line' ? 'origin' : false,
+                borderRadius: tipoGraficoJS === 'bar' ? 3 : 0,
+                pointRadius: tipo === 'line' ? 3 : 0,
+                pointHoverRadius: tipo === 'line' ? 5 : 0
             }]
         },
-        options: cfg
+        options: opcoes
     });
 
-    const listEl = document.getElementById('list-' + id);
-    if (!listEl) return;
-    const max = Math.max(...values) || 1;
-    listEl.innerHTML = labels.map((lbl, i) => {
-        const pct   = Math.round((values[i] / max) * 100);
-        const color = CHART_COLORS[i % CHART_COLORS.length];
-        return `<div class="stats-list-item">
-            <div class="stats-list-dot" style="background:${color}"></div>
-            <div class="stats-list-label" title="${esc(lbl)}">${esc(lbl)}</div>
-            <div class="stats-list-bar-wrap"><div class="stats-list-bar" style="width:${pct}%;background:${color}"></div></div>
-            <div class="stats-list-val">${esc(String(values[i]))}${unit ? ' '+unit : ''}</div>
-        </div>`;
+    // Renderiza a lista textual abaixo/ao lado do gráfico
+    const elementoLista = document.getElementById('list-' + id);
+    if (!elementoLista) {
+        return;
+    }
+
+    const valorMaximo = Math.max(...valores) || 1;
+    
+    elementoLista.innerHTML = rotulos.map((texto, i) => {
+        const percentual = Math.round((valores[i] / valorMaximo) * 100);
+        const cor = CORES_GRAFICOS[i % CORES_GRAFICOS.length];
+        
+        return `
+            <div class="stats-list-item">
+                <div class="stats-list-dot" style="background:${cor}"></div>
+                <div class="stats-list-label" title="${esc(texto)}">${esc(texto)}</div>
+                <div class="stats-list-bar-wrap">
+                    <div class="stats-list-bar" style="width:${percentual}%;background:${cor}"></div>
+                </div>
+                <div class="stats-list-val">${esc(String(valores[i]))}${unidade ? ' ' + unidade : ''}</div>
+            </div>`;
     }).join('');
 }
 
-function renderAllCharts() {
-    if (!statsRawData) return;
-    const d   = statsRawData;
-    const fmt = arr => ({ labels: arr.map(r => r.label), values: arr.map(r => Number(r.valor)) });
+// Renderiza todos os gráficos da tela de estatísticas
+function renderizarTodosGraficos() {
+    if (!dadosBrutosStats) {
+        return;
+    }
 
-    buildChartWithList('generos',  'bar-h',    ...Object.values(fmt(d.generosMaisEmprestados)));
-    buildChartWithList('autores',  'bar-h',    ...Object.values(fmt(d.autoresMaisEmprestados)));
-    buildChartWithList('livros',   'bar-h',    ...Object.values(fmt(d.livrosMaisEmprestados)));
-    buildChartWithList('usuarios', 'bar-h',    ...Object.values(fmt(d.usuariosMaisAtivos)));
-    buildChartWithList('meses',    'line',     ...Object.values(fmt(d.emprestimosPorMes)));
-    buildChartWithList('cadastros','line',     ...Object.values(fmt(d.cadastrosPorMes)));
-    buildChartWithList('decadas',  'bar',      ...Object.values(fmt(d.livrosPorAno)));
-    buildChartWithList('acervo',   'doughnut',
-        d.distribuicaoStatus.map(r => r.label === 'disponivel' ? 'Disponível' : 'Alugado'),
-        d.distribuicaoStatus.map(r => Number(r.valor)),
-        'ex.'
-    );
+    const d = dadosBrutosStats;
+    
+    // Função auxiliar para formatar arrays vindos da API
+    const formatar = arr => ({
+        labels: arr.map(r => r.label),
+        values: arr.map(r => Number(r.valor))
+    });
+
+    // Montagem dos gráficos principais
+    const gGeneros = formatar(d.generosMaisEmprestados);
+    montarGraficoComLista('generos', 'bar-h', gGeneros.labels, gGeneros.values);
+
+    const gAutores = formatar(d.autoresMaisEmprestados);
+    montarGraficoComLista('autores', 'bar-h', gAutores.labels, gAutores.values);
+
+    const gLivros = formatar(d.livrosMaisEmprestados);
+    montarGraficoComLista('livros', 'bar-h', gLivros.labels, gLivros.values);
+
+    const gUsuarios = formatar(d.usuariosMaisAtivos);
+    montarGraficoComLista('usuarios', 'bar-h', gUsuarios.labels, gUsuarios.values);
+
+    const gMeses = formatar(d.emprestimosPorMes);
+    montarGraficoComLista('meses', 'line', gMeses.labels, gMeses.values);
+
+    const gCadastros = formatar(d.cadastrosPorMes);
+    montarGraficoComLista('cadastros', 'line', gCadastros.labels, gCadastros.values);
+
+    const gDecadas = formatar(d.livrosPorAno);
+    montarGraficoComLista('decadas', 'bar', gDecadas.labels, gDecadas.values);
+
+    // Gráfico de Pizza para distribuição do acervo
+    const rotulosAcervo = d.distribuicaoStatus.map(r => r.label === 'disponivel' ? 'Disponível' : 'Alugado');
+    const valoresAcervo = d.distribuicaoStatus.map(r => Number(r.valor));
+    montarGraficoComLista('acervo', 'doughnut', rotulosAcervo, valoresAcervo, 'ex.');
 }
 
-function renderKpis(d) {
-    const t   = d.taxaAtraso || {};
+// Preenche os cartões de indicadores (KPIs)
+function renderizarIndicadores(d) {
+    const t = d.taxaAtraso || {};
     const dev = d.tempoMedioDevolucao || {};
-    const total  = Number(t.total) || 1;
-    const taxaPct = Math.round(((Number(t.atrasados) + Number(t.devolvidos_atrasados)) / total) * 100);
-    const kpis = [
-        { label:'Total de Empréstimos',   val: t.total ?? 0,                    cls:'blue'  },
-        { label:'Devolvidos no Prazo',     val: t.devolvidos_prazo ?? 0,         cls:'green' },
-        { label:'Devolvidos com Atraso',   val: t.devolvidos_atrasados ?? 0,     cls:'amber' },
-        { label:'Ativos em Atraso',        val: t.atrasados ?? 0,               cls:'red'   },
-        { label:'Taxa de Atraso',          val: taxaPct+'%',                     cls: taxaPct > 20 ? 'red' : 'green' },
-        { label:'Média de Devolução',      val: (dev.media_dias??'—')+(dev.media_dias?' d':''), cls:'blue'  },
-        { label:'Mais Rápido',            val: (dev.min_dias??'—')+(dev.min_dias?' d':''),     cls:'green' },
-        { label:'Mais Lento',             val: (dev.max_dias??'—')+(dev.max_dias?' d':''),     cls:'amber' },
+    
+    const total = Number(t.total) || 1;
+    const somaAtrasos = Number(t.atrasados) + Number(t.devolvidos_atrasados);
+    const taxaPct = Math.round((somaAtrasos / total) * 100);
+
+    const indicadores = [
+        { label: 'Total de Empréstimos',   val: t.total ?? 0,                    cls: 'blue'  },
+        { label: 'Devolvidos no Prazo',     val: t.devolvidos_prazo ?? 0,         cls: 'green' },
+        { label: 'Devolvidos com Atraso',   val: t.devolvidos_atrasados ?? 0,     cls: 'amber' },
+        { label: 'Ativos em Atraso',        val: t.atrasados ?? 0,               cls: 'red'   },
+        { label: 'Taxa de Atraso',          val: taxaPct + '%',                  cls: taxaPct > 20 ? 'red' : 'green' },
+        { label: 'Média de Devolução',      val: (dev.media_dias ?? '—') + (dev.media_dias ? ' d' : ''), cls: 'blue' },
+        { label: 'Mais Rápido',            val: (dev.min_dias ?? '—') + (dev.min_dias ? ' d' : ''),     cls: 'green' },
+        { label: 'Mais Lento',             val: (dev.max_dias ?? '—') + (dev.max_dias ? ' d' : ''),     cls: 'amber' },
     ];
-    document.getElementById('statsKpiGrid').innerHTML = kpis.map(k => `
+
+    document.getElementById('statsKpiGrid').innerHTML = indicadores.map(k => `
         <div class="stats-kpi-card">
             <div class="stats-kpi-label">${esc(k.label)}</div>
             <div class="stats-kpi-val ${k.cls}">${esc(String(k.val))}</div>
         </div>`).join('');
 }
 
-async function loadStatsDetalhado() {
+// Busca os dados detalhados do servidor
+async function carregarEstatisticasDetalhadas() {
     document.getElementById('statsLoading').style.display = 'block';
     document.getElementById('statsContent').style.display = 'none';
+
+    // Garante que o Chart.js está carregado antes de prosseguir
     if (!window.Chart) {
-        await new Promise((res, rej) => {
-            const s = document.createElement('script');
-            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-            s.onload = res; s.onerror = rej;
-            document.head.appendChild(s);
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
         });
     }
+
     try {
-        const data = await api('/stats/detalhado');
-        statsRawData = data;
-        renderKpis(data);
+        const dados = await api('/stats/detalhado');
+        dadosBrutosStats = dados;
+        
+        renderizarIndicadores(dados);
+        
         document.getElementById('statsLoading').style.display = 'none';
         document.getElementById('statsContent').style.display = 'block';
-        renderAllCharts();
-    } catch (err) {
+        
+        renderizarTodosGraficos();
+    } catch (erro) {
         document.getElementById('statsLoading').textContent = 'Erro ao carregar estatísticas.';
-        showAlert(err.message, 'danger');
+        exibirAlerta(erro.message, 'danger');
     }
 }
 
-function exportStatsCSV() {
-    if (!statsRawData) { showAlert('Carregue as estatísticas primeiro.', 'warning'); return; }
-    const d   = statsRawData;
-    const t   = d.taxaAtraso || {};
-    const dev = d.tempoMedioDevolucao || {};
-    const total   = Number(t.total) || 1;
-    const taxaPct = Math.round(((Number(t.atrasados) + Number(t.devolvidos_atrasados)) / total) * 100);
-    const q   = v  => `"${String(v??'').replace(/"/g,'""')}"`;
-    const row = cols => cols.map(q).join(',');
-    const sec = (title, header, rows) => `${title}\n${header}\n${rows.join('\n')}\n`;
+// Exporta os dados atuais para um arquivo CSV
+function exportarEstatisticasCSV() {
+    if (!dadosBrutosStats) {
+        exibirAlerta('Carregue as estatísticas primeiro.', 'warning');
+        return;
+    }
 
-    const csv = [
-        sec('KPIs', row(['Métrica','Valor']), [
-            row(['Total de Empréstimos',         t.total??0]),
-            row(['Devolvidos no Prazo',           t.devolvidos_prazo??0]),
-            row(['Devolvidos com Atraso',         t.devolvidos_atrasados??0]),
-            row(['Ativos em Atraso',              t.atrasados??0]),
-            row(['Taxa de Atraso (%)',            taxaPct]),
-            row(['Média de Devolução (dias)',      dev.media_dias??'—']),
-            row(['Devolução Mais Rápida (dias)',   dev.min_dias??'—']),
-            row(['Devolução Mais Lenta (dias)',    dev.max_dias??'—']),
+    const d = dadosBrutosStats;
+    const t = d.taxaAtraso || {};
+    const dev = d.tempoMedioDevolucao || {};
+    
+    const total = Number(t.total) || 1;
+    const somaAtrasos = Number(t.atrasados) + Number(t.devolvidos_atrasados);
+    const taxaPct = Math.round((somaAtrasos / total) * 100);
+
+    const formatarAspas = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const formatarLinha = cols => cols.map(formatarAspas).join(',');
+    const formatarSecao = (titulo, cabecalho, linhas) => `${titulo}\n${cabecalho}\n${linhas.join('\n')}\n`;
+
+    const csvContent = [
+        formatarSecao('KPIs', formatarLinha(['Métrica', 'Valor']), [
+            formatarLinha(['Total de Empréstimos', t.total ?? 0]),
+            formatarLinha(['Devolvidos no Prazo', t.devolvidos_prazo ?? 0]),
+            formatarLinha(['Devolvidos com Atraso', t.devolvidos_atrasados ?? 0]),
+            formatarLinha(['Ativos em Atraso', t.atrasados ?? 0]),
+            formatarLinha(['Taxa de Atraso (%)', taxaPct]),
+            formatarLinha(['Média de Devolução (dias)', dev.media_dias ?? '—']),
+            formatarLinha(['Devolução Mais Rápida (dias)', dev.min_dias ?? '—']),
+            formatarLinha(['Devolução Mais Lenta (dias)', dev.max_dias ?? '—']),
         ]),
-        sec('Gêneros Mais Emprestados',  row(['Gênero','Empréstimos']),   d.generosMaisEmprestados.map(r=>row([r.label,r.valor]))),
-        sec('Autores Mais Emprestados',  row(['Autor','Empréstimos']),    d.autoresMaisEmprestados.map(r=>row([r.label,r.valor]))),
-        sec('Livros Mais Emprestados',   row(['Livro','Empréstimos']),    d.livrosMaisEmprestados.map(r=>row([r.label,r.valor]))),
-        sec('Usuários Mais Ativos',      row(['Usuário','Empréstimos']),  d.usuariosMaisAtivos.map(r=>row([r.label,r.valor]))),
-        sec('Empréstimos por Mês',       row(['Mês','Empréstimos']),      d.emprestimosPorMes.map(r=>row([r.label,r.valor]))),
-        sec('Cadastros por Mês',         row(['Mês','Usuários']),         d.cadastrosPorMes.map(r=>row([r.label,r.valor]))),
-        sec('Acervo por Década',         row(['Década','Livros']),        d.livrosPorAno.map(r=>row([r.label,r.valor]))),
-        sec('Status do Acervo',          row(['Status','Exemplares']),    d.distribuicaoStatus.map(r=>row([r.label,r.valor]))),
+        formatarSecao('Gêneros Mais Emprestados', formatarLinha(['Gênero', 'Empréstimos']), d.generosMaisEmprestados.map(r => formatarLinha([r.label, r.valor]))),
+        formatarSecao('Autores Mais Emprestados', formatarLinha(['Autor', 'Empréstimos']), d.autoresMaisEmprestados.map(r => formatarLinha([r.label, r.valor]))),
+        formatarSecao('Livros Mais Emprestados', formatarLinha(['Livro', 'Empréstimos']), d.livrosMaisEmprestados.map(r => formatarLinha([r.label, r.valor]))),
+        formatarSecao('Usuários Mais Ativos', formatarLinha(['Usuário', 'Empréstimos']), d.usuariosMaisAtivos.map(r => formatarLinha([r.label, r.valor]))),
+        formatarSecao('Empréstimos por Mês', formatarLinha(['Mês', 'Empréstimos']), d.emprestimosPorMes.map(r => formatarLinha([r.label, r.valor]))),
+        formatarSecao('Cadastros por Mês', formatarLinha(['Mês', 'Usuários']), d.cadastrosPorMes.map(r => formatarLinha([r.label, r.valor]))),
+        formatarSecao('Acervo por Década', formatarLinha(['Década', 'Livros']), d.livrosPorAno.map(r => formatarLinha([r.label, r.valor]))),
+        formatarSecao('Status do Acervo', formatarLinha(['Status', 'Exemplares']), d.distribuicaoStatus.map(r => formatarLinha([r.label, r.valor]))),
     ].join('\n');
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' }));
-    a.download = `luizateca_stats_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-    showAlert('CSV exportado!');
+    // Cria o link de download para o usuário
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `luizateca_stats_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    
+    exibirAlerta('CSV exportado com sucesso!');
 }

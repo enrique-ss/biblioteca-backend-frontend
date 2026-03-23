@@ -1,126 +1,144 @@
 import { Response } from 'express';
 import db from '../database';
-import { AuthRequest } from '../middlewares/auth';
+import { RequisicaoAutenticada } from '../middlewares/auth';
 
+/**
+ * Controlador de Acervo: Gerencia Livros e seus Exemplares físicos.
+ */
 export class LivroController {
 
-  private gerarLocalizacao() {
+  /**
+   * Gera uma localização fictícia (Corredor e Prateleira) para novos livros.
+   */
+  private gerarLocalizacaoAutomatica() {
     const corredores = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
     const prateleiras = ['1', '2', '3', '4', '5'];
+    
     return {
       corredor: corredores[Math.floor(Math.random() * corredores.length)],
       prateleira: prateleiras[Math.floor(Math.random() * prateleiras.length)]
     };
   }
 
-  // Essa função ajusta o número de exemplares que aparece na tabela de livros
-  // sempre que adicionamos, removemos ou perdemos uma cópia física.
-  private recalcularContadores = async (livro_id: number) => {
-    // Passo 1: Disparamos duas contagens no banco de dados ao mesmo tempo (Promise.all)
-    const resultados = await Promise.all([
-      // Conta todas as cópias que ainda existem fisicamente (exclui as declaradas como perdidas)
-      db('exemplares').where({ livro_id }).whereNot({ condicao: 'perdido' }).count('id as total').first() as Promise<any>,
-      
-      // Conta apenas as cópias que estão prontas para adoção/empréstimo na prateleira
-      db('exemplares').where({ livro_id, disponibilidade: 'disponivel' }).count('id as disponiveis').first() as Promise<any>
+  /**
+   * Função Auxiliar: Recalcula os contadores de exemplares de um livro
+   * sempre que uma cópia é adicionada, removida ou alterada fisicamente.
+   */
+  private recalcularContadores = async (livroId: number) => {
+    // Busca as contagens em paralelo no banco de dados para maior eficiência
+    const [totalFisico, totalDisponivel] = await Promise.all([
+      // Apenas exemplares que NÃO foram marcados como 'perdido'
+      db('exemplares').where({ livro_id: livroId }).whereNot({ condicao: 'perdido' }).count('id as total').first() as Promise<any>,
+      // Apenas exemplares que estão de fato na prateleira ('disponivel')
+      db('exemplares').where({ livro_id: livroId, disponibilidade: 'disponivel' }).count('id as disponiveis').first() as Promise<any>
     ]);
 
-    // O Knex retorna um objeto com a chave correspondente ao nosso count()
-    const registroTotal = resultados[0];
-    const registroDisponiveis = resultados[1];
+    const numTotal = Number(totalFisico.total);
+    const numDisponivel = Number(totalDisponivel.disponiveis);
 
-    const totalFisico = Number(registroTotal.total);
-    const totalDisponivel = Number(registroDisponiveis.disponiveis);
-
-    // Passo 2: Atualizamos o livro "Pai" para refletir os números exatos e o status textual
-    await db('livros').where({ id: livro_id }).update({
-      exemplares: totalFisico,
-      exemplares_disponiveis: totalDisponivel,
-      status: totalDisponivel > 0 ? 'disponivel' : 'alugado'
+    // Atualiza o registro do Livro "Pai" com os novos números consolidados
+    await db('livros').where({ id: livroId }).update({
+      exemplares: numTotal,
+      exemplares_disponiveis: numDisponivel,
+      // Se não houver nenhum disponível, o status global muda para 'alugado'
+      status: numDisponivel > 0 ? 'disponivel' : 'alugado'
     });
   };
 
-  // Listar com busca, filtro, paginação, ordenação e condição dos exemplares
-  listar = async (req: AuthRequest, res: Response) => {
+  // Listagem de livros com filtros avançados
+  listar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
-      const { status, busca, page: p, limit: l, sort = 'titulo', order = 'asc' } = req.query;
-      const page = Math.max(1, parseInt(String(p || 1)));
-      const limit = Math.min(100, parseInt(String(l || 20)));
-      const offset = (page - 1) * limit;
+      const { status, busca, page, limit, sort, order } = req.query;
 
-      const allowed = ['titulo', 'autor', 'genero', 'ano_lancamento', 'status', 'created_at'];
-      const col = allowed.includes(String(sort)) ? String(sort) : 'titulo';
-      const dir = order === 'desc' ? 'desc' : 'asc';
+      // Sanitização de paginação e ordenação
+      const pagina = Math.max(1, parseInt(String(page || 1)));
+      const limite = Math.min(100, parseInt(String(limit || 20)));
+      const deslocamento = (pagina - 1) * limite;
 
-      let query = db('livros').whereNull('deleted_at');
+      const colunasPermitidas = ['titulo', 'autor', 'genero', 'ano_lancamento', 'status', 'created_at'];
+      const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'titulo';
+      const direcaoOrdenacao = order === 'desc' ? 'desc' : 'asc';
 
-      if (status === 'disponivel') query = query.where('exemplares_disponiveis', '>', 0);
-      else if (status === 'alugado') query = query.where({ status: 'alugado' });
+      let consulta = db('livros').whereNull('deleted_at');
 
-      if (busca && String(busca).trim()) {
-        const termo = `%${String(busca).trim()}%`;
-        query = query.where(b =>
-          b.whereILike('titulo', termo)
-            .orWhereILike('autor', termo)
-            .orWhereILike('genero', termo)
+      // Filtro por disponibilidade rápida
+      if (status === 'disponivel') {
+        consulta = consulta.where('exemplares_disponiveis', '>', 0);
+      } else if (status === 'alugado') {
+        consulta = consulta.where({ status: 'alugado' });
+      }
+
+      // Filtro de busca textual (Título, Autor ou Gênero)
+      const termoBusca = String(busca || '').trim();
+      if (termoBusca) {
+        const queryTermo = `%${termoBusca}%`;
+        consulta = consulta.where(builder =>
+          builder.whereILike('titulo', queryTermo)
+            .orWhereILike('autor', queryTermo)
+            .orWhereILike('genero', queryTermo)
         );
       }
 
-      // Disparamos duas queries simultâneas para ganhar performance
-      // Uma busca os livros da página atual, a outra conta quantos livros existem no total do banco
-      const resultadosDeBusca = await Promise.all([
-        query.clone().select('*').orderBy(col, dir).limit(limit).offset(offset),
-        query.clone().count('id as total')
+      // Executa consulta dos dados e contagem total simultaneamente
+      const [registros, contagem] = await Promise.all([
+        consulta.clone().select('*').orderBy(colunaOrdenacao, direcaoOrdenacao).limit(limite).offset(deslocamento),
+        consulta.clone().count('id as total')
       ]);
 
-      const rows = resultadosDeBusca[0];
-      const contagem = resultadosDeBusca[1];
-      const total = contagem[0].total; // Knex devolve contagem em array
+      const listaLivros = registros as any[];
+      const totalGeral = Number(contagem[0].total);
 
-      // Enriquece cada livro com contagem de exemplares por condição física
-      // Enriquece com condição física dos exemplares (independente da disponibilidade)
-      const livroIds = (rows as any[]).map((r: any) => r.id);
-      let condicoes: any[] = [];
-      if (livroIds.length > 0) {
-        condicoes = await db('exemplares')
-          .whereIn('livro_id', livroIds)
+      // Agrupa informações de condição física para cada livro na lista
+      const idsLivros = listaLivros.map(r => r.id);
+      let mapaCondicoes: Record<number, any> = {};
+
+      if (idsLivros.length > 0) {
+        const resumoCondicoes = await db('exemplares')
+          .whereIn('livro_id', idsLivros)
           .select('livro_id', 'condicao')
           .count('id as qtd')
           .groupBy('livro_id', 'condicao');
+
+        for (const item of resumoCondicoes) {
+          if (!mapaCondicoes[item.livro_id]) mapaCondicoes[item.livro_id] = {};
+          mapaCondicoes[item.livro_id][item.condicao as string] = Number(item.qtd);
+        }
       }
 
-      const condicaoMap: Record<number, any> = {};
-      for (const c of condicoes) {
-        if (!condicaoMap[c.livro_id]) condicaoMap[c.livro_id] = {};
-        condicaoMap[c.livro_id][c.condicao] = Number(c.qtd);
-      }
-
-      const data = (rows as any[]).map((r: any) => ({
-        ...r,
-        condicao: condicaoMap[r.id] ?? {}
+      // Formata o retorno final com os contadores de condição
+      const dadosFormatados = listaLivros.map(livro => ({
+        ...livro,
+        resumo_condicao: mapaCondicoes[livro.id] ?? {}
       }));
 
-      res.json({ data, total, page, limit, pages: Math.ceil(Number(total) / limit) });
-    } catch (error) {
-      console.error('Erro ao listar livros:', error);
-      res.status(500).json({ error: 'Erro ao listar livros' });
+      res.json({ 
+        data: dadosFormatados, 
+        total: totalGeral, 
+        page: pagina, 
+        limit: limite, 
+        pages: Math.ceil(totalGeral / limite) 
+      });
+    } catch (erro) {
+      console.error('Erro ao listar livros:', erro);
+      res.status(500).json({ error: 'Erro ao carregar o acervo de livros.' });
     }
   };
 
-  // Listar exemplares de um livro específico
-  listarExemplares = async (req: AuthRequest, res: Response) => {
+  // Retorna os exemplares físicos vinculados a um livro específico
+  listarExemplares = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
 
       const livro = await db('livros').where({ id }).whereNull('deleted_at').first();
-      if (!livro) return res.status(404).json({ error: 'Livro não encontrado' });
+      if (!livro) return res.status(404).json({ error: 'Livro não encontrado.' });
 
       const exemplares = await db('exemplares')
         .where({ livro_id: id })
         .select('id', 'codigo', 'disponibilidade', 'condicao', 'observacao', 'created_at')
         .orderBy('id', 'asc');
 
-      const exemplariesComHistorico = await Promise.all(
+      // Enriquece os exemplares com informações do último empréstimo (histórico)
+      const listaEnriquecida = await Promise.all(
         exemplares.map(async (ex) => {
           const ultimoAluguel = await db('alugueis')
             .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
@@ -128,207 +146,237 @@ export class LivroController {
             .select(
               'alugueis.id as aluguel_id',
               'usuarios.nome as usuario',
-              'usuarios.email as contato',
               'alugueis.data_aluguel',
               'alugueis.data_prevista_devolucao as prazo',
               'alugueis.status as status_aluguel'
             )
             .orderBy('alugueis.id', 'desc')
             .first();
+            
           return { ...ex, ultimo_aluguel: ultimoAluguel || null };
         })
       );
 
-      res.json({ livro: { id: livro.id, titulo: livro.titulo, autor: livro.autor }, exemplares: exemplariesComHistorico });
-    } catch (error) {
-      console.error('Erro ao listar exemplares:', error);
-      res.status(500).json({ error: 'Erro ao listar exemplares' });
+      res.json({ 
+        livro: { id: livro.id, titulo: livro.titulo, autor: livro.autor }, 
+        exemplares: listaEnriquecida 
+      });
+    } catch (erro) {
+      console.error('Erro ao listar exemplares:', erro);
+      res.status(500).json({ error: 'Erro ao carregar exemplares físicos.' });
     }
   };
 
-  // Atualizar status de um exemplar individual
-  atualizarExemplar = async (req: AuthRequest, res: Response) => {
+  // Atualiza manualmente o estado ou disponibilidade de uma cópia física
+  atualizarExemplar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { exemplar_id } = req.params;
-      const { status, observacao } = req.body;
+      const { status, condicao, observacao } = req.body;
 
-      // Aceita atualização de condicao (bom/danificado/perdido) OU disponibilidade (disponivel/emprestado/indisponivel)
-      const { condicao } = req.body;
-      const condicoesValidas = ['bom', 'danificado', 'perdido'];
-      const disponibilidades = ['disponivel', 'emprestado', 'indisponivel', 'perdido'];
+      const exemplarOriginal = await db('exemplares').where({ id: exemplar_id }).first();
+      if (!exemplarOriginal) return res.status(404).json({ error: 'Exemplar não encontrado.' });
 
-      const exemplar = await db('exemplares').where({ id: exemplar_id }).first();
-      if (!exemplar) return res.status(404).json({ error: 'Exemplar não encontrado' });
+      const atualizacoes: any = { observacao: observacao?.trim() || null };
 
-      const atualizacao: any = { observacao: observacao?.trim() || null };
-
+      // Validação e lógica de alteração de Condição Física
       if (condicao !== undefined) {
-        if (!condicoesValidas.includes(condicao))
-          return res.status(400).json({ error: `Condição inválida. Use: ${condicoesValidas.join(', ')}` });
-        atualizacao.condicao = condicao;
+        const permitidos = ['bom', 'danificado', 'perdido'];
+        if (!permitidos.includes(condicao)) {
+          return res.status(400).json({ error: 'Condição física deve ser: bom, danificado ou perdido.' });
+        }
         
-        // Se a condição for "perdido", automaticamente muda disponibilidade para "perdido"
+        atualizacoes.condicao = condicao;
+        
+        // Regra Automática: Se o exemplar foi perdido fisicamente, ele deixa de estar disponível para empréstimo
         if (condicao === 'perdido') {
-          atualizacao.disponibilidade = 'perdido';
-        } else if (exemplar.disponibilidade === 'perdido') {
-          atualizacao.disponibilidade = 'disponivel';
+          atualizacoes.disponibilidade = 'perdido';
+        } else if (exemplarOriginal.disponibilidade === 'perdido') {
+          // Se estava marcado como perdido e mudou para bom/danificado, volta a ficar disponível biblioteca
+          atualizacoes.disponibilidade = 'disponivel';
         }
       }
 
+      // Validação de alteração de Disponibilidade (Uso logístico)
       if (status !== undefined) {
-        if (!disponibilidades.includes(status))
-          return res.status(400).json({ error: `Disponibilidade inválida. Use: ${disponibilidades.join(', ')}` });
-        if (exemplar.disponibilidade === 'emprestado' && status === 'disponivel')
-          return res.status(400).json({ error: 'Use o fluxo de devolução para marcar como disponível' });
-        // Não permite deixar como "disponível" se a condição for "perdido"
-        const finalCondicao = atualizacao.condicao || exemplar.condicao;
-        if (status === 'disponivel' && finalCondicao === 'perdido')
-          return res.status(400).json({ error: 'Exemplar perdido não pode ficar disponível' });
-        atualizacao.disponibilidade = status;
+        const permitidos = ['disponivel', 'emprestado', 'indisponivel', 'perdido'];
+        if (!permitidos.includes(status)) {
+          return res.status(400).json({ error: 'Disponibilidade deve ser: disponivel, emprestado, indisponivel ou perdido.' });
+        }
+
+        // Bloqueio de Segurança: Não permite "disponibilizar" um exemplar que está em mãos de um aluno sem o fluxo de devolução
+        if (exemplarOriginal.disponibilidade === 'emprestado' && status === 'disponivel') {
+          return res.status(400).json({ error: 'Para devolver este livro à prateleira, use a tela de devolução de empréstimos.' });
+        }
+
+        // Bloqueio de Segurança: Exemplares perdidos fisicamente não podem ser marcados como disponíveis na prateleira
+        const condicaoFinal = atualizacoes.condicao || exemplarOriginal.condicao;
+        if (status === 'disponivel' && condicaoFinal === 'perdido') {
+          return res.status(400).json({ error: 'Não é possível disponibilizar um exemplar que consta como perdido no inventário.' });
+        }
+        
+        atualizacoes.disponibilidade = status;
       }
 
-      await db('exemplares').where({ id: exemplar_id }).update(atualizacao);
+      await db('exemplares').where({ id: exemplar_id }).update(atualizacoes);
 
-      await this.recalcularContadores(exemplar.livro_id);
+      // Garante que os números totais do livro estejam sincronizados após a mudança
+      await this.recalcularContadores(exemplarOriginal.livro_id);
 
-      const atualizado = await db('exemplares').where({ id: exemplar_id }).first();
-      res.json({ message: '✅ Exemplar atualizado!', exemplar: atualizado });
-    } catch (error) {
-      console.error('Erro ao atualizar exemplar:', error);
-      res.status(500).json({ error: 'Erro ao atualizar exemplar' });
+      const exemplarAtualizado = await db('exemplares').where({ id: exemplar_id }).first();
+      res.json({ message: '✅ Inventário atualizado com sucesso!', exemplar: exemplarAtualizado });
+    } catch (erro) {
+      console.error('Erro ao atualizar exemplar:', erro);
+      res.status(500).json({ error: 'Erro ao atualizar dados do exemplar físico.' });
     }
   };
 
-  // Cadastrar
-  cadastrar = async (req: AuthRequest, res: Response) => {
+  // Cadastro de novo livro com geração automática de exemplares iniciais
+  cadastrar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { titulo, autor, ano_lancamento, genero, isbn, exemplares } = req.body;
 
-      if (!titulo?.trim()) return res.status(400).json({ error: 'O título do livro é obrigatório' });
-      if (!autor?.trim()) return res.status(400).json({ error: 'O nome do autor é obrigatório' });
+      if (!titulo?.trim() || !autor?.trim()) {
+        return res.status(400).json({ error: 'Título e Autor são campos obrigatórios.' });
+      }
 
-      const ano = parseInt(ano_lancamento);
+      const anoNum = parseInt(ano_lancamento);
       const anoAtual = new Date().getFullYear();
-      if (isNaN(ano) || ano < 500 || ano > anoAtual + 1)
-        return res.status(400).json({ error: `Ano inválido. Deve ser entre 500 e ${anoAtual + 1}` });
+      if (isNaN(anoNum) || anoNum < 500 || anoNum > anoAtual + 1) {
+        return res.status(400).json({ error: `Ano de lançamento inválido.` });
+      }
 
-      const qtd = Math.min(999, Math.max(1, parseInt(exemplares) || 1));
-      const { corredor, prateleira } = this.gerarLocalizacao();
+      const qtdExemplares = Math.min(999, Math.max(1, parseInt(exemplares) || 1));
+      const localizacao = this.gerarLocalizacaoAutomatica();
 
+      // Executa a operação dentro de uma Transação para garantir integridade (Livro + Exemplares)
       await db.transaction(async (trx) => {
-        const [livro_id] = await trx('livros').insert({
-          titulo: titulo.trim(), autor: autor.trim(), ano_lancamento: ano,
-          genero: genero?.trim() || 'Não Informado', isbn: isbn?.trim() || null,
-          corredor, prateleira, exemplares: qtd, exemplares_disponiveis: qtd,
-          status: 'disponivel', deleted_at: null
+        const [novoLivroId] = await trx('livros').insert({
+          titulo: titulo.trim(),
+          autor: autor.trim(),
+          ano_lancamento: anoNum,
+          genero: genero?.trim() || 'Não Informado',
+          isbn: isbn?.trim() || null,
+          corredor: localizacao.corredor,
+          prateleira: localizacao.prateleira,
+          exemplares: qtdExemplares,
+          exemplares_disponiveis: qtdExemplares,
+          status: 'disponivel'
         });
 
-        const inserts = Array.from({ length: qtd }, (_, i) => ({
-          livro_id,
-          codigo: `EX-${livro_id}-${String(i + 1).padStart(3, '0')}`,
+        // Cria as cópias físicas individuais
+        const listaExemplares = Array.from({ length: qtdExemplares }, (_, i) => ({
+          livro_id: novoLivroId,
+          codigo: `EX-${novoLivroId}-${String(i + 1).padStart(3, '0')}`,
           disponibilidade: 'disponivel',
           condicao: 'bom'
         }));
-        await trx('exemplares').insert(inserts);
+        
+        await trx('exemplares').insert(listaExemplares);
       });
-
-      const livro = await db('livros')
-        .where({ titulo: titulo.trim(), autor: autor.trim() })
-        .orderBy('id', 'desc').first();
 
       res.status(201).json({
-        message: '✅ Livro cadastrado com sucesso!',
-        info: `📍 Corredor ${corredor} - Prateleira ${prateleira} | ${qtd} exemplar(es)`,
-        livro
+        message: '✅ Livro e exemplares cadastrados com sucesso!',
+        localizacao: `Corredor ${localizacao.corredor}, Prateleira ${localizacao.prateleira}`
       });
-    } catch (error) {
-      console.error('Erro ao cadastrar livro:', error);
-      res.status(500).json({ error: 'Erro ao cadastrar livro' });
+    } catch (erro) {
+      console.error('Erro ao cadastrar livro:', erro);
+      res.status(500).json({ error: 'Falha ao incluir livro no acervo.' });
     }
   };
 
-  // Editar livro
-  editar = async (req: AuthRequest, res: Response) => {
+  // Edição de informações básicas e ajuste no volume de exemplares
+  editar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
       const { titulo, autor, ano_lancamento, genero, isbn, exemplares } = req.body;
 
-      const livro = await db('livros').where({ id }).whereNull('deleted_at').first();
-      if (!livro) return res.status(404).json({ error: 'Livro não encontrado' });
+      const livroOriginal = await db('livros').where({ id }).whereNull('deleted_at').first();
+      if (!livroOriginal) return res.status(404).json({ error: 'Livro não encontrado.' });
 
-      const dados: any = {};
-      if (titulo !== undefined) dados.titulo = titulo.trim();
-      if (autor !== undefined) dados.autor = autor.trim();
-      if (genero !== undefined) dados.genero = genero.trim() || 'Não Informado';
-      if (isbn !== undefined) dados.isbn = isbn.trim() || null;
+      const dadosParaMudar: any = {};
+      
+      if (titulo !== undefined) dadosParaMudar.titulo = titulo.trim();
+      if (autor !== undefined) dadosParaMudar.autor = autor.trim();
+      if (genero !== undefined) dadosParaMudar.genero = genero.trim() || 'Não Informado';
+      if (isbn !== undefined) dadosParaMudar.isbn = isbn.trim() || null;
       if (ano_lancamento !== undefined) {
         const ano = parseInt(ano_lancamento);
-        const anoAtual = new Date().getFullYear();
-        if (isNaN(ano) || ano < 500 || ano > anoAtual + 1)
-          return res.status(400).json({ error: `Ano inválido. Deve ser entre 500 e ${anoAtual + 1}` });
-        dados.ano_lancamento = ano;
+        if (!isNaN(ano)) dadosParaMudar.ano_lancamento = ano;
       }
 
+      // Gestão de Inventário Dinâmica: Aumentar ou diminuir cópias físicas
       if (exemplares !== undefined) {
-        const qtd = Math.min(999, Math.max(1, parseInt(exemplares) || 1));
-        const diff = qtd - livro.exemplares;
+        const novaQtd = Math.max(1, parseInt(exemplares) || 1);
+        const diferenca = novaQtd - livroOriginal.exemplares;
 
-        if (diff > 0) {
-          const { total: base } = await db('exemplares').where({ livro_id: id }).count('id as total').first() as any;
-          const inserts = Array.from({ length: diff }, (_, i) => ({
+        if (diferenca > 0) {
+          // Adiciona as novas cópias
+          const { maxId } = await db('exemplares').where({ livro_id: id }).max('id as maxId').first() as any;
+          const novosExemplares = Array.from({ length: diferenca }, (_, i) => ({
             livro_id: Number(id),
-            codigo: `EX-${id}-${String(Number(base) + i + 1).padStart(3, '0')}`,
+            codigo: `EX-${id}-${String(Number(maxId) + i + 1).padStart(3, '0')}`,
             disponibilidade: 'disponivel',
             condicao: 'bom'
           }));
-          await db('exemplares').insert(inserts);
-        } else if (diff < 0) {
-          const paraRemover = await db('exemplares')
+          await db('exemplares').insert(novosExemplares);
+        } else if (diferenca < 0) {
+          // Remove as cópias excedentes (apenas se estiverem disponíveis na biblioteca)
+          const absDiff = Math.abs(diferenca);
+          const exemplaresDeletaveis = await db('exemplares')
             .where({ livro_id: id, disponibilidade: 'disponivel' })
-            .limit(Math.abs(diff)).select('id');
+            .limit(absDiff)
+            .select('id');
 
-          if (paraRemover.length < Math.abs(diff))
+          if (exemplaresDeletaveis.length < absDiff) {
             return res.status(400).json({
-              error: `Não é possível reduzir: apenas ${paraRemover.length} exemplar(es) disponível(is) para remover`
+              error: `Redução negada: existem apenas ${exemplaresDeletaveis.length} cópias disponíveis no momento. Outras estão em empréstimo.`
             });
+          }
 
-          await db('exemplares').whereIn('id', paraRemover.map(e => e.id)).del();
+          await db('exemplares').whereIn('id', exemplaresDeletaveis.map(e => e.id)).del();
         }
 
+        // Força a atualização dos contadores após o ajuste
         await this.recalcularContadores(Number(id));
       }
 
-      if (Object.keys(dados).length > 0) await db('livros').where({ id }).update(dados);
+      if (Object.keys(dadosParaMudar).length > 0) {
+        await db('livros').where({ id }).update(dadosParaMudar);
+      }
 
-      const atualizado = await db('livros').where({ id }).first();
-      res.json({ message: '✅ Livro atualizado com sucesso!', livro: atualizado });
-    } catch (error) {
-      console.error('Erro ao editar livro:', error);
-      res.status(500).json({ error: 'Erro ao editar livro' });
+      res.json({ message: '✅ Informações do livro atualizadas com sucesso!' });
+    } catch (erro) {
+      console.error('Erro ao editar livro:', erro);
+      res.status(500).json({ error: 'Erro ao processar alterações no livro.' });
     }
   };
 
-  // Soft delete
-  remover = async (req: AuthRequest, res: Response) => {
+  // Exclusão lógica (Soft Delete) do livro
+  remover = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
 
       const livro = await db('livros').where({ id }).whereNull('deleted_at').first();
-      if (!livro) return res.status(404).json({ error: 'Livro não encontrado' });
+      if (!livro) return res.status(404).json({ error: 'Livro não encontrado.' });
 
-      const [{ total }] = await db('alugueis')
+      // Verificação de Segurança: Não permite remover se houver empréstimos ativos ou atrasados
+      const [{ totalAtivos }] = await db('alugueis')
         .where({ livro_id: id })
         .whereIn('status', ['ativo', 'atrasado'])
-        .count('id as total');
+        .count('id as totalAtivos');
 
-      if (Number(total) > 0)
-        return res.status(400).json({ error: `❌ Não é possível remover: ${total} exemplar(es) em empréstimo ativo.` });
+      if (Number(totalAtivos) > 0) {
+        return res.status(400).json({ 
+          error: `❌ Bloqueio: Este livro possui ${totalAtivos} empréstimo(s) pendente(s) de devolução.` 
+        });
+      }
 
+      // Marca como deletado (não apaga do banco por questões de histórico financeiro/estatístico)
       await db('livros').where({ id }).update({ deleted_at: new Date() });
-      res.json({ message: '✅ Livro removido do acervo.' });
-    } catch (error) {
-      console.error('Erro ao remover livro:', error);
-      res.status(500).json({ error: 'Erro ao remover livro' });
+      res.json({ message: '✅ Livro removido permanentemente do catálogo público.' });
+    } catch (erro) {
+      console.error('Erro ao remover livro:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro ao tentar remover o livro.' });
     }
   };
 }

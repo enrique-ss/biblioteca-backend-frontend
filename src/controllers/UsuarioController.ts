@@ -1,118 +1,182 @@
 import { Response } from 'express';
 import db from '../database';
-import { AuthRequest } from '../middlewares/auth';
+import { RequisicaoAutenticada } from '../middlewares/auth';
 
+/**
+ * Controlador de Usuários exclusivo para Bibliotecários.
+ * Gerencia a listagem, edição, bloqueio e exclusão de contas.
+ */
 export class UsuarioController {
 
-  // Listar com busca, paginação e ordenação
-  listar = async (req: AuthRequest, res: Response) => {
+  // Listagem de usuários com suporte a busca, paginação e ordenação
+  listar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
-      const { busca, page: p, limit: l, sort, order } = req.query;
-      const page = Math.max(1, parseInt(String(p || 1)));
-      const limit = Math.min(100, parseInt(String(l || 20)));
-      const offset = (page - 1) * limit;
+      const { busca, page, limit, sort, order } = req.query;
 
-      // Configuração de ordenação
-      const allowedSorts = ['nome', 'email', 'tipo', 'created_at'];
-      const sortCol = allowedSorts.includes(String(sort)) ? String(sort) : 'nome';
-      const sortDir = order === 'desc' ? 'desc' : 'asc';
+      // Sanitização de paginação
+      const pagina = Math.max(1, parseInt(String(page || 1)));
+      const limite = Math.min(100, parseInt(String(limit || 20)));
+      const deslocamento = (pagina - 1) * limite;
 
-      let query = db('usuarios').select('id', 'nome', 'email', 'tipo', 'multa_pendente', 'bloqueado', 'motivo_bloqueio', 'created_at');
+      // Configuração de colunas permitidas para ordenação (Evita SQL Injection)
+      const colunasPermitidas = ['nome', 'email', 'tipo', 'created_at'];
+      const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'nome';
+      const direcaoOrdenacao = order === 'desc' ? 'desc' : 'asc';
 
-      if (busca && String(busca).trim()) {
-        const termo = `%${String(busca).trim()}%`;
-        query = query.where(b => b.whereILike('nome', termo).orWhereILike('email', termo));
+      let consulta = db('usuarios').select(
+        'id', 'nome', 'email', 'tipo', 'multa_pendente', 'bloqueado', 'motivo_bloqueio', 'created_at'
+      );
+
+      // Aplica filtro de busca se fornecido (Nome ou E-mail)
+      const termoBusca = String(busca || '').trim();
+      if (termoBusca) {
+        const queryTermo = `%${termoBusca}%`;
+        consulta = consulta.where(builder => 
+          builder.whereILike('nome', queryTermo).orWhereILike('email', queryTermo)
+        );
       }
 
-      const [rows, [{ total }]] = await Promise.all([
-        query.clone().orderBy(sortCol, sortDir).limit(limit).offset(offset),
+      // Executa a busca dos dados e a contagem total de forma paralela
+      const [registros, [{ total }]] = await Promise.all([
+        consulta.clone()
+          .orderBy(colunaOrdenacao, direcaoOrdenacao)
+          .limit(limite)
+          .offset(deslocamento),
         db('usuarios').modify(q => {
-          if (busca && String(busca).trim()) {
-            const termo = `%${String(busca).trim()}%`;
-            q.where(b => b.whereILike('nome', termo).orWhereILike('email', termo));
+          if (termoBusca) {
+            const queryTermo = `%${termoBusca}%`;
+            q.where(builder => 
+              builder.whereILike('nome', queryTermo).orWhereILike('email', queryTermo)
+            );
           }
         }).count('id as total')
       ]);
 
-      res.json({ data: rows, total, page, limit, pages: Math.ceil(Number(total) / limit) });
-    } catch (error) {
-      console.error('Erro ao listar usuários:', error);
-      res.status(500).json({ error: 'Erro ao listar usuários' });
+      res.json({ 
+        data: registros, 
+        total: Number(total), 
+        page: pagina, 
+        limit: limite, 
+        pages: Math.ceil(Number(total) / limite) 
+      });
+    } catch (erro) {
+      console.error('Erro ao listar usuários:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro ao tentar listar os usuários.' });
     }
   };
 
-  // Atualizar
-  atualizar = async (req: AuthRequest, res: Response) => {
+  // Atualização administrativa de dados de usuário
+  atualizar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
       const { nome, email, tipo } = req.body;
 
-      const usuario = await db('usuarios').where({ id }).first();
-      if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+      // Verifica se o usuário alvo existe no sistema
+      const usuarioAlvo = await db('usuarios').where({ id }).first();
+      if (!usuarioAlvo) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
 
-      const dados: any = {};
+      const dadosParaAtualizar: any = {};
 
       if (nome !== undefined) {
-        if (nome.trim().length < 3) return res.status(400).json({ error: 'O nome deve ter pelo menos 3 caracteres' });
-        dados.nome = nome.trim();
+        if (nome.trim().length < 3) {
+          return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
+        }
+        dadosParaAtualizar.nome = nome.trim();
       }
 
       if (email !== undefined) {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-          return res.status(400).json({ error: 'Formato de email inválido' });
-        const existe = await db('usuarios').where({ email: email.toLowerCase().trim() }).whereNot({ id }).first();
-        if (existe) return res.status(400).json({ error: 'Este email já está sendo utilizado' });
-        dados.email = email.toLowerCase().trim();
+        const emaisFormatado = email.toLowerCase().trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emaisFormatado)) {
+          return res.status(400).json({ error: 'Formato de e-mail inválido.' });
+        }
+        
+        // Verifica se o novo e-mail já não pertence a outra pessoa
+        const emailEmUso = await db('usuarios')
+          .where({ email: emaisFormatado })
+          .whereNot({ id })
+          .first();
+        
+        if (emailEmUso) {
+          return res.status(400).json({ error: 'Este e-mail já está sendo utilizado por outro cadastro.' });
+        }
+        dadosParaAtualizar.email = emaisFormatado;
       }
 
       if (tipo !== undefined) {
-        if (!['usuario', 'bibliotecario'].includes(tipo)) return res.status(400).json({ error: 'Tipo inválido' });
-        dados.tipo = tipo;
+        if (!['usuario', 'bibliotecario'].includes(tipo)) {
+          return res.status(400).json({ error: 'Tipo de conta inválido.' });
+        }
+        dadosParaAtualizar.tipo = tipo;
       }
 
-      if (Object.keys(dados).length > 0) await db('usuarios').where({ id }).update(dados);
+      // Aplica as mudanças se houver alguma
+      if (Object.keys(dadosParaAtualizar).length > 0) {
+        await db('usuarios').where({ id }).update(dadosParaAtualizar);
+      }
 
-      const atualizado = await db('usuarios').where({ id }).select('id', 'nome', 'email', 'tipo').first();
-      res.json({ message: '✅ Usuário atualizado com sucesso!', usuario: atualizado });
-    } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
-      res.status(500).json({ error: 'Erro ao atualizar usuário' });
+      const usuarioAtualizado = await db('usuarios')
+        .where({ id })
+        .select('id', 'nome', 'email', 'tipo')
+        .first();
+
+      res.json({ 
+        message: '✅ Usuário atualizado com sucesso!', 
+        usuario: usuarioAtualizado 
+      });
+    } catch (erro) {
+      console.error('Erro ao atualizar usuário:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro ao tentar atualizar os dados do usuário.' });
     }
   };
 
-  // Excluir
-  excluir = async (req: AuthRequest, res: Response) => {
+  // Exclusão definitiva de um usuário
+  excluir = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
+      
       const usuario = await db('usuarios').where({ id }).first();
-      if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
 
-      const [{ total }] = await db('alugueis').where({ usuario_id: id, status: 'ativo' }).count('id as total');
-      if (Number(total) > 0) return res.status(400).json({ error: `❌ Não é possível excluir: ${total} livro(s) pendente(s) de devolução.` });
+      // Regra de segurança: Não excluir usuário com livros em mãos
+      const [{ totalAtivos }] = await db('alugueis')
+        .where({ usuario_id: id, status: 'ativo' })
+        .count('id as totalAtivos');
+      
+      if (Number(totalAtivos) > 0) {
+        return res.status(400).json({ 
+          error: `❌ Bloqueio de Segurança: O usuário possui ${totalAtivos} livro(s) pendente(s) de devolução.` 
+        });
+      }
 
       await db('usuarios').where({ id }).del();
       res.json({ message: '✅ Usuário removido permanentemente do sistema.' });
-    } catch (error) {
-      console.error('Erro ao excluir usuário:', error);
-      res.status(500).json({ error: 'Erro ao excluir usuário' });
+    } catch (erro) {
+      console.error('Erro ao excluir usuário:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro ao tentar excluir o usuário.' });
     }
   };
 
-  // Bloquear usuário
-  bloquear = async (req: AuthRequest, res: Response) => {
+  // Bloqueio manual de acesso (impede novos empréstimos)
+  bloquear = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
       const { motivo } = req.body;
 
       if (!motivo?.trim()) {
-        return res.status(400).json({ error: 'Motivo do bloqueio é obrigatório' });
+        return res.status(400).json({ error: 'É obrigatório informar o motivo do bloqueio.' });
       }
 
       const usuario = await db('usuarios').where({ id }).first();
-      if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
 
       if (usuario.bloqueado) {
-        return res.status(400).json({ error: 'Usuário já está bloqueado' });
+        return res.status(400).json({ error: 'Este usuário já se encontra bloqueado.' });
       }
 
       await db('usuarios').where({ id }).update({
@@ -120,23 +184,25 @@ export class UsuarioController {
         motivo_bloqueio: motivo.trim()
       });
 
-      res.json({ message: '✅ Usuário bloqueado com sucesso' });
-    } catch (error) {
-      console.error('Erro ao bloquear usuário:', error);
-      res.status(500).json({ error: 'Erro ao bloquear usuário' });
+      res.json({ message: '✅ Usuário bloqueado com sucesso!' });
+    } catch (erro) {
+      console.error('Erro ao bloquear usuário:', erro);
+      res.status(500).json({ error: 'Erro interno ao processar o bloqueio.' });
     }
   };
 
-  // Desbloquear usuário
-  desbloquear = async (req: AuthRequest, res: Response) => {
+  // Remove o bloqueio de um usuário
+  desbloquear = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
 
       const usuario = await db('usuarios').where({ id }).first();
-      if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
 
       if (!usuario.bloqueado) {
-        return res.status(400).json({ error: 'Usuário não está bloqueado' });
+        return res.status(400).json({ error: 'Este usuário não está bloqueado.' });
       }
 
       await db('usuarios').where({ id }).update({
@@ -144,10 +210,10 @@ export class UsuarioController {
         motivo_bloqueio: null
       });
 
-      res.json({ message: '✅ Usuário desbloqueado com sucesso' });
-    } catch (error) {
-      console.error('Erro ao desbloquear usuário:', error);
-      res.status(500).json({ error: 'Erro ao desbloquear usuário' });
+      res.json({ message: '✅ Usuário desbloqueado. O acesso está liberado novamente.' });
+    } catch (erro) {
+      console.error('Erro ao desbloquear usuário:', erro);
+      res.status(500).json({ error: 'Erro interno ao processar o desbloqueio.' });
     }
   };
 }
