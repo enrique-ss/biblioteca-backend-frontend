@@ -99,9 +99,9 @@ function initThreeBG() {
         requestAnimationFrame(animate);
         const elapsedTime = clock.getElapsedTime();
 
-        // Slow cinematic rotation
-        particlesGroup.rotation.y = elapsedTime * 0.03;
-        particlesGroup.rotation.x = elapsedTime * 0.015;
+        // Slow cinematic rotation (reduced speed for more calmness)
+        particlesGroup.rotation.y = elapsedTime * 0.01;
+        particlesGroup.rotation.x = elapsedTime * 0.01;
 
         // Mouse interaction removed for static background stability
 
