@@ -340,7 +340,7 @@ function renovarEmprestimo(id) {
             try {
                 const resposta = await api(`/alugueis/${id}/renovar`, { method: 'PUT' });
                 exibirAlerta(resposta.message || 'Empréstimo renovado!');
-                loadMeusAlugueis();
+                carregarMeusAlugueis();
             } catch (erro) { 
                 exibirAlerta(erro.message, 'danger'); 
             }
