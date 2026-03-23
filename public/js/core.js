@@ -109,12 +109,29 @@ function showAlert(message, type = 'success') {
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
+// Função central que fará todas as requisições HTTP cruzando do Frontend para o Backend.
+// Ela já injeta automaticamente o token de segurança para não repetirmos código por todo o site.
 async function api(endpoint, options = {}) {
+    // Definimos que estamos conversando através de texto no formato JSON
     const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    // Se o usuário já fez login (e tem um token na memória), adicionamos no cabeçalho criptografado
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Dispara a requisição HTTP para o servidor local (ou nuvem) e espera a resposta
     const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+    
+    // Transforma a resposta de texto do servidor em um objeto Javascript manipulável
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || data.message || 'Erro na requisição');
+    
+    // Se o status HTTP da resposta apontar um erro (ex: 400 Bad Request, 500 Internal Error)
+    if (!res.ok) {
+        // Encerramos a execução disparando um Alerta formatado para a tela do usuário
+        throw new Error(data.error || data.message || 'Erro inesperado na requisição');
+    }
+    
     return data;
 }
 

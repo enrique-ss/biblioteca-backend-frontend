@@ -53,45 +53,86 @@ async function loadMeusAlugueis() {
     } catch (err) { setEmpty('alugueisTbody', 8, err.message); showAlert(err.message, 'danger'); }
 }
 
+/*
+ * Função Didática: Exibe em vermelho os dias e o custo financeiro 
+ * da multa atual, ou exibe apenas "—" (traço) se o livro estiver dentro do prazo.
+ */
+function renderAlertaAtraso(diasAtraso, multaAcumulada) {
+    if (diasAtraso > 0) {
+        return `<span style="color:#f85149;font-weight:600">${diasAtraso}d — R$&nbsp;${multaAcumulada.toFixed(2)}</span>`;
+    }
+    return `<span style="color:var(--text-faint)">—</span>`;
+}
+
+/*
+ * Função Didática: Determina os botões de ação na tabela de Controle Geral.
+ */
+function renderAcoesAluguel(id, podeDevolver) {
+    if (podeDevolver) {
+        return `<button class="btn btn-success btn-sm" onclick="abrirModalDevolucao(${id})">Devolver</button>`;
+    }
+    return `<span style="color:var(--text-faint)">—</span>`;
+}
+
 function renderAlugueisCompleto(data) {
     const tbody = document.getElementById('alugueisTbody');
-    tbody.innerHTML = '';
-    if (!data.length) { setEmpty('alugueisTbody', 9, 'Nenhum empréstimo encontrado.'); return; }
+    tbody.innerHTML = ''; // Limpa a tabela
+
+    if (!data.length) { 
+        setEmpty('alugueisTbody', 9, 'Nenhum empréstimo encontrado.'); 
+        return; 
+    }
+
     data.forEach(a => {
         const diasAtraso = Number(a.dias_atraso ?? 0);
         const multaAcum = Number(a.multa_acumulada ?? 0);
-        const atrasoCell = diasAtraso > 0
-            ? `<span style="color:#f85149;font-weight:600">${diasAtraso}d — R$&nbsp;${multaAcum.toFixed(2)}</span>`
-            : `<span style="color:var(--text-faint)">—</span>`;
 
         const tr = document.createElement('tr');
+        
+        // Vamos usar variáveis claras para avisar sobre multa pendente passada
+        const badgeMulta = a.multa_pendente 
+            ? ' <span class="badge badge-danger" style="font-size:.55rem;vertical-align:middle">multa pendente</span>' 
+            : '';
+
         tr.innerHTML = `
             <td style="color:var(--text-faint)">${esc(a.id)}</td>
-            <td>${esc(a.usuario ?? '—')}${a.multa_pendente ? ' <span class="badge badge-danger" style="font-size:.55rem;vertical-align:middle">multa</span>' : ''}</td>
+            <td>${esc(a.usuario ?? '—')} ${badgeMulta}</td>
             <td><strong>${esc(a.titulo ?? '—')}</strong></td>
             <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(a.exemplar_codigo ?? '—')}</code></td>
             <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
             <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
-            <td>${atrasoCell}</td>
+            <td>${renderAlertaAtraso(diasAtraso, multaAcum)}</td>
             <td>${badgeStatus(a.status)}</td>
-            <td>${a.pode_devolver
-                ? `<button class="btn btn-success btn-sm" onclick="abrirModalDevolucao(${a.id})">Devolver</button>`
-                : `<span style="color:var(--text-faint)">—</span>`
-            }</td>`;
+            <td>${renderAcoesAluguel(a.id, a.pode_devolver)}</td>
+        `;
+        
         tbody.appendChild(tr);
     });
 }
 
+/*
+ * Função Didática: Representa o botão de Extender/Renovar o Prazo (+14 dias)
+ * na visão do aluno autenticado (Meus Empréstimos). 
+ */
+function renderAcoesMeusAlugueis(id, podeRenovar) {
+    if (podeRenovar) {
+        return `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${id})">+14 dias</button>`;
+    }
+    return `<span style="color:var(--text-faint)">—</span>`;
+}
+
 function renderAlugueisMeus(data) {
     const tbody = document.getElementById('alugueisTbody');
-    tbody.innerHTML = '';
-    if (!data.length) { setEmpty('alugueisTbody', 8, 'Nenhum empréstimo encontrado.'); return; }
+    tbody.innerHTML = ''; // Limpa a tabela
+    
+    if (!data.length) { 
+        setEmpty('alugueisTbody', 8, 'Nenhum empréstimo encontrado.'); 
+        return; 
+    }
+    
     data.forEach(a => {
         const diasAtraso = Number(a.dias_atraso ?? 0);
         const multaAcum = Number(a.multa_acumulada ?? 0);
-        const atrasoCell = diasAtraso > 0
-            ? `<span style="color:#f85149;font-weight:600">${diasAtraso}d — R$&nbsp;${multaAcum.toFixed(2)}</span>`
-            : `<span style="color:var(--text-faint)">—</span>`;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -100,12 +141,10 @@ function renderAlugueisMeus(data) {
             <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(a.exemplar_codigo ?? '—')}</code></td>
             <td style="color:var(--text-dim)">${fmtDate(a.data_aluguel)}</td>
             <td style="color:var(--text-dim)">${fmtDate(a.prazo)}</td>
-            <td>${atrasoCell}</td>
+            <td>${renderAlertaAtraso(diasAtraso, multaAcum)}</td>
             <td>${badgeStatus(a.status)}</td>
-            <td>${a.pode_renovar
-                ? `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${a.id})">+14 dias</button>`
-                : `<span style="color:var(--text-faint)">—</span>`
-            }</td>`;
+            <td>${renderAcoesMeusAlugueis(a.id, a.pode_renovar)}</td>
+        `;
         tbody.appendChild(tr);
     });
 }
@@ -137,7 +176,7 @@ async function prepareAluguelModal() {
             
             try {
                 const { exemplares } = await api(`/livros/${livroId}/exemplares`);
-                const disponiveis = exemplares.filter(ex => ex.disponibilidade === 'disponivel' && ex.condicao !== 'perdido');
+                const disponiveis = exemplares.filter(ex => ex.disponibilidade === 'disponivel');
                 
                 selE.innerHTML = '<option value="">Selecione um exemplar…</option>';
                 disponiveis.forEach(ex => {

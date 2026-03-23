@@ -269,7 +269,7 @@ async function novoEmprestimo() {
     const response = await api.get(`/livros/${livro_id}/exemplares`);
     const exemplares = response.data.exemplares || response.data;
     const disponiveis = exemplares.filter((ex: any) => 
-      ex.disponibilidade === 'disponivel' && ex.condicao !== 'perdido'
+      ex.disponibilidade === 'disponivel'
     );
     
     if (disponiveis.length === 0) {

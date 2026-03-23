@@ -13,18 +13,30 @@ export class LivroController {
     };
   }
 
-  // Recalcula exemplares_disponiveis e status do livro com base nos exemplares reais
+  // Essa função ajusta o número de exemplares que aparece na tabela de livros
+  // sempre que adicionamos, removemos ou perdemos uma cópia física.
   private recalcularContadores = async (livro_id: number) => {
-    // Conta todos os exemplares exceto perdidos para o total físico
-    // Disponíveis = disponibilidade='disponivel' (independente da condição)
-    const [{ total }, { disponiveis }] = await Promise.all([
+    // Passo 1: Disparamos duas contagens no banco de dados ao mesmo tempo (Promise.all)
+    const resultados = await Promise.all([
+      // Conta todas as cópias que ainda existem fisicamente (exclui as declaradas como perdidas)
       db('exemplares').where({ livro_id }).whereNot({ condicao: 'perdido' }).count('id as total').first() as Promise<any>,
+      
+      // Conta apenas as cópias que estão prontas para adoção/empréstimo na prateleira
       db('exemplares').where({ livro_id, disponibilidade: 'disponivel' }).count('id as disponiveis').first() as Promise<any>
     ]);
+
+    // O Knex retorna um objeto com a chave correspondente ao nosso count()
+    const registroTotal = resultados[0];
+    const registroDisponiveis = resultados[1];
+
+    const totalFisico = Number(registroTotal.total);
+    const totalDisponivel = Number(registroDisponiveis.disponiveis);
+
+    // Passo 2: Atualizamos o livro "Pai" para refletir os números exatos e o status textual
     await db('livros').where({ id: livro_id }).update({
-      exemplares: Number(total),
-      exemplares_disponiveis: Number(disponiveis),
-      status: Number(disponiveis) > 0 ? 'disponivel' : 'alugado'
+      exemplares: totalFisico,
+      exemplares_disponiveis: totalDisponivel,
+      status: totalDisponivel > 0 ? 'disponivel' : 'alugado'
     });
   };
 
@@ -54,10 +66,16 @@ export class LivroController {
         );
       }
 
-      const [rows, [{ total }]] = await Promise.all([
+      // Disparamos duas queries simultâneas para ganhar performance
+      // Uma busca os livros da página atual, a outra conta quantos livros existem no total do banco
+      const resultadosDeBusca = await Promise.all([
         query.clone().select('*').orderBy(col, dir).limit(limit).offset(offset),
         query.clone().count('id as total')
       ]);
+
+      const rows = resultadosDeBusca[0];
+      const contagem = resultadosDeBusca[1];
+      const total = contagem[0].total; // Knex devolve contagem em array
 
       // Enriquece cada livro com contagem de exemplares por condição física
       // Enriquece com condição física dos exemplares (independente da disponibilidade)
@@ -152,6 +170,8 @@ export class LivroController {
         // Se a condição for "perdido", automaticamente muda disponibilidade para "perdido"
         if (condicao === 'perdido') {
           atualizacao.disponibilidade = 'perdido';
+        } else if (exemplar.disponibilidade === 'perdido') {
+          atualizacao.disponibilidade = 'disponivel';
         }
       }
 
@@ -161,7 +181,8 @@ export class LivroController {
         if (exemplar.disponibilidade === 'emprestado' && status === 'disponivel')
           return res.status(400).json({ error: 'Use o fluxo de devolução para marcar como disponível' });
         // Não permite deixar como "disponível" se a condição for "perdido"
-        if (status === 'disponivel' && exemplar.condicao === 'perdido')
+        const finalCondicao = atualizacao.condicao || exemplar.condicao;
+        if (status === 'disponivel' && finalCondicao === 'perdido')
           return res.status(400).json({ error: 'Exemplar perdido não pode ficar disponível' });
         atualizacao.disponibilidade = status;
       }

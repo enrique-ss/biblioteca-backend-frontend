@@ -9,78 +9,134 @@ export class AluguelController {
 
   criar = async (req: AuthRequest, res: Response) => {
     try {
+      // Passo 1: Receber os dados enviados pelo frontend (livro, usuário e possível exemplar específico)
       const { livro_id, usuario_id, exemplar_id } = req.body;
 
+      // Passo 2: Buscar o usuário no banco de dados para checar se ele existe
       const usuario = await db('usuarios').where({ id: usuario_id }).first();
-      if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado.' });
+      
+      if (!usuario) {
+          return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
+
+      // Passo 3: Regras de negócio - Bloqueios e Multas
+      // 3.1 - O usuário não pode estar bloqueado manualmente pelo bibliotecário
       if (usuario.bloqueado) {
         return res.status(400).json({ error: `Usuário bloqueado. Motivo: ${usuario.motivo_bloqueio || 'Não informado'}` });
       }
+
+      // 3.2 - O usuário não pode ter multas pendentes não pagas
       if (usuario.multa_pendente) {
+        // Buscamos todas as multas em aberto deste usuário
         const multas = await db('multas').where({ usuario_id, status: 'pendente' }).select('valor');
-        const total = multas.reduce((s: number, m: any) => s + Number(m.valor), 0);
-        return res.status(400).json({ error: `Usuário com multa pendente de R$ ${total.toFixed(2)}. Quite antes de realizar novos empréstimos.` });
+        
+        // Somamos o valor de todas as multas para avisar o usuário do prejuízo
+        let total = 0;
+        for (const multa of multas) {
+            total = total + Number(multa.valor);
+        }
+        
+        return res.status(400).json({ 
+            error: `Usuário com multa pendente de R$ ${total.toFixed(2)}. Quite antes de realizar novos empréstimos.` 
+        });
       }
 
-      const data_aluguel = new Date();
+      // Passo 4: Preparar as datas do empréstimo
+      const data_aluguel = new Date(); // Data de Hoje
       const data_prevista = new Date();
-      data_prevista.setDate(data_aluguel.getDate() + 14);
+      data_prevista.setDate(data_aluguel.getDate() + 14); // Adiciona 14 dias corridos de prazo
 
+      // Passo 5: Iniciar uma transação coesa no banco de dados (ACID)
+      // Se qualquer instrução falhar dentro da transação, todas as outras são revertidas automaticamente
       await db.transaction(async (trx) => {
-        // Busca exemplar específico se informado, senão o primeiro disponível
         let exemplar;
+        
+        // 5.1 - Se o usuário escolheu um exemplar físico específico no menu
         if (exemplar_id) {
           exemplar = await trx('exemplares')
-            .where({ id: exemplar_id, livro_id, disponibilidade: 'disponivel' })
-            .whereNot({ condicao: 'perdido' })
+            .where({ id: exemplar_id, livro_id: livro_id, disponibilidade: 'disponivel' })
             .first();
-          if (!exemplar) throw new Error('Exemplar específico não encontrado ou não está disponível.');
-        } else {
+            
+          if (!exemplar) {
+              throw new Error('Exemplar específico não encontrado ou não está disponível atualmente.');
+          }
+        } 
+        // 5.2 - Caso contrário, pegamos o primeiro livro da estante que esteja disponível
+        else {
           exemplar = await trx('exemplares')
-            .where({ livro_id, disponibilidade: 'disponivel' })
-            .whereNot({ condicao: 'perdido' })
-            .orderBy('id', 'asc')
+            .where({ livro_id: livro_id, disponibilidade: 'disponivel' })
+            .orderBy('id', 'asc') // Pega o código mais antigo (FIFO)
             .first();
-          if (!exemplar) throw new Error('Livro não disponível para empréstimo.');
+            
+          if (!exemplar) {
+              throw new Error('Livro não disponível para empréstimo neste momento.');
+          }
         }
 
+        // Descobrimos quantos exemplares deste título estavam disponíveis antes desse empréstimo
         const livro = await trx('livros').where({ id: livro_id }).first();
         const novosDisponiveis = livro.exemplares_disponiveis - 1;
 
+        // 5.3 - Executamos as atualizações no banco simulaneamente para ganhar velocidade
         await Promise.all([
+          
+          // A) Registrar o histórico do aluguel na tabela
           trx('alugueis').insert({
-            livro_id, exemplar_id: exemplar.id, usuario_id,
-            data_prevista_devolucao: data_prevista, status: 'ativo'
+            livro_id: livro_id, 
+            exemplar_id: exemplar.id, 
+            usuario_id: usuario_id,
+            data_prevista_devolucao: data_prevista, 
+            status: 'ativo'
           }),
-          // Muda só disponibilidade — condição física não muda ao emprestar
+          
+          // B) Marcar a cópia física exata (exemplar) como indiscutivelmente 'emprestada'
           trx('exemplares').where({ id: exemplar.id }).update({ disponibilidade: 'emprestado' }),
+          
+          // C) Reduzir o total de livros disponíveis na tela inicial da biblioteca
           trx('livros').where({ id: livro_id }).update({
             exemplares_disponiveis: novosDisponiveis,
+            // Se o contador zerou, o livro inteiro entra no status 'alugado'
             status: novosDisponiveis === 0 ? 'alugado' : 'disponivel'
           })
         ]);
       });
 
-      res.status(201).json({ message: 'Empréstimo registrado com sucesso!', prazo: data_prevista.toLocaleDateString('pt-BR') });
-    } catch (error: any) { res.status(400).json({ error: error.message }); }
+      // Passo 6: Responder ao cliente que a ação foi um sucesso
+      res.status(201).json({ 
+          message: 'Empréstimo registrado com sucesso!', 
+          prazo: data_prevista.toLocaleDateString('pt-BR') 
+      });
+
+    } catch (error: any) { 
+        // Caso um `throw new Error` tenha sido acionado, ele cai diretamente aqui 
+        res.status(400).json({ error: error.message }); 
+    }
   };
 
   devolver = async (req: AuthRequest, res: Response) => {
     try {
+      // Passo 1: Receber os dados da requisição
+      // O id vem da URL (ex: /alugueis/5/devolver), enquanto o estado da cópia vem do corpo do JSON
       const { id } = req.params;
       const { estado_exemplar = 'bom', observacao = '' } = req.body;
 
+      // Passo 2: Validar se o estado informado faz sentido
       const estadosValidos = ['bom', 'danificado', 'perdido'];
-      if (!estadosValidos.includes(estado_exemplar))
-        return res.status(400).json({ error: `Estado inválido. Use: ${estadosValidos.join(', ')}` });
+      if (!estadosValidos.includes(estado_exemplar)) {
+        return res.status(400).json({ error: `Estado inválido. Use um dos seguintes: ${estadosValidos.join(', ')}` });
+      }
 
+      // Preparamos um array para guardar avisos de multa que serão devolvidos ao frontend
       const multasGeradas: { tipo: string; valor: number; dias?: number }[] = [];
 
+      // Passo 3: Transação no banco (Se quebrar o cálculo no meio, nada é salvo)
       await db.transaction(async (trx) => {
+        
+        // 3.1 Busca os detalhes do aluguel atual cruzando os dados com o livro
         const registro = await trx('alugueis')
           .join('livros', 'alugueis.livro_id', 'livros.id')
           .where('alugueis.id', id)
-          .where('alugueis.status', 'ativo')
+          .where('alugueis.status', 'ativo') // Só devolve se o status ainda constar como ativo
           .select(
             'alugueis.id', 'alugueis.livro_id', 'alugueis.exemplar_id',
             'alugueis.usuario_id', 'alugueis.data_prevista_devolucao',
@@ -88,47 +144,86 @@ export class AluguelController {
           )
           .first();
 
-        if (!registro) throw new Error('Registro de aluguel ativo não encontrado.');
+        // Se o aluguel não existir ou já estiver fechado
+        if (!registro) {
+            throw new Error('Registro de aluguel ativo não encontrado.');
+        }
 
-        const agora = new Date(); agora.setHours(0, 0, 0, 0);
-        const prazo = new Date(registro.data_prevista_devolucao); prazo.setHours(0, 0, 0, 0);
+        // 3.2 Padronizamos as datas para ignorar "horas" e focar apenas no dia puro
+        const agora = new Date(); 
+        agora.setHours(0, 0, 0, 0);
+        
+        const prazo = new Date(registro.data_prevista_devolucao); 
+        prazo.setHours(0, 0, 0, 0);
 
-        // Multa por atraso
-        const diasAtraso = Math.max(0, Math.floor((agora.getTime() - prazo.getTime()) / 86_400_000));
+        // 3.3 Calcula a multa por ATRASO
+        // 86_400_000 é a quantidade de milissegundos num dia inteiro
+        const diferencaEmMilisegundos = agora.getTime() - prazo.getTime();
+        const diferencaEmDias = Math.floor(diferencaEmMilisegundos / 86_400_000);
+        
+        // Math.max garante que o atraso nunca será negativo (se devolveu antes do prazo vira 0)
+        const diasAtraso = Math.max(0, diferencaEmDias); 
+
         if (diasAtraso > 0) {
           const valorAtraso = diasAtraso * MULTA_DIA;
-          await trx('multas').insert({ aluguel_id: registro.id, usuario_id: registro.usuario_id, tipo: 'atraso', valor: valorAtraso, dias_atraso: diasAtraso, status: 'pendente' });
+          
+          await trx('multas').insert({ 
+              aluguel_id: registro.id, 
+              usuario_id: registro.usuario_id, 
+              tipo: 'atraso', 
+              valor: valorAtraso, 
+              dias_atraso: diasAtraso, 
+              status: 'pendente' 
+          });
           multasGeradas.push({ tipo: 'atraso', valor: valorAtraso, dias: diasAtraso });
         }
 
-        // Multa por perda
+        // 3.4 Calcula a multa por PERDA (destruição do material)
         if (estado_exemplar === 'perdido') {
-          await trx('multas').insert({ aluguel_id: registro.id, usuario_id: registro.usuario_id, tipo: 'perda', valor: MULTA_PERDA, dias_atraso: 0, status: 'pendente' });
+          await trx('multas').insert({ 
+              aluguel_id: registro.id, 
+              usuario_id: registro.usuario_id, 
+              tipo: 'perda', 
+              valor: MULTA_PERDA, 
+              dias_atraso: 0, 
+              status: 'pendente' 
+          });
           multasGeradas.push({ tipo: 'perda', valor: MULTA_PERDA });
         }
 
-        if (multasGeradas.length > 0)
+        // 3.5 Se gerou qualquer multa, bloqueamos o usuário adicionando a "flag"
+        if (multasGeradas.length > 0) {
           await trx('usuarios').where({ id: registro.usuario_id }).update({ multa_pendente: true });
+        }
 
-        // Atualização do exemplar:
-        // Se perdido: disponibilidade = 'perdido', NÃO volta ao acervo
-        // Se danificado ou bom: disponibilidade = 'disponivel'
-        // condicao sempre registra o estado físico real
+        // Passo 4: Atualizar os status do acervo
+        // Se a cópia física foi perdida, não podemos devolver como 'disponível' para a estante
         const voltaAcervo = estado_exemplar !== 'perdido';
         const disponibilidadeFinal = estado_exemplar === 'perdido' ? 'perdido' : 'disponivel';
-        const novosDisponiveis = voltaAcervo
-          ? registro.exemplares_disponiveis + 1
-          : registro.exemplares_disponiveis;
+        
+        // O estoque só aumenta se o livro realmente voltar pra prateleira
+        let novosDisponiveis = registro.exemplares_disponiveis;
+        if (voltaAcervo) {
+            novosDisponiveis = novosDisponiveis + 1;
+        }
 
+        // Processamos as três tabelas afetadas ao mesmo tempo para fechar o ciclo
         await Promise.all([
+          // Tabela 1: Encerra o aluguel
           trx('alugueis').where({ id }).update({
-            status: 'devolvido', data_devolucao: new Date(), estado_devolucao: estado_exemplar
+            status: 'devolvido', 
+            data_devolucao: new Date(), 
+            estado_devolucao: estado_exemplar
           }),
+          
+          // Tabela 2: Atualiza a condição do livro exato
           trx('exemplares').where({ id: registro.exemplar_id }).update({
             disponibilidade: disponibilidadeFinal,
             condicao: estado_exemplar,
             observacao: observacao?.trim() || null
           }),
+          
+          // Tabela 3: Desbloqueia a categoria principal mostrando a quantidade global
           trx('livros').where({ id: registro.livro_id }).update({
             exemplares_disponiveis: novosDisponiveis,
             status: novosDisponiveis > 0 ? 'disponivel' : 'alugado'
@@ -136,21 +231,34 @@ export class AluguelController {
         ]);
       });
 
+      // Passo 5: Formatar uma mensagem clara ao cliente de acordo com o resultado
       const voltaAcervo = estado_exemplar !== 'perdido';
-      const totalMulta = multasGeradas.reduce((s, m) => s + m.valor, 0);
+      
+      let totalMulta = 0;
+      for (const multa of multasGeradas) {
+          totalMulta = totalMulta + multa.valor;
+      }
 
       let message = 'Livro devolvido com sucesso!';
-      if (estado_exemplar === 'perdido') message = 'Devolução registrada — exemplar marcado como perdido e removido do acervo disponível.';
-      if (estado_exemplar === 'danificado') message = 'Devolução registrada — exemplar marcado como danificado mas mantido no acervo.';
+      if (estado_exemplar === 'perdido') {
+          message = 'Devolução registrada — exemplar marcado como perdido e removido do acervo disponível.';
+      }
+      if (estado_exemplar === 'danificado') {
+          message = 'Devolução registrada — exemplar marcado como danificado mas mantido no acervo livre.';
+      }
 
       res.json({
-        message, estado_exemplar,
+        message: message, 
+        estado_exemplar: estado_exemplar,
         voltou_acervo: voltaAcervo,
         multas: multasGeradas,
         total_multa: totalMulta > 0 ? totalMulta : null,
-        aviso: totalMulta > 0 ? `Multa de R$ ${totalMulta.toFixed(2)} gerada. Usuário bloqueado para novos empréstimos.` : null
+        aviso: totalMulta > 0 ? `Multa de R$ ${totalMulta.toFixed(2)} gerada. Usuário bloqueado para novos empréstimos até o pagamento.` : null
       });
-    } catch (error: any) { res.status(400).json({ error: error.message }); }
+
+    } catch (error: any) { 
+        res.status(400).json({ error: error.message }); 
+    }
   };
 
   pagarMulta = async (req: AuthRequest, res: Response) => {

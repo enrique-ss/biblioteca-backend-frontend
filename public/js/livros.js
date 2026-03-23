@@ -125,6 +125,48 @@ function removerLivro(id, titulo) {
 
 // ── EXEMPLARES ────────────────────────────────────────────────────────────────
 
+/*
+ * Função Didática: Avalia o estado atual de um exemplar (cópia física)
+ * e devolve os botões e menus (Ações) corretos em formato HTML.
+ * Retirar isso do meio da tabela evita "ternários ( if ? a : b )" gigantes.
+ */
+function renderAcoesDoExemplar(livroId, ex) {
+    // Regra 1: Se o livro está na casa de um aluno (emprestado), 
+    // o bibliotecário não pode alterar nada até ele ser devolvido.
+    if (ex.disponibilidade === 'emprestado') {
+        return '<span style="color:var(--text-faint);font-size:var(--fs-xs)">Emprestado</span>';
+    }
+    
+    // Regra 2: Se a cópia foi dada como perdida, o único botão
+    // que deve aparecer é o de "Achei" (alterando para Bom ou Danificado).
+    if (ex.disponibilidade === 'perdido') {
+        return `
+            <select class="form-select exemplar-status-select" 
+                    onchange="atualizarCondicao(${livroId}, ${ex.id}, this.value)">
+                <option value="" disabled selected>Perdido</option>
+                <option value="bom">Bom</option>
+                <option value="danificado">Danificado</option>
+            </select>
+        `;
+    }
+    
+    // Regra 3: Se a cópia está na biblioteca (Disponível ou Indisponível/Manutenção),
+    // mostramos os controles totais para o bibliotecário gerenciá-la.
+    return `
+        <select class="form-select exemplar-status-select" 
+                onchange="atualizarDisponibilidade(${livroId}, ${ex.id}, this.value)">
+            <option value="disponivel" ${ex.disponibilidade === 'disponivel' ? 'selected' : ''}>Disponível</option>
+            <option value="indisponivel" ${ex.disponibilidade === 'indisponivel' ? 'selected' : ''}>Indisponível</option>
+        </select>
+        <select class="form-select exemplar-status-select" 
+                onchange="atualizarCondicao(${livroId}, ${ex.id}, this.value)">
+            <option value="bom" ${ex.condicao === 'bom' ? 'selected' : ''}>Bom</option>
+            <option value="danificado" ${ex.condicao === 'danificado' ? 'selected' : ''}>Danificado</option>
+            <option value="perdido">Perdido</option>
+        </select>
+    `;
+}
+
 async function verExemplares(livroId, titulo) {
     document.getElementById('exemplaresTitulo').textContent = titulo;
     document.getElementById('exemplaresLivroId').value = livroId;
@@ -157,34 +199,7 @@ async function carregarExemplares(livroId) {
                 </td>
                 <td>
                     <div class="exemplar-actions">
-                        ${ex.disponibilidade === 'emprestado' 
-                            ? '<span style="color:var(--text-faint);font-size:var(--fs-xs)">Emprestado</span>'
-                            : ex.condicao === 'perdido'
-                            ? `
-                                <select class="form-select exemplar-status-select" 
-                                        onchange="atualizarCondicao(${livroId}, ${ex.id}, this.value)"
-                                        data-current="${ex.condicao || 'bom'}">
-                                    <option value="">Condição: Perdido</option>
-                                    <option value="bom">Achado - Bom</option>
-                                    <option value="danificado">Achado - Danificado</option>
-                                </select>
-                            `
-                            : `
-                                <select class="form-select exemplar-status-select" 
-                                        onchange="atualizarDisponibilidade(${livroId}, ${ex.id}, this.value)"
-                                        data-current="${ex.disponibilidade}">
-                                    <option value="">Disponível</option>
-                                    <option value="indisponivel" ${ex.disponibilidade === 'indisponivel' ? 'selected' : ''}>Tornar Indisponível</option>
-                                </select>
-                                <select class="form-select exemplar-status-select" 
-                                        onchange="atualizarCondicao(${livroId}, ${ex.id}, this.value)"
-                                        data-current="${ex.condicao || 'bom'}">
-                                    <option value="">Condição: ${ex.condicao || 'bom'}</option>
-                                    <option value="danificado">Danificado</option>
-                                    <option value="perdido">Perdido</option>
-                                </select>
-                            `
-                        }
+                        ${renderAcoesDoExemplar(livroId, ex)}
                     </div>
                 </td>`;
             tbody.appendChild(tr);
