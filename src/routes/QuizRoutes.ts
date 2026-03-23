@@ -12,6 +12,6 @@ router.use(verificarToken);
 
 // Consulta e persistência de progresso (XP, Level, HP e Lições)
 router.get('/', controller.buscarProgresso);
-router.post('/', controller.salvarProgresso);
+router.post('/', controller.submeterLicao);
 
 export default router;
