@@ -1,26 +1,19 @@
 // ── NOTIFICAÇÕES ─────────────────────────────────────────────────────────────
 
 let notificationsData = [];
-let notificationsOpen = false;
+// Dropdown logic removed. Alertas now use a full screen.
 
-function toggleNotifications() {
-    const dropdown = document.getElementById('notificationsDropdown');
-    notificationsOpen = !notificationsOpen;
-    
-    if (notificationsOpen) {
-        dropdown.classList.add('show');
-        loadNotifications();
-    } else {
-        dropdown.classList.remove('show');
-    }
+async function loadNotificationsFull() {
+    await loadNotifications();
+    renderNotificationsFullScreen();
 }
 
 async function loadNotifications() {
     if (!currentUser) return;
     
     try {
-        const notificationsBody = document.getElementById('notificationsBody');
-        notificationsBody.innerHTML = '<div class="notifications-loading">Carregando...</div>';
+        const notificationsBody = document.getElementById('notificationsFullScreenBody');
+        if (notificationsBody) notificationsBody.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gold);">Carregando...</div>';
         
         // Carrega notificações baseadas no tipo de usuário
         const promises = [];
@@ -37,9 +30,8 @@ async function loadNotifications() {
         renderNotifications();
         updateNotificationBadge();
     } catch (err) {
-        console.error('Erro ao carregar notificações:', err);
-        document.getElementById('notificationsBody').innerHTML = 
-            '<div class="notification-item">Erro ao carregar notificações</div>';
+        const body = document.getElementById('notificationsFullScreenBody');
+        if (body) body.innerHTML = '<div style="text-align:center; padding:40px; color:var(--crimson);">Erro ao carregar notificações</div>';
     }
 }
 
@@ -126,26 +118,29 @@ async function loadUserNotifications() {
     return notifications;
 }
 
-function renderNotifications() {
-    const notificationsBody = document.getElementById('notificationsBody');
+function renderNotificationsFullScreen() {
+    const body = document.getElementById('notificationsFullScreenBody');
+    if (!body) return;
     
     if (notificationsData.length === 0) {
-        notificationsBody.innerHTML = `
-            <div class="notification-item">
-                <div class="notification-message">Nenhuma notificação no momento.</div>
+        body.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-faint); font-style: italic; font-size: var(--fs-md);">
+                Nenhum alerta pendente no momento. Tudo tranquilo!
             </div>
         `;
         return;
     }
     
-    notificationsBody.innerHTML = notificationsData.map(notification => `
-        <div class="notification-item">
-            <div class="notification-title">
-                <span class="notification-type ${notification.type}">${notification.type}</span>
-                ${notification.title}
+    body.innerHTML = notificationsData.map(notification => `
+        <div style="padding: 24px; border-bottom: 1px solid var(--border-m); margin-bottom: 8px; transition: background 0.3s; border-radius: var(--r-md);" onmouseover="this.style.background='var(--gold-bg-subtle)'" onmouseleave="this.style.background='transparent'">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <strong style="color: var(--gold); font-family: 'Cinzel', serif; font-size: var(--fs-md); letter-spacing: 0.05em;">
+                    <span class="notification-type ${notification.type}" style="font-family: 'Crimson Pro', serif; font-size: 0.7em; margin-right: 8px; vertical-align: middle;">${notification.type.toUpperCase()}</span> 
+                    ${notification.title}
+                </strong>
+                <span style="color: var(--text-dim); font-size: var(--fs-xs); font-style: italic;">Agora</span>
             </div>
-            <div class="notification-message">${notification.message}</div>
-            <div class="notification-time">Agora</div>
+            <div style="color: var(--text); font-size: var(--fs-base); line-height: 1.6;">${notification.message}</div>
         </div>
     `).join('');
 }
@@ -162,15 +157,7 @@ function updateNotificationBadge() {
     }
 }
 
-// Fechar dropdown ao clicar fora
-document.addEventListener('click', (e) => {
-    if (notificationsOpen) {
-        const notificationsEl = document.getElementById('navNotifications');
-        if (!notificationsEl.contains(e.target)) {
-            toggleNotifications();
-        }
-    }
-});
+// Evento de click fora da tela dropdown removido pois agora é tela cheia
 
 // Atualizar navbar para mostrar notificações
 function updateNotificationsVisibility() {

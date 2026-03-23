@@ -45,6 +45,23 @@ function logout() {
 }
 
 function updateNavbar() {
+    const isLogged = !!currentUser;
     const btn = document.getElementById('btnLogout');
-    if (btn) btn.style.display = currentUser ? 'inline-flex' : 'none';
+    if (btn) btn.style.display = isLogged ? 'inline-flex' : 'none';
+
+    const sidebarNav = document.getElementById('sidebarNav');
+    if (sidebarNav) sidebarNav.style.display = isLogged ? 'flex' : 'none';
+
+    const navNotifications = document.getElementById('navNotifications');
+    if (navNotifications) navNotifications.style.display = isLogged ? 'block' : 'none';
+
+    const navUser = document.getElementById('navUser');
+    if (navUser) navUser.style.display = isLogged ? 'flex' : 'none';
+
+    if (isLogged) {
+        const uName = document.getElementById('navUserName');
+        if (uName) uName.textContent = currentUser.nome.split(' ')[0];
+        const uRole = document.getElementById('navUserRole');
+        if (uRole) uRole.textContent = currentUser.tipo === 'bibliotecario' ? 'Admin' : 'Leitor';
+    }
 }

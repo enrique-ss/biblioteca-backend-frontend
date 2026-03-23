@@ -39,13 +39,13 @@ function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.getAttribute('data-theme') === 'dark';
     html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-    document.getElementById('btnTheme').textContent = isDark ? '☀️' : '🌙';
+    document.getElementById('btnThemeIcon').textContent = isDark ? '☀️' : '🌙';
     localStorage.setItem('luizateca_theme', isDark ? 'light' : 'dark');
 }
 function restoreTheme() {
     const saved = localStorage.getItem('luizateca_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
-    document.getElementById('btnTheme').textContent = saved === 'dark' ? '🌙' : '☀️';
+    document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
 
 // ── SESSION ───────────────────────────────────────────────────────────────────
@@ -70,6 +70,11 @@ function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Dispara animação GSAP da página caso a função via animations.js esteja disponível
+    if (typeof animateScreenTransition === 'function') {
+        animateScreenTransition(id);
+    }
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────

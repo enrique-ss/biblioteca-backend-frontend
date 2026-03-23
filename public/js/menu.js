@@ -3,11 +3,12 @@
 function loadMenu() {
     document.getElementById('menuUserName').textContent = currentUser.nome;
     const isBib = currentUser.tipo === 'bibliotecario';
-    const grid = document.getElementById('menuGrid');
-    grid.innerHTML = '';
+    
+    const sideNav = document.getElementById('sidebarNav');
+    sideNav.innerHTML = ''; // Limpa links dinâmicos
 
     const items = [
-        { icon: '📚', title: 'Acervo de Livros', action() { loadLivros(); showScreen('livrosScreen'); } }
+        { icon: '📚', title: 'Acervo', action() { loadLivros(); showScreen('livrosScreen'); } }
     ];
 
     if (isBib) {
@@ -18,21 +19,21 @@ function loadMenu() {
         );
     } else {
         items.push(
-            { icon: '📖', title: 'Meus Empréstimos', action() { loadMeusAlugueis(); showScreen('alugueisScreen'); } }
+            { icon: '📖', title: 'Meus Livros', action() { loadMeusAlugueis(); showScreen('alugueisScreen'); } }
         );
     }
 
     items.push(
-        { icon: '🎓', title: 'Quiz Literário', action() { showScreen('quizScreen'); quizInit(); } },
-        { icon: '✏️', title: 'Meu Perfil',     action() { loadPerfil(); showScreen('perfilScreen'); } }
+        { icon: '🎓', title: 'Quiz Literário', action() { showScreen('quizScreen'); quizInit(); } }
     );
 
     items.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'menu-card';
-        card.innerHTML = `<span class="menu-card-icon">${item.icon}</span><div class="menu-card-title">${item.title}</div>`;
-        card.addEventListener('click', item.action);
-        grid.appendChild(card);
+        const btn = document.createElement('button');
+        btn.className = 'side-btn';
+        btn.title = item.title;
+        btn.onclick = item.action;
+        btn.innerHTML = `<span class="side-icon">${item.icon}</span><span class="side-text">${item.title}</span>`;
+        sideNav.appendChild(btn);
     });
 
     document.getElementById('btnAddLivro').style.display    = isBib ? 'inline-flex' : 'none';

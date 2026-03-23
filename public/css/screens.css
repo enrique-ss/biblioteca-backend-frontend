@@ -1,24 +1,49 @@
-/* ── AUTH ── */
-.auth-wrap { min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
-.auth-card { background: var(--surface-2); border: 1px solid var(--border-s); border-radius: var(--r-xl); padding: 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); position: relative; overflow: hidden; }
+/* ── TELA DE LOGIN / INICIAL ── */
+.auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+.auth-card { 
+    background: var(--glass-2); 
+    backdrop-filter: blur(16px); 
+    -webkit-backdrop-filter: blur(16px); 
+    border: 1px solid var(--border-m); 
+    border-radius: var(--r-xl); 
+    padding: 40px; 
+    width: 100%; 
+    max-width: 420px; 
+    box-shadow: var(--shadow-lg); 
+    position: relative; 
+    overflow: hidden; 
+}
 .auth-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg,transparent,var(--gold),transparent); opacity: .4; }
 .auth-title    { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--gold); text-align: center; letter-spacing: .06em; margin-bottom: 4px; }
 .auth-subtitle { text-align: center; color: var(--text-dim); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; }
 
-/* ── MENU ── */
-.menu-screen-wrap { padding-top: 40px; }
-.menu-welcome { text-align: center; margin-bottom: 36px; }
-.menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--text); letter-spacing: .04em; margin-bottom: 6px; }
-.menu-welcome h2 span { color: var(--gold); }
-.menu-welcome p { color: var(--text-dim); font-style: italic; font-size: var(--fs-base); }
+/* ── TELA MENU ── */
+.menu-screen-wrap { max-width: 1000px; margin: 0 auto; text-align: center; padding-top: 40px; }
+.menu-welcome { margin-bottom: 40px; }
+.menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
+.menu-welcome p { color: var(--text-dim); margin-top: 8px; font-size: var(--fs-md); }
 
-.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
 
-.menu-card { background: var(--surface-2); border: 1px solid var(--border-s); border-radius: var(--r-xl); padding: 28px 20px; text-align: center; cursor: pointer; transition: all .22s cubic-bezier(.22,1,.36,1); position: relative; overflow: hidden; }
-.menu-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg,transparent,var(--gold),transparent); opacity: 0; transition: opacity .22s; }
-.menu-card:hover { transform: translateY(-6px); border-color: var(--border-m); background: var(--surface-3); box-shadow: var(--shadow); }
-.menu-card:hover::after { opacity: 1; }
-.menu-card:active { transform: translateY(-2px); }
+.menu-card { 
+    background: var(--glass-1); 
+    backdrop-filter: blur(16px); 
+    -webkit-backdrop-filter: blur(16px); 
+    border: 1px solid var(--border-s); 
+    border-radius: var(--r-lg); 
+    padding: 32px 24px; 
+    text-align: center; 
+    cursor: pointer; 
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    position: relative; 
+    overflow: hidden; 
+}
+.menu-card:hover { 
+    transform: translateY(-8px) scale(1.02); 
+    background: var(--glass-2); 
+    border-color: var(--gold); 
+    box-shadow: 0 12px 32px var(--gold-shadow-soft); 
+}
 .menu-card-icon  { font-size: 2.2rem; display: block; margin-bottom: 12px; filter: sepia(.7) brightness(.65); }
 .menu-card-title { font-family: 'Cinzel', serif; font-size: var(--fs-sm); font-weight: 600; color: var(--text); letter-spacing: .05em; }
 

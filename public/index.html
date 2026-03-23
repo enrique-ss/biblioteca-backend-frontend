@@ -13,42 +13,44 @@
 </head>
 
 <body>
+    <canvas id="threeCanvas" class="three-bg"></canvas>
     <div class="app-wrapper">
 
-        <nav class="navbar">
-            <a href="#" class="nav-brand" onclick="return false;">
-                <span class="nav-brand-icon">📚</span>
-                <span>
-                    <span class="nav-brand-name">LuizaTeca</span>
-                    <span class="nav-brand-sub">Sistema de Biblioteca</span>
-                </span>
-            </a>
-            <div class="nav-right">
-                <div class="nav-notifications" id="navNotifications" style="display:none;">
-                    <button class="nav-notifications-btn" onclick="toggleNotifications()" title="Notificações">
-                        <span class="nav-notifications-icon">🔔</span>
-                        <span class="nav-notifications-badge" id="notificationsBadge">0</span>
-                    </button>
-                    <div class="nav-notifications-dropdown" id="notificationsDropdown">
-                        <div class="notifications-header">
-                            <h3>Notificações</h3>
-                            <button class="btn-close" onclick="toggleNotifications()">×</button>
-                        </div>
-                        <div class="notifications-body" id="notificationsBody">
-                            <div class="notifications-loading">Carregando...</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="nav-user" id="navUser" style="display:none;">
-                    <div class="nav-user-avatar">📖</div>
-                    <div class="nav-user-info">
-                        <div class="nav-user-name" id="navUserName"></div>
-                        <div class="nav-user-role" id="navUserRole"></div>
-                    </div>
-                </div>
-                <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand" onclick="showScreen('menuScreen')">
+                <span class="sidebar-icon">📚</span>
+                <span class="sidebar-text">LuizaTeca</span>
             </div>
-        </nav>
+            
+            <div class="sidebar-nav" id="sidebarNav" style="display:none;">
+                <!-- Dynamically populated by menu.js depending on user role -->
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="nav-notifications" id="navNotifications" style="display:none;">
+                    <button class="side-btn" onclick="showScreen('notificacoesScreen'); loadNotificationsFull();" title="Notificações">
+                        <span class="side-icon" style="position:relative;">🔔<span class="nav-notifications-badge" id="notificationsBadge">0</span></span>
+                        <span class="side-text">Alertas</span>
+                    </button>
+                </div>
+                
+                <button class="side-btn" onclick="toggleTheme()" title="Alternar tema">
+                    <span class="side-icon" id="btnThemeIcon">🌙</span><span class="side-text">Tema</span>
+                </button>
+
+                <div class="sidebar-user" id="navUser" style="display:none;" onclick="showScreen('perfilScreen')">
+                    <div class="side-avatar">🎓</div>
+                    <div class="side-user-info">
+                        <div class="side-user-name" id="navUserName"></div>
+                        <div class="side-user-role" id="navUserRole" style="font-size:10px; opacity:0.6; text-transform:uppercase;"></div>
+                    </div>
+                </div>
+
+                <button class="side-btn" id="btnLogout" style="display:none; color: var(--crimson); border-top: 1px solid var(--border-s); margin-top: 8px; padding-top: 16px;" onclick="logout()" title="Sair da Conta">
+                    <span class="side-icon" style="color:var(--crimson);">🚪</span><span class="side-text" style="color:var(--crimson);">Sair da Conta</span>
+                </button>
+            </div>
+        </aside>
 
         <div class="container" id="appContainer">
 
@@ -93,14 +95,23 @@
             </section>
 
             <section id="menuScreen" class="screen">
-                <div class="menu-screen-wrap">
-                    <div class="menu-welcome">
+                <div class="menu-screen-wrap" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh;">
+                    <div class="menu-welcome" style="margin-bottom:0;">
                         <h2>Bem-vindo, <span id="menuUserName"></span></h2>
-                        <p>O que deseja fazer hoje?</p>
+                        <p style="font-size: 1.2rem; margin-top: 10px; color: var(--gold);">O que deseja fazer hoje?</p>
                     </div>
-                    <div class="menu-grid" id="menuGrid"></div>
-                    <div class="menu-logout">
-                        <button class="btn btn-danger" onclick="logout()">Encerrar sessão</button>
+                </div>
+            </section>
+
+            <!-- TELA NOTIFICAÇÕES -->
+            <section id="notificacoesScreen" class="screen">
+                <div class="page-header">
+                    <h2 class="page-title">Centro de Alertas</h2>
+                    <p class="page-subtitle">Avisos e pendências do sistema</p>
+                </div>
+                <div class="table-wrap" style="padding: 32px; max-width: 800px; margin: 0 auto; background: var(--glass-1); backdrop-filter: blur(12px); border-radius: var(--r-xl); border: 1px solid var(--border-m); box-shadow: 0 12px 32px rgba(0,0,0,0.6);">
+                    <div id="notificationsFullScreenBody">
+                        <div class="notifications-loading" style="text-align: center; color: var(--gold); font-size: var(--fs-md); padding: 40px;">Buscando alertas...</div>
                     </div>
                 </div>
             </section>
@@ -663,6 +674,11 @@
 
     <div id="alertContainer"></div>
 
+    <!-- Bibliotecas Externas (GSAP + Three.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="js/animations.js"></script>
     <script src="js/core.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/notifications.js"></script>
