@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-
 import rotasAutenticacao from './routes/authRoutes';
 import rotasLivros from './routes/LivroRoutes';
 import rotasAlugueis from './routes/aluguelRoutes';

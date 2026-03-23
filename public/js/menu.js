@@ -20,7 +20,7 @@ function carregarMenu() {
             icon: '📚', 
             title: 'Acervo', 
             action() { 
-                loadLivros(); 
+                carregarLivros(); 
                 mostrarTela('livrosScreen'); 
             } 
         }
@@ -33,7 +33,7 @@ function carregarMenu() {
                 icon: '📋', 
                 title: 'Empréstimos',  
                 action() { 
-                    loadAlugueis(); 
+                    carregarAlugueis(); 
                     mostrarTela('alugueisScreen'); 
                 } 
             },
@@ -61,7 +61,7 @@ function carregarMenu() {
                 icon: '📖', 
                 title: 'Meus Livros', 
                 action() { 
-                    loadMeusAlugueis(); 
+                    carregarMeusAlugueis(); 
                     mostrarTela('alugueisScreen'); 
                 } 
             }

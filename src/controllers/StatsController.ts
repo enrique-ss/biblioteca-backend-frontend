@@ -191,16 +191,16 @@ export class StatsController {
             ]);
 
             res.json({
-                generosMaisProcurados,
-                autoresPopulares,
-                livrosFavoritos,
-                usuariosEngajados,
-                evolucaoEmprestimos,
-                novosCadastros,
-                indicadoresAtraso,
-                divisaoAcervo,
-                performanceDevolucao,
-                acervoPorDecada,
+                generosMaisEmprestados: generosMaisProcurados,
+                autoresMaisEmprestados: autoresPopulares,
+                livrosMaisEmprestados: livrosFavoritos,
+                usuariosMaisAtivos: usuariosEngajados,
+                emprestimosPorMes: evolucaoEmprestimos,
+                cadastrosPorMes: novosCadastros,
+                taxaAtraso: indicadoresAtraso,
+                distribuicaoStatus: divisaoAcervo,
+                tempoMedioDevolucao: performanceDevolucao,
+                livrosPorAno: acervoPorDecada,
                 evolucaoAtrasos,
             });
         } catch (erro) {

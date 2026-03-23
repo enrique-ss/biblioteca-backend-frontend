@@ -76,7 +76,7 @@ async function carregarAlugueis(pagina = 1, busca = '') {
     }
 }
 
-async function loadMeusAlugueis() {
+async function carregarMeusAlugueis() {
     document.getElementById('alugueisTitle').innerHTML = `<span>Meus Livros Alugados</span>`;
     document.getElementById('alugueisHead').innerHTML = `
         <tr>

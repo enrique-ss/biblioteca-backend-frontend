@@ -90,7 +90,7 @@ export class LivroController {
 
       // Agrupa informações de condição física para cada livro na lista
       const idsLivros = listaLivros.map(r => r.id);
-      let mapaCondicoes: Record<number, any> = {};
+      let mapaCondicoes: Record<string, any> = {};
 
       if (idsLivros.length > 0) {
         const resumoCondicoes = await db('exemplares')
@@ -99,16 +99,19 @@ export class LivroController {
           .count('id as qtd')
           .groupBy('livro_id', 'condicao');
 
-        for (const item of resumoCondicoes) {
-          if (!mapaCondicoes[item.livro_id]) mapaCondicoes[item.livro_id] = {};
-          mapaCondicoes[item.livro_id][item.condicao as string] = Number(item.qtd);
+        for (const item of resumoCondicoes as any[]) {
+          const idStr = String(item.livro_id);
+          if (!mapaCondicoes[idStr]) {
+            mapaCondicoes[idStr] = {};
+          }
+          mapaCondicoes[idStr][item.condicao as string] = Number(item.qtd);
         }
       }
 
       // Formata o retorno final com os contadores de condição
       const dadosFormatados = listaLivros.map(livro => ({
         ...livro,
-        resumo_condicao: mapaCondicoes[livro.id] ?? {}
+        resumo_condicao: mapaCondicoes[String(livro.id)] ?? {}
       }));
 
       res.json({ 

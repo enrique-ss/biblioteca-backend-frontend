@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import db from '../database';
-import { gerarToken, AuthRequest } from '../middlewares/auth';
+import { gerarToken, RequisicaoAutenticada } from '../middlewares/auth';
 
 /**
  * Controlador responsável pelos processos de autenticação e gestão de perfil.
@@ -118,7 +118,7 @@ export class AuthController {
   }
 
   // Permite que qualquer usuário autenticado edite suas próprias informações
-  editarPerfil = async (req: AuthRequest, res: Response) => {
+  editarPerfil = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       // O ID vem do token decodificado pelo middleware de autenticação
       const usuarioId = req.usuario!.id;

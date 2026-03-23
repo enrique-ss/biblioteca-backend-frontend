@@ -17,7 +17,7 @@
     <div class="app-wrapper">
 
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-brand" onclick="showScreen('menuScreen')">
+            <div class="sidebar-brand" onclick="mostrarTela('menuScreen')">
                 <span class="brand-logo-short">LT</span>
                 <span class="brand-logo-full">LuizaTeca</span>
             </div>
@@ -28,7 +28,7 @@
 
             <div class="sidebar-bottom">
                 <div class="nav-notifications" id="navNotifications" style="display:none;">
-                    <button class="side-btn" onclick="showScreen('notificacoesScreen'); loadNotificationsFull();" title="Notificações">
+                    <button class="side-btn" onclick="mostrarTela('notificacoesScreen'); carregarNotificacoesCompleto();" title="Notificações">
                         <span class="side-icon" style="position:relative;">🔔<span class="nav-notifications-badge" id="notificationsBadge">0</span></span>
                         <span class="side-text">Alertas</span>
                     </button>
@@ -38,7 +38,7 @@
                     <span class="side-icon" id="btnThemeIcon">🌙</span><span class="side-text">Tema</span>
                 </button>
 
-                <button class="side-btn" id="navUser" style="display:none;" onclick="showScreen('perfilScreen')" title="Meu Perfil">
+                <button class="side-btn" id="navUser" style="display:none;" onclick="mostrarTela('perfilScreen')" title="Meu Perfil">
                     <span class="side-icon">👤</span><span class="side-text">Meu Perfil</span>
                 </button>
 
@@ -63,7 +63,7 @@
                             <button type="submit" class="btn btn-primary btn-block"
                                 style="margin-top:6px;">Entrar</button>
                             <div class="form-footer">Não tem conta? <button type="button" class="link-btn"
-                                    onclick="showScreen('registerScreen')">Cadastre-se</button></div>
+                                    onclick="mostrarTela('registerScreen')">Cadastre-se</button></div>
                         </form>
                     </div>
                 </div>
@@ -84,7 +84,7 @@
                             <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px;">Criar
                                 conta</button>
                             <div style="text-align:center;margin-top:8px;"><button type="button" class="btn btn-ghost"
-                                    onclick="showScreen('loginScreen')">← Voltar ao login</button></div>
+                                    onclick="mostrarTela('loginScreen')">← Voltar ao login</button></div>
                         </form>
                     </div>
                 </div>
@@ -117,12 +117,12 @@
                     <h2 class="page-title"><span>Acervo</span> de Livros</h2>
                     <div class="page-actions">
                         <button class="btn btn-success" id="btnAddLivro" style="display:none;"
-                            onclick="openModal('addLivroModal')">+ Novo Livro</button>
-                        <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
+                            onclick="abrirModal('addLivroModal')">+ Novo Livro</button>
+                        <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaLivros" class="form-input"
-                        placeholder="Buscar por título, autor ou gênero…" oninput="loadLivrosDebounced(this.value)">
+                        placeholder="Buscar por título, autor ou gênero…" oninput="carregarLivrosDebounced(this.value)">
                 </div>
                 <div class="table-wrap">
                     <table class="data-table">
@@ -152,12 +152,12 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Histórico</span> de Empréstimos</h2>
                     <div class="page-actions">
-                        <button class="btn btn-success btn-sm" onclick="exportCSV()">Exportar CSV</button>
-                        <button class="btn btn-ghost" onclick="showScreen('alugueisScreen')">← Voltar</button>
+                        <button class="btn btn-success btn-sm" onclick="exportarHistoricoCSV()">Exportar CSV</button>
+                        <button class="btn btn-ghost" onclick="mostrarTela('alugueisScreen')">← Voltar</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaHistorico" class="form-input"
-                        placeholder="Filtrar por usuário (ID)..." oninput="loadHistorico(1, this.value)"></div>
+                        placeholder="Filtrar por usuário (ID)..." oninput="carregarHistorico(1, this.value)"></div>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead>
@@ -184,14 +184,14 @@
                     <h2 class="page-title" id="alugueisTitle"><span>Empréstimos</span></h2>
                     <div class="page-actions">
                         <button class="btn btn-ghost" id="btnHistorico" style="display:none;"
-                            onclick="showScreen('historicoScreen'); loadHistorico();">Histórico</button>
+                            onclick="mostrarTela('historicoScreen'); carregarHistorico();">Histórico</button>
                         <button class="btn btn-success" id="btnNovoAluguel" style="display:none;"
-                            onclick="prepareAluguelModal()">+ Novo Aluguel</button>
-                        <button class="btn btn-ghost" onclick="voltarAlugueis()">← Voltar</button>
+                            onclick="prepararModalNovoAluguel()">+ Novo Aluguel</button>
+                        <button class="btn btn-ghost" onclick="voltarParaMenu()">← Voltar</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaAlugueis" class="form-input"
-                        placeholder="Buscar por usuário, livro ou exemplar…" oninput="loadAlugueisDebounced(this.value)"></div>
+                        placeholder="Buscar por usuário, livro ou exemplar…" oninput="carregarAlugueisDebounced(this.value)"></div>
                 <div id="atrasadosBanner" style="display:none;" class="atrasados-banner"></div>
                 <div class="table-wrap">
                     <table class="data-table">
@@ -205,11 +205,11 @@
             <section id="usuariosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Gerenciar</span> Usuários</h2>
-                    <div class="page-actions"><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
+                    <div class="page-actions"><button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">←
                             Voltar</button></div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaUsuarios" class="form-input"
-                        placeholder="Buscar por nome ou email…" oninput="loadUsuariosDebounced(this.value)"></div>
+                        placeholder="Buscar por nome ou email…" oninput="carregarUsuariosDebounced(this.value)"></div>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead>
@@ -234,7 +234,7 @@
             <section id="perfilScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Meu</span> Perfil</h2>
-                    <div class="page-actions"><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
+                    <div class="page-actions"><button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">←
                             Voltar</button></div>
                 </div>
                 <div class="auth-wrap" style="min-height:auto;padding-top:0;align-items:flex-start;">
@@ -265,8 +265,8 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Estatísticas</span></h2>
                     <div class="page-actions">
-                        <button class="btn btn-success btn-sm" onclick="exportStatsCSV()">Exportar CSV</button>
-                        <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
+                        <button class="btn btn-success btn-sm" onclick="exportarEstatisticasCSV()">Exportar CSV</button>
+                        <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
                     </div>
                 </div>
                 <div id="statsLoading" class="stats-loading"><span class="spinner"></span> Carregando estatísticas...
@@ -354,7 +354,7 @@
                 <div id="quizAgeSelect">
                     <div class="page-header">
                         <h2 class="page-title"><span>Quiz</span> Literário</h2>
-                        <div class="page-actions"><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
+                        <div class="page-actions"><button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">←
                                 Voltar</button></div>
                     </div>
                     <p style="color:var(--text-dim);margin-bottom:24px;">Selecione sua faixa etária para começar:</p>
@@ -381,7 +381,7 @@
                         <h2 class="page-title" id="quizHomeTitle"><span>Quiz</span> Literário</h2>
                         <div class="page-actions">
                             <button class="btn btn-ghost" onclick="quizChangeAge()">← Faixa etária</button>
-                            <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Menu</button>
+                            <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Menu</button>
                         </div>
                     </div>
                     <div class="quiz-status-bar">
@@ -446,7 +446,7 @@
                         </div>
                         <div class="btn-pair">
                             <button class="btn btn-gold" onclick="quizShowPanel('quizHome')">Voltar ao Quiz</button>
-                            <button class="btn btn-ghost" onclick="showScreen('menuScreen')">Sair do Quiz</button>
+                            <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">Sair do Quiz</button>
                         </div>
                     </div>
                 </div>
@@ -457,7 +457,7 @@
 
     <!-- MODAIS -->
     <div id="addLivroModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('addLivroModal')"></div>
+        <div class="modal-backdrop" onclick="fecharModal('addLivroModal')"></div>
         <div class="modal-box">
             <h2 class="modal-title">Cadastrar Livro</h2>
             <p class="modal-subtitle">Preencha os dados do novo exemplar</p>
@@ -476,14 +476,14 @@
                 <div class="form-group"><label class="form-label">Exemplares</label><input type="number"
                         id="livroExemplares" class="form-input" min="1" max="999" value="1" required></div>
                 <div class="btn-group"><button type="submit" class="btn btn-success">Cadastrar</button><button
-                        type="button" class="btn btn-ghost" onclick="closeModal('addLivroModal')">Cancelar</button>
+                        type="button" class="btn btn-ghost" onclick="fecharModal('addLivroModal')">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div id="editLivroModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('editLivroModal')"></div>
+        <div class="modal-backdrop" onclick="fecharModal('editLivroModal')"></div>
         <div class="modal-box">
             <h2 class="modal-title">Editar Livro</h2>
             <p class="modal-subtitle">Atualize os dados do exemplar</p>
@@ -503,13 +503,13 @@
                 <div class="form-group"><label class="form-label">Exemplares totais</label><input type="number"
                         id="editLivroExemplares" class="form-input" min="1" max="999" required></div>
                 <div class="btn-group"><button type="submit" class="btn btn-gold">Salvar</button><button type="button"
-                        class="btn btn-ghost" onclick="closeModal('editLivroModal')">Cancelar</button></div>
+                        class="btn btn-ghost" onclick="fecharModal('editLivroModal')">Cancelar</button></div>
             </form>
         </div>
     </div>
 
     <div id="exemplareModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('exemplareModal')"></div>
+        <div class="modal-backdrop" onclick="fecharModal('exemplareModal')"></div>
         <div class="modal-box" style="max-width:780px;">
             <h2 class="modal-title">Exemplares</h2>
             <p class="modal-subtitle" id="exemplaresTitulo">—</p>
@@ -535,12 +535,12 @@
                 </table>
             </div>
             <div class="btn-group" style="margin-top:16px;"><button type="button" class="btn btn-ghost"
-                    onclick="closeModal('exemplareModal')">Fechar</button></div>
+                    onclick="fecharModal('exemplareModal')">Fechar</button></div>
         </div>
     </div>
 
     <div id="devolucaoModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('devolucaoModal')"></div>
+        <div class="modal-backdrop" onclick="fecharModal('devolucaoModal')"></div>
         <div class="modal-box">
             <h2 class="modal-title">Registrar Devolução</h2>
             <p class="modal-subtitle">Informe o estado do exemplar devolvido</p>
@@ -561,14 +561,14 @@
                 </div>
                 <div class="btn-group">
                     <button type="submit" class="btn btn-success">Confirmar Devolução</button>
-                    <button type="button" class="btn btn-ghost" onclick="closeModal('devolucaoModal')">Cancelar</button>
+                    <button type="button" class="btn btn-ghost" onclick="fecharModal('devolucaoModal')">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div id="addAluguelModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('addAluguelModal')"></div>
+        <div class="modal-backdrop" onclick="fecharModal('addAluguelModal')"></div>
         <div class="modal-box">
             <h2 class="modal-title">Registrar Empréstimo</h2>
             <p class="modal-subtitle">Selecione o livro e o leitor</p>
@@ -586,14 +586,14 @@
                         <option value="">Selecione um usuário…</option>
                     </select></div>
                 <div class="btn-group"><button type="submit" class="btn btn-success">Registrar</button><button
-                        type="button" class="btn btn-ghost" onclick="closeModal('addAluguelModal')">Cancelar</button>
+                        type="button" class="btn btn-ghost" onclick="fecharModal('addAluguelModal')">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div id="editUsuarioModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('editUsuarioModal')"></div>
+        <div class="modal-backdrop" onclick="fecharModal('editUsuarioModal')"></div>
         <div class="modal-box">
             <h2 class="modal-title">Editar Usuário</h2>
             <p class="modal-subtitle">Atualize os dados do cadastro</p>
@@ -610,7 +610,7 @@
                     </select>
                 </div>
                 <div class="btn-group"><button type="submit" class="btn btn-gold">Salvar alterações</button><button
-                        type="button" class="btn btn-ghost" onclick="closeModal('editUsuarioModal')">Cancelar</button>
+                        type="button" class="btn btn-ghost" onclick="fecharModal('editUsuarioModal')">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -618,7 +618,7 @@
 
 
     <div id="multasModal" class="modal">
-        <div class="modal-backdrop" onclick="closeModal('multasModal')"></div>
+        <div class="modal-backdrop" onclick="fecharModal('multasModal')"></div>
         <div class="modal-box" style="max-width:680px;">
             <h2 class="modal-title">Multas do Usuário</h2>
             <p class="modal-subtitle" id="multasUsuarioNome">—</p>
@@ -649,7 +649,7 @@
                 <div class="btn-group" style="margin-top:0;">
                     <button id="btnQuitarMultas" class="btn btn-success" style="display:none;"
                         onclick="quitarMultasUsuario()">Quitar todas</button>
-                    <button class="btn btn-ghost" onclick="closeModal('multasModal')">Fechar</button>
+                    <button class="btn btn-ghost" onclick="fecharModal('multasModal')">Fechar</button>
                 </div>
             </div>
         </div>
