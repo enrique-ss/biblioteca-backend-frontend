@@ -157,20 +157,6 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [multas] criada.');
 
-    // --- Criação da Tabela: PROGRESSO DO QUIZ ---
-    await db.schema.createTable('quiz_progresso', (t) => {
-      t.increments('id').primary();
-      t.integer('usuario_id').unsigned().notNullable().unique();
-      t.integer('xp').notNullable().defaultTo(0);
-      t.integer('level').notNullable().defaultTo(1);
-      t.integer('hp').notNullable().defaultTo(5);
-      t.text('completed_lessons').notNullable().defaultTo('[]');
-      t.timestamp('updated_at').defaultTo(db.fn.now());
-      
-      t.foreign('usuario_id').references('id').inTable('usuarios').onDelete('CASCADE');
-    });
-    console.log('✅ Tabela [quiz_progresso] criada.');
-
     console.log('\n🎉 Banco de dados configurado com sucesso!');
     await db.destroy();
     process.exit(0);

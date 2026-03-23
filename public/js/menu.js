@@ -44,14 +44,6 @@ function carregarMenu() {
                     carregarUsuarios(); 
                     mostrarTela('usuariosScreen'); 
                 } 
-            },
-            { 
-                icon: '📊', 
-                title: 'Estatísticas', 
-                action() { 
-                    mostrarTela('statsScreen'); 
-                    carregarEstatisticasDetalhadas(); 
-                } 
             }
         );
     } else {
@@ -78,11 +70,11 @@ function carregarMenu() {
 
     // Item comum a todos
     itensMenu.push({ 
-        icon: '🎓', 
-        title: 'Quiz Literário', 
+        icon: '📊', 
+        title: 'Estatísticas', 
         action() { 
-            mostrarTela('quizScreen'); 
-            inicializarQuiz(); 
+            mostrarTela('statsScreen'); 
+            carregarEstatisticasDetalhadas(); 
         } 
     });
 

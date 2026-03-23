@@ -7,7 +7,6 @@ import rotasLivros from './routes/LivroRoutes';
 import rotasAlugueis from './routes/aluguelRoutes';
 import rotasUsuarios from './routes/UsuarioRoutes';
 import rotasEstatisticas from './routes/StatsRoutes';
-import rotasQuiz from './routes/QuizRoutes';
 
 dotenv.config();
 
@@ -37,7 +36,6 @@ app.use('/api/livros', rotasLivros);
 app.use('/api/alugueis', rotasAlugueis);
 app.use('/api/usuarios', rotasUsuarios);
 app.use('/api/stats', rotasEstatisticas);
-app.use('/api/quiz', rotasQuiz);
 
 // Rota de verificação de integridade (Health Check)
 app.get('/', (req, res) => {
