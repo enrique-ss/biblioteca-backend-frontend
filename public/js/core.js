@@ -27,28 +27,29 @@ function sortTable(table, col) {
     state.col = col;
     
     // Atualiza visualmente os indicadores de ordenação no HTML
-    document.querySelectorAll(`.sortable`).forEach(th => {
+    const thsSelector = `#${table}Screen .sortable`;
+    document.querySelectorAll(thsSelector).forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
     });
     
-    // Busca o TH que disparou a ordenação (pelo atributo onclick)
-    const thCliqueado = document.querySelector(`[onclick*="sortTable('${table}','${col}')"]`);
+    const thCliqueado = document.querySelector(`[onclick="sortTable('${table}','${col}')"]`);
     if (thCliqueado) {
-        thCliqueado.classList.add(state.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        const classe = state.dir === 'asc' ? 'sort-asc' : 'sort-desc';
+        thCliqueado.classList.add(classe);
     }
     
     // Recarrega os dados da tabela específica com a nova ordenação
     if (table === 'livros') {
         const busca = document.getElementById('buscaLivros')?.value || '';
-        carregarLivros(busca, 1);
+        loadLivros(busca, 1);
     } else if (table === 'usuarios') {
         const busca = document.getElementById('buscaUsuarios')?.value || '';
-        carregarUsuarios(1, busca);
+        loadUsuarios(1, busca);
     } else if (table === 'alugueis') {
-        carregarAlugueis(1);
+        loadAlugueis(1);
     } else if (table === 'historico') {
         const busca = document.getElementById('buscaHistorico')?.value || '';
-        carregarHistorico(1, busca);
+        loadHistorico(1, busca);
     }
 }
 

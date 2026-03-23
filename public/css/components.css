@@ -219,11 +219,10 @@
 .pg-info { font-family: 'Cinzel', serif; font-size: var(--fs-xs); color: var(--text-dim); padding: 0 8px; }
 
 /* ── SORTABLE ── */
-.sortable { cursor: pointer; user-select: none; transition: color 0.2s; }
+.sortable { cursor: pointer; user-select: none; }
 .sortable:hover { color: var(--gold); }
-.sort-asc, .sort-desc { color: var(--gold) !important; font-weight: 700; }
-.sort-asc::after  { content: ' ▲'; font-size: 0.65em; margin-left: 5px; vertical-align: middle; opacity: 0.8; }
-.sort-desc::after { content: ' ▼'; font-size: 0.65em; margin-left: 5px; vertical-align: middle; opacity: 0.8; }
+.sort-asc::after  { content: ' ↑'; color: var(--gold); }
+.sort-desc::after { content: ' ↓'; color: var(--gold); }
 
 /* ── ATRASADOS BANNER ── */
 .atrasados-banner { width: 100%; margin-top: 12px; padding: 12px 16px; background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.30); border-radius: var(--r-md); color: #f85149; font-family: 'Cinzel', serif; font-size: var(--fs-xs); letter-spacing: .06em; display: flex; align-items: center; gap: 10px; }
