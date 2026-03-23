@@ -59,9 +59,6 @@ function updateNavbar() {
     if (navUser) navUser.style.display = isLogged ? 'flex' : 'none';
 
     if (isLogged) {
-        const uName = document.getElementById('navUserName');
-        if (uName) uName.textContent = currentUser.nome.split(' ')[0];
-        const uRole = document.getElementById('navUserRole');
-        if (uRole) uRole.textContent = currentUser.tipo === 'bibliotecario' ? 'Admin' : 'Leitor';
+        // Name and Role removed from sidebar as per UI refinement
     }
 }

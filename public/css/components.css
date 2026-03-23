@@ -123,12 +123,11 @@
     border-bottom-right-radius: var(--r-md);
 }
 .data-table tbody tr:not(.loading-row):not(.empty-row):hover { 
-    background: rgba(38, 45, 40, 0.65); 
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 16px 32px rgba(0,0,0,0.6);
+    background: var(--surface-3); 
+    /* removed transform and heavy shadow for a more discrete effect */
 }
 .data-table tbody tr:not(.loading-row):not(.empty-row):hover td {
-    border-color: var(--gold);
+    border-color: var(--gold-dim);
 }
 .td-actions { display: flex; gap: 8px; align-items: center; }
 .table-empty { text-align: center; padding: 48px 20px; color: var(--text-faint); font-style: italic; font-size: var(--fs-base); border: none !important; }

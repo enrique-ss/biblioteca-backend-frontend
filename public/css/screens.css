@@ -20,8 +20,11 @@
 /* ── TELA MENU ── */
 .menu-screen-wrap { max-width: 1000px; margin: 0 auto; text-align: center; padding-top: 40px; }
 .menu-welcome { margin-bottom: 40px; }
-.menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
-.menu-welcome p { color: var(--text-dim); margin-top: 8px; font-size: var(--fs-md); }
+.menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: #ffffff; letter-spacing: 0.05em; }
+.menu-welcome p { color: #ffffff; margin-top: 8px; font-size: var(--fs-md); }
+#menuUserName { color: var(--gold); }
+[data-theme="light"] .menu-welcome h2 { color: #000000; }
+[data-theme="light"] .menu-welcome p { color: #000000; }
 
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
 

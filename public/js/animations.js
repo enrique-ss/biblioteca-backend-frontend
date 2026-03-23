@@ -91,14 +91,7 @@ function initThreeBG() {
     });
     observer.observe(document.documentElement, { attributes: true });
 
-    // Mouse movement interaction for parallax
-    let mouseX = 0;
-    let mouseY = 0;
-
-    document.addEventListener('mousemove', (event) => {
-        mouseX = (event.clientX / window.innerWidth) - 0.5;
-        mouseY = (event.clientY / window.innerHeight) - 0.5;
-    });
+    // Mouse interaction removed for static background stability
 
     const clock = new THREE.Clock();
 
@@ -110,13 +103,7 @@ function initThreeBG() {
         particlesGroup.rotation.y = elapsedTime * 0.03;
         particlesGroup.rotation.x = elapsedTime * 0.015;
 
-        // Heavy mouse interaction (Profound Parallax effect)
-        particlesGroup.position.x += (mouseX * 6 - particlesGroup.position.x) * 0.02;
-        particlesGroup.position.y += (-mouseY * 6 - particlesGroup.position.y) * 0.02;
-        
-        // Also move camera slightly for extra depth
-        camera.position.x += (mouseX * 1.5 - camera.position.x) * 0.02;
-        camera.position.y += (-mouseY * 1.5 - camera.position.y) * 0.02;
+        // Mouse interaction removed for static background stability
 
         renderer.render(scene, camera);
     }
@@ -158,36 +145,7 @@ function animateScreenTransition(screenId) {
             { duration: 0.9, opacity: 1, y: 0, rotationX: 0, stagger: 0.08, ease: "back.out(1.2)", delay: 0.1 }
         );
         
-        // Add extreme interactive hover tilt (Parallax on elements)
-        uiElements.forEach(el => {
-            el.addEventListener('mousemove', (e) => {
-                const rect = el.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                const rotateX = ((y - centerY) / centerY) * -12; // Inverted for 3D feel
-                const rotateY = ((x - centerX) / centerX) * 12;
-
-                gsap.to(el, {
-                    duration: 0.4,
-                    rotationX: rotateX,
-                    rotationY: rotateY,
-                    transformPerspective: 1000,
-                    ease: "power2.out"
-                });
-            });
-
-            el.addEventListener('mouseleave', () => {
-                gsap.to(el, {
-                    duration: 0.8,
-                    rotationX: 0,
-                    rotationY: 0,
-                    ease: "elastic.out(1, 0.5)"
-                });
-            });
-        });
+        // UI Tilt disabled for static stability
     }
 }
 

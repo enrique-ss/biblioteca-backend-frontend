@@ -33,8 +33,8 @@ async function loadUsuarios(page = 1, busca = '') {
                     ? `<button class="btn btn-warning btn-sm" onclick="verMultasUsuario(${u.id},'${esc(u.nome)}')">Multas</button>`
                     : ''}
                     ${u.bloqueado
-                    ? `<button class="btn btn-success btn-sm" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`
-                    : `<button class="btn btn-warning btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`}
+                    ? `<button class="btn btn-ghost btn-sm" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`
+                    : `<button class="btn btn-ghost btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`}
                     <button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id},'${esc(u.nome)}')">Excluir</button>
                 </div></td>`;
             tbody.appendChild(tr);

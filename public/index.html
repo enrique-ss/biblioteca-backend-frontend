@@ -18,8 +18,8 @@
 
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand" onclick="showScreen('menuScreen')">
-                <span class="sidebar-icon">📚</span>
-                <span class="sidebar-text">LuizaTeca</span>
+                <span class="brand-logo-short">LT</span>
+                <span class="brand-logo-full">LuizaTeca</span>
             </div>
             
             <div class="sidebar-nav" id="sidebarNav" style="display:none;">
@@ -38,13 +38,9 @@
                     <span class="side-icon" id="btnThemeIcon">🌙</span><span class="side-text">Tema</span>
                 </button>
 
-                <div class="sidebar-user" id="navUser" style="display:none;" onclick="showScreen('perfilScreen')">
-                    <div class="side-avatar">🎓</div>
-                    <div class="side-user-info">
-                        <div class="side-user-name" id="navUserName"></div>
-                        <div class="side-user-role" id="navUserRole" style="font-size:10px; opacity:0.6; text-transform:uppercase;"></div>
-                    </div>
-                </div>
+                <button class="side-btn" id="navUser" style="display:none;" onclick="showScreen('perfilScreen')" title="Meu Perfil">
+                    <span class="side-icon">👤</span><span class="side-text">Meu Perfil</span>
+                </button>
 
                 <button class="side-btn" id="btnLogout" style="display:none; color: var(--crimson); border-top: 1px solid var(--border-s); margin-top: 8px; padding-top: 16px;" onclick="logout()" title="Sair da Conta">
                     <span class="side-icon" style="color:var(--crimson);">🚪</span><span class="side-text" style="color:var(--crimson);">Sair da Conta</span>
@@ -98,7 +94,7 @@
                 <div class="menu-screen-wrap" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh;">
                     <div class="menu-welcome" style="margin-bottom:0;">
                         <h2>Bem-vindo, <span id="menuUserName"></span></h2>
-                        <p style="font-size: 1.2rem; margin-top: 10px; color: var(--gold);">O que deseja fazer hoje?</p>
+                        <p style="font-size: 1.2rem; margin-top: 10px;">O que deseja fazer hoje?</p>
                     </div>
                 </div>
             </section>
@@ -118,7 +114,7 @@
 
             <section id="livrosScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title">📚 <span>Acervo</span> de Livros</h2>
+                    <h2 class="page-title"><span>Acervo</span> de Livros</h2>
                     <div class="page-actions">
                         <button class="btn btn-success" id="btnAddLivro" style="display:none;"
                             onclick="openModal('addLivroModal')">+ Novo Livro</button>
@@ -154,7 +150,7 @@
 
             <section id="historicoScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title">📋 <span>Histórico</span> de Empréstimos</h2>
+                    <h2 class="page-title"><span>Histórico</span> de Empréstimos</h2>
                     <div class="page-actions">
                         <button class="btn btn-success btn-sm" onclick="exportCSV()">Exportar CSV</button>
                         <button class="btn btn-ghost" onclick="showScreen('alugueisScreen')">← Voltar</button>
@@ -208,7 +204,7 @@
 
             <section id="usuariosScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title">👥 <span>Gerenciar</span> Usuários</h2>
+                    <h2 class="page-title"><span>Gerenciar</span> Usuários</h2>
                     <div class="page-actions"><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
                             Voltar</button></div>
                 </div>
@@ -237,7 +233,7 @@
 
             <section id="perfilScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title">✏️ <span>Meu</span> Perfil</h2>
+                    <h2 class="page-title"><span>Meu</span> Perfil</h2>
                     <div class="page-actions"><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
                             Voltar</button></div>
                 </div>
@@ -267,7 +263,7 @@
 
             <section id="statsScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title">📊 <span>Estatísticas</span></h2>
+                    <h2 class="page-title"><span>Estatísticas</span></h2>
                     <div class="page-actions">
                         <button class="btn btn-success btn-sm" onclick="exportStatsCSV()">Exportar CSV</button>
                         <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Voltar</button>
@@ -357,7 +353,7 @@
             <section id="quizScreen" class="screen">
                 <div id="quizAgeSelect">
                     <div class="page-header">
-                        <h2 class="page-title">🎓 <span>Quiz</span> Literário</h2>
+                        <h2 class="page-title"><span>Quiz</span> Literário</h2>
                         <div class="page-actions"><button class="btn btn-ghost" onclick="showScreen('menuScreen')">←
                                 Voltar</button></div>
                     </div>
@@ -382,7 +378,7 @@
                 </div>
                 <div id="quizHome" style="display:none;">
                     <div class="page-header">
-                        <h2 class="page-title" id="quizHomeTitle">🎓 <span>Quiz</span> Literário</h2>
+                        <h2 class="page-title" id="quizHomeTitle"><span>Quiz</span> Literário</h2>
                         <div class="page-actions">
                             <button class="btn btn-ghost" onclick="quizChangeAge()">← Faixa etária</button>
                             <button class="btn btn-ghost" onclick="showScreen('menuScreen')">← Menu</button>

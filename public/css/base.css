@@ -48,7 +48,7 @@
 
 /* ── TOKENS LIGHT ── */
 [data-theme="light"] {
-    --bg: #F8F9FA;
+    --bg: #F0F2F5; /* Less stark white for better contrast */
     --surface-1: rgba(255, 255, 255, 0.9);
     --surface-2: rgba(255, 255, 255, 0.95);
     --surface-3: rgba(255, 255, 255, 0.98);
@@ -147,9 +147,11 @@ body {
     transition: background 0.2s;
 }
 .sidebar-brand:hover { background: var(--gold-bg-subtle); }
-.sidebar-icon { font-size: 1.8rem; filter: sepia(0.8) brightness(0.9); flex-shrink: 0; width: 80px; text-align: center; }
-.sidebar-text { font-family: 'Cinzel', serif; font-weight: 700; color: var(--gold); font-size: var(--fs-md); letter-spacing: 0.05em; opacity: 0; transition: opacity 0.3s ease; }
-.sidebar:hover .sidebar-text { opacity: 1; transition-delay: 0.1s; }
+.brand-logo-short { font-family: 'Cinzel', serif; font-weight: 700; color: var(--gold); font-size: 1.5rem; width: 80px; text-align: center; flex-shrink: 0; }
+.brand-logo-full { font-family: 'Cinzel', serif; font-weight: 700; color: var(--gold); font-size: var(--fs-md); letter-spacing: 0.05em; display: none; white-space: nowrap; }
+.sidebar:hover .brand-logo-short { display: none; }
+.sidebar:hover .brand-logo-full { display: block; padding-left: 24px; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .sidebar-nav { padding: 24px 0; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .side-btn {
@@ -166,18 +168,7 @@ body {
 
 .sidebar-bottom { border-top: 1px solid var(--border-s); padding-bottom: 16px; padding-top: 8px; }
 
-.sidebar-user {
-    margin: 16px 0 12px; padding: 12px 0;
-    background: transparent; border: none; border-top: 1px solid var(--border-s);
-    border-radius: 0; display: flex; align-items: center; 
-    cursor: pointer; white-space: nowrap; transition: all 0.3s;
-}
-.sidebar-user:hover { border-color: transparent; background: var(--gold-bg-subtle); transform: none; }
-.side-avatar { width: 38px; height: 38px; background: var(--gold-bg-bold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; margin-left: 21px; margin-right: 21px; }
-.side-user-info { opacity: 0; overflow: hidden; transition: opacity 0.2s; display: flex; flex-direction: column; gap: 2px; }
-.sidebar:hover .side-user-info { opacity: 1; transition-delay: 0.1s; }
-.side-user-name { font-weight: 600; font-size: var(--fs-sm); color: var(--text); }
-.side-user-role { font-size: 0.65rem; color: var(--gold); font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
+/* Sidebar user styles removed for standardized button */
 
 /* ── NOTIFICATIONS ── */
 .nav-notifications-badge {
@@ -289,6 +280,8 @@ body {
     from { opacity: 0; transform: translateY(12px) }
     to   { opacity: 1; transform: translateY(0) }
 }
+
+
 
 /* ── PAGE HEADER ── */
 .page-header {
