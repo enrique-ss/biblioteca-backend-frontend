@@ -1,285 +1,213 @@
 // Gerenciamento de Estatísticas e Gráficos
-
 let instanciasGraficos = {};
 let dadosBrutosStats = null;
 
-// Paleta de cores para os gráficos (estilo moderno e harmonioso)
-const CORES_GRAFICOS = [
-    'rgba(122,162,247, 0.85)', // Azul
-    'rgba(63,185,80, 0.85)',   // Verde
-    'rgba(210,153,34, 0.85)',  // Âmbar
-    'rgba(248,81,73, 0.85)',   // Vermelho
-    'rgba(158,112,247, 0.85)', // Roxo
-    'rgba(87,199,199, 0.85)',  // Ciano
-    'rgba(247,162,122, 0.85)', // Laranja
-    'rgba(122,247,162, 0.85)'  // Lima
-];
-
-// Bordas com 100% de opacidade baseadas nas cores acima
-const BORDAS_GRAFICOS = CORES_GRAFICOS.map(cor => cor.replace('0.85', '1'));
-
-// Recupera cores do tema CSS para manter consistência nos gráficos
-function obterCorTexto() {
-    const estilo = getComputedStyle(document.documentElement);
-    return estilo.getPropertyValue('--text').trim() || '#e6edf3';
+// Helper para converter qualquer cor CSS para RGB (r, g, b)
+function extrairRgb(cor) {
+    const temp = document.createElement('div');
+    temp.style.color = cor;
+    temp.style.display = 'none';
+    document.body.appendChild(temp);
+    const rgb = getComputedStyle(temp).color.match(/\d+/g).slice(0, 3).join(', ');
+    document.body.removeChild(temp);
+    return rgb || '212, 175, 55';
 }
 
-function obterCorTextoSuave() {
+function obterConfigTema() {
     const estilo = getComputedStyle(document.documentElement);
-    return estilo.getPropertyValue('--text-dim').trim() || '#adbac7';
+    const accent = estilo.getPropertyValue('--accent').trim();
+    const text = estilo.getPropertyValue('--text').trim();
+    const bg = estilo.getPropertyValue('--bg').trim();
+    
+    return {
+        accent: accent,
+        accentRgb: extrairRgb(accent),
+        text: text,
+        bg: bg
+    };
 }
 
-// Configurações padrão para o Chart.js
+function obterPaletaGrafico(qtd = 5) {
+    const conf = obterConfigTema();
+    return Array.from({length: qtd}, (_, i) => `rgba(${conf.accentRgb}, ${0.9 - (i * 0.15)})`);
+}
+
 function configurarPadraoGrafico(ehHorizontal = false) {
-    const configuracao = {
+    const conf = obterConfigTema();
+    const config = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
             tooltip: {
-                backgroundColor: 'rgba(22,27,34, 0.96)',
-                titleColor: '#7aa2f7',
-                bodyColor: '#e6edf3',
-                borderColor: 'rgba(122,162,247, 0.18)',
+                backgroundColor: conf.bg === '#0A0C0B' || conf.bg.includes('0, 0, 0') ? 'rgba(5,6,5,0.95)' : 'rgba(255,255,255,0.95)',
+                titleColor: conf.accent,
+                bodyColor: conf.text,
+                borderColor: conf.accent,
                 borderWidth: 1,
-                padding: 10,
-                cornerRadius: 6
+                padding: 12,
+                cornerRadius: 8,
+                titleFont: { family: 'Cinzel', size: 13, weight: '700' }
             }
         },
         scales: {
             x: {
-                ticks: { color: obterCorTextoSuave(), font: { size: 10 } },
-                grid: { color: 'rgba(122,162,247, 0.05)' }
+                ticks: { color: `rgba(${conf.accentRgb}, 0.65)`, font: { family: 'Cinzel', size: 9, weight: '700' } },
+                grid: { display: false }
             },
             y: {
-                ticks: { color: obterCorTextoSuave(), font: { size: 10 } },
-                grid: { color: 'rgba(122,162,247, 0.05)' },
+                ticks: { color: `rgba(${conf.accentRgb}, 0.65)`, font: { family: 'Cinzel', size: 9, weight: '700' } },
+                grid: { color: `rgba(${conf.accentRgb}, 0.1)`, drawBorder: false },
                 beginAtZero: true
             }
         }
     };
-
     if (ehHorizontal) {
-        configuracao.indexAxis = 'y';
-        configuracao.scales.x.ticks.maxTicksLimit = 5;
-        delete configuracao.scales.y.beginAtZero;
+        config.indexAxis = 'y';
     }
-
-    return configuracao;
+    return config;
 }
 
-// Constrói um gráfico e sua respectiva lista lateral de detalhes
 function montarGraficoComLista(id, tipo, rotulos, valores, unidade = '') {
-    const elementoCtx = document.getElementById('chart-' + id);
-    if (!elementoCtx) {
-        return;
-    }
+    const ctx = document.getElementById('chart-' + id);
+    if (!ctx) return;
 
-    // Limpa instância anterior se existir para evitar bugs de hover
     if (instanciasGraficos[id]) {
         instanciasGraficos[id].destroy();
         delete instanciasGraficos[id];
     }
 
     const ehPizza = tipo === 'doughnut';
-    const ehHorizontal = tipo === 'bar-h';
-    const tipoGraficoJS = ehHorizontal ? 'bar' : tipo;
-    
-    const opcoes = configurarPadraoGrafico(ehHorizontal);
-    if (ehPizza) {
-        delete opcoes.scales;
-    }
+    const paleta = obterPaletaGrafico(rotulos.length);
+    const conf = obterConfigTema();
 
-    instanciasGraficos[id] = new Chart(elementoCtx, {
-        type: tipoGraficoJS,
+    instanciasGraficos[id] = new Chart(ctx, {
+        type: tipo === 'bar-h' ? 'bar' : tipo,
         data: {
             labels: rotulos,
             datasets: [{
                 data: valores,
-                backgroundColor: ehPizza ? CORES_GRAFICOS.slice(0, rotulos.length) : CORES_GRAFICOS[0],
-                borderColor: ehPizza ? BORDAS_GRAFICOS.slice(0, rotulos.length) : BORDAS_GRAFICOS[0],
-                borderWidth: 1.5,
-                tension: 0.35,
-                fill: tipo === 'line' ? 'origin' : false,
-                borderRadius: tipoGraficoJS === 'bar' ? 3 : 0,
-                pointRadius: tipo === 'line' ? 3 : 0,
-                pointHoverRadius: tipo === 'line' ? 5 : 0
+                backgroundColor: ehPizza ? paleta : paleta[0],
+                borderColor: conf.bg,
+                borderWidth: 2,
+                tension: 0.3,
+                borderRadius: tipo === 'bar' || tipo === 'bar-h' ? 4 : 0
             }]
         },
-        options: opcoes
+        options: configurarPadraoGrafico(tipo === 'bar-h')
     });
 
-    // Renderiza a lista textual abaixo/ao lado do gráfico
-    const elementoLista = document.getElementById('list-' + id);
-    if (!elementoLista) {
-        return;
-    }
+    const listEl = document.getElementById('list-' + id);
+    if (!listEl) return;
 
-    const valorMaximo = Math.max(...valores) || 1;
-    
-    elementoLista.innerHTML = rotulos.map((texto, i) => {
-        const percentual = Math.round((valores[i] / valorMaximo) * 100);
-        const cor = CORES_GRAFICOS[i % CORES_GRAFICOS.length];
-        
+    const max = Math.max(...valores) || 1;
+    listEl.innerHTML = rotulos.map((r, i) => {
+        const pct = Math.round((valores[i] / max) * 100);
+        const cor = paleta[i % paleta.length];
         return `
             <div class="stats-list-item">
                 <div class="stats-list-dot" style="background:${cor}"></div>
-                <div class="stats-list-label" title="${esc(texto)}">${esc(texto)}</div>
+                <div class="stats-list-label" title="${esc(r)}">${esc(r)}</div>
                 <div class="stats-list-bar-wrap">
-                    <div class="stats-list-bar" style="width:${percentual}%;background:${cor}"></div>
+                    <div class="stats-list-bar" style="width:${pct}%;background:${cor}"></div>
                 </div>
                 <div class="stats-list-val">${esc(String(valores[i]))}${unidade ? ' ' + unidade : ''}</div>
             </div>`;
     }).join('');
 }
 
-// Renderiza todos os gráficos da tela de estatísticas
 function renderizarTodosGraficos() {
-    if (!dadosBrutosStats) {
-        return;
-    }
-
+    if (!dadosBrutosStats) return;
     const d = dadosBrutosStats;
-    
-    // Função auxiliar para formatar arrays vindos da API
-    const formatar = arr => ({
-        labels: arr.map(r => r.label),
-        values: arr.map(r => Number(r.valor))
-    });
+    const fmt = arr => ({ labels: arr.map(x => x.label), values: arr.map(x => Number(x.valor)) });
 
-    // Montagem dos gráficos principais
-    const gGeneros = formatar(d.generosMaisEmprestados);
-    montarGraficoComLista('generos', 'bar-h', gGeneros.labels, gGeneros.values);
+    const gG = fmt(d.generosMaisEmprestados); montarGraficoComLista('generos', 'bar-h', gG.labels, gG.values);
+    const gA = fmt(d.autoresMaisEmprestados); montarGraficoComLista('autores', 'bar-h', gA.labels, gA.values);
+    const gL = fmt(d.livrosMaisEmprestados); montarGraficoComLista('livros', 'bar-h', gL.labels, gL.values);
+    const gU = fmt(d.usuariosMaisAtivos);    montarGraficoComLista('usuarios', 'bar-h', gU.labels, gU.values);
+    const gM = fmt(d.emprestimosPorMes);    montarGraficoComLista('meses', 'line', gM.labels, gM.values);
+    const gC = fmt(d.cadastrosPorMes);      montarGraficoComLista('cadastros', 'line', gC.labels, gC.values);
+    const gD = fmt(d.livrosPorAno);         montarGraficoComLista('decadas', 'bar', gD.labels, gD.values);
 
-    const gAutores = formatar(d.autoresMaisEmprestados);
-    montarGraficoComLista('autores', 'bar-h', gAutores.labels, gAutores.values);
-
-    const gLivros = formatar(d.livrosMaisEmprestados);
-    montarGraficoComLista('livros', 'bar-h', gLivros.labels, gLivros.values);
-
-    const gUsuarios = formatar(d.usuariosMaisAtivos);
-    montarGraficoComLista('usuarios', 'bar-h', gUsuarios.labels, gUsuarios.values);
-
-    const gMeses = formatar(d.emprestimosPorMes);
-    montarGraficoComLista('meses', 'line', gMeses.labels, gMeses.values);
-
-    const gCadastros = formatar(d.cadastrosPorMes);
-    montarGraficoComLista('cadastros', 'line', gCadastros.labels, gCadastros.values);
-
-    const gDecadas = formatar(d.livrosPorAno);
-    montarGraficoComLista('decadas', 'bar', gDecadas.labels, gDecadas.values);
-
-    // Gráfico de Pizza para distribuição do acervo
-    const rotulosAcervo = d.distribuicaoStatus.map(r => r.label === 'disponivel' ? 'Disponível' : 'Alugado');
-    const valoresAcervo = d.distribuicaoStatus.map(r => Number(r.valor));
-    montarGraficoComLista('acervo', 'doughnut', rotulosAcervo, valoresAcervo, 'ex.');
+    const acLabels = d.distribuicaoStatus.map(x => x.label === 'disponivel' ? 'Disponível' : 'Alugado');
+    const acVals = d.distribuicaoStatus.map(x => Number(x.valor));
+    montarGraficoComLista('acervo', 'doughnut', acLabels, acVals, 'ex.');
 }
 
-// Preenche os cartões de indicadores (KPIs)
 function renderizarIndicadores(d) {
     const t = d.taxaAtraso || {};
     const dev = d.tempoMedioDevolucao || {};
-    
     const total = Number(t.total) || 1;
-    const somaAtrasos = Number(t.atrasados) + Number(t.devolvidos_atrasados);
-    const taxaPct = Math.round((somaAtrasos / total) * 100);
+    const atrasos = Number(t.atrasados) + Number(t.devolvidos_atrasados);
+    const pct = Math.round((atrasos / total) * 100);
 
-    const indicadores = [
-        { label: 'Total de Empréstimos',   val: t.total ?? 0,                    cls: 'blue'  },
-        { label: 'Devolvidos no Prazo',     val: t.devolvidos_prazo ?? 0,         cls: 'green' },
-        { label: 'Devolvidos com Atraso',   val: t.devolvidos_atrasados ?? 0,     cls: 'amber' },
-        { label: 'Ativos em Atraso',        val: t.atrasados ?? 0,               cls: 'red'   },
-        { label: 'Taxa de Atraso',          val: taxaPct + '%',                  cls: taxaPct > 20 ? 'red' : 'green' },
-        { label: 'Média de Devolução',      val: (dev.media_dias ?? '—') + (dev.media_dias ? ' d' : ''), cls: 'blue' },
-        { label: 'Mais Rápido',            val: (dev.min_dias ?? '—') + (dev.min_dias ? ' d' : ''),     cls: 'green' },
-        { label: 'Mais Lento',             val: (dev.max_dias ?? '—') + (dev.max_dias ? ' d' : ''),     cls: 'amber' },
+    const kpis = [
+        { l: 'Total de Empréstimos', v: t.total ?? 0 },
+        { l: 'Devolvidos no Prazo', v: t.devolvidos_prazo ?? 0 },
+        { l: 'Devolvidos com Atraso', v: t.devolvidos_atrasados ?? 0 },
+        { l: 'Ativos em Atraso', v: t.atrasados ?? 0 },
+        { l: 'Taxa de Atraso', v: pct + '%' },
+        { l: 'Média de Devolução', v: (dev.media_dias ?? '—') + ' d' }
     ];
 
-    document.getElementById('statsKpiGrid').innerHTML = indicadores.map(k => `
+    document.getElementById('statsKpiGrid').innerHTML = kpis.map(k => `
         <div class="stats-kpi-card">
-            <div class="stats-kpi-label">${esc(k.label)}</div>
-            <div class="stats-kpi-val ${k.cls}">${esc(String(k.val))}</div>
+            <div class="stats-kpi-label">${esc(k.l)}</div>
+            <div class="stats-kpi-val">${esc(String(k.v))}</div>
         </div>`).join('');
 }
 
-// Busca os dados detalhados do servidor
 async function carregarEstatisticasDetalhadas() {
     document.getElementById('statsLoading').style.display = 'block';
     document.getElementById('statsContent').style.display = 'none';
 
-    // Garante que o Chart.js está carregado antes de prosseguir
     if (!window.Chart) {
-        await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
+        await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
         });
     }
 
     try {
         const dados = await api('/stats/detalhado');
         dadosBrutosStats = dados;
-        
         renderizarIndicadores(dados);
-        
         document.getElementById('statsLoading').style.display = 'none';
         document.getElementById('statsContent').style.display = 'block';
-        
         renderizarTodosGraficos();
-    } catch (erro) {
+    } catch (e) {
         document.getElementById('statsLoading').textContent = 'Erro ao carregar estatísticas.';
-        exibirAlerta(erro.message, 'danger');
+        exibirAlerta(e.message, 'danger');
     }
 }
 
-// Exporta os dados atuais para um arquivo CSV
 function exportarEstatisticasCSV() {
-    if (!dadosBrutosStats) {
-        exibirAlerta('Carregue as estatísticas primeiro.', 'warning');
-        return;
-    }
-
+    if (!dadosBrutosStats) return exibirAlerta('Carregue as estatísticas primeiro.', 'warning');
     const d = dadosBrutosStats;
-    const t = d.taxaAtraso || {};
-    const dev = d.tempoMedioDevolucao || {};
-    
-    const total = Number(t.total) || 1;
-    const somaAtrasos = Number(t.atrasados) + Number(t.devolvidos_atrasados);
-    const taxaPct = Math.round((somaAtrasos / total) * 100);
+    const fA = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const fL = c => c.map(fA).join(',');
+    const fS = (t, c, l) => `${t}\n${c}\n${l.join('\n')}\n`;
 
-    const formatarAspas = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const formatarLinha = cols => cols.map(formatarAspas).join(',');
-    const formatarSecao = (titulo, cabecalho, linhas) => `${titulo}\n${cabecalho}\n${linhas.join('\n')}\n`;
-
-    const csvContent = [
-        formatarSecao('KPIs', formatarLinha(['Métrica', 'Valor']), [
-            formatarLinha(['Total de Empréstimos', t.total ?? 0]),
-            formatarLinha(['Devolvidos no Prazo', t.devolvidos_prazo ?? 0]),
-            formatarLinha(['Devolvidos com Atraso', t.devolvidos_atrasados ?? 0]),
-            formatarLinha(['Ativos em Atraso', t.atrasados ?? 0]),
-            formatarLinha(['Taxa de Atraso (%)', taxaPct]),
-            formatarLinha(['Média de Devolução (dias)', dev.media_dias ?? '—']),
-            formatarLinha(['Devolução Mais Rápida (dias)', dev.min_dias ?? '—']),
-            formatarLinha(['Devolução Mais Lenta (dias)', dev.max_dias ?? '—']),
-        ]),
-        formatarSecao('Gêneros Mais Emprestados', formatarLinha(['Gênero', 'Empréstimos']), d.generosMaisEmprestados.map(r => formatarLinha([r.label, r.valor]))),
-        formatarSecao('Autores Mais Emprestados', formatarLinha(['Autor', 'Empréstimos']), d.autoresMaisEmprestados.map(r => formatarLinha([r.label, r.valor]))),
-        formatarSecao('Livros Mais Emprestados', formatarLinha(['Livro', 'Empréstimos']), d.livrosMaisEmprestados.map(r => formatarLinha([r.label, r.valor]))),
-        formatarSecao('Usuários Mais Ativos', formatarLinha(['Usuário', 'Empréstimos']), d.usuariosMaisAtivos.map(r => formatarLinha([r.label, r.valor]))),
-        formatarSecao('Empréstimos por Mês', formatarLinha(['Mês', 'Empréstimos']), d.emprestimosPorMes.map(r => formatarLinha([r.label, r.valor]))),
-        formatarSecao('Cadastros por Mês', formatarLinha(['Mês', 'Usuários']), d.cadastrosPorMes.map(r => formatarLinha([r.label, r.valor]))),
-        formatarSecao('Acervo por Década', formatarLinha(['Década', 'Livros']), d.livrosPorAno.map(r => formatarLinha([r.label, r.valor]))),
-        formatarSecao('Status do Acervo', formatarLinha(['Status', 'Exemplares']), d.distribuicaoStatus.map(r => formatarLinha([r.label, r.valor]))),
+    const csv = [
+        fS('KPIS', fL(['Métrica', 'Valor']), [fL(['Total', d.taxaAtraso?.total])]),
+        fS('Gêneros', fL(['Gênero', 'Val']), d.generosMaisEmprestados.map(r => fL([r.label, r.valor])))
     ].join('\n');
 
-    // Cria o link de download para o usuário
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `luizateca_stats_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `stats_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
-    
-    exibirAlerta('CSV exportado com sucesso!');
 }
+
+// Atualizar ao trocar o tema
+window.addEventListener('storage', (e) => {
+    if (e.key === 'luizateca_theme') renderizarTodosGraficos();
+});
+// Redesenhar ao clicar no botão de tema (via MutationObserver simplificado)
+const obTema = new MutationObserver(() => {
+    if (document.getElementById('statsScreen').classList.contains('active')) renderizarTodosGraficos();
+});
+obTema.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
