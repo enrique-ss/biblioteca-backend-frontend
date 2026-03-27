@@ -6,7 +6,7 @@
 ```html
 <section id="[nome]Screen" class="screen">
     <div class="page-header">
-        <h2 class="page-title">[emoji] <span>[Título]</span> [Subtítulo]</h2>
+        <h2 class="page-title"><span>Primeirapalavra</span> Resto do Título</h2>
         <div class="page-actions">
             <!-- Botões de ação principais -->
             <button class="btn btn-success">Ação Principal</button>
@@ -72,11 +72,6 @@
 - **Ações**: Voltar
 - **Conteúdo**: Formulário de edição
 
-### 🎓 Quiz (quizScreen)
-- **Pesquisa**: Não aplicável
-- **Ações**: Voltar, navegação interna
-- **Conteúdo**: Múltiplos painéis internos
-
 ## Classes CSS Padrão
 
 ### Estrutura
@@ -120,13 +115,13 @@
 - Tabelas com scroll horizontal se necessário
 
 ## Cores e Tema
-- **Títulos**: `--text` principal, `--gold` para spans
+- **Títulos**: `--text` principal para o título, envolvendo **apenas a primeira palavra** em um `<span>` com cor `--gold`.
 - **Botões**: `--success` (verde), `--gold` (dourado), `--crimson` (vermelho)
 - **Fundo**: `--bg` principal, `--surface-*` para cards
 - **Texto**: `--text`, `--text-dim`, `--text-faint`
 
 ## Ícones e Emojis
-- **Navegação**: 📚, 👥, 📋, 📊, ✏️, 🎓
+- **Navegação**: 📚, 👥, 📋, 📊, ✏️
 - **Botões**: Sem emojis (apenas texto)
-- **Cards**: 🌱, 📖, 🔭 (quiz)
+- **Cards**: 🌱 (Acervo), 📖 (Empréstimos), 📈 (Estatísticas)
 - **Tema**: 🌙/☀️ (alternar tema)

@@ -40,11 +40,11 @@ function inicializarFundo3D() {
     const texturaEstrela = criarTexturaEstrela();
     const temaEhClaro = document.documentElement.getAttribute('data-theme') === 'light';
 
-    // Configurações das camadas de partículas
+    // Configurações das camadas de partículas (Quantidade reduzida para elegância)
     const camadas = [
-        { total: 1200, tamClaro: 0.04, tamEscuro: 0.02 }, 
-        { total: 1100, tamClaro: 0.06, tamEscuro: 0.035 }, 
-        { total: 1200, tamClaro: 0.08, tamEscuro: 0.055 }  
+        { total: 600, tamClaro: 0.14, tamEscuro: 0.12, opEscuro: 0.8 }, 
+        { total: 500, tamClaro: 0.22, tamEscuro: 0.18, opEscuro: 0.85 }, 
+        { total: 400, tamClaro: 0.35, tamEscuro: 0.28, opEscuro: 0.9 }  
     ];
 
     const materiais = [];
@@ -54,9 +54,10 @@ function inicializarFundo3D() {
         const posArray = new Float32Array(camada.total * 3);
         
         for(let i = 0; i < camada.total * 3; i += 3) {
-            posArray[i]   = (Math.random() - 0.5) * 14;      
-            posArray[i+1] = (Math.random() - 0.5) * 12;      
-            posArray[i+2] = (Math.random() - 0.5) * 6 - 2;   
+            // Dispersão moderada para dar vida ao site sem poluir
+            posArray[i]   = (Math.random() - 0.5) * 35;      
+            posArray[i+1] = (Math.random() - 0.5) * 25;      
+            posArray[i+2] = (Math.random() - 0.5) * 30 - 10;   
         }
         
         geometria.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
@@ -65,10 +66,11 @@ function inicializarFundo3D() {
             size: temaEhClaro ? camada.tamClaro : camada.tamEscuro,
             color: temaEhClaro ? 0x0D6EFD : 0xD4AF37,
             transparent: true,
-            opacity: temaEhClaro ? 0.85 : 0.6,
+            opacity: temaEhClaro ? 0.85 : camada.opEscuro, 
             map: texturaEstrela,
             depthWrite: false,
-            blending: THREE.AdditiveBlending
+            blending: THREE.AdditiveBlending,
+            sizeAttenuation: true 
         });
         
         materiais.push({ mat: material, camada: camada });
@@ -85,7 +87,7 @@ function inicializarFundo3D() {
                 const ehClaro = document.documentElement.getAttribute('data-theme') === 'light';
                 materiais.forEach(m => {
                     const novaCor = ehClaro ? 0x0D6EFD : 0xD4AF37;
-                    const novaOpacidade = ehClaro ? 0.85 : 0.6;
+                    const novaOpacidade = ehClaro ? 0.85 : (m.camada.opEscuro || 0.6);
                     const novoTamanho = ehClaro ? m.camada.tamClaro : m.camada.tamEscuro;
                     
                     m.mat.color.setHex(novaCor);
@@ -99,16 +101,21 @@ function inicializarFundo3D() {
     
     observadorTema.observe(document.documentElement, { attributes: true });
 
-    // Interação com mouse removido para estabilidade do fundo
     const relogio = new THREE.Clock();
 
     function animar() {
         requestAnimationFrame(animar);
         const tempoDecorrido = relogio.getElapsedTime();
 
-        // Rotação cinematográfica lenta (velocidade reduzida para maior calma)
-        grupoParticulas.rotation.y = tempoDecorrido * 0.01;
-        grupoParticulas.rotation.x = tempoDecorrido * 0.01;
+        // Rotação de drift espacial orgânico
+        grupoParticulas.rotation.y = tempoDecorrido * 0.006;
+        grupoParticulas.rotation.x = tempoDecorrido * 0.004;
+
+        // Micro-oscilação nas camadas para dar sensação de "vida" e profundidade dinâmica
+        grupoParticulas.children.forEach((camada, i) => {
+            camada.position.z = Math.sin(tempoDecorrido * 0.15 + i) * 1.5;
+            camada.position.x = Math.cos(tempoDecorrido * 0.1 + i) * 0.8;
+        });
 
         renderer.render(cena, camera);
     }

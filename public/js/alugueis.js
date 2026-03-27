@@ -8,7 +8,7 @@ function voltarParaMenu() {
 
 async function carregarAlugueis(pagina = 1, busca = '') {
     // Define o título e cabeçalho da tabela de controle geral
-    document.getElementById('alugueisTitle').innerHTML = `<span>Controle de Empréstimos</span>`;
+    document.getElementById('alugueisTitle').innerHTML = `<span>Controle</span> de Empréstimos`;
     document.getElementById('alugueisHead').innerHTML = `
         <tr>
             <th>#</th>
@@ -77,7 +77,7 @@ async function carregarAlugueis(pagina = 1, busca = '') {
 }
 
 async function carregarMeusAlugueis() {
-    document.getElementById('alugueisTitle').innerHTML = `<span>Meus Livros Alugados</span>`;
+    document.getElementById('alugueisTitle').innerHTML = `<span>Meus</span> Livros Alugados`;
     document.getElementById('alugueisHead').innerHTML = `
         <tr>
             <th>#</th>
