@@ -80,10 +80,10 @@
                                     id="regEmail" class="form-input" placeholder="seu@email.com" required></div>
                             <div class="form-group"><label class="form-label">Senha</label><input type="password"
                                     id="regSenha" class="form-input" placeholder="Mínimo 8 caracteres" required></div>
-                            <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px;">Criar
-                                conta</button>
-                            <div style="text-align:center;margin-top:8px;"><button type="button" class="btn btn-ghost"
-                                    onclick="mostrarTela('loginScreen')">← Voltar ao login</button></div>
+                            <div class="btn-group" style="margin-top: 20px;">
+                                <button type="submit" class="btn btn-primary">Criar conta</button>
+                                <button type="button" class="btn btn-ghost" onclick="mostrarTela('loginScreen')">Voltar ao login</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -102,9 +102,8 @@
             <section id="notificacoesScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Centro</span> de Alertas</h2>
-                    <p class="page-subtitle">Avisos e pendências do sistema</p>
                 </div>
-                <div class="table-wrap" style="padding: 32px; max-width: 800px; margin: 0 auto; background: var(--glass-1); backdrop-filter: blur(12px); border-radius: var(--r-xl); border: 1px solid var(--border-m); box-shadow: 0 12px 32px rgba(0,0,0,0.6);">
+                <div class="table-wrap" style="padding: 24px; max-width: 900px; margin: 0 auto; background: var(--surface); backdrop-filter: blur(24px); border-radius: var(--r-xl); border: 1px solid var(--border); box-shadow: var(--shadow);">
                     <div id="notificationsFullScreenBody">
                         <div class="notifications-loading" style="text-align: center; color: var(--accent); font-size: var(--fs-md); padding: 40px;">Buscando alertas...</div>
                     </div>
@@ -581,7 +580,7 @@
             <p class="confirm-msg" id="confirmMsg"></p>
             <div class="confirm-actions">
                 <button class="btn btn-danger" id="confirmOkBtn">Confirmar</button>
-                <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+                <button class="btn btn-ghost" onclick="fecharConfirmacao()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -602,7 +601,7 @@
     <script src="js/usuarios.js"></script>
     <script src="js/perfil.js"></script>
     <script src="js/stats.js"></script>
-    <script>restoreSession();</script>
+    <script>restaurarSessao();</script>
 </body>
 
 </html>

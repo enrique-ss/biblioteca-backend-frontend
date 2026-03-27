@@ -85,6 +85,9 @@ function restaurarSessao() {
         atualizarNavbar(); 
         carregarMenu(); 
         mostrarTela('menuScreen');
+    } else {
+        atualizarNavbar(); 
+        mostrarTela('loginScreen');
     }
 }
 

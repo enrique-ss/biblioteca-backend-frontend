@@ -72,7 +72,7 @@ body {
     z-index: 1;
     min-height: 100vh;
     display: flex;
-    padding-left: 80px; /* Default sidebar width */
+    padding-left: 0; 
 }
 
 .container {
@@ -88,6 +88,7 @@ body {
     position: fixed;
     top: 0; left: 0; bottom: 0;
     width: 80px;
+    display: none;
     background: var(--bg);
     backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
     border-right: 1px solid var(--border);
@@ -219,17 +220,18 @@ body {
 }
 .notification-type {
   display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
   margin-right: 8px;
+  letter-spacing: 0.05em;
 }
-.notification-type.warning { background: rgba(255,193,7,0.2); color: #f39c12; }
-.notification-type.danger { background: rgba(220,53,69,0.2); color: #dc3545; }
-.notification-type.info { background: rgba(0,123,255,0.2); color: #007bff; }
-.notification-type.success { background: rgba(40,167,69,0.2); color: #28a745; }
+.notification-type.warning { background: rgba(199, 125, 34, 0.15); color: var(--warning); border: 1px solid rgba(199, 125, 34, 0.2); }
+.notification-type.danger  { background: rgba(140, 28, 19, 0.15); color: var(--danger); border: 1px solid rgba(140, 28, 19, 0.2); }
+.notification-type.info    { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--border); }
+.notification-type.success { background: rgba(60, 90, 62, 0.15); color: var(--success); border: 1px solid rgba(60, 90, 62, 0.2); }
 
 /* Theme Button is now in sidebars */
 
@@ -267,7 +269,7 @@ body {
 .spinner {
     display: inline-block;
     width: 16px; height: 16px;
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin .7s linear infinite;

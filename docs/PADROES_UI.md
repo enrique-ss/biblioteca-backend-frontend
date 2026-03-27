@@ -10,7 +10,7 @@
         <div class="page-actions">
             <!-- Botões de ação principais -->
             <button class="btn btn-success">Ação Principal</button>
-            <button class="btn btn-ghost">← Voltar</button>
+            <button class="btn">Secundário</button>
         </div>
     </div>
     
@@ -19,9 +19,6 @@
         <input type="text" id="busca[nome]" class="form-input" 
                placeholder="Buscar por..." oninput="load[nome]Debounced(this.value)">
     </div>
-    
-    <!-- Banners informativos (se aplicável) -->
-    <div id="[nome]Banner" style="display:none;" class="[nome]-banner"></div>
     
     <!-- Conteúdo principal -->
     <div class="table-wrap">
@@ -39,89 +36,48 @@
 
 ### 📚 Livros (livrosScreen)
 - **Pesquisa**: Título, autor, gênero
-- **Ordenação**: título, autor, gênero, status
+- **Ordenação**: Título, autor, gênero, status
 - **Ações**: + Novo Livro, Voltar
-- **Posição**: Barra de pesquisa fora do page-header
 
 ### 👥 Usuários (usuariosScreen)
 - **Pesquisa**: Nome, email
-- **Ordenação**: nome, email, tipo
 - **Ações**: Voltar
-- **Posição**: Barra de pesquisa fora do page-header
 
 ### 📋 Empréstimos (alugueisScreen)
 - **Pesquisa**: Usuário, livro, exemplar
-- **Ordenação**: usuário, livro, empréstimo, prazo, atraso
 - **Ações**: Histórico, + Novo Aluguel, Voltar
-- **Posição**: Barra de pesquisa fora do page-header
-- **Banner**: Avisos de atrasados
-
-### 📚 Histórico (historicoScreen)
-- **Pesquisa**: Usuário (ID)
-- **Ordenação**: usuário, livro, estado, datas
-- **Ações**: Exportar CSV, Voltar
-- **Posição**: Barra de pesquisa fora do page-header
 
 ### 📊 Estatísticas (statsScreen)
-- **Pesquisa**: Não aplicável
 - **Ações**: Exportar CSV, Voltar
 - **Conteúdo**: Cards de KPI e gráficos
 
+### 🔔 Alertas (notificacoesScreen)
+- **Conteúdo**: Centro de mensagens e pendências personalizadas por tipo de usuário.
+- **Estilo**: Centro de Alertas em wrap centralizado (`max-width: 900px`) com fundo `var(--surface)`.
+
 ### ✏️ Perfil (perfilScreen)
-- **Pesquisa**: Não aplicável
-- **Ações**: Voltar
-- **Conteúdo**: Formulário de edição
+- **Conteúdo**: Formulário de edição de dados e troca de senha.
 
 ## Classes CSS Padrão
 
 ### Estrutura
 - `.screen`: Container principal da tela
 - `.page-header`: Cabeçalho com título e ações
-- `.page-title`: Título da página
-- `.page-actions`: Container de botões de ação
-- `.search-bar`: Barra de pesquisa
-- `.table-wrap`: Container da tabela
-- `.pagination`: Paginação
-
-### Tabelas
-- `.data-table`: Tabela padrão
-- `.sortable`: Coluna ordenável
-- `.sort-asc`: Indicador de ordenação ascendente
-- `.sort-desc`: Indicador de ordenação descendente
-- `.sort-indicator`: Container do indicador visual
+- `.page-title`: Título da página (destaque em `<span>`)
+- `.table-wrap`: Container da tabela com fundo glassmorphism
 
 ### Botões
 - `.btn`: Botão base
-- `.btn-success`: Botão de ação principal
-- `.btn-ghost`: Botão secundário
-- `.btn-danger`: Botão de exclusão
-- `.btn-sm`: Botão pequeno
+- `.btn-success`: Botão principal (Verde)
+- `.btn-danger`: Botão de ação perigosa (Carmesim/Vermelho)
 
-## Padrões de Comportamento
-
-### Ordenação
-- Click no cabeçalho para alternar asc/desc
-- Indicadores visuais (↑/↓)
-- Estado mantido no `sortState`
-
-### Pesquisa
-- Debounce de 300ms
-- Busca em tempo real
-- Limpa resultados ao digitar
-
-### Responsividade
-- Layout adaptável para mobile
-- Botões com tamanhos apropriados
-- Tabelas com scroll horizontal se necessário
-
-## Cores e Tema
-- **Títulos**: `--text` principal para o título, envolvendo **apenas a primeira palavra** em um `<span>` com cor `--gold`.
-- **Botões**: `--success` (verde), `--gold` (dourado), `--crimson` (vermelho)
-- **Fundo**: `--bg` principal, `--surface-*` para cards
-- **Texto**: `--text`, `--text-dim`, `--text-faint`
+## Cores e Tema (Tokens)
+- **Accent**: `--accent` (Dourado no Dark / Azul no Light). Usado para destaques, ícones e botões primários.
+- **Fundo**: `--bg` (fundo principal), `--surface` (cards e áreas de conteúdo).
+- **Semânticas**: `--success` (Verde), `--danger` (Vermelho), `--warning` (Laranja).
+- **Texto**: `--text` principal para leitura clara.
 
 ## Ícones e Emojis
-- **Navegação**: 📚, 👥, 📋, 📊, ✏️
-- **Botões**: Sem emojis (apenas texto)
-- **Cards**: 🌱 (Acervo), 📖 (Empréstimos), 📈 (Estatísticas)
-- **Tema**: 🌙/☀️ (alternar tema)
+- **Navegação no Sidebar**: 📚 (Livros), 👥 (Usuários), 📋 (Empréstimos), 📊 (Estatísticas), ✏️ (Perfil), 🚪 (Sair)
+- **Alertas**: 🔔 (Nav/Badge)
+- **Tema**: 🌙 (Dark) / ☀️ (Light)

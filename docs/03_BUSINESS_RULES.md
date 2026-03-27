@@ -30,3 +30,13 @@ Este documento sumariza as regras essenciais operacionais do Sistema LuizaTeca.
 ## 4. Exemplares e Multiplicidade
 - O `livro` atua como um agrupador (título, autor, etc.), enquanto a tabela `exemplares` representa os itens físicos reais.
 - Cada exemplar possui um código individual, permitindo o controle preciso de qual cópia está com qual usuário e em que estado ela se encontra.
+
+## 5. Centro de Alertas e Notificações (Alertas)
+- **Objetivo**: Garantir que pendências críticas não passem despercebidas por bibliotecários e usuários.
+- **Alertas para Bibliotecários (Nível Sistema)**:
+    - **Vencimentos Críticos**: Notifica quando qualquer empréstimo no sistema ultrapassa a data de devolução prevista.
+    - **Pendências Financeiras**: Lista a existência de multas não pagas que bloqueiam a operação de usuários.
+    - **Bloqueios Ativos**: Indica usuários impedidos de operar por restrições manuais.
+- **Alertas para Usuários (Nível Pessoal)**:
+    - **Pendências de Devolução**: Alerta imediato sobre livros que o próprio usuário deve devolver.
+    - **Débitos Pessoais**: Notifica sobre valores devidos que impedem novos empréstimos.

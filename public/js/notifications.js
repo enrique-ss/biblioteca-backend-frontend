@@ -17,7 +17,7 @@ async function buscarNotificacoes() {
     try {
         const corpoNotificacoes = document.getElementById('notificationsFullScreenBody');
         if (corpoNotificacoes) {
-            corpoNotificacoes.innerHTML = '<div style="text-align:center; padding:40px; color:var(--gold);">Carregando alertas...</div>';
+            corpoNotificacoes.innerHTML = '<div style="text-align:center; padding:40px; color:var(--accent);">Carregando alertas...</div>';
         }
         
         const promessas = [];
@@ -141,13 +141,13 @@ function renderizarNotificacoesTelaCheia() {
     }
     
     corpo.innerHTML = dadosNotificacoes.map(notif => `
-        <div class="notification-item" style="padding: 24px; border-bottom: 1px solid var(--border-m); margin-bottom: 8px; border-radius: var(--r-md); transition: background 0.3s;" onmouseover="this.style.background='var(--gold-bg-subtle)'" onmouseleave="this.style.background='transparent'">
+        <div class="notification-item" style="padding: 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; border-radius: var(--r-md); transition: background 0.3s; background: rgba(255,255,255,0.02);" onmouseover="this.style.background='var(--accent-bg)'" onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <strong style="color: var(--gold); font-family: 'Cinzel', serif; font-size: var(--fs-md); letter-spacing: 0.05em;">
+                <strong style="color: var(--accent); font-family: 'Cinzel', serif; font-size: var(--fs-md); letter-spacing: 0.05em;">
                     <span class="notification-type ${notif.type}" style="font-family: 'Crimson Pro', serif; font-size: 0.7em; margin-right: 8px; vertical-align: middle;">${notif.type.toUpperCase()}</span> 
                     ${notif.title}
                 </strong>
-                <span style="color: var(--text-dim); font-size: var(--fs-xs); font-style: italic;">Agora</span>
+                <span style="color: var(--text); font-size: var(--fs-xs); font-style: italic; opacity: 0.6;">Agora</span>
             </div>
             <div style="color: var(--text); font-size: var(--fs-base); line-height: 1.6;">${notif.message}</div>
         </div>`).join('');

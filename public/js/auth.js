@@ -74,6 +74,11 @@ function logout() {
 // Atualiza a visibilidade dos elementos da barra lateral conforme o login
 function atualizarNavbar() {
     const estaLogado = !!currentUser;
+    const sidebar = document.getElementById('sidebar');
+    const wrapper = document.querySelector('.app-wrapper');
+
+    if (sidebar) sidebar.style.display = estaLogado ? 'flex' : 'none';
+    if (wrapper) wrapper.style.paddingLeft = estaLogado ? '80px' : '0';
 
     // Atualiza botões básicos
     const btnSair = document.getElementById('btnLogout');
@@ -94,9 +99,5 @@ function atualizarNavbar() {
     const botaoPerfil = document.getElementById('navUser');
     if (botaoPerfil) {
         botaoPerfil.style.display = estaLogado ? 'flex' : 'none';
-    }
-
-    if (estaLogado) {
-        // Nome e Tipo de usuário removidos da sidebar conforme refinamento de UI
     }
 }
