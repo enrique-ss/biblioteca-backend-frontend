@@ -190,6 +190,10 @@ export class StatsController {
                     .orderBy('label', 'asc'),
             ]);
 
+            const totalAtrasos = Number(indicadoresAtraso.atrasados_atuais || 0) + Number(indicadoresAtraso.entregues_com_atraso || 0);
+            const totalEmprestimos = Number(indicadoresAtraso.total || 0) || 1;
+            const taxaAtrasoPct = Math.round((totalAtrasos / totalEmprestimos) * 100);
+
             res.json({
                 generosMaisEmprestados: generosMaisProcurados,
                 autoresMaisEmprestados: autoresPopulares,
@@ -197,11 +201,18 @@ export class StatsController {
                 usuariosMaisAtivos: usuariosEngajados,
                 emprestimosPorMes: evolucaoEmprestimos,
                 cadastrosPorMes: novosCadastros,
-                taxaAtraso: indicadoresAtraso,
                 distribuicaoStatus: divisaoAcervo,
                 tempoMedioDevolucao: performanceDevolucao,
                 livrosPorAno: acervoPorDecada,
                 evolucaoAtrasos,
+                kpis: [
+                    { label: 'Total de Empréstimos', valor: String(indicadoresAtraso.total || 0) },
+                    { label: 'Devolvidos no Prazo', valor: String(indicadoresAtraso.entregues_no_prazo || 0) },
+                    { label: 'Devolvidos com Atraso', valor: String(indicadoresAtraso.entregues_com_atraso || 0) },
+                    { label: 'Ativos em Atraso', valor: String(indicadoresAtraso.atrasados_atuais || 0) },
+                    { label: 'Taxa de Atraso', valor: taxaAtrasoPct + '%' },
+                    { label: 'Média de Devolução', valor: (performanceDevolucao.media_dias || '—') + ' d' }
+                ]
             });
         } catch (erro) {
             console.error('Erro ao gerar relatório detalhado:', erro);

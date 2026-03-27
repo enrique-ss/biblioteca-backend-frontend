@@ -13,15 +13,24 @@ O **LuizaTeca** é um sistema de gerenciamento de biblioteca estruturado em múl
 ## 2. Componentes Principais
 
 ### 2.1 API Rest (Backend)
-O servidor principal que expõe os endpoints para consumo. Responsável por aplicar as regras de negócio, persistir dados no MySQL e garantir a segurança através de middlewares de autenticação (JWT) e rate-limiting.
+O "Cérebro" do sistema. É responsável por **toda a lógica de negócio**, cálculos matemáticos, totalizações de relatórios, processamento de multas e validações de segurança. Nenhuma lógica de decisão ou cálculo complexo deve residir fora deste componente.
 
 ### 2.2 Aplicação Web (Frontend Vanilla)
-A interface de usuário web, encontrada sob o diretório `public/`. Não necessita de frameworks pesados de compilação; utiliza chamadas JavaScript assíncronas simples (Fetch/Axios) e atualiza o DOM (Document Object Model) de forma dinâmica a partir da página principal `index.html`.
+A interface de usuário web. Atua como um **"Frontend Burro"**: seu único papel é capturar entradas do usuário, enviá-las para a API e renderizar visualmente os dados recebidos. Não realiza cálculos de estatísticas ou transformações pesadas de dados.
 
 ### 2.3 Interface de Linha de Comando (CLI)
-Um sistema operado em terminal (`src/cli.ts`), fornecendo uma experiência rica em bash com tabelas formatadas e cores, desenhada para administradores ou usuários que preferem trabalhar via terminal de console. O CLI se comunica diretamente com a API Rest, tal como o Frontend Web.
+A interface de terminal. Assim como a versão Web, é um cliente **"burro"** que consome os mesmos endpoints da API e apenas formata a saída para o console, garantindo que um administrador veja exatamente os mesmos dados e regras independentemente de onde acesse.
 
-## 3. Diretórios
+## 3. Princípio do Frontend Burro (Dumb Frontend)
+
+Para garantir consistência absoluta entre a interface **Web** e o **CLI**, o projeto segue rigorosamente o modelo de **Frontend Burro**:
+
+1.  **Cálculos no Backend**: Médias, porcentagens, somas de faturamento e filtros complexos são realizados via SQL ou lógica em TypeScript no servidor.
+2.  **Dados Prontos para Exibição**: A API deve retornar objetos com os valores já formatados ou calculados (ex: `kpis: [{ label: "Taxa", valor: "15%" }]`).
+3.  **Sincronia Total**: Como a lógica está centralizada no Backend, qualquer alteração em uma regra de negócio reflete instantaneamente e de forma idêntica tanto no navegador quanto no terminal.
+
+## 4. Diretórios
+...
 
 - `/src`: Código-fonte do Backend (TypeScript)
     - `/src/controllers`: Lógica de rotas e processamento de requests e regras de negócio base.

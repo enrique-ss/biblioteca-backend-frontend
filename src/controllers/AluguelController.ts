@@ -530,7 +530,13 @@ export class AluguelController {
         )
         .orderBy('dias_atraso', 'desc');
 
-      res.json({ total: listaAtrasados.length, data: listaAtrasados });
+      const totalFaturamento = listaAtrasados.reduce((acc, cur) => acc + Number(cur.multa_acumulada), 0);
+
+      res.json({ 
+        total: listaAtrasados.length, 
+        data: listaAtrasados,
+        total_faturamento_pendente: totalFaturamento
+      });
     } catch { 
       res.status(500).json({ error: 'Erro ao compilar lista de atrasados.' }); 
     }

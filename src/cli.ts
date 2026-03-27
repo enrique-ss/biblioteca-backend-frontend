@@ -366,7 +366,7 @@ async function acaoListarAtrasados() {
       data.data.forEach((item: any) => {
         console.log(`  ${colorir(String(item.id).padStart(3), cores.cinza)}  ${colorir(item.usuario.padEnd(20), cores.branco)}  ${item.titulo.substring(0, 30).padEnd(30)}  ${colorir(`${item.dias_atraso} dias`, cores.vermelho + cores.negrito)}  R$ ${Number(item.multa_acumulada).toFixed(2)}`);
       });
-      console.log(colorir(`\n  Faturamento de multas pendentes: R$ ${data.data.reduce((acc: any, cur: any) => acc + Number(cur.multa_acumulada), 0).toFixed(2)}`, cores.vermelho));
+      console.log(colorir(`\n  Faturamento de multas pendentes: R$ ${Number(data.total_faturamento_pendente || 0).toFixed(2)}`, cores.vermelho));
     }
   } catch (erro: any) { logErro(erro); }
   await aguardarEnter();

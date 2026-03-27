@@ -135,25 +135,12 @@ function renderizarTodosGraficos() {
 }
 
 function renderizarIndicadores(d) {
-    const t = d.taxaAtraso || {};
-    const dev = d.tempoMedioDevolucao || {};
-    const total = Number(t.total) || 1;
-    const atrasos = Number(t.atrasados) + Number(t.devolvidos_atrasados);
-    const pct = Math.round((atrasos / total) * 100);
-
-    const kpis = [
-        { l: 'Total de Empréstimos', v: t.total ?? 0 },
-        { l: 'Devolvidos no Prazo', v: t.devolvidos_prazo ?? 0 },
-        { l: 'Devolvidos com Atraso', v: t.devolvidos_atrasados ?? 0 },
-        { l: 'Ativos em Atraso', v: t.atrasados ?? 0 },
-        { l: 'Taxa de Atraso', v: pct + '%' },
-        { l: 'Média de Devolução', v: (dev.media_dias ?? '—') + ' d' }
-    ];
+    const kpis = d.kpis || [];
 
     document.getElementById('statsKpiGrid').innerHTML = kpis.map(k => `
         <div class="stats-kpi-card">
-            <div class="stats-kpi-label">${esc(k.l)}</div>
-            <div class="stats-kpi-val">${esc(String(k.v))}</div>
+            <div class="stats-kpi-label">${esc(k.label)}</div>
+            <div class="stats-kpi-val">${esc(String(k.valor))}</div>
         </div>`).join('');
 }
 

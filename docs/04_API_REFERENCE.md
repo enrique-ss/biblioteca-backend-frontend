@@ -25,7 +25,7 @@ A API REST do LuizaTeca obedece ao formato JSON para comunicação e respostas. 
 ## 📋 Aluguéis / Empréstimos (`/api/alugueis`)
 - `GET /api/alugueis/todos`: (Bibliotecário) Lista todos os empréstimos ativos.
 - `GET /api/alugueis/meus`: Lista os empréstimos do usuário logado.
-- `GET /api/alugueis/atrasados`: (Bibliotecário) Lista apenas empréstimos com prazo vencido.
+- `GET /api/alugueis/atrasados`: (Bibliotecário) Lista apenas empréstimos com prazo vencido. **Retorna `total_faturamento_pendente` pré-calculado.**
 - `GET /api/alugueis/historico`: (Bibliotecário) Histórico completo de devoluções.
 - `POST /api/alugueis`: (Bibliotecário) Registra um novo empréstimo.
 - `PUT /api/alugueis/:id/devolver`: (Bibliotecário) Registra a devolução e processa multas.
@@ -38,5 +38,5 @@ A API REST do LuizaTeca obedece ao formato JSON para comunicação e respostas. 
 - `PUT /api/alugueis/multas/:usuario_id/pagar`: (Bibliotecário) Registra o pagamento das multas de um usuário.
 
 ## 📊 Estatísticas (`/api/stats`)
-- `GET /api/stats`: Resumo simplificado para o Dashboard.
-- `GET /api/stats/detalhado`: (Bibliotecário) Dados detalhados para gráficos e relatórios.
+- `GET /api/stats`: Resumo simplificado (KPIS rápidos) para a Dashboard inicial.
+- `GET /api/stats/detalhado`: (Bibliotecário) Relatório completo. Retorna um objeto `kpis` contendo uma lista de objetos `{ label, valor }` já formatados (com %, dias, totais) para serem renderizados sem cálculos no frontend.
