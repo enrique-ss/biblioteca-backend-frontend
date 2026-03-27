@@ -56,11 +56,11 @@ async function carregarLivros(busca = '', pagina = 1) {
             const ehBibliotecario = currentUser?.tipo === 'bibliotecario';
 
             tr.innerHTML = `
-                <td style="color:var(--text-faint)">${esc(livro.id)}</td>
+                <td style="color:var(--text-dim)">${esc(livro.id)}</td>
                 <td><strong>${esc(livro.titulo)}</strong></td>
                 <td>${esc(livro.autor)}</td>
                 <td>${esc(livro.genero)}</td>
-                <td style="color:var(--text-dim)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
+                <td style="color:var(--text)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
                 <td style="text-align:center">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)}</td>
                 <td>${badgeStatus(livro.status)}</td>
                 <td>
@@ -240,17 +240,18 @@ async function carregarExemplares(livroId) {
             const ultimo = ex.ultimo_aluguel;
 
             tr.innerHTML = `
-                <td style="color:var(--text-faint)">${esc(ex.id)}</td>
+                <td style="color:var(--text-dim)">${esc(ex.id)}</td>
                 <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(ex.codigo ?? '—')}</code></td>
                 <td>${badgeExemplar(ex.disponibilidade)}</td>
                 <td>${badgeCondicaoExemplar(ex.condicao || 'bom')}</td>
-                <td style="color:var(--text-dim);font-size:var(--fs-xs)">${esc(ex.observacao ?? '—')}</td>
+                <td style="color:var(--text);font-size:var(--fs-xs)">${esc(ex.observacao ?? '—')}</td>
                 <td style="font-size:var(--fs-xs)">
                     ${ultimo ? `
                         <strong>${esc(ultimo.usuario)}</strong><br>
-                        <span style="color:var(--text-dim)">${formatarData(ultimo.data_aluguel)}</span>
+                        <strong>${esc(ultimo.usuario)}</strong><br>
+                        <span style="color:var(--text)">${formatarData(ultimo.data_aluguel)}</span>
                         ${ultimo.status_aluguel === 'ativo' ? '<span class="badge badge-warning" style="margin-left:4px;font-size:.55rem">em mãos</span>' : ''}
-                    ` : '<span style="color:var(--text-faint)">Nunca alugado</span>'}
+                    ` : '<span style="color:var(--text-dim)">Nunca alugado</span>'}
                 </td>
                 <td>
                     <div class="exemplar-actions">

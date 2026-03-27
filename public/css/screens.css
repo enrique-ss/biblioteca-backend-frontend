@@ -15,7 +15,7 @@
 }
 .auth-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg,transparent,var(--gold),transparent); opacity: .4; }
 .auth-title    { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--gold); text-align: center; letter-spacing: .06em; margin-bottom: 4px; }
-.auth-subtitle { text-align: center; color: var(--text-dim); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; }
+.auth-subtitle { text-align: center; color: var(--text); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; opacity: 1; }
 
 /* ── TELA MENU ── */
 .menu-screen-wrap { max-width: 1000px; margin: 0 auto; text-align: center; padding-top: 40px; }
@@ -47,7 +47,7 @@
     border-color: var(--gold); 
     box-shadow: 0 12px 32px var(--gold-shadow-soft); 
 }
-.menu-card-icon  { font-size: 2.2rem; display: block; margin-bottom: 12px; filter: sepia(.7) brightness(.65); }
+.menu-card-icon  { font-size: 2.2rem; display: block; margin-bottom: 12px; }
 .menu-card-title { font-family: 'Cinzel', serif; font-size: var(--fs-sm); font-weight: 600; color: var(--text); letter-spacing: .05em; }
 
 .menu-logout { text-align: center; padding-top: 8px; }
@@ -55,7 +55,7 @@
 
 /* ── PERFIL ── */
 .perfil-info { display: flex; flex-direction: column; gap: 14px; }
-.perfil-field-label { font-family: 'Cinzel', serif; font-size: var(--fs-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 3px; }
+.perfil-field-label { font-family: 'Cinzel', serif; font-size: var(--fs-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; font-weight: 700; }
 .perfil-field-value { font-size: var(--fs-base); color: var(--text); }
 
 /* ── RESPONSIVE ── */

@@ -130,16 +130,16 @@ function renderizarTabelaAlugueisCompleta(lista) {
             : '';
 
         tr.innerHTML = `
-            <td style="color:var(--text-faint)">${esc(item.id)}</td>
+            <td style="color:var(--text-dim)">${esc(item.id)}</td>
             <td>${esc(item.usuario ?? '—')} ${badgeInadimplente}</td>
             <td><strong>${esc(item.titulo ?? '—')}</strong></td>
             <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
-            <td style="color:var(--text-dim)">${formatarData(item.data_aluguel)}</td>
-            <td style="color:var(--text-dim)">${formatarData(item.prazo)}</td>
+            <td style="color:var(--text)">${formatarData(item.data_aluguel)}</td>
+            <td style="color:var(--text)">${formatarData(item.prazo)}</td>
             <td>${renderizarAlertaAtraso(diasAtraso, multaAcum)}</td>
             <td>${badgeStatus(item.status)}</td>
             <td>
-                ${item.pode_devolver ? `<button class="btn btn-success btn-sm" onclick="abrirModalDevolucao(${item.id})">Devolver</button>` : '<span style="color:var(--text-faint)">—</span>'}
+                ${item.pode_devolver ? `<button class="btn btn-success btn-sm" onclick="abrirModalDevolucao(${item.id})">Devolver</button>` : '<span style="color:var(--text-dim)">—</span>'}
             </td>`;
         
         tbody.appendChild(tr);
@@ -161,15 +161,15 @@ function renderizarTabelaAlugueisUsuario(lista) {
         const tr = document.createElement('tr');
 
         tr.innerHTML = `
-            <td style="color:var(--text-faint)">${esc(item.id)}</td>
+            <td style="color:var(--text-dim)">${esc(item.id)}</td>
             <td><strong>${esc(item.titulo ?? '—')}</strong></td>
             <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
-            <td style="color:var(--text-dim)">${formatarData(item.data_aluguel)}</td>
-            <td style="color:var(--text-dim)">${formatarData(item.prazo)}</td>
+            <td style="color:var(--text)">${formatarData(item.data_aluguel)}</td>
+            <td style="color:var(--text)">${formatarData(item.prazo)}</td>
             <td>${renderizarAlertaAtraso(diasAtraso, multaAcum)}</td>
             <td>${badgeStatus(item.status)}</td>
             <td>
-                ${item.pode_renovar ? `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${item.id})">+14 dias</button>` : '<span style="color:var(--text-faint)">—</span>'}
+                ${item.pode_renovar ? `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${item.id})">+14 dias</button>` : '<span style="color:var(--text-dim)">—</span>'}
             </td>`;
             
         tbody.appendChild(tr);
@@ -376,14 +376,14 @@ async function carregarHistorico(pagina = 1, usuarioId = '') {
         data.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="color:var(--text-faint)">${esc(item.id)}</td>
+                <td style="color:var(--text-dim)">${esc(item.id)}</td>
                 <td>${esc(item.usuario)}</td>
                 <td><strong>${esc(item.titulo)}</strong></td>
                 <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
                 <td>${badgeExemplar(item.estado_devolucao ?? item.exemplar_status ?? 'disponivel')}</td>
-                <td style="color:var(--text-dim)">${formatarData(item.data_aluguel)}</td>
-                <td style="color:var(--text-dim)">${formatarData(item.prazo)}</td>
-                <td style="color:var(--text-dim)">${formatarData(item.data_devolucao)}</td>
+                <td style="color:var(--text)">${formatarData(item.data_aluguel)}</td>
+                <td style="color:var(--text)">${formatarData(item.prazo)}</td>
+                <td style="color:var(--text)">${formatarData(item.data_devolucao)}</td>
                 <td style="text-align:center">${esc(item.renovacoes ?? 0)}x</td>`;
             
             tbody.appendChild(tr);
@@ -459,9 +459,9 @@ async function carregarMinhasMultas() {
                 <td>${badgeTipoMulta(m.tipo)}</td>
                 <td><strong>${esc(m.livro)}</strong></td>
                 <td style="color:#f85149;font-weight:600">R$ ${Number(m.valor).toFixed(2)}</td>
-                <td style="color:var(--text-dim)">${m.dias_atraso > 0 ? `${m.dias_atraso} dias` : '—'}</td>
+                <td style="color:var(--text)">${m.dias_atraso > 0 ? `${m.dias_atraso} dias` : '—'}</td>
                 <td><span class="badge ${classeBadge}">${esc(m.status)}</span></td>
-                <td style="color:var(--text-dim)">${formatarData(m.created_at)}</td>`;
+                <td style="color:var(--text)">${formatarData(m.created_at)}</td>`;
             
             tbody.appendChild(tr);
         });

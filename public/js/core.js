@@ -247,7 +247,7 @@ function badgeStatus(status) {
 function badgeTipo(tipo) {
     const mapas = {
         bibliotecario: `<span class="badge badge-gold">Bibliotecário</span>`,
-        usuario: `<span class="badge" style="background:rgba(100,100,100,.10);color:var(--text-dim);border-color:var(--border-s)">Usuário</span>`,
+        usuario: `<span class="badge" style="background:var(--gold-bg-bold);color:var(--text);border-color:var(--gold)">Usuário</span>`,
     };
     return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
 }
@@ -257,14 +257,14 @@ function badgeExemplar(status) {
         disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
         indisponivel: `<span class="badge badge-danger"><span class="badge-dot"></span>Indisponível</span>`,
         emprestado: `<span class="badge badge-info"><span class="badge-dot"></span>Emprestado</span>`,
-        perdido: `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
+        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white"><span class="badge-dot" style="background:white"></span>Perdido</span>`,
     };
     return mapas[status] || `<span class="badge">${esc(status)}</span>`;
 }
 
 function badgeCondicao(condicao = {}) {
     if (!condicao || !Object.keys(condicao).length) {
-        return '<span style="color:var(--text-faint)">—</span>';
+        return '<span style="color:var(--text)">—</span>';
     }
     
     const partes = [];
@@ -272,7 +272,7 @@ function badgeCondicao(condicao = {}) {
         partes.push(`<span class="badge badge-danger" title="${condicao.danificado} danificado(s)">${condicao.danificado} danif.</span>`);
     }
     if (condicao.perdido > 0) {
-        partes.push(`<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)" title="${condicao.perdido} perdido(s)">${condicao.perdido} perd.</span>`);
+        partes.push(`<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white" title="${condicao.perdido} perdido(s)">${condicao.perdido} perd.</span>`);
     }
     
     if (partes.length === 0) {
@@ -285,7 +285,7 @@ function badgeCondicaoExemplar(condicao) {
     const mapas = {
         bom: `<span class="badge badge-success"><span class="badge-dot"></span>Bom</span>`,
         danificado: `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`,
-        perdido: `<span class="badge" style="background:rgba(118,131,144,.12);color:var(--text-faint);border-color:var(--border-m)"><span class="badge-dot" style="background:var(--text-faint)"></span>Perdido</span>`,
+        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white"><span class="badge-dot" style="background:white"></span>Perdido</span>`,
     };
     return mapas[condicao] || `<span class="badge">${esc(condicao)}</span>`;
 }

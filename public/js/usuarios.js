@@ -52,9 +52,9 @@ async function carregarUsuarios(pagina = 1, busca = '') {
             }
 
             tr.innerHTML = `
-                <td style="color:var(--text-faint)">${esc(u.id)}</td>
+                <td style="color:var(--text-dim)">${esc(u.id)}</td>
                 <td><strong>${esc(u.nome)}</strong>${badgesDestaque}</td>
-                <td style="color:var(--text-dim)">${esc(u.email)}</td>
+                <td style="color:var(--text)">${esc(u.email)}</td>
                 <td>${badgeTipo(u.tipo)}</td>
                 <td><div class="td-actions">
                     <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
@@ -158,9 +158,9 @@ async function carregarMultasUsuario(id) {
                 <td>${badgeTipoMulta(m.tipo)}</td>
                 <td><strong>${esc(m.livro)}</strong></td>
                 <td style="color:#f85149;font-weight:600">R$ ${Number(m.valor).toFixed(2)}</td>
-                <td style="color:var(--text-dim)">${m.dias_atraso > 0 ? `${m.dias_atraso} dias` : '—'}</td>
+                <td style="color:var(--text)">${m.dias_atraso > 0 ? `${m.dias_atraso} dias` : '—'}</td>
                 <td><span class="badge ${classeBadge}">${esc(m.status)}</span></td>
-                <td style="color:var(--text-dim)">${formatarData(m.created_at)}</td>`;
+                <td style="color:var(--text)">${formatarData(m.created_at)}</td>`;
             
             tbody.appendChild(tr);
         });
