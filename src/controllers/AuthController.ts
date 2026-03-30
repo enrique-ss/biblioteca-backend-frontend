@@ -8,7 +8,17 @@ import { gerarToken, RequisicaoAutenticada } from '../middlewares/auth';
  */
 export class AuthController {
   
-  // Registro de novos usuários no sistema
+  private getPermissions(tipo: string) {
+    const ehAdmin = tipo === 'bibliotecario';
+    return {
+      can_manage: ehAdmin,
+      can_edit: ehAdmin,
+      can_delete: ehAdmin,
+      can_approve: ehAdmin,
+      can_view_stats: ehAdmin,
+      is_admin: ehAdmin
+    };
+  }
   registrar = async (req: Request, res: Response) => {
     try {
       const { nome, email, senha, tipo } = req.body;
@@ -69,7 +79,8 @@ export class AuthController {
           id: usuarioCriado.id, 
           nome: usuarioCriado.nome, 
           email: usuarioCriado.email, 
-          tipo: usuarioCriado.tipo 
+          tipo: usuarioCriado.tipo,
+          permissions: this.getPermissions(usuarioCriado.tipo)
         }
       });
     } catch (erro) {
@@ -108,7 +119,8 @@ export class AuthController {
           id: usuarioEncontrado.id, 
           nome: usuarioEncontrado.nome, 
           email: usuarioEncontrado.email, 
-          tipo: usuarioEncontrado.tipo 
+          tipo: usuarioEncontrado.tipo,
+          permissions: this.getPermissions(usuarioEncontrado.tipo)
         }
       });
     } catch (erro) {
@@ -172,7 +184,10 @@ export class AuthController {
 
       res.json({
         message: '✅ Perfil atualizado com sucesso!',
-        usuario: usuarioAtualizado
+        usuario: {
+          ...usuarioAtualizado,
+          permissions: this.getPermissions(usuarioAtualizado.tipo)
+        }
       });
     } catch (erro) {
       console.error('Erro ao atualizar perfil:', erro);

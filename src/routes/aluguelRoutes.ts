@@ -22,7 +22,6 @@ router.put('/:id/renovar', controller.renovar);
 // Consultas de Controle
 router.get('/todos', verificarBibliotecario, controller.listarTodos);
 router.get('/historico', verificarBibliotecario, controller.historico);
-router.get('/atrasados', verificarBibliotecario, controller.atrasados);
 router.get('/multas/:usuario_id', verificarBibliotecario, controller.listarMultas);
 
 // Operações de Registro e Financeiro

@@ -61,7 +61,7 @@ async function carregarLivros(busca = '', pagina = 1) {
         ];
 
         data.forEach((livro, index) => {
-            const ehBibliotecario = currentUser?.tipo === 'bibliotecario';
+            const ehBibliotecario = currentUser?.permissions?.is_admin || false;
             const card = document.createElement('div');
             card.className = 'digital-card';
             

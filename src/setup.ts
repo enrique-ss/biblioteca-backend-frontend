@@ -118,11 +118,13 @@ async function configurarBanco() {
       // Condição física: bom / danificado / perdido
       t.enum('condicao', ['bom', 'danificado', 'perdido']).notNullable().defaultTo('bom');
       t.text('observacao').nullable();
+      t.timestamp('deleted_at').nullable();
       t.timestamp('created_at').defaultTo(db.fn.now());
       
       t.foreign('livro_id').references('id').inTable('livros').onDelete('CASCADE');
       t.index(['livro_id', 'disponibilidade'], 'idx_exemplares_livro_disp');
       t.index(['condicao'], 'idx_exemplares_condicao');
+      t.index(['deleted_at'], 'idx_exemplares_deleted_at');
     });
     console.log('✅ Tabela [exemplares] criada.');
 

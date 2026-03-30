@@ -43,10 +43,10 @@ export class LivroController {
   private recalcularContadores = async (livroId: number) => {
     // Busca as contagens em paralelo no banco de dados para maior eficiência
     const [totalFisico, totalDisponivel] = await Promise.all([
-      // Apenas exemplares que NÃO foram marcados como 'perdido'
-      db('exemplares').where({ livro_id: livroId }).whereNot({ condicao: 'perdido' }).count('id as total').first() as Promise<any>,
-      // Apenas exemplares que estão de fato na prateleira ('disponivel')
-      db('exemplares').where({ livro_id: livroId, disponibilidade: 'disponivel' }).count('id as disponiveis').first() as Promise<any>
+      // Apenas exemplares que NÃO foram marcados como 'perdido' e não foram deletados
+      db('exemplares').where({ livro_id: livroId }).whereNot({ condicao: 'perdido' }).whereNull('deleted_at').count('id as total').first() as Promise<any>,
+      // Apenas exemplares que estão de fato na prateleira ('disponivel') e não deletados
+      db('exemplares').where({ livro_id: livroId, disponibilidade: 'disponivel' }).whereNull('deleted_at').count('id as disponiveis').first() as Promise<any>
     ]);
 
     const numTotal = Number(totalFisico.total);
@@ -111,6 +111,7 @@ export class LivroController {
       if (idsLivros.length > 0) {
         const resumoCondicoes = await db('exemplares')
           .whereIn('livro_id', idsLivros)
+          .whereNull('deleted_at')
           .select('livro_id', 'condicao')
           .count('id as qtd')
           .groupBy('livro_id', 'condicao');
@@ -153,6 +154,7 @@ export class LivroController {
 
       const exemplares = await db('exemplares')
         .where({ livro_id: id })
+        .whereNull('deleted_at')
         .select('id', 'codigo', 'disponibilidade', 'condicao', 'observacao', 'created_at')
         .orderBy('id', 'asc');
 
@@ -192,7 +194,7 @@ export class LivroController {
       const { exemplar_id } = req.params;
       const { status, condicao, observacao } = req.body;
 
-      const exemplarOriginal = await db('exemplares').where({ id: exemplar_id }).first();
+      const exemplarOriginal = await db('exemplares').where({ id: exemplar_id }).whereNull('deleted_at').first();
       if (!exemplarOriginal) return res.status(404).json({ error: 'Exemplar não encontrado.' });
 
       const atualizacoes: any = { observacao: observacao?.trim() || null };
@@ -241,7 +243,7 @@ export class LivroController {
       // Garante que os números totais do livro estejam sincronizados após a mudança
       await this.recalcularContadores(exemplarOriginal.livro_id);
 
-      const exemplarAtualizado = await db('exemplares').where({ id: exemplar_id }).first();
+      const exemplarAtualizado = await db('exemplares').where({ id: exemplar_id }).whereNull('deleted_at').first();
       res.json({ message: '✅ Inventário atualizado com sucesso!', exemplar: exemplarAtualizado });
     } catch (erro) {
       console.error('Erro ao atualizar exemplar:', erro);
@@ -360,7 +362,8 @@ export class LivroController {
             });
           }
 
-          await db('exemplares').whereIn('id', exemplaresDeletaveis.map(e => e.id)).del();
+          // Arquivamento Logístico das cópias excedentes (Soft Delete)
+          await db('exemplares').whereIn('id', exemplaresDeletaveis.map(e => e.id)).update({ deleted_at: new Date() });
         }
 
         // Força a atualização dos contadores após o ajuste

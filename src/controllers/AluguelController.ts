@@ -225,8 +225,9 @@ export class AluguelController {
 
       res.json({
         message: msgSucesso, 
-        multas_detalhadas: listaMultas,
+        multas_detalhadas: listaMultas.map(m => ({ ...m, valor_formatado: `R$ ${m.valor.toFixed(2)}` })),
         total_de_multa: totalMultas > 0 ? totalMultas : 0,
+        total_multa_formatada: totalMultas > 0 ? `R$ ${totalMultas.toFixed(2)}` : 'R$ 0,00',
         aviso: totalMultas > 0 ? `Atenção: Multa acumulada de R$ ${totalMultas.toFixed(2)}. Cadastro bloqueado até a quitação.` : null
       });
 
@@ -294,7 +295,12 @@ export class AluguelController {
         .filter(m => m.status === 'pendente')
         .reduce((sum, m) => sum + Number(m.valor), 0);
 
-      res.json({ multas, total_pendente: totalPendente });
+      const dadosFormatados = multas.map(m => ({
+        ...m,
+        valor_formatado: `R$ ${Number(m.valor).toFixed(2)}`
+      }));
+
+      res.json({ multas: dadosFormatados, total_pendente: totalPendente, total_pendente_formatado: `R$ ${totalPendente.toFixed(2)}` });
     } catch { 
       res.status(500).json({ error: 'Erro ao recuperar extrato de multas.' }); 
     }
@@ -397,24 +403,34 @@ export class AluguelController {
         );
       }
 
-      const [registros, contagem] = await Promise.all([
+      const [registros, contagem, atrasadosCount] = await Promise.all([
         baseQuery.clone().select(
           'alugueis.id', 'usuarios.nome as usuario', 'usuarios.multa_pendente',
           'livros.titulo', 'exemplares.id as exemplar_id', 'exemplares.codigo as exemplar_codigo',
           'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao as prazo',
           db.raw(`CASE WHEN alugueis.data_prevista_devolucao < ? THEN 'atrasado' ELSE 'ativo' END as status`, [hoje]),
           db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) as dias_atraso`),
-          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) * ${VALOR_MULTA_DIARIA} as multa_acumulada`),
+          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) * ${VALOR_MULTA_DIARIA} as valor_multa_num`),
           db.raw('TRUE as pode_devolver'), 
           db.raw('TRUE as pode_renovar')
         ).orderBy(colOrdenacao, dirOrdenacao).limit(limite).offset(deslocamento),
-        baseQuery.clone().count('alugueis.id as total')
+        baseQuery.clone().count('alugueis.id as total'),
+        db('alugueis').where('status', 'ativo').where('data_prevista_devolucao', '<', hoje).count('id as totalAtrasados')
       ]);
 
       const totalGeral = Number(contagem[0].total);
+      const totalAtrasados = Number(atrasadosCount[0].totalAtrasados);
+      
+      const dadosFormatados = registros.map((r: any) => ({
+        ...r,
+        multa_acumulada_formatada: r.valor_multa_num > 0 ? `R$ ${Number(r.valor_multa_num).toFixed(2)}` : '—',
+        multa_acumulada: r.valor_multa_num
+      }));
+
       res.json({ 
-        data: registros, 
+        data: dadosFormatados, 
         total: totalGeral, 
+        total_atrasados: totalAtrasados,
         page: pagina, 
         limit: limite, 
         pages: Math.ceil(totalGeral / limite) 
@@ -444,11 +460,17 @@ export class AluguelController {
           db.raw('COALESCE(alugueis.renovacoes, 0) as renovacoes'),
           db.raw(`CASE WHEN alugueis.status='ativo' AND COALESCE(alugueis.renovacoes,0)<2 THEN TRUE ELSE FALSE END as pode_renovar`),
           db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) as dias_atraso`),
-          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) * ${VALOR_MULTA_DIARIA} as multa_acumulada`)
+          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) * ${VALOR_MULTA_DIARIA} as valor_multa_num`)
         )
         .orderBy('alugueis.id', 'desc');
 
-      res.json(alugueis);
+      const dadosFormatados = alugueis.map((a: any) => ({
+        ...a,
+        multa_acumulada_formatada: a.valor_multa_num > 0 ? `R$ ${Number(a.valor_multa_num).toFixed(2)}` : '—',
+        multa_acumulada: a.valor_multa_num
+      }));
+
+      res.json(dadosFormatados);
     } catch { 
       res.status(500).json({ error: 'Não foi possível recuperar seus empréstimos.' }); 
     }
@@ -504,40 +526,6 @@ export class AluguelController {
     }
   };
 
-  /**
-   * Resumo rápido de todos os empréstimos que já estouraram o prazo.
-   */
-  atrasados = async (req: RequisicaoAutenticada, res: Response) => {
-    try {
-      const hoje = new Date(); 
-      hoje.setHours(0, 0, 0, 0);
-
-      const listaAtrasados = await db('alugueis')
-        .join('livros', 'alugueis.livro_id', 'livros.id')
-        .join('exemplares', 'alugueis.exemplar_id', 'exemplares.id')
-        .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
-        .where('alugueis.status', 'ativo')
-        .where('alugueis.data_prevista_devolucao', '<', hoje)
-        .select(
-          'alugueis.id', 'usuarios.nome as usuario', 'usuarios.email as contato',
-          'livros.titulo', 'exemplares.codigo as exemplar_codigo',
-          'alugueis.data_prevista_devolucao as prazo',
-          db.raw('DATEDIFF(NOW(), alugueis.data_prevista_devolucao) as dias_atraso'),
-          db.raw(`DATEDIFF(NOW(), alugueis.data_prevista_devolucao) * ${VALOR_MULTA_DIARIA} as multa_acumulada`)
-        )
-        .orderBy('dias_atraso', 'desc');
-
-      const totalFaturamento = listaAtrasados.reduce((acc, cur) => acc + Number(cur.multa_acumulada), 0);
-
-      res.json({ 
-        total: listaAtrasados.length, 
-        data: listaAtrasados,
-        total_faturamento_pendente: totalFaturamento
-      });
-    } catch { 
-      res.status(500).json({ error: 'Erro ao compilar lista de atrasados.' }); 
-    }
-  };
 
   /**
    * Adiciona mais 14 dias ao prazo de devolução. Limite de 2 renovações.

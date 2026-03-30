@@ -140,22 +140,32 @@ export class AcervoDigitalController {
           }
 
           const { id } = req.params;
-          const { acao } = req.body; // 'aprovar' ou 'rejeitar'
-
-          if (acao === 'aprovar') {
-              await db('acervo_digital').where({ id }).update({ status: 'aprovado' });
-              return res.json({ message: 'Documento aprovado e adicionado ao acervo!' });
-          } else {
-              // Soft Delete em vez de real Delete
-              await db('acervo_digital').where({ id }).update({ 
-                  status: 'pendente', 
-                  deleted_at: db.fn.now() 
-              });
-              return res.json({ message: 'Documento rejeitado e arquivado (não visível).' });
-          }
+          await db('acervo_digital').where({ id }).update({ status: 'aprovado' });
+          res.json({ message: 'Documento aprovado e adicionado ao acervo!' });
       } catch (erro) {
           console.error('Erro ao processar aprovação:', erro);
           res.status(500).json({ error: 'Falha ao processar solicitação.' });
       }
   };
+
+  /**
+   * Rejeita um documento pendente (Soft Delete)
+   */
+  rejeitar = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+        if (req.usuario?.tipo !== 'bibliotecario') {
+           return res.status(403).json({ error: 'Acesso negado.' });
+        }
+
+        const { id } = req.params;
+        await db('acervo_digital').where({ id }).update({ 
+            status: 'pendente', 
+            deleted_at: db.fn.now() 
+        });
+        res.json({ message: 'Documento rejeitado e arquivado (não visível).' });
+    } catch (erro) {
+        console.error('Erro ao processar rejeição:', erro);
+        res.status(500).json({ error: 'Falha ao processar solicitação.' });
+    }
+};
 }

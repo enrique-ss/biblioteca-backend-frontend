@@ -36,24 +36,22 @@ async function carregarAlugueis(pagina = 1, busca = '') {
             parametros.set('busca', busca.trim());
         }
 
-        // Busca dados de empréstimos e resumo de atrasados simultaneamente
-        const [resposta, atrasados] = await Promise.all([
-            api(`/alugueis/todos?${parametros}`),
-            api('/alugueis/atrasados')
-        ]);
+        // Busca dados de empréstimos (O total de atrasados já vem nos metadados da resposta)
+        const resposta = await api(`/alugueis/todos?${parametros}`);
 
         const linhas = Array.isArray(resposta) ? resposta : (resposta.data ?? []);
         const totalPaginas = Array.isArray(resposta) ? 1 : (resposta.pages ?? 1);
+        const totalAtrasados = resposta.total_atrasados ?? 0;
 
         renderizarTabelaAlugueisCompleta(linhas);
         renderizarPaginacao('alugueisPagination', pagina, totalPaginas, (p) => carregarAlugueis(p, busca));
 
-        // Gerencia o banner de aviso de atrasos no topo da tela
+        // Gerencia o banner de aviso de atrasos no topo da tela (Usando metadado do Back)
         const banner = document.getElementById('atrasadosBanner');
-        if (atrasados.total > 0) {
+        if (totalAtrasados > 0) {
             banner.style.display = 'flex';
             banner.innerHTML = `
-                ${atrasados.total} empréstimo(s) em atraso — 
+                ${totalAtrasados} empréstimo(s) em atraso — 
                 <a href="#" style="color:inherit;margin-left:4px;text-decoration:underline" onclick="mostrarTela('historicoScreen');carregarHistorico();">ver detalhes</a>`;
         } else {
             banner.style.display = 'none';
@@ -101,12 +99,9 @@ async function carregarMeusAlugueis() {
     }
 }
 
-/**
- * Função Didática: Exibe em destaque (vermelho) o tempo de atraso e o valor da multa acumulada.
- */
-function renderizarAlertaAtraso(diasAtraso, multaAcumulada) {
-    if (diasAtraso > 0) {
-        return `<span style="color:#f85149;font-weight:600">${diasAtraso}d — R$ ${multaAcumulada.toFixed(2)}</span>`;
+function renderizarBadgeMulta(multaFormatada) {
+    if (multaFormatada && multaFormatada !== '—') {
+        return `<span style="color:#f85149;font-weight:600">${multaFormatada}</span>`;
     }
     return `<span style="color:var(--text-faint)">—</span>`;
 }
@@ -136,7 +131,7 @@ function renderizarTabelaAlugueisCompleta(lista) {
             <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
             <td style="color:var(--text)">${formatarData(item.data_aluguel)}</td>
             <td style="color:var(--text)">${formatarData(item.prazo)}</td>
-            <td>${renderizarAlertaAtraso(diasAtraso, multaAcum)}</td>
+            <td>${renderizarBadgeMulta(item.multa_acumulada_formatada)}</td>
             <td>${badgeStatus(item.status)}</td>
             <td>
                 ${item.pode_devolver ? `<button class="btn btn-success btn-sm" onclick="abrirModalDevolucao(${item.id})">Devolver</button>` : '<span style="color:var(--text-dim)">—</span>'}
@@ -166,7 +161,7 @@ function renderizarTabelaAlugueisUsuario(lista) {
             <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(item.exemplar_codigo ?? '—')}</code></td>
             <td style="color:var(--text)">${formatarData(item.data_aluguel)}</td>
             <td style="color:var(--text)">${formatarData(item.prazo)}</td>
-            <td>${renderizarAlertaAtraso(diasAtraso, multaAcum)}</td>
+            <td>${renderizarBadgeMulta(item.multa_acumulada_formatada)}</td>
             <td>${badgeStatus(item.status)}</td>
             <td>
                 ${item.pode_renovar ? `<button class="btn btn-gold btn-sm" onclick="renovarEmprestimo(${item.id})">+14 dias</button>` : '<span style="color:var(--text-dim)">—</span>'}

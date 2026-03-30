@@ -20,15 +20,15 @@ A API REST do LuizaTeca obedece ao formato JSON para comunicação e respostas. 
 - **GET /api/acervo-digital**: Lista PDFs aprovados com filtros de busca e paginação.
 - **POST /api/acervo-digital**: Envia um novo PDF (Base64) e metadados.
 - **GET /api/acervo-digital/pendentes**: (Bibliotecário) Lista submissões aguardando curadoria.
-- **PATCH /api/acervo-digital/:id/aprovar**: (Bibliotecário) Aprova um documento.
-- **PATCH /api/acervo-digital/:id/rejeitar**: (Bibliotecário) Rejeita um documento.
-- **DELETE /api/acervo-digital/:id**: (Bibliotecário) Remove um documento do acervo.
+- **POST /api/acervo-digital/:id/aprovar**: (Bibliotecário) Aprova ou rejeita um documento (via body {acao: 'aprovar'|'rejeitar'}).
+- **DELETE /api/acervo-digital/:id**: (Bibliotecário) Remove logicamente um documento do acervo.
 
 ## 👥 Usuários (`/api/usuarios`)
 - `GET /api/usuarios`: (Bibliotecário) Lista todos os usuários.
-- `GET /api/usuarios/:id`: (Bibliotecário) Detalhes de um usuário específico.
-- `PUT /api/usuarios/:id`: (Bibliotecário) Atualiza dados ou bloqueia um usuário.
-- `DELETE /api/usuarios/:id`: (Bibliotecário) Remove uma conta do sistema.
+- `PUT /api/usuarios/:id`: (Bibliotecário) Atualiza dados básicos do usuário.
+- `POST /api/usuarios/:id/bloquear`: (Bibliotecário) Bloqueia acesso do usuário por infração.
+- `POST /api/usuarios/:id/desbloquear`: (Bibliotecário) Reabilita acesso do usuário.
+- `DELETE /api/usuarios/:id`: (Bibliotecário) Arquiva uma conta do sistema (Soft Delete).
 
 ## 📋 Aluguéis / Empréstimos (`/api/alugueis`)
 - `GET /api/alugueis/todos`: (Bibliotecário) Lista todos os empréstimos ativos.

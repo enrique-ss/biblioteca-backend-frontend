@@ -19,6 +19,7 @@ router.post('/', controller.cadastrar);
 
 // Rotas restritas a Bibliotecários (Gestão de Aprovações)
 router.get('/pendentes', verificarBibliotecario, controller.listarPendentes);
-router.post('/:id/aprovar', verificarBibliotecario, controller.aprovar);
+router.patch('/:id/aprovar', verificarBibliotecario, controller.aprovar);
+router.patch('/:id/rejeitar', verificarBibliotecario, controller.rejeitar);
 
 export default router;

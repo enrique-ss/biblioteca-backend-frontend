@@ -16,8 +16,8 @@ router.get('/', controller.listar);
 router.put('/:id', controller.atualizar);
 router.delete('/:id', controller.excluir);
 
-// Rotas de Controle de Bloqueio
-router.post('/:id/bloquear', controller.bloquear);
-router.post('/:id/desbloquear', controller.desbloquear);
+// Rotas de Controle de Bloqueio (Mudança de Status via Patch)
+router.patch('/:id/bloquear', controller.bloquear);
+router.patch('/:id/desbloquear', controller.desbloquear);
 
 export default router;

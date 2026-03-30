@@ -7,7 +7,7 @@ function carregarMenu() {
         elementoNome.textContent = currentUser.nome;
     }
 
-    const ehBibliotecario = currentUser.tipo === 'bibliotecario';
+    const ehBibliotecario = currentUser.permissions?.is_admin || false;
     
     const navLateral = document.getElementById('sidebarNav');
     if (navLateral) {
