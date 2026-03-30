@@ -1,82 +1,74 @@
-# 🛠️ Manual Técnico Completo: LuizaTeca
+# 🛠️ Manual Técnico Definitivo: LuizaTeca (FAQ & Arquitetura)
 
-Este documento é a especificação técnica definitiva do ecossistema LuizaTeca. Ele consolida arquitetura, banco de dados, regras de negócio e referências de API para desenvolvedores e mantenedores.
-
----
-
-## 🏛️ 1. Arquitetura do Sistema
-
-O LuizaTeca segue o padrão **Thin Client (Cliente Magro)** com uma separação rigorosa entre a interface e o processamento de dados.
-
-### 1.1 Stack Tecnológica
-- **Backend:** Node.js, Express, TypeScript.
-- **Banco de Dados:** SQLite (com Query Builder Knex.js).
-- **Autenticação:** JSON Web Tokens (JWT) com validade indefinida (sessão persistente) e bcryptjs para senhas.
-- **Frontend Web:** HTML5, CSS3 nativo, JavaScript Vanilla (Modular).
-- **Frontend CLI:** TypeScript/Node.js com Axios.
-
-### 1.2 Fragment Loading & Modularização (Web)
-Para evitar o crescimento de um "monolito HTML", o sistema utiliza o carregamento de fragmentos assíncronos:
-1.  O `index.html` carrega como um shell vazio.
-2.  O `core.js` busca `screens.html` e `modals.html` via `fetch`.
-3.  O conteúdo é injetado no DOM dentro de `#mainApp`.
-4.  Event listeners são vinculados via funções `setup...()` (ex: `setupLivrosForms`).
+Este documento foi desenhado para responder a qualquer pergunta sobre o projeto, focando no **"Por que?"** e no **"Como?"** de cada decisão técnica.
 
 ---
 
-## 🗄️ 2. Estrutura de Banco de Dados (Schema)
+## 🏗️ 1. Arquitetura "Thin Client" (Frontend Burro)
 
-O banco é relacional e robusto, com chaves estrangeiras que impedem a desordem dos dados.
+**Por que?**
+Evitar inconsistências. Se o cálculo de multas estivesse no JavaScript do site, um erro de arredondamento poderia dar um valor no Web e outro no terminal (CLI). Ao centralizar tudo no Backend, garantimos uma "única fonte da verdade".
 
-### 2.1 Principais Tabelas:
-- **`usuarios`**: `id`, `nome`, `email` (unique), `senha`, `tipo` (ENUM: 'usuario', 'bibliotecario'), `bloqueado` (boolean), `multa_pendente` (boolean).
-- **`livros`**: `id`, `titulo`, `autor`, `genero`, `ano_lancamento`, `corredor`, `prateleira`, `exemplares` (total), `exemplares_disponiveis`, `capa_url` (LongText), `deleted_at`.
-- **`exemplares`**: `id`, `livro_id` (FK), `codigo`, `disponibilidade` ('disponivel', 'emprestado', 'indisponivel', 'perdido'), `condicao` ('bom', 'danificado', 'perdido'), `observacao`.
-- **`acervo_digital`**: `id`, `titulo`, `autor`, `categoria`, `url_arquivo` (Base64), `paginas`, `status` ('pendente', 'aprovado').
-- **`alugueis`**: `id`, `livro_id` (FK), `exemplar_id` (FK), `usuario_id` (FK), `data_aluguel`, `data_prevista_devolucao` (D+14), `status` ('ativo', 'finalizado', 'atrasado').
-- **`multas`**: `id`, `aluguel_id` (FK), `usuario_id` (FK), `valor`, `status` ('pendente', 'pago').
+**Como?**
+O site e o terminal não "pensam", eles apenas perguntam ao servidor: `GET /api/alugueis/multas/minhas`. O servidor faz a conta no banco e responde o valor pronto.
 
 ---
 
-## 📋 3. Regras de Negócio Core
+## 📦 2. Guia de Dependências (O que e Por que?)
 
-### 3.1 Empréstimos e Circulação
-- **Prazos**: 14 dias para devolução.
-- **Renovações**: Permitidas até 2 vezes, desde que o livro não esteja atrasado.
-- **Condição no Recebimento**: O bibliotecário deve avaliar o exemplar na devolução.
-    - `danificado` -> O exemplar ganha uma observação, mas continua circulando.
-    - `perdido` -> Gera automaticamente uma multa de **R$ 100,00** e remove o exemplar do estoque.
-
-### 3.2 Financeiro e Bloqueios
-- **Multa por Atraso**: R$ 1,00 por dia.
-- **Bloqueio Automático**: Usuários com QUALQUER multa em aberto estão proibidos de retirar novos livros (Físicos ou Digitais).
-- **Abono**: Apenas usuários 'bibliotecário' podem zerar multas manualmente.
-
-### 3.3 Política de Dados (Soft Delete)
-- **Hard Delete Proibido**: Registros de aluguéis e multas nunca são apagados para evitar furos na auditoria.
-- **Arquivamento**: Livros e usuários são removidos do catálogo via `deleted_at`.
+| Biblioteca | Por que usamos? | Como ela ajuda? |
+| :--- | :--- | :--- |
+| **Express** | O motor do servidor. | Gerencia as rotas e os pedidos que chegam do site e do CLI. |
+| **CORS** | Segurança do Navegador. | Permite que o site (porta 8080) converse com o servidor (porta 3000). |
+| **BcryptJS** | Segurança de Senhas. | Transforma senhas em códigos (hashes). Se o banco for invadido, as senhas estão seguras. |
+| **JWT** | Prova de Identidade. | Gera um "token" (crachá digital). O site guarda isso para provar quem você é em cada clique. |
+| **Knex.js** | Query Builder. | Traduz nosso código JS para SQL, tornando as buscas no banco mais rápidas de escrever e manter. |
+| **MySQL2** | Driver do Banco. | É a "ponte" física entre o nosso código e o banco de dados MySQL. |
+| **Axios** | Cliente HTTP (CLI). | Permite que o terminal faça os pedidos para o servidor, assim como o navegador faz. |
 
 ---
 
-## 🌐 4. Referência Completa da API
+## 🗄️ 3. Banco de Dados e Soft Delete
 
-A API responde em JSON e exige cabeçalho `Authorization: Bearer <token>`.
+**Por que usar "Soft Delete" (Não apagar nada)?**
+Num sistema financeiro ou de biblioteca, apagar um registro é um erro grave. Se você apagar um livro, como saberá quem o alugou há um ano? O **Soft Delete** mantém a história viva para auditorias.
 
-| Rota | Método | Descrição | Acesso |
-| :--- | :--- | :--- | :--- |
-| `/api/auth/login` | POST | Gera token de acesso | Público |
-| `/api/livros` | GET | Lista acervo físico (paginado) | Público |
-| `/api/livros` | POST | Cria livro e N exemplares | Bibliotecário |
-| `/api/livros/:id/exemplares`| GET | Lista cópias físicas | Bibliotecário |
-| `/api/alugueis` | POST | Registra novo empréstimo | Bibliotecário |
-| `/api/alugueis/:id/devolver` | PUT | Finaliza aluguel e gera multas | Bibliotecário |
-| `/api/acervo-digital` | GET | Lista PDFs (aprovados) | Público |
-| `/api/acervo-digital` | POST | Usuário envia PDF p/ aprovação | Usuário |
-| `/api/acervo-digital/:id/aprovar`| POST | Aprova/Rejeita documento | Bibliotecário |
+**Como?**
+Usamos uma coluna chamada `deleted_at`. Quando você clica em "Excluir", o sistema preenche essa data. O livro "some" do site (porque só mostramos quem tem `deleted_at` vazio), mas continua no banco para relatórios passados.
 
 ---
 
-## 🔍 5. Auditoria de Segurança e Desemepenho
-- **Sincronia Total**: Web e CLI usam os mesmos cálculos no Backend (Frontends Burros).
-- **Otimização**: Consultas SQL agregadas para retornar KPIs em uma única requisição.
-- **Segurança**: Prevenção contra exclusão em cascata (Cascade Protection) através de Soft Deletes.
+## 🔄 4. Fragment Loading (Modularização Web)
+
+**Por que não um index.html gigante?**
+Um arquivo de 5 mil linhas é impossível de ler e manter. Modularizar permite que o desenvolvedor trabalhe em uma tela específica sem quebrar o resto do site.
+
+**Como?**
+O `index.html` é apenas um "esqueleto". O `core.js` usa a função `loadPartials()` para buscar o HTML de `screens.html` e `modals.html` via requisição assíncrona e "injetar" as telas dentro do site.
+
+---
+
+## 🛡️ 5. Segurança: JWT vs Sessão Comum
+
+**Por que JWT?**
+Sessões comuns pesam no servidor. O JWT é **Stateless** (sem estado). O servidor não precisa "lembrar" que você está logado; você mostra o seu token em cada pedido e o servidor apenas o valida matematicamente.
+
+**Como?**
+Ao logar, o backend gera uma string criptografada com seu ID e seu cargo (`bibliotecario` ou `usuario`). O frontend envia essa string no cabeçalho `Authorization: Bearer <token>`.
+
+---
+
+## 📋 6. Regras de Negócio (Lógica Interna)
+
+**Por que o prazo de 14 dias?**
+É o padrão acadêmico para rotatividade de estoque.
+**Como o sistema bloqueia o usuário?**
+Toda vez que o usuário tenta um empréstimo, o `RentController` verifica no banco: `count(multas) > 0`. Se for verdadeiro, o sistema trava o processo e retorna um erro 400.
+
+---
+
+## 🔍 7. Perguntas Frequentes de Apresentação (FAQ)
+
+1.  **O sistema aguenta muitos usuários?** Sim, o uso de MySQL com Pool de Conexões (`mysql2`) permite gerenciar centenas de acessos simultâneos sem travar.
+2.  **E se o servidor cair?** O Frontend acusará "Erro de Conexão", mas como os dados estão no banco MySQL, nada é perdido ao reiniciar o serviço.
+3.  **Qual o ponto mais inovador?** A sincronia total entre Web e CLI. Você pode gerenciar a biblioteca de qualquer lugar, seja por uma interface visual rica ou por um terminal ágil.
