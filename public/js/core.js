@@ -1,5 +1,6 @@
-// Configurações Globais
-const API_URL = 'http://127.0.0.1:3000/api';
+// Configurações Globais (Detecta automaticamente se está rodando em rede local ou localhost)
+const HOST_IP = window.location.hostname;
+const API_URL = `http://${HOST_IP}:3000/api`;
 let token = null;
 let currentUser = null;
 

@@ -5,8 +5,9 @@ import dotenv from 'dotenv';
 // Carrega as variáveis de ambiente do arquivo .env
 dotenv.config();
 
-// Configuração base da API (Comunica com o servidor Express)
-const api = axios.create({ baseURL: 'http://127.0.0.1:3000/api' });
+// Configuração base da API (Comunica com o servidor via IP dinâmico ou fixo)
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000/api';
+const api = axios.create({ baseURL: BASE_URL });
 
 let tokenAcesso: string | null = null;
 let usuarioLogado: any = null;
@@ -114,22 +115,15 @@ async function menuAcervo() {
     limparTela();
     imprimirTitulo('ACERVO DE LIVROS', cores.magenta);
 
-    if (usuarioLogado.tipo === 'bibliotecario') {
-      imprimirOpcao('1', 'Consultar catálogo (Físico)');
-      imprimirOpcao('2', 'Cadastrar nova obra');
-      imprimirOpcao('3', 'Editar informações de livro');
-      imprimirOpcao('5', 'Gerenciar cópias físicas (Exemplares)');
-      imprimirOpcao('6', 'Vistoria: Alterar estado de conservação');
-      imprimirOpcao('7', 'Acervo Digital (PDFs/Curadoria)');
-    } else {
-      imprimirOpcao('1', 'Pesquisar livros físicos');
-      imprimirOpcao('7', 'Explorar Acervo Digital');
+    imprimirOpcao('1', 'Consultar Catálogo');
+    if (usuarioLogado.permissions?.is_admin) {
+      imprimirOpcao('2', 'Adicionar Nova Obra');
+      imprimirOpcao('3', 'Gerenciar Exemplares (Cópias)');
     }
-    
-    imprimirOpcao('0', 'Voltar ao menu inicial');
+    imprimirOpcao('0', 'Voltar');
     desenharDivisor();
 
-    const permitidos = usuarioLogado.tipo === 'bibliotecario' ? ['1', '2', '3', '5', '6', '7', '0'] : ['1', '7', '0'];
+    const permitidos = usuarioLogado.permissions?.is_admin ? ['1', '2', '3', '0'] : ['1', '0'];
     const opc = await validarEscolha(colorir('Selecione uma ação: ', cores.amarelo + cores.negrito), permitidos);
     
     if (opc === '0' || opc === '') break;
@@ -137,10 +131,7 @@ async function menuAcervo() {
     switch (opc) {
       case '1': await acaoConsultarAcervo(); break;
       case '2': await acaoCadastrarLivro(); break;
-      case '3': await acaoEditarLivro(); break;
-      case '5': await acaoVerExemplares(); break;
-      case '6': await acaoAlterarEstadoExemplar(); break;
-      case '7': await menuAcervoDigital(); break;
+      case '3': await acaoVerExemplares(); break;
     }
   }
 }
@@ -368,10 +359,17 @@ async function acaoListarEmprestimosAtivos() {
 
 async function acaoListarAtrasados() {
   try {
-    const { data } = await api.get('/alugueis/atrasados');
-    data.data.forEach((item: any) => {
-      console.log(`  ${colorir(String(item.id).padStart(3), cores.cinza)}  ${item.usuario.padEnd(20)}  ${item.titulo.substring(0, 30)}  ${item.dias_atraso} dias de atraso`);
-    });
+    // Busca empréstimos ativos e filtra localmente ou usa a contagem do back
+    const { data } = await api.get('/alugueis/todos?limit=100');
+    const atrasados = data.data.filter((i: any) => i.status === 'atrasado');
+    
+    if (atrasados.length === 0) {
+      console.log('\nNão há livros em atraso no momento.');
+    } else {
+      atrasados.forEach((item: any) => {
+        console.log(`  ${colorir(String(item.id).padStart(3), cores.cinza)}  ${item.usuario.padEnd(20)}  ${item.titulo.substring(0, 30)}  ${colorir(item.multa_acumulada_formatada, cores.vermelho)}`);
+      });
+    }
   } catch (erro: any) { logErro(erro); }
   await aguardarEnter();
 }
@@ -508,31 +506,41 @@ async function menuPrincipal() {
     await exibirMiniDashboard();
     desenharDivisor();
 
-    if (usuarioLogado.tipo === 'bibliotecario') {
-      imprimirOpcao('1', 'Gestão do Acervo');
-      imprimirOpcao('2', 'Empréstimos');
-      imprimirOpcao('3', 'Usuários');
-      imprimirOpcao('4', 'ALERTAS');
+    if (usuarioLogado.permissions?.is_admin) {
+      imprimirOpcao('1', 'Acervo Físico');
+      imprimirOpcao('2', 'Acervo Digital');
+      imprimirOpcao('3', 'Empréstimos');
+      imprimirOpcao('4', 'Usuários');
+      imprimirOpcao('5', 'Estatísticas');
+      imprimirOpcao('6', 'Alertas');
+      imprimirOpcao('7', 'Meu Perfil');
       imprimirOpcao('0', 'Logout');
-      const opc = await validarEscolha('Escolha: ', ['1', '2', '3', '4', '0']);
+      const opc = await validarEscolha('Ação: ', ['1', '2', '3', '4', '5', '6', '7', '0']);
       if (opc === '0' || opc === '') break;
       switch (opc) {
         case '1': await menuAcervo(); break;
-        case '2': await menuEmprestimos(); break;
-        case '3': await menuUsuarios(); break;
-        case '4': await acaoCentroAlertas(); break;
+        case '2': await menuAcervoDigital(); break;
+        case '3': await menuEmprestimos(); break;
+        case '4': await menuUsuarios(); break;
+        case '5': await acaoVerEstatisticas(); break;
+        case '6': await acaoCentroAlertas(); break;
+        case '7': await acaoMeuPerfil(); break;
       }
     } else {
-      imprimirOpcao('1', 'Consultar Acervo');
-      imprimirOpcao('2', 'Minha Área');
-      imprimirOpcao('3', 'ALERTAS');
+      imprimirOpcao('1', 'Acervo Físico');
+      imprimirOpcao('2', 'Acervo Digital');
+      imprimirOpcao('3', 'Meus Livros');
+      imprimirOpcao('4', 'Alertas');
+      imprimirOpcao('5', 'Meu Perfil');
       imprimirOpcao('0', 'Logout');
-      const opc = await validarEscolha('Escolha: ', ['1', '2', '3', '0']);
+      const opc = await validarEscolha('Ação: ', ['1', '2', '3', '4', '5', '0']);
       if (opc === '0' || opc === '') break;
       switch (opc) {
         case '1': await menuAcervo(); break;
-        case '2': await menuMeusDados(); break;
-        case '3': await acaoCentroAlertas(); break;
+        case '2': await menuAcervoDigital(); break;
+        case '3': await menuMeusDados(); break;
+        case '4': await acaoCentroAlertas(); break;
+        case '5': await acaoMeuPerfil(); break;
       }
     }
   }
@@ -541,19 +549,35 @@ async function menuPrincipal() {
   return telaInicial();
 }
 
+async function acaoMeuPerfil() {
+  limparTela();
+  imprimirTitulo('MEU PERFIL', cores.azul);
+  console.log(`  ${colorir('Nome: ', cores.cinza)} ${usuarioLogado.nome}`);
+  console.log(`  ${colorir('E-mail:', cores.cinza)} ${usuarioLogado.email}`);
+  console.log(`  ${colorir('Tipo:  ', cores.cinza)} ${usuarioLogado.tipo}`);
+  await aguardarEnter();
+}
+
+async function acaoVerEstatisticas() {
+  limparTela();
+  imprimirTitulo('ESTATÍSTICAS DO SISTEMA', cores.magenta);
+  await exibirMiniDashboard();
+  await aguardarEnter();
+}
+
 async function acaoCentroAlertas() {
   limparTela();
   imprimirTitulo('CENTRO DE ALERTAS', cores.amarelo);
   try {
     const lista: any[] = [];
     if (usuarioLogado.tipo === 'bibliotecario') {
-      const { data: atr } = await api.get('/alugueis/atrasados');
-      if (atr.total > 0) lista.push(`Existem ${atr.total} empréstimos em atraso.`);
+      const { data: res } = await api.get('/alugueis/todos?limit=1');
+      if (res.total_atrasados > 0) lista.push(`Existem ${res.total_atrasados} empréstimos em atraso.`);
       const { data: pen } = await api.get('/acervo-digital/pendentes');
       if (pen.length > 0) lista.push(`Existem ${pen.length} arquivos digitais pendentes.`);
     } else {
       const { data: mul } = await api.get('/alugueis/multas/minhas');
-      if (mul.total_pendente > 0) lista.push(`Você possui R$ ${mul.total_pendente.toFixed(2)} em multas.`);
+      if (mul.total_pendente > 0) lista.push(`Você possui ${mul.total_pendente_formatado} em multas.`);
     }
     if (lista.length === 0) console.log('\n  Tudo em ordem.');
     else lista.forEach(l => console.log(`  [!] ${l}`));
