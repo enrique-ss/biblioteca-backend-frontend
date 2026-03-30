@@ -340,7 +340,7 @@ function renovarEmprestimo(id) {
             try {
                 const resposta = await api(`/alugueis/${id}/renovar`, { method: 'PUT' });
                 exibirAlerta(resposta.message || 'Empréstimo renovado!');
-                loadMeusAlugueis();
+                carregarMeusAlugueis();
             } catch (erro) { 
                 exibirAlerta(erro.message, 'danger'); 
             }
@@ -439,13 +439,20 @@ async function exportarHistoricoCSV() {
 
 async function carregarMinhasMultas() {
     definirCarregando('minhasMultasTbody', 6);
+    document.getElementById('btnPagarMinhasMultas').style.display = 'none';
+    document.getElementById('minhasMultasTotal').textContent = '';
+
     try {
-        const { multas, total_pendente } = await api('/alugueis/multas/minhas');
+        // A API retorna { multas: [...], total_pendente: number }
+        const resposta = await api('/alugueis/multas/minhas');
+        const multas = resposta.multas || [];
+        const total_pendente = resposta.total_pendente || 0;
+
         const tbody = document.getElementById('minhasMultasTbody');
         tbody.innerHTML = '';
         
         if (!multas.length) { 
-            definirVazio('minhasMultasTbody', 6, 'Você não possui multas registradas no sistema.'); 
+            definirVazio('minhasMultasTbody', 6, 'Você não possui multas registradas. Parabéns! 🎉'); 
             document.getElementById('minhasMultasTotal').textContent = '';
             document.getElementById('btnPagarMinhasMultas').style.display = 'none';
             return; 
@@ -453,14 +460,16 @@ async function carregarMinhasMultas() {
 
         multas.forEach(m => {
             const tr = document.createElement('tr');
-            const classeBadge = m.status === 'pendente' ? 'badge-danger' : 'badge-success';
+            const isPendente = m.status === 'pendente';
+            const classeBadge = isPendente ? 'badge-danger' : 'badge-success';
+            const statusLabel = isPendente ? 'Pendente' : 'Paga';
             
             tr.innerHTML = `
                 <td>${badgeTipoMulta(m.tipo)}</td>
-                <td><strong>${esc(m.livro)}</strong></td>
+                <td><strong>${esc(m.livro || '—')}</strong></td>
                 <td style="color:#f85149;font-weight:600">R$ ${Number(m.valor).toFixed(2)}</td>
                 <td style="color:var(--text)">${m.dias_atraso > 0 ? `${m.dias_atraso} dias` : '—'}</td>
-                <td><span class="badge ${classeBadge}">${esc(m.status)}</span></td>
+                <td><span class="badge ${classeBadge}">${statusLabel}</span></td>
                 <td style="color:var(--text)">${formatarData(m.created_at)}</td>`;
             
             tbody.appendChild(tr);
@@ -468,14 +477,15 @@ async function carregarMinhasMultas() {
 
         const totalEl = document.getElementById('minhasMultasTotal');
         if (total_pendente > 0) {
-            totalEl.innerHTML = `Total a pagar: <strong style="color:#f85149">R$ ${total_pendente.toFixed(2)}</strong>`;
+            totalEl.innerHTML = `Total pendente: <strong style="color:#f85149">R$ ${total_pendente.toFixed(2)}</strong>`;
             document.getElementById('btnPagarMinhasMultas').style.display = 'inline-flex';
         } else {
-            totalEl.textContent = 'Você está em dia com a biblioteca. Parabéns!';
+            totalEl.innerHTML = `<span style="color:var(--success)">✓ Você está em dia com a biblioteca!</span>`;
             document.getElementById('btnPagarMinhasMultas').style.display = 'none';
         }
     } catch (erro) { 
-        definirVazio('minhasMultasTbody', 6, erro.message); 
+        definirVazio('minhasMultasTbody', 6, `Erro ao carregar multas: ${erro.message}`);
+        exibirAlerta(erro.message, 'danger');
     }
 }
 
@@ -489,14 +499,14 @@ async function pagarMinhasMultas() {
             try {
                 const resultado = await api('/alugueis/multas/pagar/mim', { method: 'PUT' });
                 exibirAlerta(resultado.message, 'success');
-                await carregarMinhasMultas();
-                
-                // Atualiza o estado do usuário (remover indicação de multa)
+                // Atualiza o estado do usuário
                 if (currentUser) {
                     currentUser.multa_pendente = false;
                     salvarSessao();
                     atualizarNavbar();
                 }
+                // Recarrega os alertas para refletir o pagamento
+                await buscarNotificacoes();
             } catch (erro) { 
                 exibirAlerta(erro.message, 'danger'); 
             }

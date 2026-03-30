@@ -70,6 +70,17 @@ async function configurarBanco() {
     });
     console.log('⭐ Usuário admin padrão criado: admin@admin | senha: admin123');
 
+    // Criação do usuário comum padrão (para testes)
+    const hashSenhaUser = await bcrypt.hash('user123', 10);
+    await db('usuarios').insert({
+      nome: 'Usuário Teste',
+      email: 'user@user',
+      senha: hashSenhaUser,
+      tipo: 'usuario',
+      multa_pendente: false
+    });
+    console.log('👤 Usuário comum padrão criado: user@user | senha: user123');
+
     // --- Criação da Tabela: LIVROS ---
     await db.schema.createTable('livros', (t) => {
       t.increments('id').primary();

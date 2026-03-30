@@ -54,6 +54,15 @@ function carregarMenu() {
                 } 
             }
         );
+        // Estatísticas só para bibliotecários
+        itensMenu.push({ 
+            icon: '📊', 
+            title: 'Estatísticas', 
+            action() { 
+                mostrarTela('statsScreen'); 
+                carregarEstatisticasDetalhadas(); 
+            } 
+        });
     } else {
         // Opções para usuários comuns
         itensMenu.push(
@@ -64,26 +73,9 @@ function carregarMenu() {
                     carregarMeusAlugueis(); 
                     mostrarTela('alugueisScreen'); 
                 } 
-            },
-            { 
-                icon: '💸', 
-                title: 'Minhas Multas', 
-                action() { 
-                    carregarMinhasMultas(); 
-                    mostrarTela('multasUsuarioScreen'); 
-                } 
             }
         );
     }
-
-    itensMenu.push({ 
-        icon: '📊', 
-        title: 'Estatísticas', 
-        action() { 
-            mostrarTela('statsScreen'); 
-            carregarEstatisticasDetalhadas(); 
-        } 
-    });
 
     // Itens de suporte comum (Alertas e Tema)
     itensMenu.push(
