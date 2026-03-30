@@ -200,6 +200,7 @@
 }
 
 .digital-card:hover .digital-card-poster::after {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
     opacity: 1;
 }
 
@@ -270,15 +271,32 @@
     gap: 8px;
 }
 
+.digital-card-content .btn {
+    border: none !important;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.digital-card-actions .btn:hover {
+    background: var(--accent);
+    color: #fff !important;
+}
+
 .digital-card-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .digital-card-actions .btn {
     flex: 1;
-    font-size: 0.6rem;
-    padding: 10px 4px;
+    font-size: 0.7rem;
+    padding: 12px 6px;
+    border-radius: var(--r-md);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
 }
 
 /* ── RESPONSIVE ── */

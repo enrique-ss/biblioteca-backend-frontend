@@ -42,7 +42,7 @@ async function carregarUsuarios(pagina = 1, busca = '') {
             if (u.bloqueado) {
                 botaoBloqueio = `<button class="btn btn-ghost btn-sm" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`;
             } else {
-                botaoBloqueio = `<button class="btn btn-ghost btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`;
+                botaoBloqueio = `<button class="btn btn-danger btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`;
             }
 
             // Adiciona botão de multas se houver
@@ -60,7 +60,6 @@ async function carregarUsuarios(pagina = 1, busca = '') {
                     <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
                     ${botaoMultas}
                     ${botaoBloqueio}
-                    <button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id},'${esc(u.nome)}')">Excluir</button>
                 </div></td>`;
             
             tbody.appendChild(tr);
@@ -113,23 +112,6 @@ document.getElementById('editUsuarioForm').addEventListener('submit', async (e) 
     }
 });
 
-function excluirUsuario(id, nome) {
-    exibirConfirmacao({
-        icon: '🗑️',
-        title: 'Excluir usuário',
-        msg: `Deseja realmente excluir "${nome}" permanentemente?`,
-        okLabel: 'Excluir',
-        async onOk() {
-            try {
-                await api(`/usuarios/${id}`, { method: 'DELETE' });
-                exibirAlerta('Usuário excluído!');
-                carregarUsuarios();
-            } catch (erro) { 
-                exibirAlerta(erro.message, 'danger'); 
-            }
-        }
-    });
-}
 
 async function verMultasUsuario(id, nome) {
     abrirModal('multasModal');

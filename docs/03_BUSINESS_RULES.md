@@ -42,6 +42,7 @@ Este documento sumariza as regras essenciais operacionais do Sistema LuizaTeca.
     - **Monitoramento**: Visão geral de atrasos em todo o sistema e multas em aberto.
     - **Curadoria**: Alerta sobre novos documentos digitais aguardando aprovação.
 
-## 6. Manutenção de Acervo
-- **Soft Delete**: Livros removidos do sistema não são apagados fisicamente do banco de imediato. Eles recebem um timestamp em `deleted_at` para permitir auditoria e histórico de empréstimos antigos.
+## 6. Integridade de Dados e Auditoria
+- **Política de Não-Exclusão (No Hard Delete)**: Para garantir a integridade histórica e financeira, o sistema **proíbe a exclusão física** de registros de usuários e livros. As opções de "Excluir" foram removidas de todas as interfaces (Web e CLI).
+- **Arquivamento Logístico (Soft Delete)**: O descarte de uma obra ou desativação de usuário é realizado via campo `deleted_at`. Registros arquivados deixam de aparecer no catálogo público e nas listagens administrativas de usuários, mas permanecem no banco para auditoria de empréstimos e multas passadas.
 - **Sincronia de Inventário**: A devolução de um exemplar físico atualiza automaticamente o contador `exemplares_disponiveis` na tabela de livros pai.

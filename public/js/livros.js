@@ -94,9 +94,9 @@ async function carregarLivros(busca = '', pagina = 1) {
                     </div>
 
                     ${ehBibliotecario ? `
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn btn-ghost btn-sm" style="flex:1" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
-                        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
+                    <div class="digital-card-actions">
+                        <button class="btn btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
+                        <button class="btn btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
                     </div>` : ''}
                 </div>
             `;

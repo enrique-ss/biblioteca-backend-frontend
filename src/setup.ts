@@ -53,9 +53,11 @@ async function configurarBanco() {
       t.boolean('multa_pendente').notNullable().defaultTo(false);
       t.boolean('bloqueado').notNullable().defaultTo(false);
       t.text('motivo_bloqueio').nullable();
+      t.timestamp('deleted_at').nullable();
       t.timestamp('created_at').defaultTo(db.fn.now());
       
       t.index(['tipo'], 'idx_usuarios_tipo');
+      t.index(['deleted_at'], 'idx_usuarios_deleted_at');
     });
     console.log('✅ Tabela [usuarios] criada.');
 
@@ -180,12 +182,14 @@ async function configurarBanco() {
       t.text('capa_url', 'longtext').nullable(); // Base64 da thumb (capa)
       t.enum('status', ['pendente', 'aprovado']).notNullable().defaultTo('aprovado');
       t.integer('usuario_id').unsigned().nullable(); // Quem enviou
+      t.timestamp('deleted_at').nullable();
       t.timestamp('created_at').defaultTo(db.fn.now());
       
       t.foreign('usuario_id').references('id').inTable('usuarios').onDelete('SET NULL');
       t.index(['categoria'], 'idx_digital_categoria');
       t.index(['status'], 'idx_digital_status');
       t.index(['titulo'], 'idx_digital_titulo');
+      t.index(['deleted_at'], 'idx_digital_deleted_at');
     });
     console.log('✅ Tabela [acervo_digital] criada.');
 

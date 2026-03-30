@@ -118,7 +118,6 @@ async function menuAcervo() {
       imprimirOpcao('1', 'Consultar catálogo (Físico)');
       imprimirOpcao('2', 'Cadastrar nova obra');
       imprimirOpcao('3', 'Editar informações de livro');
-      imprimirOpcao('4', 'Remover do acervo (Soft Delete)');
       imprimirOpcao('5', 'Gerenciar cópias físicas (Exemplares)');
       imprimirOpcao('6', 'Vistoria: Alterar estado de conservação');
       imprimirOpcao('7', 'Acervo Digital (PDFs/Curadoria)');
@@ -130,7 +129,7 @@ async function menuAcervo() {
     imprimirOpcao('0', 'Voltar ao menu inicial');
     desenharDivisor();
 
-    const permitidos = usuarioLogado.tipo === 'bibliotecario' ? ['1', '2', '3', '4', '5', '6', '7', '0'] : ['1', '7', '0'];
+    const permitidos = usuarioLogado.tipo === 'bibliotecario' ? ['1', '2', '3', '5', '6', '7', '0'] : ['1', '7', '0'];
     const opc = await validarEscolha(colorir('Selecione uma ação: ', cores.amarelo + cores.negrito), permitidos);
     
     if (opc === '0' || opc === '') break;
@@ -139,7 +138,6 @@ async function menuAcervo() {
       case '1': await acaoConsultarAcervo(); break;
       case '2': await acaoCadastrarLivro(); break;
       case '3': await acaoEditarLivro(); break;
-      case '4': await acaoRemoverLivro(); break;
       case '5': await acaoVerExemplares(); break;
       case '6': await acaoAlterarEstadoExemplar(); break;
       case '7': await menuAcervoDigital(); break;
@@ -155,7 +153,6 @@ async function menuAcervoDigital() {
     if (usuarioLogado.tipo === 'bibliotecario') {
       imprimirOpcao('1', 'Consultar acervo digital aprovado');
       imprimirOpcao('2', 'Ver submissões PENDENTES (Curadoria)');
-      imprimirOpcao('3', 'Remover arquivo digital');
     } else {
       imprimirOpcao('1', 'Explorar biblioteca digital');
       imprimirOpcao('2', 'Enviar (Upload) novo PDF para aprovação');
@@ -164,7 +161,7 @@ async function menuAcervoDigital() {
     imprimirOpcao('0', 'Voltar');
     desenharDivisor();
 
-    const permitidos = usuarioLogado.tipo === 'bibliotecario' ? ['1', '2', '3', '0'] : ['1', '2', '0'];
+    const permitidos = usuarioLogado.tipo === 'bibliotecario' ? ['1', '2', '0'] : ['1', '2', '0'];
     const opc = await validarEscolha(colorir('Ação Digital: ', cores.amarelo + cores.negrito), permitidos);
     
     if (opc === '0') break;
@@ -176,7 +173,6 @@ async function menuAcervoDigital() {
         if (usuarioLogado.tipo === 'bibliotecario') await acaoCuradoriaDigital();
         else await acaoEnviarDigital();
         break;
-      case '3': await acaoRemoverDigital(); break;
     }
   }
 }
@@ -256,14 +252,6 @@ async function acaoCuradoriaDigital() {
   await aguardarEnter();
 }
 
-async function acaoRemoverDigital() {
-  const id = await perguntar('ID do documento digital para remover: ');
-  try {
-    await api.delete(`/acervo-digital/${id}`);
-    logSucesso('Documento removido do servidor.');
-  } catch (erro: any) { logErro(erro); }
-  await aguardarEnter();
-}
 
 async function acaoConsultarAcervo() {
   limparTela();
@@ -314,14 +302,6 @@ async function acaoEditarLivro() {
   await aguardarEnter();
 }
 
-async function acaoRemoverLivro() {
-  const id = await perguntar('ID do livro para exclusão: ');
-  try {
-    const { data } = await api.delete(`/livros/${id}`);
-    logSucesso(data.message);
-  } catch (erro: any) { logErro(erro); }
-  await aguardarEnter();
-}
 
 async function acaoVerExemplares() {
   const idLivro = await perguntar('Digite o ID do livro pai: ');

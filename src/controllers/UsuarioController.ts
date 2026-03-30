@@ -23,9 +23,11 @@ export class UsuarioController {
       const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'nome';
       const direcaoOrdenacao = order === 'desc' ? 'desc' : 'asc';
 
-      let consulta = db('usuarios').select(
-        'id', 'nome', 'email', 'tipo', 'multa_pendente', 'bloqueado', 'motivo_bloqueio', 'created_at'
-      );
+      let consulta = db('usuarios')
+        .where('deleted_at', null)
+        .select(
+          'id', 'nome', 'email', 'tipo', 'multa_pendente', 'bloqueado', 'motivo_bloqueio', 'created_at'
+        );
 
       // Aplica filtro de busca se fornecido (Nome ou E-mail)
       const termoBusca = String(busca || '').trim();
@@ -42,7 +44,7 @@ export class UsuarioController {
           .orderBy(colunaOrdenacao, direcaoOrdenacao)
           .limit(limite)
           .offset(deslocamento),
-        db('usuarios').modify(q => {
+        db('usuarios').where('deleted_at', null).modify(q => {
           if (termoBusca) {
             const queryTermo = `%${termoBusca}%`;
             q.where(builder => 
@@ -71,10 +73,10 @@ export class UsuarioController {
       const { id } = req.params;
       const { nome, email, tipo } = req.body;
 
-      // Verifica se o usuário alvo existe no sistema
-      const usuarioAlvo = await db('usuarios').where({ id }).first();
+      // Verifica se o usuário alvo existe no sistema e não está deletado
+      const usuarioAlvo = await db('usuarios').where({ id }).where('deleted_at', null).first();
       if (!usuarioAlvo) {
-        return res.status(404).json({ error: 'Usuário não encontrado.' });
+        return res.status(404).json({ error: 'Usuário não encontrado ou já desativado.' });
       }
 
       const dadosParaAtualizar: any = {};
@@ -92,14 +94,15 @@ export class UsuarioController {
           return res.status(400).json({ error: 'Formato de e-mail inválido.' });
         }
         
-        // Verifica se o novo e-mail já não pertence a outra pessoa
+        // Verifica se o novo e-mail já não pertence a outra pessoa ativa
         const emailEmUso = await db('usuarios')
           .where({ email: emaisFormatado })
           .whereNot({ id })
+          .where('deleted_at', null)
           .first();
         
         if (emailEmUso) {
-          return res.status(400).json({ error: 'Este e-mail já está sendo utilizado por outro cadastro.' });
+          return res.status(400).json({ error: 'Este e-mail já está sendo utilizado por outro cadastro ativo.' });
         }
         dadosParaAtualizar.email = emaisFormatado;
       }
@@ -131,17 +134,17 @@ export class UsuarioController {
     }
   };
 
-  // Exclusão definitiva de um usuário
+  // Arquivamento (Soft Delete) de um usuário
   excluir = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
       
-      const usuario = await db('usuarios').where({ id }).first();
+      const usuario = await db('usuarios').where({ id }).where('deleted_at', null).first();
       if (!usuario) {
-        return res.status(404).json({ error: 'Usuário não encontrado.' });
+        return res.status(404).json({ error: 'Usuário não encontrado ou já desativado.' });
       }
 
-      // Regra de segurança: Não excluir usuário com livros em mãos
+      // Regra de segurança: Não desativar usuário com livros em mãos
       const [{ totalAtivos }] = await db('alugueis')
         .where({ usuario_id: id, status: 'ativo' })
         .count('id as totalAtivos');
@@ -152,11 +155,12 @@ export class UsuarioController {
         });
       }
 
-      await db('usuarios').where({ id }).del();
-      res.json({ message: '✅ Usuário removido permanentemente do sistema.' });
+      // Soft Delete: Marcar momento do arquivamento
+      await db('usuarios').where({ id }).update({ deleted_at: db.fn.now() });
+      res.json({ message: '✅ Usuário arquivado com sucesso. Os registros históricos permanecem no banco para auditoria.' });
     } catch (erro) {
-      console.error('Erro ao excluir usuário:', erro);
-      res.status(500).json({ error: 'Ocorreu um erro ao tentar excluir o usuário.' });
+      console.error('Erro ao arquivar usuário:', erro);
+      res.status(500).json({ error: 'Ocorreu um erro ao tentar arquivar o usuário.' });
     }
   };
 

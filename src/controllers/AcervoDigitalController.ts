@@ -18,7 +18,7 @@ export class AcervoDigitalController {
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      let consulta = db('acervo_digital').where({ status: 'aprovado' });
+      let consulta = db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at');
 
       // Filtro de busca textual (Título ou Autor)
       const termoBusca = String(busca || '').trim();
@@ -44,8 +44,8 @@ export class AcervoDigitalController {
       const [registros, contagem, categoriasDisp, anosDisp] = await Promise.all([
         consulta.clone().select('*').orderBy('created_at', 'desc').limit(limite).offset(deslocamento),
         consulta.clone().count('id as total'),
-        db('acervo_digital').where({ status: 'aprovado' }).distinct('categoria').orderBy('categoria', 'asc'),
-        db('acervo_digital').where({ status: 'aprovado' }).distinct('ano').orderBy('ano', 'desc')
+        db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at').distinct('categoria').orderBy('categoria', 'asc'),
+        db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at').distinct('ano').orderBy('ano', 'desc')
       ]);
 
       const data = registros as any[];
@@ -79,6 +79,7 @@ export class AcervoDigitalController {
         .join('usuarios', 'acervo_digital.usuario_id', 'usuarios.id')
         .select('acervo_digital.*', 'usuarios.nome as usuario_nome')
         .where({ 'acervo_digital.status': 'pendente' })
+        .whereNull('acervo_digital.deleted_at')
         .orderBy('acervo_digital.created_at', 'desc');
 
       res.json(pendentes);
@@ -145,8 +146,12 @@ export class AcervoDigitalController {
               await db('acervo_digital').where({ id }).update({ status: 'aprovado' });
               return res.json({ message: 'Documento aprovado e adicionado ao acervo!' });
           } else {
-              await db('acervo_digital').where({ id }).delete();
-              return res.json({ message: 'Documento rejeitado e removido do sistema.' });
+              // Soft Delete em vez de real Delete
+              await db('acervo_digital').where({ id }).update({ 
+                  status: 'pendente', 
+                  deleted_at: db.fn.now() 
+              });
+              return res.json({ message: 'Documento rejeitado e arquivado (não visível).' });
           }
       } catch (erro) {
           console.error('Erro ao processar aprovação:', erro);
