@@ -22,28 +22,7 @@
             </div>
             
             <div class="sidebar-nav" id="sidebarNav" style="display:none;">
-                <!-- Dynamically populated by menu.js depending on user role -->
-            </div>
-
-            <div class="sidebar-bottom">
-                <div class="nav-notifications" id="navNotifications" style="display:none;">
-                    <button class="side-btn" onclick="mostrarTela('notificacoesScreen'); carregarNotificacoesCompleto();" title="Notificações">
-                        <span class="side-icon" style="position:relative;">🔔<span class="nav-notifications-badge" id="notificationsBadge">0</span></span>
-                        <span class="side-text">Alertas</span>
-                    </button>
-                </div>
-                
-                <button class="side-btn" onclick="toggleTheme()" title="Alternar tema">
-                    <span class="side-icon" id="btnThemeIcon">🌙</span><span class="side-text">Tema</span>
-                </button>
-
-                <button class="side-btn" id="navUser" style="display:none;" onclick="mostrarTela('perfilScreen')" title="Meu Perfil">
-                    <span class="side-icon">👤</span><span class="side-text">Meu Perfil</span>
-                </button>
-
-                <button class="side-btn" id="btnLogout" style="display:none; color: var(--danger); border-top: 1px solid var(--border); margin-top: 8px; padding-top: 16px;" onclick="logout()" title="Sair da Conta">
-                    <span class="side-icon" style="color:var(--danger);">🚪</span><span class="side-text" style="color:var(--danger);">Sair da Conta</span>
-                </button>
+                <!-- All items including nav, theme, profile and logout will be here -->
             </div>
         </aside>
 
@@ -112,7 +91,7 @@
 
             <section id="livrosScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title"><span>Acervo</span> de Livros</h2>
+                    <h2 class="page-title"><span>Acervo</span> Físico</h2>
                     <div class="page-actions">
                         <button class="btn btn-success" id="btnAddLivro" style="display:none;"
                             onclick="abrirModal('addLivroModal')">+ Novo Livro</button>
@@ -144,6 +123,36 @@
                     </table>
                 </div>
                 <div class="pagination" id="livrosPagination"></div>
+            </section>
+
+            <section id="acervoDigitalScreen" class="screen">
+                <div class="page-header">
+                    <h2 class="page-title"><span>Acervo</span> Digital</h2>
+                    <div class="page-actions">
+                        <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
+                    </div>
+                </div>
+                <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px;">
+                    <div class="search-bar" style="flex:1; margin-bottom:0;">
+                        <input type="text" id="buscaDigital" class="form-input"
+                            placeholder="Buscar por título no acervo digital…" oninput="carregarAcervoDigitalDebounced(this.value)">
+                    </div>
+                    <div class="filter-group" style="display:flex; gap:12px;">
+                        <select id="filtroCategoria" class="form-select" onchange="carregarAcervoDigital()" style="width:180px;">
+                            <option value="">Todas Categorias</option>
+                        </select>
+                        <select id="filtroAno" class="form-select" onchange="carregarAcervoDigital()" style="width:120px;">
+                            <option value="">Todos Anos</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="digitalGrid" class="digital-grid">
+                    <!-- Cards de PDF -->
+                    <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <span class="spinner"></span> Carregando acervo digital...
+                    </div>
+                </div>
+                <div class="pagination" id="digitalPagination"></div>
             </section>
 
             <section id="historicoScreen" class="screen">
@@ -597,6 +606,7 @@
     <script src="js/notifications.js"></script>
     <script src="js/menu.js"></script>
     <script src="js/livros.js"></script>
+    <script src="js/acervoDigital.js"></script>
     <script src="js/alugueis.js"></script>
     <script src="js/usuarios.js"></script>
     <script src="js/perfil.js"></script>

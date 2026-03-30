@@ -155,7 +155,33 @@ async function configurarBanco() {
       t.index(['usuario_id', 'status'], 'idx_multas_usuario_status');
       t.index(['aluguel_id'], 'idx_multas_aluguel');
     });
-    console.log('✅ Tabela [multas] criada.');
+    // --- Criação da Tabela: ACERVO DIGITAL ---
+    await db.schema.createTable('acervo_digital', (t) => {
+      t.increments('id').primary();
+      t.string('titulo', 200).notNullable();
+      t.string('autor', 150).nullable();
+      t.string('categoria', 100).notNullable();
+      t.integer('ano').notNullable();
+      t.integer('paginas').unsigned().notNullable();
+      t.string('tamanho_arquivo', 20).notNullable();
+      t.string('url_arquivo', 500).notNullable();
+      t.timestamp('created_at').defaultTo(db.fn.now());
+      
+      t.index(['categoria'], 'idx_digital_categoria');
+      t.index(['ano'], 'idx_digital_ano');
+      t.index(['titulo'], 'idx_digital_titulo');
+    });
+    console.log('✅ Tabela [acervo_digital] criada.');
+
+    // Inserção de dados iniciais para Acervo Digital
+    await db('acervo_digital').insert([
+      { titulo: 'Guia do Mochileiro das Galáxias (Ebook)', autor: 'Douglas Adams', categoria: 'Ficção Científica', ano: 1979, paginas: 224, tamanho_arquivo: '1.2 MB', url_arquivo: 'https://www.adobe.com/support/products/enterprise/knowledgecenter/whitepapers/pdf/sample.pdf' },
+      { titulo: 'Clean Code: A Handbook of Agile Software Craftsmanship', autor: 'Robert C. Martin', categoria: 'Programação', ano: 2008, paginas: 464, tamanho_arquivo: '4.5 MB', url_arquivo: 'https://www.adobe.com/support/products/enterprise/knowledgecenter/whitepapers/pdf/sample.pdf' },
+      { titulo: 'Dom Casmurro (Edição Digital)', autor: 'Machado de Assis', categoria: 'Literatura Brasileira', ano: 1899, paginas: 192, tamanho_arquivo: '0.8 MB', url_arquivo: 'https://www.adobe.com/support/products/enterprise/knowledgecenter/whitepapers/pdf/sample.pdf' },
+      { titulo: 'O Pequeno Príncipe', autor: 'Antoine de Saint-Exupéry', categoria: 'Literatura Infantil', ano: 1943, paginas: 96, tamanho_arquivo: '2.1 MB', url_arquivo: 'https://www.adobe.com/support/products/enterprise/knowledgecenter/whitepapers/pdf/sample.pdf' },
+      { titulo: 'Sapiens: Uma Breve História da Humanidade', autor: 'Yuval Noah Harari', categoria: 'História', ano: 2011, paginas: 443, tamanho_arquivo: '3.7 MB', url_arquivo: 'https://www.adobe.com/support/products/enterprise/knowledgecenter/whitepapers/pdf/sample.pdf' }
+    ]);
+    console.log('📚 Sementes de Acervo Digital inseridas.');
 
     console.log('\n🎉 Banco de dados configurado com sucesso!');
     await db.destroy();

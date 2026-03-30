@@ -57,12 +57,135 @@
 .perfil-field-label { font-family: 'Cinzel', serif; font-size: var(--fs-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; font-weight: 700; }
 .perfil-field-value { font-size: var(--fs-base); color: var(--text); }
 
+/* ── ACERVO DIGITAL (Streaming Style) ── */
+.digital-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 40px;
+    padding: 20px 0;
+}
+
+.digital-card {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: var(--glass-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.digital-card:hover {
+    transform: scale(1.05) translateY(-12px);
+    z-index: 10;
+    box-shadow: var(--shadow);
+    border-color: var(--accent);
+}
+
+.digital-card-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--surface), var(--bg));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.digital-card-poster::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 100%);
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.digital-card:hover .digital-card-poster::after {
+    opacity: 1;
+}
+
+.digital-card-cover-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 80%;
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-md);
+    color: var(--accent);
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    transition: transform 0.3s;
+}
+
+.digital-card:hover .digital-card-cover-text {
+    transform: translate(-50%, -80%);
+}
+
+.digital-card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 32px 24px;
+    transform: translateY(40px);
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.digital-card:hover .digital-card-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.digital-card-title {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+.digital-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.digital-card-meta span {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.digital-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.digital-card-actions .btn {
+    flex: 1;
+    font-size: 0.6rem;
+    padding: 10px 4px;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 680px) {
     .auth-card { padding: 28px 20px; }
     .menu-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
     .menu-card { padding: 20px 14px; }
     .menu-card-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .digital-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
 }
 @media (max-width: 400px) {
     .menu-grid { grid-template-columns: 1fr; }

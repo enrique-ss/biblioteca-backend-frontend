@@ -18,10 +18,18 @@ function carregarMenu() {
     const itensMenu = [
         { 
             icon: '📚', 
-            title: 'Acervo', 
+            title: 'Acervo Físico', 
             action() { 
                 carregarLivros(); 
                 mostrarTela('livrosScreen'); 
+            } 
+        },
+        { 
+            icon: '📱', 
+            title: 'Acervo Digital', 
+            action() { 
+                carregarAcervoDigital(); 
+                mostrarTela('acervoDigitalScreen'); 
             } 
         }
     ];
@@ -68,7 +76,6 @@ function carregarMenu() {
         );
     }
 
-    // Item comum a todos
     itensMenu.push({ 
         icon: '📊', 
         title: 'Estatísticas', 
@@ -78,33 +85,64 @@ function carregarMenu() {
         } 
     });
 
+    // Itens de suporte comum (Alertas e Tema)
+    itensMenu.push(
+        { 
+            icon: `<span style="position:relative;">🔔<span class="nav-notifications-badge" id="notificationsBadge">0</span></span>`, 
+            title: 'Alertas', 
+            action() { 
+                mostrarTela('notificacoesScreen'); 
+                carregarNotificacoesCompleto(); 
+            } 
+        },
+        { 
+            icon: `<span id="btnThemeIcon">${document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙'}</span>`, 
+            title: 'Tema', 
+            action() { toggleTheme(); } 
+        }
+    );
+
+    // Itens de Conta
+    itensMenu.push(
+        { 
+            icon: '👤', 
+            title: 'Meu Perfil', 
+            action() { mostrarTela('perfilScreen'); } 
+        },
+        { 
+            icon: '<span style="color:var(--danger);">🚪</span>', 
+            title: `<span style="color:var(--danger);">Sair</span>`, 
+            action() { logout(); } 
+        }
+    );
+
     // Cria visualmente cada botão no menu lateral (sidebar)
     if (navLateral) {
+        navLateral.style.display = 'flex'; // Garante que apareça
         itensMenu.forEach(item => {
             const botao = document.createElement('button');
             botao.className = 'side-btn';
-            botao.title = item.title;
+            botao.title = item.title.replace(/<[^>]*>/g, ''); // Limpa HTML para o title
             botao.onclick = item.action;
             botao.innerHTML = `<span class="side-icon">${item.icon}</span><span class="side-text">${item.title}</span>`;
             navLateral.appendChild(botao);
         });
     }
 
-    // Gerencia a visibilidade de botões de ação rápida dependendo do tipo de usuário
+    // Gerencia a visibilidade de botões de ação rápida fora da sidebar
     const displayBib = ehBibliotecario ? 'inline-flex' : 'none';
     
     const btnAddLivro = document.getElementById('btnAddLivro');
-    if (btnAddLivro) {
-        btnAddLivro.style.display = displayBib;
-    }
+    if (btnAddLivro) btnAddLivro.style.display = displayBib;
 
     const btnNovoAluguel = document.getElementById('btnNovoAluguel');
-    if (btnNovoAluguel) {
-        btnNovoAluguel.style.display = displayBib;
-    }
+    if (btnNovoAluguel) btnNovoAluguel.style.display = displayBib;
 
     const btnHistorico = document.getElementById('btnHistorico');
-    if (btnHistorico) {
-        btnHistorico.style.display = displayBib;
+    if (btnHistorico) btnHistorico.style.display = displayBib;
+
+    // Atualiza o badge das notificações se houver valor acumulado
+    if (typeof carregarNotificacoes === 'function') {
+        carregarNotificacoes(); 
     }
 }
