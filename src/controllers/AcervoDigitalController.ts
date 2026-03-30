@@ -8,7 +8,7 @@ import { RequisicaoAutenticada } from '../middlewares/auth';
 export class AcervoDigitalController {
 
   /**
-   * Listagem de documentos digitais com filtros de busca, categoria e ano.
+   * Listagem de documentos digitais homologados (aprovados).
    */
   listar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
@@ -18,7 +18,7 @@ export class AcervoDigitalController {
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      let consulta = db('acervo_digital');
+      let consulta = db('acervo_digital').where({ status: 'aprovado' });
 
       // Filtro de busca textual (Título ou Autor)
       const termoBusca = String(busca || '').trim();
@@ -42,10 +42,10 @@ export class AcervoDigitalController {
 
       // Executa consulta dos dados e contagem total
       const [registros, contagem, categoriasDisp, anosDisp] = await Promise.all([
-        consulta.clone().select('*').orderBy('titulo', 'asc').limit(limite).offset(deslocamento),
+        consulta.clone().select('*').orderBy('created_at', 'desc').limit(limite).offset(deslocamento),
         consulta.clone().count('id as total'),
-        db('acervo_digital').distinct('categoria').orderBy('categoria', 'asc'),
-        db('acervo_digital').distinct('ano').orderBy('ano', 'desc')
+        db('acervo_digital').where({ status: 'aprovado' }).distinct('categoria').orderBy('categoria', 'asc'),
+        db('acervo_digital').where({ status: 'aprovado' }).distinct('ano').orderBy('ano', 'desc')
       ]);
 
       const data = registros as any[];
@@ -67,16 +67,43 @@ export class AcervoDigitalController {
   };
 
   /**
-   * Adiciona um novo documento (Para futuras expansões, se necessário)
+   * Listagem de documentos pendentes de aprovação (Apenas Bibliotecários)
+   */
+  listarPendentes = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+      if (req.usuario?.tipo !== 'bibliotecario') {
+         return res.status(403).json({ error: 'Acesso negado. Apenas bibliotecários podem listar pendências.' });
+      }
+
+      const pendentes = await db('acervo_digital')
+        .join('usuarios', 'acervo_digital.usuario_id', 'usuarios.id')
+        .select('acervo_digital.*', 'usuarios.nome as usuario_nome')
+        .where({ 'acervo_digital.status': 'pendente' })
+        .orderBy('acervo_digital.created_at', 'desc');
+
+      res.json(pendentes);
+    } catch (erro) {
+      console.error('Erro ao listar pendências:', erro);
+      res.status(500).json({ error: 'Erro ao carregar documentos pendentes.' });
+    }
+  };
+
+  /**
+   * Adiciona um novo documento digital. 
+   * Bibliotecários: Aprovado automaticamente.
+   * Usuários: Requer aprovação.
    */
   cadastrar = async (req: RequisicaoAutenticada, res: Response) => {
-      // Implementação simplificada para o desafio
       try {
-          const { titulo, autor, categoria, ano, paginas, tamanho_arquivo, url_arquivo } = req.body;
+          const { titulo, autor, categoria, ano, paginas, tamanho_arquivo, url_arquivo, capa_url } = req.body;
+          const usuarioId = req.usuario?.id;
+          const ehBibliotecario = req.usuario?.tipo === 'bibliotecario';
           
           if (!titulo || !url_arquivo) {
-              return res.status(400).json({ error: 'Título e URL do arquivo são obrigatórios.' });
+              return res.status(400).json({ error: 'Título e URL do arquivo (PDF) são obrigatórios.' });
           }
+
+          const status = ehBibliotecario ? 'aprovado' : 'pendente';
 
           await db('acervo_digital').insert({
               titulo,
@@ -85,13 +112,45 @@ export class AcervoDigitalController {
               ano: parseInt(ano),
               paginas: parseInt(paginas),
               tamanho_arquivo,
-              url_arquivo
+              url_arquivo,
+              capa_url: capa_url || null,
+              status,
+              usuario_id: usuarioId
           });
 
-          res.status(201).json({ message: 'Documento digital cadastrado com sucesso!' });
+          const mensagem = ehBibliotecario 
+            ? 'Documento digital cadastrado com sucesso!' 
+            : 'Documento enviado com sucesso! Aguarde a aprovação de um bibliotecário.';
+
+          res.status(201).json({ message: mensagem });
       } catch (erro) {
           console.error('Erro ao cadastrar documento digital:', erro);
           res.status(500).json({ error: 'Falha ao incluir documento no acervo digital.' });
+      }
+  };
+
+  /**
+   * Aprova um documento pendente
+   */
+  aprovar = async (req: RequisicaoAutenticada, res: Response) => {
+      try {
+          if (req.usuario?.tipo !== 'bibliotecario') {
+             return res.status(403).json({ error: 'Acesso negado.' });
+          }
+
+          const { id } = req.params;
+          const { acao } = req.body; // 'aprovar' ou 'rejeitar'
+
+          if (acao === 'aprovar') {
+              await db('acervo_digital').where({ id }).update({ status: 'aprovado' });
+              return res.json({ message: 'Documento aprovado e adicionado ao acervo!' });
+          } else {
+              await db('acervo_digital').where({ id }).delete();
+              return res.json({ message: 'Documento rejeitado e removido do sistema.' });
+          }
+      } catch (erro) {
+          console.error('Erro ao processar aprovação:', erro);
+          res.status(500).json({ error: 'Falha ao processar solicitação.' });
       }
   };
 }

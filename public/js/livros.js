@@ -106,7 +106,6 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
                 autor: document.getElementById('livroAutor').value,
                 ano_lancamento: parseInt(document.getElementById('livroAno').value),
                 genero: document.getElementById('livroGenero').value,
-                isbn: document.getElementById('livroIsbn').value || null,
                 exemplares: parseInt(document.getElementById('livroExemplares').value) || 1
             })
         });
@@ -126,7 +125,6 @@ function editarLivro(livro) {
     document.getElementById('editLivroAutor').value = livro.autor;
     document.getElementById('editLivroAno').value = livro.ano_lancamento;
     document.getElementById('editLivroGenero').value = livro.genero;
-    document.getElementById('editLivroIsbn').value = livro.isbn || '';
     document.getElementById('editLivroExemplares').value = livro.exemplares;
     abrirModal('editLivroModal');
 }
@@ -143,7 +141,6 @@ document.getElementById('editLivroForm').addEventListener('submit', async (e) =>
                 autor: document.getElementById('editLivroAutor').value,
                 ano_lancamento: parseInt(document.getElementById('editLivroAno').value),
                 genero: document.getElementById('editLivroGenero').value,
-                isbn: document.getElementById('editLivroIsbn').value || null,
                 exemplares: parseInt(document.getElementById('editLivroExemplares').value) || 1
             })
         });

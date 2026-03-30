@@ -14,7 +14,11 @@ router.use(verificarToken);
 // Listagem pública para todos os usuários logados
 router.get('/', controller.listar);
 
-// Operações restritas a Bibliotecários (Administradores)
-router.post('/', verificarBibliotecario, controller.cadastrar);
+// Envio de novo documento (pode ser feito por qualquer usuário)
+router.post('/', controller.cadastrar);
+
+// Rotas restritas a Bibliotecários (Gestão de Aprovações)
+router.get('/pendentes', verificarBibliotecario, controller.listarPendentes);
+router.post('/:id/aprovar', verificarBibliotecario, controller.aprovar);
 
 export default router;

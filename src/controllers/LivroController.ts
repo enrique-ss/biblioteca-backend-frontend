@@ -7,16 +7,32 @@ import { RequisicaoAutenticada } from '../middlewares/auth';
  */
 export class LivroController {
 
-  /**
-   * Gera uma localização fictícia (Corredor e Prateleira) para novos livros.
-   */
-  private gerarLocalizacaoAutomatica() {
-    const corredores = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    const prateleiras = ['1', '2', '3', '4', '5'];
+  private gerarLocalizacaoAutomatica(genero: string, autor: string) {
+    const mapaCorredores: Record<string, string> = {
+      'Literatura': 'L',
+      'Ficção Científica': 'F',
+      'Programação': 'P',
+      'História': 'H',
+      'Negócios': 'N',
+      'Outros': 'O'
+    };
+    
+    // Define o corredor com base no Gênero (Fallback para O de Outros)
+    const corredor = mapaCorredores[genero] || 'O';
+    
+    // Prateleira realista com base na primeira letra do autor
+    const inicial = autor ? autor.trim().toUpperCase().charCodeAt(0) : 65;
+    let prateleira = '1';
+    
+    if (inicial >= 65 && inicial <= 69) prateleira = '1'; // A-E
+    else if (inicial >= 70 && inicial <= 74) prateleira = '2'; // F-J
+    else if (inicial >= 75 && inicial <= 79) prateleira = '3'; // K-O
+    else if (inicial >= 80 && inicial <= 84) prateleira = '4'; // P-T
+    else prateleira = '5'; // U-Z ou outros
     
     return {
-      corredor: corredores[Math.floor(Math.random() * corredores.length)],
-      prateleira: prateleiras[Math.floor(Math.random() * prateleiras.length)]
+      corredor,
+      prateleira
     };
   }
 
@@ -236,7 +252,7 @@ export class LivroController {
   // Cadastro de novo livro com geração automática de exemplares iniciais
   cadastrar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
-      const { titulo, autor, ano_lancamento, genero, isbn, exemplares } = req.body;
+      const { titulo, autor, ano_lancamento, genero, exemplares } = req.body;
 
       if (!titulo?.trim() || !autor?.trim()) {
         return res.status(400).json({ error: 'Título e Autor são campos obrigatórios.' });
@@ -249,7 +265,8 @@ export class LivroController {
       }
 
       const qtdExemplares = Math.min(999, Math.max(1, parseInt(exemplares) || 1));
-      const localizacao = this.gerarLocalizacaoAutomatica();
+      const g = genero?.trim() || 'Outros';
+      const localizacao = this.gerarLocalizacaoAutomatica(g, autor);
 
       // Executa a operação dentro de uma Transação para garantir integridade (Livro + Exemplares)
       await db.transaction(async (trx) => {
@@ -258,7 +275,6 @@ export class LivroController {
           autor: autor.trim(),
           ano_lancamento: anoNum,
           genero: genero?.trim() || 'Não Informado',
-          isbn: isbn?.trim() || null,
           corredor: localizacao.corredor,
           prateleira: localizacao.prateleira,
           exemplares: qtdExemplares,
@@ -291,7 +307,7 @@ export class LivroController {
   editar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
-      const { titulo, autor, ano_lancamento, genero, isbn, exemplares } = req.body;
+      const { titulo, autor, ano_lancamento, genero, exemplares } = req.body;
 
       const livroOriginal = await db('livros').where({ id }).whereNull('deleted_at').first();
       if (!livroOriginal) return res.status(404).json({ error: 'Livro não encontrado.' });
@@ -301,7 +317,13 @@ export class LivroController {
       if (titulo !== undefined) dadosParaMudar.titulo = titulo.trim();
       if (autor !== undefined) dadosParaMudar.autor = autor.trim();
       if (genero !== undefined) dadosParaMudar.genero = genero.trim() || 'Não Informado';
-      if (isbn !== undefined) dadosParaMudar.isbn = isbn.trim() || null;
+      
+      const novoGenero = dadosParaMudar.genero ?? livroOriginal.genero;
+      const novoAutor = dadosParaMudar.autor ?? livroOriginal.autor;
+      const novaLoc = this.gerarLocalizacaoAutomatica(novoGenero, novoAutor);
+      dadosParaMudar.corredor = novaLoc.corredor;
+      dadosParaMudar.prateleira = novaLoc.prateleira;
+
       if (ano_lancamento !== undefined) {
         const ano = parseInt(ano_lancamento);
         if (!isNaN(ano)) dadosParaMudar.ano_lancamento = ano;

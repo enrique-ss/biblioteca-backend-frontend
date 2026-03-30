@@ -127,8 +127,9 @@
 
             <section id="acervoDigitalScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title"><span>Acervo</span> Digital</h2>
+                    <h2 class="page-title">Acervo <span>Digital</span></h2>
                     <div class="page-actions">
+                        <button class="btn btn-primary btn-sm" onclick="abrirModal('addDigitalModal')">+ Novo Documento</button>
                         <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
                     </div>
                 </div>
@@ -137,20 +138,20 @@
                         <input type="text" id="buscaDigital" class="form-input"
                             placeholder="Buscar por título no acervo digital…" oninput="carregarAcervoDigitalDebounced(this.value)">
                     </div>
-                    <div class="filter-group" style="display:flex; gap:12px;">
-                        <select id="filtroCategoria" class="form-select" onchange="carregarAcervoDigital()" style="width:180px;">
+                    <div style="width:180px">
+                        <select id="filtroCategoria" class="form-select" onchange="carregarAcervoDigital()">
                             <option value="">Todas Categorias</option>
                         </select>
-                        <select id="filtroAno" class="form-select" onchange="carregarAcervoDigital()" style="width:120px;">
+                    </div>
+                    <div style="width:120px">
+                        <select id="filtroAno" class="form-select" onchange="carregarAcervoDigital()">
                             <option value="">Todos Anos</option>
                         </select>
                     </div>
                 </div>
+                
                 <div id="digitalGrid" class="digital-grid">
-                    <!-- Cards de PDF -->
-                    <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                        <span class="spinner"></span> Carregando acervo digital...
-                    </div>
+                    <!-- Cards de PDF (Populados dinamicamente) -->
                 </div>
                 <div class="pagination" id="digitalPagination"></div>
             </section>
@@ -394,11 +395,20 @@
                         class="form-input" required></div>
                 <div class="form-group"><label class="form-label">Ano</label><input type="number" id="livroAno"
                         class="form-input" min="1000" max="2099" required></div>
-                <div class="form-group"><label class="form-label">Gênero</label><input type="text" id="livroGenero"
-                        class="form-input" required></div>
-                <div class="form-group"><label class="form-label">ISBN <span
-                            style="opacity:1;color:var(--accent)">(opcional)</span></label><input type="text" id="livroIsbn"
-                        class="form-input" placeholder="978-3-16-148410-0"></div>
+                <div class="form-group">
+                    <label class="form-label">Gênero</label>
+                    <select id="livroGenero" class="form-select" required>
+                        <option value="" disabled selected>Escolha um gênero</option>
+                        <option value="Literatura">Literatura</option>
+                        <option value="Ficção Científica">Ficção Científica</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Suspense">Suspense</option>
+                        <option value="História">História</option>
+                        <option value="Programação">Programação</option>
+                        <option value="Biografia">Biografia</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
                 <div class="form-group"><label class="form-label">Exemplares</label><input type="number"
                         id="livroExemplares" class="form-input" min="1" max="999" value="1" required></div>
                 <div class="btn-group"><button type="submit" class="btn btn-success">Cadastrar</button><button
@@ -421,11 +431,19 @@
                         class="form-input" required></div>
                 <div class="form-group"><label class="form-label">Ano</label><input type="number" id="editLivroAno"
                         class="form-input" min="1000" max="2099" required></div>
-                <div class="form-group"><label class="form-label">Gênero</label><input type="text" id="editLivroGenero"
-                        class="form-input"></div>
-                <div class="form-group"><label class="form-label">ISBN <span
-                            style="opacity:1;color:var(--accent)">(opcional)</span></label><input type="text" id="editLivroIsbn"
-                        class="form-input"></div>
+                <div class="form-group">
+                    <label class="form-label">Gênero</label>
+                    <select id="editLivroGenero" class="form-select" required>
+                        <option value="Literatura">Literatura</option>
+                        <option value="Ficção Científica">Ficção Científica</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Suspense">Suspense</option>
+                        <option value="História">História</option>
+                        <option value="Programação">Programação</option>
+                        <option value="Biografia">Biografia</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
                 <div class="form-group"><label class="form-label">Exemplares totais</label><input type="number"
                         id="editLivroExemplares" class="form-input" min="1" max="999" required></div>
                 <div class="btn-group"><button type="submit" class="btn btn-gold">Salvar</button><button type="button"
@@ -595,6 +613,79 @@
     </div>
 
     <div id="alertContainer"></div>
+
+    <div id="addDigitalModal" class="modal">
+        <div class="modal-backdrop" onclick="fecharModal('addDigitalModal')"></div>
+        <div class="modal-box" style="max-width: 500px;">
+            <h2 class="modal-title">Novo Documento <span>Digital</span></h2>
+            <p class="modal-subtitle">Envie um arquivo PDF para o acervo</p>
+            <form id="addDigitalForm" novalidate>
+                <div class="form-group"><label class="form-label">Título do Documento</label><input type="text" id="digitalTitulo" class="form-input" required></div>
+                <div class="form-group"><label class="form-label">Autor</label><input type="text" id="digitalAutor" class="form-input" required></div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="form-group"><label class="form-label">Ano</label><input type="number" id="digitalAno" class="form-input" min="1000" max="2099" required></div>
+                    <div class="form-group"><label class="form-label">Nº Páginas</label><input type="number" id="digitalPaginas" class="form-input" min="1" required></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Categoria / Gênero</label>
+                    <select id="digitalGenero" class="form-select" required>
+                        <option value="" disabled selected>Escolha uma categoria</option>
+                        <option value="Literatura">Literatura</option>
+                        <option value="Ficção Científica">Ficção Científica</option>
+                        <option value="Programação">Programação</option>
+                        <option value="História">História</option>
+                        <option value="Negócios">Negócios</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Capa (Imagem)</label>
+                    <input type="file" id="digitalCapa" class="form-input" accept="image/*" style="padding:8px" required>
+                    <p style="font-size:10px; color:var(--accent); margin-top:4px;">* Opcional mas recomendado para estética.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Arquivo PDF</label>
+                    <input type="file" id="digitalFile" class="form-input" accept="application/pdf" style="padding:8px" required>
+                    <p style="font-size:10px; color:var(--accent); margin-top:4px;">* Anexo do PDF obrigatório.</p>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                    <button type="button" class="btn btn-ghost" onclick="fecharModal('addDigitalModal')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="aprovacoesModal" class="modal">
+        <div class="modal-backdrop" onclick="fecharModal('aprovacoesModal')"></div>
+        <div class="modal-box" style="max-width: 680px;">
+            <h2 class="modal-title">Submissões <span>Pendentes</span></h2>
+            <p class="modal-subtitle">Aprove ou rejeite documentos enviados por usuários</p>
+            <div class="table-wrap" style="max-height:50vh;overflow-y:auto; margin-top:20px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Enviado por</th>
+                            <th>Categoria</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aprovacoesTbody">
+                        <tr class="loading-row"><td colspan="4" style="text-align:center;"><span class="spinner"></span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="btn-group" style="margin-top:20px;">
+                <button class="btn btn-ghost" onclick="fecharModal('aprovacoesModal')">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Bibliotecas Externas (GSAP + Three.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>

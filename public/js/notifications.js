@@ -80,6 +80,22 @@ async function carregarNotificacoesAdmin() {
                 count: usuariosBloqueados.length
             });
         }
+        
+        // Alerta: Pendências do Acervo Digital
+        try {
+            const pendentesDigital = await api('/acervo-digital/pendentes');
+            if (pendentesDigital && pendentesDigital.length > 0) {
+                lista.push({
+                    type: 'info',
+                    title: 'Novos Documentos Digitais',
+                    message: `${pendentesDigital.length} documento(s) enviado(s) aguardam sua aprovação no acervo. <br><button class="btn btn-primary btn-sm" style="margin-top:12px; font-size: 0.8rem;" onclick="carregarPendencias()">Gerenciar Pendências</button>`,
+                    count: pendentesDigital.length
+                });
+            }
+        } catch (e) {
+            console.error('Erro ao verificar pendências digitais:', e);
+        }
+
     } catch (erro) {
         console.error('Erro ao carregar notificações administrativas:', erro);
     }
