@@ -27,16 +27,21 @@ Este documento sumariza as regras essenciais operacionais do Sistema LuizaTeca.
 - **Multas por Perda:** Valor fixo de **R$ 100,00** aplicado quando um exemplar é marcado como perdido na devolução.
 - **Bloqueio Automático:** Qualquer multa pendente impede o usuário de realizar novos empréstimos até a quitação total do débito.
 
-## 4. Exemplares e Multiplicidade
-- O `livro` atua como um agrupador (título, autor, etc.), enquanto a tabela `exemplares` representa os itens físicos reais.
-- Cada exemplar possui um código individual, permitindo o controle preciso de qual cópia está com qual usuário e em que estado ela se encontra.
+## 4. Acervo Digital (PDF Hub)
+- **Hibridismo**: O sistema permite a coexistência de acervo físico (logística real) e digital (consumo imediato).
+- **Submissões**: Usuários comuns podem enviar arquivos digitais (PDF) para o sistema. Essas submissões entram com status `pendente`.
+- **Curadoria**: Bibliotecários revisam submissões na tela de "Aprovações". Apenas documentos `aprovados` tornam-se visíveis no Acervo Digital público.
+- **Visualização**: O frontend realiza o "streaming" do Base64 do PDF e renderiza capas personalizadas.
 
-## 5. Centro de Alertas e Notificações (Alertas)
-- **Objetivo**: Garantir que pendências críticas não passem despercebidas por bibliotecários e usuários.
-- **Alertas para Bibliotecários (Nível Sistema)**:
-    - **Vencimentos Críticos**: Notifica quando qualquer empréstimo no sistema ultrapassa a data de devolução prevista.
-    - **Pendências Financeiras**: Lista a existência de multas não pagas que bloqueiam a operação de usuários.
-    - **Bloqueios Ativos**: Indica usuários impedidos de operar por restrições manuais.
-- **Alertas para Usuários (Nível Pessoal)**:
-    - **Pendências de Devolução**: Alerta imediato sobre livros que o próprio usuário deve devolver.
-    - **Débitos Pessoais**: Notifica sobre valores devidos que impedem novos empréstimos.
+## 5. Centro de Notificações e Pendências
+- **Arquitetura Unificada**: O sistema de alertas utiliza uma estrutura de dados consistente (`notification-card`) para garantir que a experiência estética seja idêntica entre perfis.
+- **Lógica de Alerta (Usuário)**:
+    - **Financeiro**: Notifica débitos pendentes e fornece link direto para quitação.
+    - **Prazos**: Alerta sobre entregas atrasadas e livros com vencimento em até 3 dias.
+- **Lógica de Alerta (Bibliotecário)**:
+    - **Monitoramento**: Visão geral de atrasos em todo o sistema e multas em aberto.
+    - **Curadoria**: Alerta sobre novos documentos digitais aguardando aprovação.
+
+## 6. Manutenção de Acervo
+- **Soft Delete**: Livros removidos do sistema não são apagados fisicamente do banco de imediato. Eles recebem um timestamp em `deleted_at` para permitir auditoria e histórico de empréstimos antigos.
+- **Sincronia de Inventário**: A devolução de um exemplar físico atualiza automaticamente o contador `exemplares_disponiveis` na tabela de livros pai.

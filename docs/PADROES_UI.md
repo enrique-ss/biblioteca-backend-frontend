@@ -1,83 +1,62 @@
-# Padrões de UI - Sistema LuizaTeca
+# Padrões de UI - LuizaTeca Premium
 
-## Estrutura Padrão das Telas
+Este documento define as diretivas de design e componentes para manter a interface do LuizaTeca coerente, moderna e de alto desempenho.
 
-### 1. Layout Básico
-```html
-<section id="[nome]Screen" class="screen">
-    <div class="page-header">
-        <h2 class="page-title"><span>Primeirapalavra</span> Resto do Título</h2>
-        <div class="page-actions">
-            <!-- Botões de ação principais -->
-            <button class="btn btn-success">Ação Principal</button>
-            <button class="btn">Secundário</button>
-        </div>
-    </div>
-    
-    <!-- Barra de pesquisa (se aplicável) -->
-    <div class="search-bar">
-        <input type="text" id="busca[nome]" class="form-input" 
-               placeholder="Buscar por..." oninput="load[nome]Debounced(this.value)">
-    </div>
-    
-    <!-- Conteúdo principal -->
-    <div class="table-wrap">
-        <table class="data-table">
-            <!-- Tabela -->
-        </table>
-    </div>
-    
-    <!-- Paginação -->
-    <div class="pagination" id="[nome]Pagination"></div>
-</section>
-```
+## 🎨 Design System (Tokens)
 
-## Padrões Específicos por Tela
+O sistema utiliza um sistema de design baseado em variáveis CSS para suportar temas Dark/Light e Glassmorphism.
 
-### 📚 Livros (livrosScreen)
-- **Pesquisa**: Título, autor, gênero
-- **Ordenação**: Título, autor, gênero, status
-- **Ações**: + Novo Livro, Voltar
+### Paleta de Cores & Contrastes
+- **--accent**: Cor de destaque (Azul no Light / Dourado no Dark). Usada para ações primárias e links.
+- **--bg**: Fundo principal de tela.
+- **--surface**: Superfície de cartões com transparência e desfoque.
+- **--text**: Cor principal de leitura (Alta fidelidade de contraste).
+- **--danger / --success**: Cores semânticas vibrantes para feedbacks.
 
-### 👥 Usuários (usuariosScreen)
-- **Pesquisa**: Nome, email
-- **Ações**: Voltar
+### Glassmorphism & Bordas
+Todos os containers de conteúdo (tabelas, cards, modais) devem seguir:
+- `backdrop-filter: var(--glass)` (Mínimo 20px de blur).
+- `border: var(--glass-border)` (Borda sutil de 1px).
+- `border-radius`: Uso de `--r-lg` (16px) para cards e `--r-pill` (500px) para botões.
 
-### 📋 Empréstimos (alugueisScreen)
-- **Pesquisa**: Usuário, livro, exemplar
-- **Ações**: Histórico, + Novo Aluguel, Voltar
+## 🏗️ Estrutura de Componentes
 
-### 📊 Estatísticas (statsScreen)
-- **Ações**: Exportar CSV, Voltar
-- **Conteúdo**: Cards de KPI e gráficos
+### 1. Botões (`.btn`)
+- **Primário**: `.btn-primary` ou `.btn-success`.
+- **Ação Rápida**: `.btn-sm` (Pequeno, usado em tabelas).
+- **Ghost**: `.btn-ghost` (Borda sutil, fundo transparente).
+- **Transições**: Sempre usar `cubic-bezier(0.4, 0, 0.2, 1)` para efeitos de hover e escala.
 
-### 🔔 Alertas (notificacoesScreen)
-- **Conteúdo**: Centro de mensagens e pendências personalizadas por tipo de usuário.
-- **Estilo**: Centro de Alertas em wrap centralizado (`max-width: 900px`) com fundo `var(--surface)`.
+### 2. Cartões de Acervo (`.digital-card`)
+Design inspirado em streaming para livros físicos e digitais:
+- **Aspect Ratio**: 2/3 para posters.
+- **Hover**: Escala de 1.05 com elevação no eixo Y.
+- **Overlay**: Gradiente escuro no rodapé para legibilidade do texto.
 
-### ✏️ Perfil (perfilScreen)
-- **Conteúdo**: Formulário de edição de dados e troca de senha.
+### 3. Tabelas de Dados (`.data-table`)
+- **Fundo**: Sempre encapsulado em `.table-wrap`.
+- **Interatividade**: Linhas com hover sutil e colunas ordenáveis (indicadas por `.sortable`).
+- **Vazio**: Quando não há dados, retornar um `div` simples em itálico com `color: var(--text-dim)`.
 
-## Classes CSS Padrão
+## 🔔 Centro de Alertas (Unified Notifications)
 
-### Estrutura
-- `.screen`: Container principal da tela
-- `.page-header`: Cabeçalho com título e ações
-- `.page-title`: Título da página (destaque em `<span>`)
-- `.table-wrap`: Container da tabela com fundo glassmorphism
+As notificações devem ser renderizadas via `notifications.js` usando o componente `notification-card`.
 
-### Botões
-- `.btn`: Botão base
-- `.btn-success`: Botão principal (Verde)
-- `.btn-danger`: Botão de ação perigosa (Carmesim/Vermelho)
+- **Estrutura**: Ícone (badge colorida) + Título + Mensagem + (Opcional) Ação.
+- **Tipos**: `info`, `warning`, `danger`.
+- **Localização**: Wrap centralizado com `max-width: 800px` para foco total.
 
-## Cores e Tema (Tokens)
-- **Accent**: `--accent` (Dourado no Dark / Azul no Light). Usado para destaques, ícones e botões primários.
-- **Fundo**: `--bg` (fundo principal), `--surface` (cards e áreas de conteúdo).
-- **Semânticas**: `--success` (Verde), `--danger` (Vermelho), `--warning` (Laranja).
-- **Texto**: `--text` principal para leitura clara.
+## 📱 Responsividade & Layout
 
-## Ícones e Emojis
-- **Navegação no Sidebar**: 📚 (Livros), 👥 (Usuários), 📋 (Empréstimos), 📊 (Estatísticas), ✏️ (Perfil), 🚪 (Sair)
-- **Alertas**: 🔔 (Nav/Badge)
-- **Tema**: 🌙 (Dark) / ☀️ (Light)
+- **Sidebar**: Mantém 80px retraída e 260px expandida.
+- **Container**: Padding generoso (`60px 80px`) para evitar sensação de "aperto" em telas 1080p+.
+- **Z-Index**: Sidebar (2000), Modais (3000), Toasts (4000).
+
+## 🎞️ Animações
+O sistema utiliza **GSAP** para:
+- Mudança de telas (`opacity` e `scale`).
+- Carregamento de cards em cascata.
+- Transições de tema via `data-theme`.
+
+---
+*Manter a interface "Premium" significa evitar cores grey-tonned opacas e priorizar contrastes puros e efeitos de profundidade.*

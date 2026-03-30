@@ -15,11 +15,14 @@ O **LuizaTeca** é um sistema de gerenciamento de biblioteca estruturado em múl
 ### 2.1 API Rest (Backend)
 O "Cérebro" do sistema. É responsável por **toda a lógica de negócio**, cálculos matemáticos, totalizações de relatórios, processamento de multas e validações de segurança. Nenhuma lógica de decisão ou cálculo complexo deve residir fora deste componente.
 
-### 2.2 Aplicação Web (Frontend Vanilla)
-A interface de usuário web. Atua como um **"Frontend Burro"**: seu único papel é capturar entradas do usuário, enviá-las para a API e renderizar visualmente os dados recebidos. Não realiza cálculos de estatísticas ou transformações pesadas de dados.
+### 2.2 Aplicação Web (Frontend Premium)
+A interface de usuário web. Além de capturar entradas e renderizar dados, o frontend gerencia uma experiência enriquecida com suporte a temas dinâmicos (Dark/Light) e **visualização de acervo digital (Streaming de PDF)** através de cartões interativos.
 
-### 2.3 Interface de Linha de Comando (CLI)
-A interface de terminal. Assim como a versão Web, é um cliente **"burro"** que consome os mesmos endpoints da API e apenas formata a saída para o console, garantindo que um administrador veja exatamente os mesmos dados e regras independentemente de onde acesse.
+### 2.3 Acervo Digital & PDF Hub
+Módulo especializado que gerencia arquivos digitais recebidos. Bibliotecários atuam como curadores, aprovando ou rejeitando submissões de usuários. O sistema armazena referências e thumbnails (capas) em Base64 para garantir que o acervo seja visualmente rico sem depender de storage externo complexo na fase inicial.
+
+### 2.4 Interface de Linha de Comando (CLI)
+A interface de terminal. Assim como a versão Web, é um cliente **"burro"** que consome os mesmos endpoints da API e apenas formata a saída para o console. Permite operações administrativas rápidas e manutenção de sistema.
 
 ## 3. Princípio do Frontend Burro (Dumb Frontend)
 

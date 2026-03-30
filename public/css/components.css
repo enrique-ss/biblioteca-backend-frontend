@@ -40,32 +40,32 @@
 /* ── BUTTONS ── */
 .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 12px 28px;
+    padding: 12px 32px;
     border-radius: var(--r-pill);
-    font-family: 'Cinzel', serif; font-size: var(--fs-xs); font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase;
+    font-family: 'Cinzel', serif; font-size: var(--fs-sm); font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
     cursor: pointer; border: 1px solid transparent;
     transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; text-decoration: none; line-height: 1;
 }
 .btn:active { transform: scale(0.96); }
 
 .btn-primary  { background: var(--accent); color: var(--bg); }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--accent-bg); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-bg); filter: brightness(1.1); }
 
 .btn-success  { background: var(--success); color: white; border: none; }
-.btn-success:hover { filter: brightness(1.2); transform: translateY(-2px); }
+.btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2); }
 
 .btn-danger   { background: var(--danger); color: white; border: none; }
-.btn-danger:hover { filter: brightness(1.2); transform: translateY(-2px); }
+.btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2); }
 
-.btn-ghost    { background: var(--accent-bg); color: var(--accent); border: var(--glass-border); }
+.btn-ghost    { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--border-m); }
 .btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
 
 .btn-gold     { background: var(--accent); color: var(--bg); }
 
 .btn-block  { width: 100%; }
-.btn-sm     { padding: 8px 16px; font-size: .6rem; }
-.btn-action { display: block; margin: 0 auto; min-width: 200px; padding: 14px 32px; }
+.btn-sm     { padding: 8px 20px; font-size: 0.75rem; letter-spacing: 0.05em; }
+.btn-action { display: block; margin: 0 auto; min-width: 220px; padding: 14px 36px; }
 
 .btn-pair { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
 .btn-pair .btn { min-width: 140px; }

@@ -39,19 +39,20 @@
 
 /* ── TOKENS LIGHT ── */
 [data-theme="light"] {
-    --bg: #F8F9FA;
-    --surface: rgba(255, 255, 255, 0.65);
+    --bg: #F8FAFC;
+    --surface: rgba(255, 255, 255, 0.7);
     --surface-solid: #ffffff;
-    --text: #1A1A1A;
-    --accent: #2563EB;   /* Modern Blue */
+    --text: #0F172A;
+    --text-dim: #64748B;
+    --accent: #2563EB;
     --accent-bg: rgba(37, 99, 235, 0.08);
     --danger: #EF4444;
     --success: #10B981;
     --warning: #F59E0B;
-    --border: rgba(0, 0, 0, 0.08);
-    --border-m: rgba(0, 0, 0, 0.15);
-    --shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
-    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
+    --border: rgba(0, 0, 0, 0.06);
+    --border-m: rgba(0, 0, 0, 0.12);
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
     --glass-border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -67,12 +68,12 @@ body {
     color: var(--text);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
-    transition: background .3s, color .3s;
+    transition: background 0.4s ease, color 0.4s ease;
 }
 
-::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--r-pill); }
+::-webkit-scrollbar-thumb { background: var(--border-m); border-radius: var(--r-pill); border: 2px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ── LAYOUT ── */
@@ -80,6 +81,7 @@ body {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
     z-index: 0; pointer-events: none;
+    opacity: 0.8;
 }
 
 .app-wrapper {
@@ -87,15 +89,18 @@ body {
     z-index: 1;
     min-height: 100vh;
     display: flex;
-    padding-left: 110px; /* Offset for floating sidebar */
+    padding-left: 90px;
+    transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .container {
     width: 100%;
-    max-width: 1200px; /* Slightly wider */
+    max-width: 1300px;
     margin: 0 auto;
-    padding: 40px 40px 100px;
+    padding: 60px 80px 100px;
     flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ── SIDEBAR (Modern Premium) ── */
@@ -111,7 +116,7 @@ body {
     display: flex; flex-direction: column;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
     overflow-x: hidden;
-    overflow-y: overlay; /* Allows scroll without shifting content in some browsers */
+    overflow-y: overlay; 
     box-shadow: var(--shadow);
 }
 /* Estilo para barra de rolagem da sidebar (quase invisível mas funcional) */

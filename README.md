@@ -1,31 +1,36 @@
-# Biblioteca API
+# LuizaTeca — Sistema de Biblioteca Premium
 
-Sistema para gestão de acervo e empréstimos com backend em Node.js, autenticação JWT e duas interfaces: CLI e Web.
+Sistema completo para gestão de acervo físico e **digital**, com arquitetura moderna em Node.js, autenticação protegida e interfaces de alto desempenho (Web e CLI).
 
-## Como rodar
+## 🚀 Como rodar
 
 Configure o `.env` com base no `.env.example`, instale as dependências com `npm install` e inicialize o banco com `npm run setup`.
 
 **Opções de execução:**
-- `npm run dev` - Inicia apenas o backend API na porta 3000
-- `npm run web` - Inicia apenas o frontend com live server na porta 8080
-- `npm run full` - Inicia backend e frontend simultaneamente
-- `npm run cli` - Interface de linha de comando
+- `npm run dev` - Inicia apenas a API Backend (Porta 3000)
+- `npm run web` - Inicia apenas o Frontend Web (Porta 8080)
+- `npm run full` - **[Recomendado]** Inicia o ecossistema completo simultaneamente
+- `npm run cli` - Interface interativa via Terminal
 
-**Recomendado:** Use `npm run full` para rodar o sistema completo.
+## ✨ O que o sistema faz
 
-## O que o sistema faz
+- **Acervo Híbrido**: Gestão de livros físicos (com controle de exemplares e localização) e livros digitais (streaming de PDFs com capas personalizadas).
+- **Autoatendimento**: Leitores consultam acervo, renovam empréstimos online e quitam multas via interface web.
+- **Gestão Administrativa**: Bibliotecários controlam estoque, processam devoluções com avaliação de estado físico e gerenciam bloqueios de usuários.
+- **Ecossistema Inteligente**: Cálculo automático de multas (R$ 1,00/dia), prazos de 14 dias e centro de notificações unificado para pendências críticas.
+- **Experiência Premium**: Interface Web com Glassmorphism, suporte nativo a Dark/Light mode e micro-animações GSAP.
 
-Leitores consultam o acervo e visualizam seu histórico de empréstimos. Bibliotecários têm acesso total: cadastram livros, registram empréstimos e devoluções. Todo empréstimo gera prazo automático de 14 dias. A devolução atualiza o histórico e a disponibilidade do livro em uma operação só. O sistema impede empréstimo de livros já alugados.
+## 🔑 Regras de acesso
 
-## Regras de acesso
+- **Administrador**: Use a opção secreta "admin" na criação de conta via CLI para privilégios de Bibliotecário.
+- **Segurança**: Autenticação via JWT com senhas criptografadas em Bcrypt.
 
-Para criar uma conta de bibliotecário pela CLI, use a opção secreta digitando "admin". Leitores só visualizam seus próprios empréstimos. Bibliotecários têm visão geral do sistema.
+## 🛠 Stack
 
-## Stack
-
-TypeScript, Node.js, Express, Knex e MySQL. Bcrypt para senhas e JWT para autenticação. Readline e ANSI Colors para a interface CLI.
+- **Backend**: TypeScript, Node.js, Express, Knex.js e MySQL.
+- **Frontend Web**: JavaScript Vanilla, CSS Moderno (Glassmorphism), GSAP e Three.js para fundos dinâmicos.
+- **Frontend CLI**: TypeScript e Inquirer para navegação interativa.
 
 ---
 
-Desenvolvido por Luiz Enrique.
+Desenvolvido por **Luiz Enrique**.

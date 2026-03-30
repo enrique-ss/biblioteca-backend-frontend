@@ -17,21 +17,36 @@
 .auth-subtitle { text-align: center; color: var(--text); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; opacity: 1; }
 
 /* ── TELA MENU e ALERTAS ── */
-.menu-screen-wrap { max-width: 1000px; margin: 0 auto; text-align: center; padding-top: 40px; }
-
-.notifications-center-wrap { 
+.menu-screen-wrap { 
     max-width: 1000px; 
     margin: 0 auto; 
-    padding: 0; /* Limpo, os cards terão padding */
+    text-align: center; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 50vh;
+}
+
+.notifications-center-wrap { 
+    max-width: 800px; 
+    margin: 0 auto; 
+    padding: 20px 0;
+}
+
+.notifications-center-wrap { 
+    max-width: 800px; 
+    margin: 0 auto; 
+    padding: 0;
 }
 
 .notification-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
     border: 1px solid var(--border);
-    border-radius: var(--r-lg);
-    margin-bottom: 24px;
-    padding: 32px;
+    border-radius: var(--r-md);
+    margin-bottom: 20px;
+    padding: 24px 28px;
     box-shadow: var(--shadow-sm);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -44,79 +59,72 @@
     box-shadow: var(--shadow);
 }
 
-.notification-card.danger { border-left: 5px solid var(--danger); }
-.notification-card.warning { border-left: 5px solid var(--warning); }
-.notification-card.info { border-left: 5px solid var(--accent); }
+.notification-card.danger { border-left: 4px solid var(--danger); }
+.notification-card.warning { border-left: 4px solid var(--warning); }
+.notification-card.info { border-left: 4px solid var(--accent); }
+.notification-card.success { border-left: 4px solid var(--success); }
 
 .notification-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     gap: 16px;
-    flex-wrap: wrap;
 }
 
 .notification-title-wrap { display: flex; align-items: center; gap: 14px; }
 .notification-icon-badge {
-    width: 40px; height: 40px;
+    width: 44px; height: 44px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
+    border-radius: 12px;
     background: var(--accent-bg);
-    border: 1px solid var(--accent);
-    font-size: 1.2rem;
+    border: 1px solid var(--border);
+    font-size: 1.3rem;
+    flex-shrink: 0;
 }
 .notification-icon-badge.danger { color: var(--danger); border-color: var(--danger); background: rgba(230, 57, 70, 0.1); }
+.notification-icon-badge.warning { color: var(--warning); border-color: var(--warning); background: rgba(233, 196, 106, 0.1); }
+.notification-icon-badge.success { color: var(--success); border-color: var(--success); background: rgba(42, 157, 143, 0.1); }
 
 .notification-title {
     font-family: 'Cinzel', serif;
-    font-size: var(--fs-md);
+    font-size: var(--fs-base);
+    font-weight: 700;
     color: var(--accent);
     margin: 0;
     letter-spacing: 0.05em;
 }
 
 .notification-content {
+    padding-left: 58px;
+}
+
+.notification-text {
     color: var(--text);
     font-size: var(--fs-sm);
-    line-height: 1.7;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    opacity: 0.9;
 }
 
-.notification-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-    font-size: 0.85rem;
+.notification-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
 }
 
-.notification-content th {
-    text-align: left;
-    color: var(--accent);
-    padding: 10px;
-    border-bottom: 1px solid var(--border-m);
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-}
-
-.notification-content td {
-    padding: 12px 10px;
-    border-bottom: 1px solid var(--border);
-}
 .menu-welcome { margin-bottom: 40px; }
-.menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: #ffffff; letter-spacing: 0.05em; }
-.menu-welcome p { color: #ffffff; margin-top: 8px; font-size: var(--fs-md); }
+.menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--text); letter-spacing: 0.05em; }
+.menu-welcome p { color: var(--text); margin-top: 8px; font-size: var(--fs-md); opacity: 0.8; }
 #menuUserName { color: var(--accent); }
-[data-theme="light"] .menu-welcome h2 { color: #000000; }
-[data-theme="light"] .menu-welcome p { color: #000000; }
 
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
 
 .menu-card { 
-    background: var(--glass-1); 
-    backdrop-filter: blur(16px); 
-    -webkit-backdrop-filter: blur(16px); 
-    border: 1px solid var(--border-s); 
+    background: var(--surface); 
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: var(--glass-border);
     border-radius: var(--r-lg); 
     padding: 32px 24px; 
     text-align: center; 
@@ -124,12 +132,13 @@
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     position: relative; 
     overflow: hidden; 
+    box-shadow: var(--shadow-sm);
 }
 .menu-card:hover { 
     transform: translateY(-8px) scale(1.02); 
-    background: var(--glass-2); 
+    background: var(--surface-solid); 
     border-color: var(--accent); 
-    box-shadow: 0 12px 32px var(--accent-bg); 
+    box-shadow: var(--shadow); 
 }
 .menu-card-icon  { font-size: 2.2rem; display: block; margin-bottom: 12px; }
 .menu-card-title { font-family: 'Cinzel', serif; font-size: var(--fs-sm); font-weight: 600; color: var(--text); letter-spacing: .05em; }
