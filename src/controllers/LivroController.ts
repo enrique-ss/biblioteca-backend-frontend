@@ -252,7 +252,7 @@ export class LivroController {
   // Cadastro de novo livro com geração automática de exemplares iniciais
   cadastrar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
-      const { titulo, autor, ano_lancamento, genero, exemplares } = req.body;
+      const { titulo, autor, ano_lancamento, genero, exemplares, capa_url } = req.body;
 
       if (!titulo?.trim() || !autor?.trim()) {
         return res.status(400).json({ error: 'Título e Autor são campos obrigatórios.' });
@@ -279,6 +279,7 @@ export class LivroController {
           prateleira: localizacao.prateleira,
           exemplares: qtdExemplares,
           exemplares_disponiveis: qtdExemplares,
+          capa_url: capa_url || null,
           status: 'disponivel'
         });
 
@@ -307,7 +308,7 @@ export class LivroController {
   editar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
       const { id } = req.params;
-      const { titulo, autor, ano_lancamento, genero, exemplares } = req.body;
+      const { titulo, autor, ano_lancamento, genero, exemplares, capa_url } = req.body;
 
       const livroOriginal = await db('livros').where({ id }).whereNull('deleted_at').first();
       if (!livroOriginal) return res.status(404).json({ error: 'Livro não encontrado.' });
@@ -317,6 +318,7 @@ export class LivroController {
       if (titulo !== undefined) dadosParaMudar.titulo = titulo.trim();
       if (autor !== undefined) dadosParaMudar.autor = autor.trim();
       if (genero !== undefined) dadosParaMudar.genero = genero.trim() || 'Não Informado';
+      if (capa_url !== undefined) dadosParaMudar.capa_url = capa_url;
       
       const novoGenero = dadosParaMudar.genero ?? livroOriginal.genero;
       const novoAutor = dadosParaMudar.autor ?? livroOriginal.autor;

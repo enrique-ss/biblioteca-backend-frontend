@@ -80,6 +80,7 @@ async function configurarBanco() {
       t.string('isbn', 20).nullable();
       t.string('corredor', 10).notNullable();
       t.string('prateleira', 10).notNullable();
+      t.text('capa_url', 'longtext').nullable();
       t.integer('exemplares').unsigned().notNullable().defaultTo(1);
       t.integer('exemplares_disponiveis').unsigned().notNullable().defaultTo(1);
       t.enum('status', ['disponivel', 'alugado']).defaultTo('disponivel');
@@ -177,16 +178,7 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [acervo_digital] criada.');
 
-    // Inserção de dados iniciais para Acervo Digital
-    const dummyCover = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=400';
-    await db('acervo_digital').insert([
-      { titulo: 'Guia do Mochileiro das Galáxias', autor: 'Douglas Adams', categoria: 'Ficção Científica', ano: 1979, paginas: 224, tamanho_arquivo: '1.2 MB', url_arquivo: 'https://pdfobject.com/pdf/sample.pdf', capa_url: dummyCover, status: 'aprovado' },
-      { titulo: 'Clean Code', autor: 'Robert C. Martin', categoria: 'Programação', ano: 2008, paginas: 464, tamanho_arquivo: '4.5 MB', url_arquivo: 'https://pdfobject.com/pdf/sample.pdf', capa_url: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&q=80&w=400', status: 'aprovado' },
-      { titulo: 'Dom Casmurro', autor: 'Machado de Assis', categoria: 'Literatura', ano: 1899, paginas: 192, tamanho_arquivo: '0.8 MB', url_arquivo: 'https://pdfobject.com/pdf/sample.pdf', capa_url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400', status: 'aprovado' },
-      { titulo: 'O Pequeno Príncipe', autor: 'Antoine de Saint-Exupéry', categoria: 'Literatura', ano: 1943, paginas: 96, tamanho_arquivo: '2.1 MB', url_arquivo: 'https://pdfobject.com/pdf/sample.pdf', capa_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=400', status: 'aprovado' },
-      { titulo: 'Sapiens', autor: 'Yuval Noah Harari', categoria: 'História', ano: 2011, paginas: 443, tamanho_arquivo: '3.7 MB', url_arquivo: 'https://pdfobject.com/pdf/sample.pdf', capa_url: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&q=80&w=400', status: 'aprovado' }
-    ]);
-    console.log('📚 Sementes de Acervo Digital inseridas.');
+    // Acervo Digital inicia vazio
 
     console.log('\n🎉 Banco de dados configurado com sucesso!');
     await db.destroy();

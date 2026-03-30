@@ -76,26 +76,24 @@ export class AluguelController {
         const livroPai = await trx('livros').where({ id: livro_id }).first();
         const novaQtdDisponivel = Math.max(0, livroPai.exemplares_disponiveis - 1);
 
-        // Atualizações simultâneas no Banco de Dados
-        await Promise.all([
-          // 1. Cria o registro do empréstimo
-          trx('alugueis').insert({
-            livro_id: livro_id, 
-            exemplar_id: exemplarSelecionado.id, 
-            usuario_id: usuario_id,
-            data_prevista_devolucao: dataPrevista, 
-            status: 'ativo'
-          }),
-          
-          // 2. Muda o status da cópia física para 'emprestado'
-          trx('exemplares').where({ id: exemplarSelecionado.id }).update({ disponibilidade: 'emprestado' }),
-          
-          // 3. Atualiza o contador global do livro no catálogo
-          trx('livros').where({ id: livro_id }).update({
-            exemplares_disponiveis: novaQtdDisponivel,
-            status: novaQtdDisponivel === 0 ? 'alugado' : 'disponivel'
-          })
-        ]);
+        // Atualizações sequenciais para evitar deadlocks no MySQL
+        // 1. Cria o registro do empréstimo
+        await trx('alugueis').insert({
+          livro_id: livro_id, 
+          exemplar_id: exemplarSelecionado.id, 
+          usuario_id: usuario_id,
+          data_prevista_devolucao: dataPrevista, 
+          status: 'ativo'
+        });
+
+        // 2. Muda o status da cópia física para 'emprestado'
+        await trx('exemplares').where({ id: exemplarSelecionado.id }).update({ disponibilidade: 'emprestado' });
+
+        // 3. Atualiza o contador global do livro no catálogo
+        await trx('livros').where({ id: livro_id }).update({
+          exemplares_disponiveis: novaQtdDisponivel,
+          status: novaQtdDisponivel === 0 ? 'alugado' : 'disponivel'
+        });
       });
 
       res.status(201).json({ 
@@ -193,27 +191,26 @@ export class AluguelController {
           novaQtdEstoque = novaQtdEstoque + 1;
         }
 
-        await Promise.all([
-          // Fecha o ciclo do empréstimo
-          trx('alugueis').where({ id }).update({
-            status: 'devolvido', 
-            data_devolucao: new Date(), 
-            estado_devolucao: estado_exemplar
-          }),
-          
-          // Atualiza a ficha médica da cópia física
-          trx('exemplares').where({ id: emprestimo.exemplar_id }).update({
-            disponibilidade: novaDisponibilidade,
-            condicao: estado_exemplar,
-            observacao: observacao?.trim() || null
-          }),
-          
-          // Reajusta o catálogo global
-          trx('livros').where({ id: emprestimo.livro_id }).update({
-            exemplares_disponiveis: novaQtdEstoque,
-            status: novaQtdEstoque > 0 ? 'disponivel' : 'alugado'
-          })
-        ]);
+        // Atualizações sequenciais para evitar deadlocks no MySQL
+        // Fecha o ciclo do empréstimo
+        await trx('alugueis').where({ id }).update({
+          status: 'devolvido', 
+          data_devolucao: new Date(), 
+          estado_devolucao: estado_exemplar
+        });
+
+        // Atualiza a ficha médica da cópia física
+        await trx('exemplares').where({ id: emprestimo.exemplar_id }).update({
+          disponibilidade: novaDisponibilidade,
+          condicao: estado_exemplar,
+          observacao: observacao?.trim() || null
+        });
+
+        // Reajusta o catálogo global
+        await trx('livros').where({ id: emprestimo.livro_id }).update({
+          exemplares_disponiveis: novaQtdEstoque,
+          status: novaQtdEstoque > 0 ? 'disponivel' : 'alugado'
+        });
       });
 
       // Consolidação do retorno para o usuário

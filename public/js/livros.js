@@ -12,14 +12,13 @@ async function carregarLivros(busca = '', pagina = 1) {
     }
     controladorAbortarLivros = new AbortController();
 
-    definirCarregando('livrosTbody', 8);
+    const grid = document.getElementById('livrosGrid');
+    grid.innerHTML = '<div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;"><span class="spinner"></span> Carregando acervo físico...</div>';
 
     try {
         const parametros = new URLSearchParams({ 
             page: pagina, 
-            limit: 20,
-            sort: sortState.livros.col,
-            order: sortState.livros.dir
+            limit: 20
         });
 
         if (busca.trim()) {
@@ -43,55 +42,75 @@ async function carregarLivros(busca = '', pagina = 1) {
         }
 
         const { data, pages } = await resposta.json();
-        const tbody = document.getElementById('livrosTbody');
-        tbody.innerHTML = '';
+        const grid = document.getElementById('livrosGrid');
+        grid.innerHTML = '';
 
         if (!data.length) {
-            definirVazio('livrosTbody', 8, 'Nenhum livro encontrado.');
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-dim); font-style: italic;">Nenhum livro físico encontrado.</div>';
+            document.getElementById('livrosPagination').innerHTML = '';
             return;
         }
 
-        data.forEach(livro => {
-            const tr = document.createElement('tr');
-            const ehBibliotecario = currentUser?.tipo === 'bibliotecario';
+        const gradientes = [
+            'linear-gradient(135deg, #1e3a8a, #1e40af)', // Blue
+            'linear-gradient(135deg, #312e81, #3730a3)', // Indigo
+            'linear-gradient(135deg, #4c1d95, #5b21b6)', // Violet
+            'linear-gradient(135deg, #701a75, #86198f)', // Fuchsia
+            'linear-gradient(135deg, #831843, #9d174d)', // Pink
+            'linear-gradient(135deg, #111827, #1f2937)'  // Dark Gray
+        ];
 
-            tr.innerHTML = `
-                <td style="color:var(--text-dim)">${esc(livro.id)}</td>
-                <td><strong>${esc(livro.titulo)}</strong></td>
-                <td>${esc(livro.autor)}</td>
-                <td>${esc(livro.genero)}</td>
-                <td style="color:var(--text)">${esc(livro.corredor ?? '—')}-${esc(livro.prateleira ?? '—')}</td>
-                <td style="text-align:center">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)}</td>
-                <td>${badgeStatus(livro.status)}</td>
-                <td>
-                    ${ehBibliotecario ? `
-                    <div class="td-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
-                        <button class="btn btn-ghost btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="removerLivro(${livro.id},'${esc(livro.titulo)}')">Remover</button>
-                    </div>` : ''}
-                </td>`;
+        data.forEach((livro, index) => {
+            const ehBibliotecario = currentUser?.tipo === 'bibliotecario';
+            const card = document.createElement('div');
+            card.className = 'digital-card';
             
-            tbody.appendChild(tr);
+            const fundo = gradientes[index % gradientes.length];
+            const estaDisponivel = livro.status === 'disponivel';
+            const badgeCor = estaDisponivel ? 'var(--success)' : 'var(--danger)';
+            const badgeLabel = estaDisponivel ? 'Disponível' : 'Alugado';
+            const textCor = '#fff';
+
+            const bgStyle = livro.capa_url 
+                ? `background: url('${esc(livro.capa_url)}') center/cover no-repeat; border-bottom: 2px solid var(--accent-bg);`
+                : `background: ${fundo}; border-bottom: 2px solid var(--accent-bg);`;
+
+            card.innerHTML = `
+                <div class="digital-card-poster" style="${bgStyle}">
+                    ${!livro.capa_url ? `<div class="digital-card-cover-text" style="font-size:1.5rem;text-transform:uppercase;color:#fff;">${esc(livro.titulo)}</div>` : ''}
+                </div>
+                <div class="digital-card-content">
+                    <h3 class="digital-card-title" style="margin-bottom: 4px;">${esc(livro.titulo)}</h3>
+                    <p style="font-size: 0.9em; color: #e2e8f0; margin-bottom: 12px; font-style: italic;">por ${esc(livro.autor)}</p>
+                    
+                    <div class="digital-card-meta">
+                        <span style="color: #e2e8f0;">📂 ${esc(livro.genero)}</span>
+                        <span style="color: #e2e8f0;">Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
+                    </div>
+
+                    <div style="margin-bottom:16px; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;">
+                        <span class="badge" style="background:${badgeCor}; color:${textCor}">${badgeLabel}</span>
+                        <span style="font-size:12px;color:#e2e8f0;float:right;margin-top:2px;">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)} unid.</span>
+                    </div>
+
+                    ${ehBibliotecario ? `
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-ghost btn-sm" style="flex:1" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
+                        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
+                    </div>` : ''}
+                </div>
+            `;
+            
+            grid.appendChild(card);
         });
 
         renderizarPaginacao('livrosPagination', pagina, pages, (p) => carregarLivros(busca, p));
-        
-        // Atualiza os indicadores visuais de ordenação nas colunas
-        document.querySelectorAll('#livrosScreen .sortable').forEach(th => {
-            th.classList.remove('sort-asc', 'sort-desc');
-        });
-        
-        const thAtual = document.querySelector(`#livrosScreen [onclick="sortTable('livros','${sortState.livros.col}')"]`);
-        if (thAtual) {
-            const classeOrdenacao = sortState.livros.dir === 'asc' ? 'sort-asc' : 'sort-desc';
-            thAtual.classList.add(classeOrdenacao);
-        }
 
     } catch (erro) {
         if (erro.name === 'AbortError') return;
-        definirVazio('livrosTbody', 8, erro.message);
-        exibirAlerta(erro.message, 'danger');
+        const grid = document.getElementById('livrosGrid');
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--danger);">${erro.message}</div>`;
+        exibirAlerta(erro.message, 'error');
     }
 }
 
@@ -134,7 +153,7 @@ function prepararAddLivro(tipo) {
         groupPaginas.style.display = 'none';
         document.getElementById('livroPaginas').required = false;
 
-        groupCapa.style.display = 'none';
+        groupCapa.style.display = 'block';
         document.getElementById('livroCapa').required = false;
 
         groupArquivo.style.display = 'none';
@@ -153,6 +172,17 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
         btnSubmit.textContent = 'Processando...';
         btnSubmit.disabled = true;
 
+        const lerArquivoComoBase64 = (arquivo) => new Promise((resolve, reject) => {
+            if (!arquivo) return resolve(null);
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(arquivo);
+        });
+
+        const capaInput = document.getElementById('livroCapa');
+        const capaBase64 = capaInput.files.length > 0 ? await lerArquivoComoBase64(capaInput.files[0]) : null;
+
         if (tipo === 'fisico') {
             await api('/livros', {
                 method: 'POST',
@@ -161,11 +191,14 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
                     autor: document.getElementById('livroAutor').value,
                     ano_lancamento: parseInt(document.getElementById('livroAno').value),
                     genero: document.getElementById('livroGenero').value,
-                    exemplares: parseInt(document.getElementById('livroExemplares').value) || 1
+                    exemplares: parseInt(document.getElementById('livroExemplares').value) || 1,
+                    capa_url: capaBase64
                 })
             });
             exibirAlerta('Exemplar físico cadastrado com sucesso!');
-            carregarLivros(document.getElementById('livrosPagination').querySelector('.active')?.textContent || 1);
+            const termoBusca = document.getElementById('buscaLivros')?.value || '';
+            const pageNum = document.getElementById('livrosPagination').querySelector('.active')?.textContent || 1;
+            carregarLivros(termoBusca, pageNum);
         } else {
             const fileInput = document.getElementById('livroArquivo');
             if (!fileInput.files.length) {
@@ -177,18 +210,7 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
 
             const file = fileInput.files[0];
             const tamanho = (file.size / 1024 / 1024).toFixed(1) + ' MB';
-            
-            const lerArquivoComoBase64 = (arquivo) => new Promise((resolve, reject) => {
-                if (!arquivo) return resolve(null);
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(arquivo);
-            });
-
             const pdfBase64 = await lerArquivoComoBase64(file);
-            const capaInput = document.getElementById('livroCapa');
-            const capaBase64 = capaInput.files.length > 0 ? await lerArquivoComoBase64(capaInput.files[0]) : null;
 
             const payload = {
                 titulo: document.getElementById('livroTitulo').value,

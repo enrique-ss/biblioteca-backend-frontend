@@ -98,29 +98,15 @@
                         <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
                     </div>
                 </div>
-                <div class="search-bar"><input type="text" id="buscaLivros" class="form-input"
-                        placeholder="Buscar por título, autor ou gênero…" oninput="carregarLivrosDebounced(this.value)">
+                <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
+                    <div class="search-bar" style="flex:1; margin-bottom:0;">
+                        <input type="text" id="buscaLivros" class="form-input" placeholder="Buscar por título, autor ou gênero…" oninput="carregarLivrosDebounced(this.value)">
+                    </div>
                 </div>
-                <div class="table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th class="sortable sort-asc" onclick="sortTable('livros','titulo')">Título</th>
-                                <th class="sortable" onclick="sortTable('livros','autor')">Autor</th>
-                                <th class="sortable" onclick="sortTable('livros','genero')">Gênero</th>
-                                <th>Localização</th>
-                                <th>Exemplares</th>
-                                <th class="sortable" onclick="sortTable('livros','status')">Disponib.</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="livrosTbody">
-                            <tr class="loading-row">
-                                <td colspan="8"><span class="spinner"></span>Carregando…</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div id="livrosGrid" class="digital-grid">
+                    <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <span class="spinner"></span> Carregando acervo físico...
+                    </div>
                 </div>
                 <div class="pagination" id="livrosPagination"></div>
             </section>
@@ -129,7 +115,7 @@
                 <div class="page-header">
                     <h2 class="page-title">Acervo <span>Digital</span></h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary btn-sm" onclick="prepararAddLivro('digital')">+ Adicionar Livro</button>
+                        <button class="btn btn-success" onclick="prepararAddLivro('digital')">+ Adicionar Livro</button>
                         <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
                     </div>
                 </div>
@@ -396,6 +382,10 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                     <div class="form-group"><label class="form-label">Ano</label><input type="number" id="livroAno" class="form-input" min="1000" max="2099" required></div>
                     <div class="form-group" id="groupPaginas" style="display:none;"><label class="form-label">Nº Páginas</label><input type="number" id="livroPaginas" class="form-input" min="1"></div>
+                    <div class="form-group" id="groupExemplares">
+                        <label class="form-label">Exemplares</label>
+                        <input type="number" id="livroExemplares" class="form-input" min="1" max="999" value="1" required>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -412,11 +402,6 @@
                         <option value="Negócios">Negócios</option>
                         <option value="Outros">Outros</option>
                     </select>
-                </div>
-
-                <div class="form-group" id="groupExemplares">
-                    <label class="form-label">Exemplares</label>
-                    <input type="number" id="livroExemplares" class="form-input" min="1" max="999" value="1" required>
                 </div>
 
                 <div class="form-group" id="groupCapa" style="display:none;">
