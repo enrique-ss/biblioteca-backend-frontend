@@ -16,8 +16,93 @@
 .auth-title    { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--accent); text-align: center; letter-spacing: .06em; margin-bottom: 4px; }
 .auth-subtitle { text-align: center; color: var(--text); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; opacity: 1; }
 
-/* ── TELA MENU ── */
+/* ── TELA MENU e ALERTAS ── */
 .menu-screen-wrap { max-width: 1000px; margin: 0 auto; text-align: center; padding-top: 40px; }
+
+.notifications-center-wrap { 
+    max-width: 1000px; 
+    margin: 0 auto; 
+    padding: 0; /* Limpo, os cards terão padding */
+}
+
+.notification-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    margin-bottom: 24px;
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.notification-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+}
+
+.notification-card.danger { border-left: 5px solid var(--danger); }
+.notification-card.warning { border-left: 5px solid var(--warning); }
+.notification-card.info { border-left: 5px solid var(--accent); }
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.notification-title-wrap { display: flex; align-items: center; gap: 14px; }
+.notification-icon-badge {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent);
+    font-size: 1.2rem;
+}
+.notification-icon-badge.danger { color: var(--danger); border-color: var(--danger); background: rgba(230, 57, 70, 0.1); }
+
+.notification-title {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-md);
+    color: var(--accent);
+    margin: 0;
+    letter-spacing: 0.05em;
+}
+
+.notification-content {
+    color: var(--text);
+    font-size: var(--fs-sm);
+    line-height: 1.7;
+}
+
+.notification-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 0.85rem;
+}
+
+.notification-content th {
+    text-align: left;
+    color: var(--accent);
+    padding: 10px;
+    border-bottom: 1px solid var(--border-m);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+}
+
+.notification-content td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border);
+}
 .menu-welcome { margin-bottom: 40px; }
 .menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: #ffffff; letter-spacing: 0.05em; }
 .menu-welcome p { color: #ffffff; margin-top: 8px; font-size: var(--fs-md); }

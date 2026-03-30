@@ -226,38 +226,41 @@ async function carregarNotificacoesUsuario() {
 // Renderiza a lista de notificações na interface principal
 function renderizarNotificacoesTelaCheia() {
     const corpo = document.getElementById('notificationsFullScreenBody');
-    if (!corpo) {
-        return;
-    }
+    if (!corpo) return;
     
     if (dadosNotificacoes.length === 0) {
         corpo.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: var(--text-faint); font-style: italic; font-size: var(--fs-md);">
-                Nenhum alerta pendente no momento. Tudo tranquilo!
+            <div style="text-align: center; padding: 60px; color: var(--text-faint); font-style: italic;">
+                Nenhum alerta ou pendência no momento. Tudo tranquilo!
             </div>`;
         return;
     }
     
     corpo.innerHTML = dadosNotificacoes.map(notif => `
-        <div class="notification-item" style="padding: 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; border-radius: var(--r-md); transition: background 0.3s; background: rgba(255,255,255,0.02);" onmouseover="this.style.background='var(--accent-bg)'" onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <strong style="color: var(--accent); font-family: 'Cinzel', serif; font-size: var(--fs-md); letter-spacing: 0.05em;">
-                    <span class="notification-type ${notif.type}" style="font-family: 'Crimson Pro', serif; font-size: 0.7em; margin-right: 8px; vertical-align: middle;">${notif.type.toUpperCase()}</span> 
-                    ${notif.title}
-                </strong>
-                <span style="color: var(--text); font-size: var(--fs-xs); font-style: italic; opacity: 0.6;">Agora</span>
+        <div class="notification-card ${notif.type}">
+            <div class="notification-header">
+                <div class="notification-title-wrap">
+                    <span class="notification-icon-badge ${notif.type}">${notif.type === 'danger' ? '⚠️' : '🔔'}</span>
+                    <h3 class="notification-title">${notif.title}</h3>
+                </div>
+                ${notif.count > 0 ? `<span class="badge badge-${notif.type}">${notif.count} pendente(s)</span>` : ''}
             </div>
-            <div style="color: var(--text); font-size: var(--fs-base); line-height: 1.6;">${notif.message}</div>
+            <div class="notification-content">
+                ${notif.message}
+            </div>
         </div>`).join('');
 }
 
 // Atualiza a bolinha vermelha na navbar com a contagem de alertas
 function atualizarBadgeNotificacoes() {
     const badge = document.getElementById('notificationsBadge');
-    const total = dadosNotificacoes.length;
+    if (!badge) return;
+
+    // Soma as pendências reais de cada item de alerta
+    const totalPendencias = dadosNotificacoes.reduce((acc, item) => acc + (item.count || 0), 0);
     
-    if (total > 0) {
-        badge.textContent = total > 99 ? '99+' : total;
+    if (totalPendencias > 0) {
+        badge.textContent = totalPendencias > 99 ? '99+' : totalPendencias;
         badge.classList.add('show');
     } else {
         badge.classList.remove('show');
@@ -270,6 +273,31 @@ function gerenciarVisibilidadeNotificacoes() {
     if (elementoNav) {
         elementoNav.style.display = currentUser ? 'block' : 'none';
     }
+}
+
+async function pagarMinhasMultas() {
+    exibirConfirmacao({
+        icon: '💳',
+        title: 'Quitar Débitos',
+        msg: 'Deseja processar o pagamento de todas as multas pendentes?',
+        okLabel: 'Sim, Pagar Agora',
+        async onOk() {
+            try {
+                const resultado = await api('/alugueis/multas/pagar/mim', { method: 'PUT' });
+                exibirAlerta(resultado.message, 'success');
+                // Atualiza o estado do usuário
+                if (currentUser) {
+                    currentUser.multa_pendente = false;
+                    salvarSessao();
+                    atualizarNavbar();
+                }
+                // Recarrega os alertas para refletir o pagamento
+                await buscarNotificacoes();
+            } catch (erro) { 
+                exibirAlerta(erro.message, 'danger'); 
+            }
+        }
+    });
 }
 
 // Estende a funcionalidade global de atualização da navbar
