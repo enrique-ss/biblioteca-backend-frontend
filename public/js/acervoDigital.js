@@ -171,71 +171,7 @@ function downloadPDF(url, titulo) {
     exibirAlerta('Download iniciado...');
 }
 
-// Configuração do formulário de adição
-document.addEventListener('DOMContentLoaded', () => {
-    const frmDigital = document.getElementById('addDigitalForm');
-    if (frmDigital) {
-        frmDigital.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const fileInput = document.getElementById('digitalFile');
-            if (!fileInput.files.length) {
-                exibirAlerta('Você deve anexar um arquivo PDF!', 'error');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            const tamanho = (file.size / 1024 / 1024).toFixed(1) + ' MB';
-            
-            const lerArquivoComoBase64 = (arquivo) => new Promise((resolve, reject) => {
-                if (!arquivo) return resolve(null);
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-                reader.readAsDataURL(arquivo);
-            });
-
-            try {
-                // Alerta visual pois Base64 em arquivos grandes trava um pouco
-                const btnSubmit = e.target.querySelector('button[type="submit"]');
-                const textoOriginal = btnSubmit.textContent;
-                btnSubmit.textContent = 'Processando...';
-                btnSubmit.disabled = true;
-
-                const pdfBase64 = await lerArquivoComoBase64(file);
-                
-                const capaInput = document.getElementById('digitalCapa');
-                const capaBase64 = capaInput.files.length > 0 ? await lerArquivoComoBase64(capaInput.files[0]) : null;
-
-                const payload = {
-                    titulo: document.getElementById('digitalTitulo').value,
-                    autor: document.getElementById('digitalAutor').value,
-                    ano: document.getElementById('digitalAno').value,
-                    categoria: document.getElementById('digitalGenero').value,
-                    paginas: document.getElementById('digitalPaginas').value,
-                    capa_url: capaBase64,
-                    tamanho_arquivo: tamanho,
-                    url_arquivo: pdfBase64
-                };
-
-                const req = await api('/acervo-digital', {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                exibirAlerta(req.message, 'success');
-                fecharModal('addDigitalModal');
-                frmDigital.reset();
-                carregarAcervoDigital(1);
-            } catch (error) {
-                exibirAlerta(error.message || 'Erro ao processar anexos.', 'error');
-            } finally {
-                const btnSubmit = e.target.querySelector('button[type="submit"]');
-                btnSubmit.textContent = 'Enviar';
-                btnSubmit.disabled = false;
-            }
-        });
-    }
-});
+// Lógica de formulário removida e consolidada em livros.js (Unified Add Book Form)
 
 // Lógica de Gestão de Pendências (Bibliotecários)
 async function carregarPendencias() {

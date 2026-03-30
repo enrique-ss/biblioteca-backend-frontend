@@ -95,27 +95,128 @@ async function carregarLivros(busca = '', pagina = 1) {
     }
 }
 
-// Cadastro de novo livro
+function prepararAddLivro(tipo) {
+    const frm = document.getElementById('addLivroForm');
+    frm.reset();
+    document.getElementById('livroTipo').value = tipo;
+    
+    const groupExemplares = document.getElementById('groupExemplares');
+    const groupPaginas = document.getElementById('groupPaginas');
+    const groupCapa = document.getElementById('groupCapa');
+    const groupArquivo = document.getElementById('groupArquivo');
+
+    if (tipo === 'digital') {
+        document.getElementById('addLivroTitle').innerHTML = 'Adicionar <span>Digital</span>';
+        document.getElementById('addLivroSubtitle').textContent = 'Incluir um livro no acervo digital (PDF)';
+        document.getElementById('btnAddSubmit').textContent = 'Enviar PDF';
+        document.getElementById('btnAddSubmit').className = 'btn btn-primary';
+
+        groupExemplares.style.display = 'none';
+        document.getElementById('livroExemplares').required = false;
+
+        groupPaginas.style.display = 'block';
+        document.getElementById('livroPaginas').required = true;
+
+        groupCapa.style.display = 'block';
+        document.getElementById('livroCapa').required = false;
+
+        groupArquivo.style.display = 'block';
+        document.getElementById('livroArquivo').required = true;
+    } else {
+        document.getElementById('addLivroTitle').innerHTML = 'Cadastrar <span>Físico</span>';
+        document.getElementById('addLivroSubtitle').textContent = 'Preencha os dados do novo exemplar';
+        document.getElementById('btnAddSubmit').textContent = 'Cadastrar Físico';
+        document.getElementById('btnAddSubmit').className = 'btn btn-success';
+
+        groupExemplares.style.display = 'block';
+        document.getElementById('livroExemplares').required = true;
+
+        groupPaginas.style.display = 'none';
+        document.getElementById('livroPaginas').required = false;
+
+        groupCapa.style.display = 'none';
+        document.getElementById('livroCapa').required = false;
+
+        groupArquivo.style.display = 'none';
+        document.getElementById('livroArquivo').required = false;
+    }
+    abrirModal('addLivroModal');
+}
+
+// Cadastro Unificado de Livro Físico ou Digital
 document.getElementById('addLivroForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const tipo = document.getElementById('livroTipo').value;
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+
     try {
-        await api('/livros', {
-            method: 'POST',
-            body: JSON.stringify({
+        btnSubmit.textContent = 'Processando...';
+        btnSubmit.disabled = true;
+
+        if (tipo === 'fisico') {
+            await api('/livros', {
+                method: 'POST',
+                body: JSON.stringify({
+                    titulo: document.getElementById('livroTitulo').value,
+                    autor: document.getElementById('livroAutor').value,
+                    ano_lancamento: parseInt(document.getElementById('livroAno').value),
+                    genero: document.getElementById('livroGenero').value,
+                    exemplares: parseInt(document.getElementById('livroExemplares').value) || 1
+                })
+            });
+            exibirAlerta('Exemplar físico cadastrado com sucesso!');
+            carregarLivros(document.getElementById('livrosPagination').querySelector('.active')?.textContent || 1);
+        } else {
+            const fileInput = document.getElementById('livroArquivo');
+            if (!fileInput.files.length) {
+                exibirAlerta('Você deve anexar um arquivo PDF!', 'error');
+                btnSubmit.textContent = 'Enviar PDF';
+                btnSubmit.disabled = false;
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const tamanho = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+            
+            const lerArquivoComoBase64 = (arquivo) => new Promise((resolve, reject) => {
+                if (!arquivo) return resolve(null);
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(arquivo);
+            });
+
+            const pdfBase64 = await lerArquivoComoBase64(file);
+            const capaInput = document.getElementById('livroCapa');
+            const capaBase64 = capaInput.files.length > 0 ? await lerArquivoComoBase64(capaInput.files[0]) : null;
+
+            const payload = {
                 titulo: document.getElementById('livroTitulo').value,
                 autor: document.getElementById('livroAutor').value,
-                ano_lancamento: parseInt(document.getElementById('livroAno').value),
-                genero: document.getElementById('livroGenero').value,
-                exemplares: parseInt(document.getElementById('livroExemplares').value) || 1
-            })
-        });
+                ano: document.getElementById('livroAno').value,
+                categoria: document.getElementById('livroGenero').value,
+                paginas: document.getElementById('livroPaginas').value,
+                capa_url: capaBase64,
+                tamanho_arquivo: tamanho,
+                url_arquivo: pdfBase64
+            };
 
-        exibirAlerta('Livro cadastrado com sucesso!');
+            const req = await api('/acervo-digital', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            exibirAlerta(req.message, 'success');
+            if (typeof carregarAcervoDigital === 'function') carregarAcervoDigital(1);
+        }
+
         fecharModal('addLivroModal');
         e.target.reset();
-        carregarLivros();
+
     } catch (erro) {
-        exibirAlerta(erro.message, 'danger');
+        exibirAlerta(erro.message || 'Erro ao concluir operação.', 'error');
+    } finally {
+        btnSubmit.textContent = tipo === 'digital' ? 'Enviar PDF' : 'Cadastrar Físico';
+        btnSubmit.disabled = false;
     }
 });
 
