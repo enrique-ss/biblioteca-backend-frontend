@@ -1,0 +1,271 @@
+<div id="addLivroModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('addLivroModal')"></div>
+    <div class="modal-box">
+        <h2 class="modal-title" id="addLivroTitle">Cadastrar <span>Livro</span></h2>
+        <p class="modal-subtitle" id="addLivroSubtitle">Preencha os dados do novo exemplar</p>
+        <form id="addLivroForm" novalidate>
+            <input type="hidden" id="livroTipo" value="fisico">
+            <div class="form-group"><label class="form-label">Título</label><input type="text" id="livroTitulo" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Autor</label><input type="text" id="livroAutor" class="form-input" required></div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="form-group"><label class="form-label">Ano</label><input type="number" id="livroAno" class="form-input" min="1000" max="2099" required></div>
+                <div class="form-group" id="groupPaginas" style="display:none;"><label class="form-label">Nº Páginas</label><input type="number" id="livroPaginas" class="form-input" min="1"></div>
+                <div class="form-group" id="groupExemplares">
+                    <label class="form-label">Exemplares</label>
+                    <input type="number" id="livroExemplares" class="form-input" min="1" max="999" value="1" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Gênero / Categoria</label>
+                <select id="livroGenero" class="form-select" required>
+                    <option value="" disabled selected>Escolha um gênero</option>
+                    <option value="Literatura">Literatura</option>
+                    <option value="Ficção Científica">Ficção Científica</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Suspense">Suspense</option>
+                    <option value="História">História</option>
+                    <option value="Programação">Programação</option>
+                    <option value="Biografia">Biografia</option>
+                    <option value="Negócios">Negócios</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="groupCapa" style="display:none;">
+                <label class="form-label">Capa (Imagem)</label>
+                <input type="file" id="livroCapa" class="form-input" accept="image/*" style="padding:8px">
+                <p style="font-size:10px; color:var(--accent); margin-top:4px;">* Recomendado.</p>
+            </div>
+            
+            <div class="form-group" id="groupArquivo" style="display:none;">
+                <label class="form-label">Arquivo PDF</label>
+                <input type="file" id="livroArquivo" class="form-input" accept="application/pdf" style="padding:8px">
+                <p style="font-size:10px; color:var(--accent); margin-top:4px;">* Obrigatório para acervo digital.</p>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" id="btnAddSubmit" class="btn btn-success">Cadastrar</button>
+                <button type="button" class="btn btn-ghost" onclick="fecharModal('addLivroModal')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="editLivroModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('editLivroModal')"></div>
+    <div class="modal-box">
+        <h2 class="modal-title">Editar Livro</h2>
+        <p class="modal-subtitle">Atualize os dados do exemplar</p>
+        <form id="editLivroForm" novalidate>
+            <input type="hidden" id="editLivroId">
+            <div class="form-group"><label class="form-label">Título</label><input type="text" id="editLivroTitulo"
+                    class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Autor</label><input type="text" id="editLivroAutor"
+                    class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Ano</label><input type="number" id="editLivroAno"
+                    class="form-input" min="1000" max="2099" required></div>
+            <div class="form-group">
+                <label class="form-label">Gênero</label>
+                <select id="editLivroGenero" class="form-select" required>
+                    <option value="Literatura">Literatura</option>
+                    <option value="Ficção Científica">Ficção Científica</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Suspense">Suspense</option>
+                    <option value="História">História</option>
+                    <option value="Programação">Programação</option>
+                    <option value="Biografia">Biografia</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">Exemplares totais</label><input type="number"
+                    id="editLivroExemplares" class="form-input" min="1" max="999" required></div>
+            <div class="btn-group"><button type="submit" class="btn btn-gold">Salvar</button><button type="button"
+                    class="btn btn-ghost" onclick="fecharModal('editLivroModal')">Cancelar</button></div>
+        </form>
+    </div>
+</div>
+
+<div id="exemplareModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('exemplareModal')"></div>
+    <div class="modal-box" style="max-width:780px;">
+        <h2 class="modal-title">Exemplares</h2>
+        <p class="modal-subtitle" id="exemplaresTitulo">—</p>
+        <input type="hidden" id="exemplaresLivroId">
+        <div class="table-wrap" style="max-height:50vh;overflow-y:auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Código</th>
+                        <th>Status</th>
+                        <th>Condição</th>
+                        <th>Observação</th>
+                        <th>Último Aluguel</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="exemplaresTbody">
+                    <tr class="loading-row">
+                        <td colspan="7"><span class="spinner"></span>Carregando…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="btn-group" style="margin-top:16px;"><button type="button" class="btn btn-ghost"
+                onclick="fecharModal('exemplareModal')">Fechar</button></div>
+    </div>
+</div>
+
+<div id="devolucaoModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('devolucaoModal')"></div>
+    <div class="modal-box">
+        <h2 class="modal-title">Registrar Devolução</h2>
+        <p class="modal-subtitle">Informe o estado do exemplar devolvido</p>
+        <form id="devolucaoForm" novalidate>
+            <input type="hidden" id="devolucaoAluguelId">
+            <div class="form-group">
+                <label class="form-label">Estado do Exemplar</label>
+                <select id="devolucaoEstado" class="form-select" required>
+                    <option value="bom">Bom estado — disponível para novos empréstimos</option>
+                    <option value="danificado">Danificado — volta ao acervo com ressalva</option>
+                    <option value="perdido">Perdido — removido do acervo + multa R$ 100,00</option>
+                </select>
+            </div>
+            <div id="devolucaoObsWrap" class="form-group" style="display:none;">
+                <label class="form-label">Observação <span style="opacity:1;color:var(--accent)">(opcional)</span></label>
+                <input type="text" id="devolucaoObs" class="form-input"
+                    placeholder="Descreva o problema encontrado…">
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">Confirmar Devolução</button>
+                <button type="button" class="btn btn-ghost" onclick="fecharModal('devolucaoModal')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="addAluguelModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('addAluguelModal')"></div>
+    <div class="modal-box">
+        <h2 class="modal-title">Registrar Empréstimo</h2>
+        <p class="modal-subtitle">Selecione o livro e o leitor</p>
+        <form id="addAluguelForm" novalidate>
+            <div class="form-group"><label class="form-label">Livro disponível</label><select id="aluguelLivro"
+                    class="form-select" required>
+                    <option value="">Selecione um livro…</option>
+                </select></div>
+            <div class="form-group"><label class="form-label">Exemplar (opcional)</label><select id="aluguelExemplar"
+                    class="form-select">
+                    <option value="">Selecione um livro primeiro…</option>
+                </select></div>
+            <div class="form-group"><label class="form-label">Usuário</label><select id="aluguelUsuario"
+                    class="form-select" required>
+                    <option value="">Selecione um usuário…</option>
+                </select></div>
+            <div class="btn-group"><button type="submit" class="btn btn-success">Registrar</button><button
+                    type="button" class="btn btn-ghost" onclick="fecharModal('addAluguelModal')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="editUsuarioModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('editUsuarioModal')"></div>
+    <div class="modal-box">
+        <h2 class="modal-title">Editar Usuário</h2>
+        <p class="modal-subtitle">Atualize os dados do cadastro</p>
+        <form id="editUsuarioForm" novalidate>
+            <input type="hidden" id="editUsuarioId">
+            <div class="form-group"><label class="form-label">Nome</label><input type="text" id="editUsuarioNome"
+                    class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" id="editUsuarioEmail"
+                    class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Tipo</label>
+                <select id="editUsuarioTipo" class="form-select">
+                    <option value="usuario">Usuário</option>
+                    <option value="bibliotecario">Bibliotecário</option>
+                </select>
+            </div>
+            <div class="btn-group"><button type="submit" class="btn btn-gold">Salvar alterações</button><button
+                    type="button" class="btn btn-ghost" onclick="fecharModal('editUsuarioModal')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="multasModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('multasModal')"></div>
+    <div class="modal-box" style="max-width:680px;">
+        <h2 class="modal-title">Multas do Usuário</h2>
+        <p class="modal-subtitle" id="multasUsuarioNome">—</p>
+        <input type="hidden" id="multasUsuarioId">
+        <div class="table-wrap" style="max-height:45vh;overflow-y:auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Livro</th>
+                        <th>Valor</th>
+                        <th>Atraso</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody id="multasTbody">
+                    <tr class="loading-row">
+                        <td colspan="6"><span class="spinner"></span>Carregando…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:10px;">
+            <span id="multasTotalPendente" style="font-family:'Cinzel',serif;font-size:var(--fs-sm);color:var(--text-dim);"></span>
+            <div class="btn-group" style="margin-top:0;">
+                <button id="btnQuitarMultas" class="btn btn-success" style="display:none;"
+                    onclick="quitarMultasUsuario()">Quitar todas</button>
+                <button class="btn btn-ghost" onclick="fecharModal('multasModal')">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="confirmDialog">
+    <div class="confirm-backdrop"></div>
+    <div class="confirm-box">
+        <div class="confirm-icon" id="confirmIcon">⚠️</div>
+        <h3 class="confirm-title" id="confirmTitle">Confirmar ação</h3>
+        <p class="confirm-msg" id="confirmMsg"></p>
+        <div class="confirm-actions">
+            <button class="btn btn-danger" id="confirmOkBtn">Confirmar</button>
+            <button class="btn btn-ghost" onclick="fecharConfirmacao()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<div id="aprovacoesModal" class="modal">
+    <div class="modal-backdrop" onclick="fecharModal('aprovacoesModal')"></div>
+    <div class="modal-box" style="max-width: 680px;">
+        <h2 class="modal-title">Submissões <span>Pendentes</span></h2>
+        <p class="modal-subtitle">Aprove ou rejeite documentos enviados por usuários</p>
+        <div class="table-wrap" style="max-height:50vh;overflow-y:auto; margin-top:20px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Enviado por</th>
+                        <th>Categoria</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="aprovacoesTbody">
+                    <tr class="loading-row"><td colspan="4" style="text-align:center;"><span class="spinner"></span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="btn-group" style="margin-top:20px;">
+            <button class="btn btn-ghost" onclick="fecharModal('aprovacoesModal')">Fechar</button>
+        </div>
+    </div>
+</div>

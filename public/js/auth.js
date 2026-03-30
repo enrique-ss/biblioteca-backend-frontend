@@ -1,60 +1,68 @@
 // Lógica de Autenticação (Login e Registro)
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        const payload = {
-            email: document.getElementById('loginEmail').value,
-            senha: document.getElementById('loginPassword').value
-        };
+function setupAuthForms() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const payload = {
+                    email: document.getElementById('loginEmail').value,
+                    senha: document.getElementById('loginPassword').value
+                };
 
-        const dados = await api('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify(payload)
+                const dados = await api('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                token = dados.token;
+                currentUser = dados.usuario;
+
+                salvarSessao();
+                atualizarNavbar();
+                carregarMenu();
+                
+                mostrarTela('menuScreen');
+                e.target.reset();
+            } catch (erro) {
+                exibirAlerta(erro.message, 'danger');
+            }
         });
-
-        token = dados.token;
-        currentUser = dados.usuario;
-
-        salvarSessao();
-        atualizarNavbar();
-        carregarMenu();
-        
-        mostrarTela('menuScreen');
-        e.target.reset();
-    } catch (erro) {
-        exibirAlerta(erro.message, 'danger');
     }
-});
 
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        const payload = {
-            nome: document.getElementById('regNome').value,
-            email: document.getElementById('regEmail').value,
-            senha: document.getElementById('regSenha').value,
-            tipo: 'usuario'
-        };
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const payload = {
+                    nome: document.getElementById('regNome').value,
+                    email: document.getElementById('regEmail').value,
+                    senha: document.getElementById('regSenha').value,
+                    tipo: 'usuario'
+                };
 
-        const dados = await api('/auth/registrar', {
-            method: 'POST',
-            body: JSON.stringify(payload)
+                const dados = await api('/auth/registrar', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                token = dados.token;
+                currentUser = dados.usuario;
+
+                salvarSessao();
+                atualizarNavbar();
+                carregarMenu();
+
+                mostrarTela('menuScreen');
+                e.target.reset();
+            } catch (erro) {
+                exibirAlerta(erro.message, 'danger');
+            }
         });
-
-        token = dados.token;
-        currentUser = dados.usuario;
-
-        salvarSessao();
-        atualizarNavbar();
-        carregarMenu();
-
-        mostrarTela('menuScreen');
-        e.target.reset();
-    } catch (erro) {
-        exibirAlerta(erro.message, 'danger');
     }
-});
+}
 
 // Encerra a sessão do usuário
 function logout() {

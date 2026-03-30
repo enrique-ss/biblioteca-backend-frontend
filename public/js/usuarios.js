@@ -92,25 +92,30 @@ function editarUsuario(u) {
     abrirModal('editUsuarioModal');
 }
 
-document.getElementById('editUsuarioForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('editUsuarioId').value;
-    try {
-        await api(`/usuarios/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-                nome: document.getElementById('editUsuarioNome').value,
-                email: document.getElementById('editUsuarioEmail').value,
-                tipo: document.getElementById('editUsuarioTipo').value,
-            })
+function setupUsuariosForms() {
+    const editUsuarioForm = document.getElementById('editUsuarioForm');
+    if (editUsuarioForm) {
+        editUsuarioForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editUsuarioId').value;
+            try {
+                await api(`/usuarios/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        nome: document.getElementById('editUsuarioNome').value,
+                        email: document.getElementById('editUsuarioEmail').value,
+                        tipo: document.getElementById('editUsuarioTipo').value,
+                    })
+                });
+                exibirAlerta('Usuário atualizado com sucesso!');
+                fecharModal('editUsuarioModal');
+                carregarUsuarios();
+            } catch (erro) { 
+                exibirAlerta(erro.message, 'danger'); 
+            }
         });
-        exibirAlerta('Usuário atualizado com sucesso!');
-        fecharModal('editUsuarioModal');
-        carregarUsuarios();
-    } catch (erro) { 
-        exibirAlerta(erro.message, 'danger'); 
     }
-});
+}
 
 
 async function verMultasUsuario(id, nome) {

@@ -1,3 +1,11 @@
+/* 
+ * --------------------------------------------------------------------------
+ * LuizaTeca - Gestão de Livros e Exemplares (Físico)
+ * --------------------------------------------------------------------------
+ * Este arquivo lida com a busca de livros, renderização do grid, cadastro
+ * de novos títulos e a gestão individual de cópias físicas (exemplares).
+ */
+
 // Gerenciamento do Acervo de Livros e Exemplares
 
 let controladorAbortarLivros = null;

@@ -1,4 +1,10 @@
-// Configurações Globais (Detecta automaticamente se está rodando em rede local ou localhost)
+/* 
+ * --------------------------------------------------------------------------
+ * LuizaTeca - Core Engine (Front-end)
+ * --------------------------------------------------------------------------
+ */
+
+// Configurações Globais
 const HOST_IP = window.location.hostname;
 const API_URL = `http://${HOST_IP}:3000/api`;
 let token = null;
@@ -98,6 +104,10 @@ function limparSessao() {
     currentUser = null;
 }
 
+// =========================================================================
+// 🧭 NAVEGAÇÃO E MODAIS
+// =========================================================================
+
 // Navegação entre Telas do Sistema
 function mostrarTela(id) {
     // Esconde todas as telas
@@ -170,6 +180,10 @@ function exibirAlerta(mensagem, tipo = 'success') {
         setTimeout(() => el.remove(), 340);
     }, 3400);
 }
+
+// =========================================================================
+// 📡 COMUNICAÇÃO COM O BACKEND (API)
+// =========================================================================
 
 // Função central para requisições na API
 async function api(endpoint, options = {}) {
