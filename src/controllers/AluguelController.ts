@@ -382,7 +382,7 @@ export class AluguelController {
       const limite = Math.min(50, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      const colunasAceitas = ['usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao'];
+      const colunasAceitas = ['alugueis.id', 'usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao'];
       const colOrdenacao = colunasAceitas.includes(String(sort)) ? String(sort) : 'alugueis.data_aluguel';
       const dirOrdenacao = order === 'desc' ? 'desc' : 'asc';
 
@@ -400,6 +400,7 @@ export class AluguelController {
           builder.whereILike('usuarios.nome', queryTermo)
             .orWhereILike('livros.titulo', queryTermo)
             .orWhereILike('exemplares.codigo', queryTermo)
+            .orWhereRaw('CAST(alugueis.id AS CHAR) LIKE ?', [queryTermo])
         );
       }
 
@@ -486,7 +487,7 @@ export class AluguelController {
       const limite = Math.min(50, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      const colunasValidas = ['usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_devolucao'];
+      const colunasValidas = ['alugueis.id', 'usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_devolucao'];
       const colOrd = colunasValidas.includes(String(sort)) ? String(sort) : 'alugueis.data_devolucao';
       const dirOrd = order === 'desc' ? 'desc' : 'asc';
 

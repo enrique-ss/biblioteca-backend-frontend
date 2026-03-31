@@ -34,7 +34,9 @@ export class UsuarioController {
       if (termoBusca) {
         const queryTermo = `%${termoBusca}%`;
         consulta = consulta.where(builder => 
-          builder.whereILike('nome', queryTermo).orWhereILike('email', queryTermo)
+          builder.whereILike('nome', queryTermo)
+            .orWhereILike('email', queryTermo)
+            .orWhereRaw('CAST(id AS CHAR) LIKE ?', [queryTermo])
         );
       }
 
@@ -48,7 +50,9 @@ export class UsuarioController {
           if (termoBusca) {
             const queryTermo = `%${termoBusca}%`;
             q.where(builder => 
-              builder.whereILike('nome', queryTermo).orWhereILike('email', queryTermo)
+              builder.whereILike('nome', queryTermo)
+                .orWhereILike('email', queryTermo)
+                .orWhereRaw('CAST(id AS CHAR) LIKE ?', [queryTermo])
             );
           }
         }).count('id as total')

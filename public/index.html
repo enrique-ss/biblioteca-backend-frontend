@@ -98,7 +98,7 @@
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
-                        <input type="text" id="buscaLivros" class="form-input" placeholder="Buscar por título, autor ou gênero…" oninput="carregarLivrosDebounced(this.value)">
+                        <input type="text" id="buscaLivros" class="form-input" placeholder="Buscar por título, autor, gênero ou ano…" oninput="carregarLivrosDebounced(this.value)">
                     </div>
                     <div style="width:140px">
                         <select id="filtroCategoria" class="form-select" onchange="carregarLivros()">
@@ -137,7 +137,7 @@
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px;">
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
                         <input type="text" id="buscaDigital" class="form-input"
-                            placeholder="Buscar por título no acervo digital…" oninput="carregarAcervoDigitalDebounced(this.value)">
+                            placeholder="Buscar por título, autor, categoria ou ano…" oninput="carregarAcervoDigitalDebounced(this.value)">
                     </div>
                     <div style="width:160px">
                         <select id="filtroCategoriaDigital" class="form-select" onchange="carregarAcervoDigital()">
@@ -199,7 +199,7 @@
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaAlugueis" class="form-input"
-                        placeholder="Buscar por usuário, livro ou exemplar…" oninput="carregarAlugueisDebounced(this.value)"></div>
+                        placeholder="Buscar por usuário, livro, exemplar ou ID do empréstimo…" oninput="carregarAlugueisDebounced(this.value)"></div>
                 <div id="atrasadosBanner" style="display:none;" class="atrasados-banner"></div>
                 <div class="table-wrap">
                     <table class="data-table">
@@ -216,7 +216,7 @@
                     <div class="page-actions"></div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaUsuarios" class="form-input"
-                        placeholder="Buscar por nome ou email…" oninput="carregarUsuariosDebounced(this.value)"></div>
+                        placeholder="Buscar por nome, email ou ID…" oninput="carregarUsuariosDebounced(this.value)"></div>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead>

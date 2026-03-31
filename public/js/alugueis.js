@@ -7,11 +7,11 @@ async function carregarAlugueis(pagina = 1, busca = '') {
     document.getElementById('alugueisTitle').innerHTML = `<span>Controle</span> de Empréstimos`;
     document.getElementById('alugueisHead').innerHTML = `
         <tr>
-            <th>#</th>
-            <th class="sortable" onclick="sortTable('alugueis','usuario')">Usuário <span class="sort-indicator"></span></th>
-            <th class="sortable" onclick="sortTable('alugueis','titulo')">Livro <span class="sort-indicator"></span></th>
+            <th class="sortable" onclick="sortTable('alugueis','alugueis.id')"># <span class="sort-indicator"></span></th>
+            <th class="sortable" onclick="sortTable('alugueis','usuarios.nome')">Usuário <span class="sort-indicator"></span></th>
+            <th class="sortable" onclick="sortTable('alugueis','livros.titulo')">Livro <span class="sort-indicator"></span></th>
             <th>Exemplar</th>
-            <th class="sortable" onclick="sortTable('alugueis','data_aluguel')">Empréstimo <span class="sort-indicator"></span></th>
+            <th class="sortable" onclick="sortTable('alugueis','alugueis.data_aluguel')">Empréstimo <span class="sort-indicator"></span></th>
             <th class="sortable" onclick="sortTable('alugueis','prazo')">Prazo <span class="sort-indicator"></span></th>
             <th class="sortable" onclick="sortTable('alugueis','dias_atraso')">Atraso <span class="sort-indicator"></span></th>
             <th>Status</th>
