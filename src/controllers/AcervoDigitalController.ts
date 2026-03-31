@@ -12,11 +12,15 @@ export class AcervoDigitalController {
    */
   listar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
-      const { busca, categoria, ano, page, limit } = req.query;
+      const colunasPermitidas = ['titulo', 'autor', 'categoria', 'ano', 'created_at'];
+      const { status, busca, categoria, ano, page, limit, sort, order } = req.query;
 
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
+
+      const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'created_at';
+      const direcaoOrdenacao = order === 'asc' ? 'asc' : 'desc';
 
       let consulta = db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at');
 
@@ -27,6 +31,8 @@ export class AcervoDigitalController {
         consulta = consulta.where(builder =>
           builder.whereILike('titulo', queryTermo)
             .orWhereILike('autor', queryTermo)
+            .orWhereILike('categoria', queryTermo)
+            .orWhereRaw('CAST(ano AS CHAR) LIKE ?', [queryTermo])
         );
       }
 
@@ -42,7 +48,7 @@ export class AcervoDigitalController {
 
       // Executa consulta dos dados e contagem total
       const [registros, contagem, categoriasDisp, anosDisp] = await Promise.all([
-        consulta.clone().select('*').orderBy('created_at', 'desc').limit(limite).offset(deslocamento),
+        consulta.clone().select('*').orderBy(colunaOrdenacao, direcaoOrdenacao).limit(limite).offset(deslocamento),
         consulta.clone().count('id as total'),
         db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at').distinct('categoria').orderBy('categoria', 'asc'),
         db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at').distinct('ano').orderBy('ano', 'desc')

@@ -10,6 +10,7 @@ Este documento apresenta as especificações técnicas, arquiteturais e funciona
 - **Frontend (Web):** Desenvolvido em HTML5/Vanilla CSS/JavaScript, focando em performance nativa e baixa pegada de memória. Utilizamos o padrão de **Fragment Loading** (carregamento sob demanda) para otimizar o tempo de resposta inicial (FCP - First Contentful Paint).
 - **Backend (API):** O núcleo do sistema é uma **API (Application Programming Interface)** desenvolvida em Node.js. Academicamente, uma API é um conjunto de rotas, protocolos e ferramentas que permitem a comunicação entre diferentes softwares. Ela atua como um tradutor universal: o Frontend solicita um dado (ex: "quem é o usuário X?"), e a API consulta o banco de dados, processa as regras de segurança e retorna a resposta pronta. O servidor é **Stateless**, utilizando JWT para manter a integridade das sessões sem sobrecarregar a memória do servidor.
 - **Integração Multicliente:** Por ser baseado em uma API centralizada, o Cristalário suporta simultaneamente a Interface Web e a Interface de Linha de Comando (CLI), garantindo que ambas sigam rigorosamente as mesmas regras de negócio (como prazos e multas).
+- **Filtros Avançados e Busca Inteligente:** O sistema implementa um motor de busca "full-field" no backend, permitindo que a barra de pesquisa identifique automaticamente Títulos, Autores, Gêneros e Anos de Lançamento. Adicionalmente, filtros por Categoria (Gênero), Disponibilidade em tempo real e Estado Físico (Bom/Danificado) permitem uma navegação granular no acervo.
 
 ---
 

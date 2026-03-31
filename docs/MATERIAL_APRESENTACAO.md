@@ -21,7 +21,7 @@ Este documento serve como guia estruturado para a defesa do projeto Cristalário
 ## 📚 3. Acervo Físico e Controle de Exemplares
 **Fala Acadêmica:** "Diferente de sistemas legados, o Cristalário trata cada livro como uma entidade mestre, ramificada em múltiplos exemplares físicos. Cada exemplar possui seu próprio código de rastreamento, estado de conservação (Bom, Danificado ou Perdido) e localização logística específica (Corredor e Prateleira)."
 
-> **🎥 Demonstração Prática:** "Entrando no 'Acervo Físico', temos uma grade dinâmica com cards informativos. Vou clicar em 'Exemplares' de uma obra. Vejam que o sistema detalha o estado de cada unidade. Se eu marcar um exemplar como 'Indisponível' aqui, ele é removido instantaneamente da lista de empréstimos possíveis."
+> **🎥 Demonstração Prática:** "Entrando no 'Acervo Físico', temos uma grade dinâmica. Notem a potência da nossa busca: se eu digitar '2024' ou um gênero como 'Fantasia' na barra geral, o sistema filtra instantaneamente. Além disso, temos filtros específicos para Categoria, Disponibilidade e, crucialmente, o Estado Físico do exemplar, permitindo encontrar apenas livros em 'Bom Estado' para empréstimo imediato."
 
 ---
 

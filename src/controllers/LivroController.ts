@@ -64,7 +64,7 @@ export class LivroController {
   // Listagem de livros com filtros avançados
   listar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
-      const { status, busca, page, limit, sort, order, categoria, ano } = req.query;
+      const { status, busca, page, limit, sort, order, categoria, ano, condicao } = req.query;
 
       // Sanitização de paginação e ordenação
       const pagina = Math.max(1, parseInt(String(page || 1)));
@@ -82,6 +82,17 @@ export class LivroController {
         consulta = consulta.where('exemplares_disponiveis', '>', 0);
       } else if (status === 'alugado') {
         consulta = consulta.where({ status: 'alugado' });
+      }
+
+      // Filtro por condição do exemplar
+      if (condicao && String(condicao).trim()) {
+        consulta = consulta.whereExists(function() {
+          this.select('*')
+            .from('exemplares')
+            .whereRaw('exemplares.livro_id = livros.id')
+            .where('condicao', String(condicao).trim())
+            .whereNull('deleted_at');
+        });
       }
 
       // Filtro por categoria/gênero
@@ -102,6 +113,7 @@ export class LivroController {
           builder.whereILike('titulo', queryTermo)
             .orWhereILike('autor', queryTermo)
             .orWhereILike('genero', queryTermo)
+            .orWhereRaw('CAST(ano_lancamento AS CHAR) LIKE ?', [queryTermo])
         );
       }
 
@@ -179,8 +191,8 @@ export class LivroController {
         .distinct()
         .orderBy('ano_lancamento', 'desc');
 
-      const listaCategorias = categorias.map((c: any) => c.genero);
-      const listaAnos = anos.map((a: any) => a.ano_lancamento);
+      const listaCategorias = categorias.map((c: any) => c.genero || 'Não Informado');
+      const listaAnos = anos.map((a: any) => a.ano_lancamento).filter(Boolean);
 
       res.json({
         categorias: listaCategorias,

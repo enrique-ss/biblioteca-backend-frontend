@@ -100,14 +100,22 @@
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
                         <input type="text" id="buscaLivros" class="form-input" placeholder="Buscar por título, autor ou gênero…" oninput="carregarLivrosDebounced(this.value)">
                     </div>
-                    <div style="width:180px">
+                    <div style="width:140px">
                         <select id="filtroCategoria" class="form-select" onchange="carregarLivros()">
-                            <option value="">Todas Categorias</option>
+                            <option value="">Todos</option>
                         </select>
                     </div>
-                    <div style="width:120px">
-                        <select id="filtroAno" class="form-select" onchange="carregarLivros()">
-                            <option value="">Todos Anos</option>
+                    <div style="width:140px">
+                        <select id="filtroStatus" class="form-select" onchange="carregarLivros()">
+                            <option value="">Todos</option>
+                            <option value="disponivel">Disponíveis</option>
+                        </select>
+                    </div>
+                    <div style="width:140px">
+                        <select id="filtroCondicao" class="form-select" onchange="carregarLivros()">
+                            <option value="">Todos</option>
+                            <option value="bom">Bom</option>
+                            <option value="danificado">Danificado</option>
                         </select>
                     </div>
                 </div>
@@ -131,14 +139,15 @@
                         <input type="text" id="buscaDigital" class="form-input"
                             placeholder="Buscar por título no acervo digital…" oninput="carregarAcervoDigitalDebounced(this.value)">
                     </div>
-                    <div style="width:180px">
-                        <select id="filtroCategoria" class="form-select" onchange="carregarAcervoDigital()">
-                            <option value="">Todas Categorias</option>
+                    <div style="width:160px">
+                        <select id="filtroCategoriaDigital" class="form-select" onchange="carregarAcervoDigital()">
+                            <option value="">Todos</option>
                         </select>
                     </div>
-                    <div style="width:120px">
-                        <select id="filtroAno" class="form-select" onchange="carregarAcervoDigital()">
-                            <option value="">Todos Anos</option>
+                    <div style="width:140px">
+                        <select id="filtroStatusDigital" class="form-select" onchange="carregarAcervoDigital()">
+                            <option value="">Todos</option>
+                            <option value="disponivel">Disponíveis</option>
                         </select>
                     </div>
                 </div>

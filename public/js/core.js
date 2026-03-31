@@ -9,7 +9,8 @@ const sortState = {
     livros: { col: 'titulo', dir: 'asc' },
     usuarios: { col: 'nome', dir: 'asc' },
     alugueis: { col: 'data_aluguel', dir: 'desc' },
-    historico: { col: 'data_devolucao', dir: 'desc' }
+    historico: { col: 'id', dir: 'desc' },
+    acervoDigital: { col: 'created_at', dir: 'desc' }
 };
 
 // Gerencia a ordenação de uma tabela

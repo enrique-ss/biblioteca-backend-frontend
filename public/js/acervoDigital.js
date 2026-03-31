@@ -8,8 +8,8 @@ const carregarAcervoDigitalDebounced = debounce((valor) => carregarAcervoDigital
 async function carregarAcervoDigital(pagina = 1) {
     const grid = document.getElementById('digitalGrid');
     const busca = document.getElementById('buscaDigital').value;
-    const categoria = document.getElementById('filtroCategoria').value;
-    const ano = document.getElementById('filtroAno').value;
+    const categoria = document.getElementById('filtroCategoriaDigital').value;
+    const status = document.getElementById('filtroStatusDigital').value;
 
     // Cancela a requisição anterior se houver uma em andamento
     if (controladorAbortarDigital) {
@@ -22,12 +22,14 @@ async function carregarAcervoDigital(pagina = 1) {
     try {
         const query = new URLSearchParams({
             page: pagina,
-            limit: 6
+            limit: 12,
+            sort: sortState.acervoDigital.col,
+            order: sortState.acervoDigital.dir
         });
 
         if (busca.trim()) query.set('busca', busca.trim());
         if (categoria) query.set('categoria', categoria);
-        if (ano) query.set('ano', ano);
+        if (status) query.set('status', status);
 
         const response = await fetch(`${API_URL}/acervo-digital?${query}`, {
             headers: { 
@@ -132,28 +134,23 @@ async function carregarAcervoDigital(pagina = 1) {
 }
 
 function atualizarFiltrosDigital(categorias, anos) {
-    const selCat = document.getElementById('filtroCategoria');
-    const selAno = document.getElementById('filtroAno');
+    const selCat = document.getElementById('filtroCategoriaDigital');
+    const selStatus = document.getElementById('filtroStatusDigital');
 
-    if (!selCat || !selAno) return;
+    if (!selCat || !selStatus) return;
 
-    // Só preenche se estiverem vazios (exceto a primeira opção)
-    if (selCat.options.length <= 1 && categorias) {
-        categorias.forEach(cat => {
+    // Preserva o valor selecionado se houver
+    const catAtual = selCat.value;
+
+    if (categorias && Array.isArray(categorias)) {
+        selCat.innerHTML = '<option value="">Todos</option>';
+        categorias.filter(c => c).forEach(cat => {
             const opt = document.createElement('option');
             opt.value = cat;
             opt.textContent = cat;
             selCat.appendChild(opt);
         });
-    }
-
-    if (selAno.options.length <= 1 && anos) {
-        anos.forEach(ano => {
-            const opt = document.createElement('option');
-            opt.value = ano;
-            opt.textContent = ano;
-            selAno.appendChild(opt);
-        });
+        selCat.value = catAtual;
     }
 }
 
