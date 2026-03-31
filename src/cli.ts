@@ -86,13 +86,13 @@ async function validarEscolha(mensagem: string, opcoesValidas: string[]): Promis
  */
 function exibirBanner() {
   console.log(`
-  ${cores.magenta}██╗     ██╗   ██╗██╗███████╗ █████╗ ████████╗███████╗ ██████╗ █████╗ ${cores.reset}
-  ${cores.magenta}██║     ██║   ██║██║╚══███╔╝██╔══██╗╚══██╔══╝██╔════╝██╔════╝██╔══██╗${cores.reset}
-  ${cores.ciano}██║     ██║   ██║██║  ███╔╝ ███████║   ██║   █████╗  ██║     ███████║${cores.reset}
-  ${cores.ciano}██║     ██║   ██║██║ ███╔╝  ██╔══██║   ██║   ██╔══╝  ██║     ██╔══██║${cores.reset}
-  ${cores.azul}███████╗╚██████╔╝██║███████╗██║  ██║   ██║   ███████╗╚██████╗██║  ██║${cores.reset}
-  ${cores.azul}╚══════╝ ╚═════╝ ╚═╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝${cores.reset}`);
-  console.log(colorir('           Controle de Acervo e Gamificação v2.0 - Backend Shell', cores.cinza));
+  ${cores.magenta} ██████╗██████╗ ██╗███████╗████████╗█████╗ ██╗      █████╗ ██████╗ ██╗ ██████╗ ${cores.reset}
+  ${cores.magenta}██╔════╝██╔══██╗██║██╔════╝╚══██╔══╝██╔══██╗██║     ██╔══██╗██╔══██╗██║██╔═══██╗${cores.reset}
+  ${cores.ciano}██║     ██████╔╝██║███████╗   ██║   ███████║██║     ███████║██████╔╝██║██║   ██║${cores.reset}
+  ${cores.ciano}██║     ██╔══██╗██║╚════██║   ██║   ██╔══██║██║     ██╔══██║██╔══██╗██║██║   ██║${cores.reset}
+  ${cores.azul}╚██████╗██║  ██║██║███████║   ██║   ██║  ██║███████╗██║  ██║██║  ██║██║╚██████╔╝${cores.reset}
+  ${cores.azul} ╚═════╝╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ${cores.reset}`);
+  console.log(colorir('           Sistema de Biblioteca Cristalário - Backend Shell', cores.cinza));
 }
 
 async function exibirMiniDashboard() {
@@ -110,12 +110,29 @@ async function exibirMiniDashboard() {
 // GESTÃO DE ACERVO (HÍBRIDO: FÍSICO E DIGITAL)
 // ==============================================================================
 
+let filtroAtualAcervo = '/livros';
+
 async function menuAcervo() {
+  filtroAtualAcervo = '/livros'; // Reseta o filtro ao entrar
   while (true) {
     limparTela();
     imprimirTitulo('ACERVO DE LIVROS', cores.magenta);
 
-    imprimirOpcao('1', 'Consultar Catálogo');
+    try {
+      const { data } = await api.get(filtroAtualAcervo);
+      const lista = data.data || [];
+      if (lista.length === 0) {
+        console.log('\n  Nenhum livro encontrado no acervo ou para esta pesquisa.');
+      } else {
+        lista.forEach((livro: any) => {
+          console.log(`  ${colorir(String(livro.id).padStart(3), cores.cinza)}  ${colorir(livro.titulo.padEnd(35), cores.branco + cores.negrito)}  ${colorir(livro.autor.padEnd(20), cores.ciano)}  disp:${colorir(String(livro.exemplares_disponiveis) + '/' + livro.exemplares, cores.amarelo)}`);
+        });
+      }
+    } catch (erro: any) { logErro(erro); }
+
+    desenharDivisor();
+
+    imprimirOpcao('1', 'Pesquisar e Filtrar Catálogo');
     if (usuarioLogado.permissions?.is_admin) {
       imprimirOpcao('2', 'Adicionar Nova Obra');
       imprimirOpcao('3', 'Gerenciar Exemplares (Cópias)');
@@ -124,13 +141,13 @@ async function menuAcervo() {
     desenharDivisor();
 
     const permitidos = usuarioLogado.permissions?.is_admin ? ['1', '2', '3', '0'] : ['1', '0'];
-    const opc = await validarEscolha(colorir('Selecione uma ação: ', cores.amarelo + cores.negrito), permitidos);
+    const opc = await validarEscolha(colorir('Opção: ', cores.amarelo + cores.negrito), permitidos);
     
     if (opc === '0' || opc === '') break;
 
     switch (opc) {
-      case '1': await acaoConsultarAcervo(); break;
-      case '2': await acaoCadastrarLivro(); break;
+      case '1': await acaoDefinirFiltrosAcervo(); break;
+      case '2': await acaoCadastrarLivro(); filtroAtualAcervo = '/livros'; break;
       case '3': await acaoVerExemplares(); break;
     }
   }
@@ -141,26 +158,39 @@ async function menuAcervoDigital() {
     limparTela();
     imprimirTitulo('ACERVO DIGITAL (PDF HUB)', cores.magenta);
 
+    try {
+      const { data } = await api.get('/acervo-digital');
+      const lista = data.data || data;
+
+      if (lista.length === 0) {
+        console.log('\n  Nenhum documento aprovado encontrado no momento.');
+      } else {
+        lista.forEach((d: any) => {
+          console.log(`  ${colorir(String(d.id).padStart(3), cores.cinza)}  ${colorir(d.titulo.padEnd(35), cores.branco + cores.negrito)}  ${colorir(d.categoria.padEnd(15), cores.ciano)}  ${d.paginas}p | ${d.tamanho_arquivo}`);
+        });
+        console.log(colorir(`\n  Total: ${lista.length} documentos`, cores.cinza));
+      }
+    } catch (erro: any) { logErro(erro); }
+
+    desenharDivisor();
+
     if (usuarioLogado.tipo === 'bibliotecario') {
-      imprimirOpcao('1', 'Consultar acervo digital aprovado');
-      imprimirOpcao('2', 'Ver submissões PENDENTES (Curadoria)');
+      imprimirOpcao('1', 'Ver submissões PENDENTES (Curadoria)');
     } else {
-      imprimirOpcao('1', 'Explorar biblioteca digital');
-      imprimirOpcao('2', 'Enviar (Upload) novo PDF para aprovação');
+      imprimirOpcao('1', 'Enviar (Upload) novo PDF para aprovação');
     }
     
     imprimirOpcao('0', 'Voltar');
     desenharDivisor();
 
-    const permitidos = usuarioLogado.tipo === 'bibliotecario' ? ['1', '2', '0'] : ['1', '2', '0'];
-    const opc = await validarEscolha(colorir('Ação Digital: ', cores.amarelo + cores.negrito), permitidos);
+    const permitidos = ['1', '0'];
+    const opc = await validarEscolha(colorir('Opção: ', cores.amarelo + cores.negrito), permitidos);
     
     if (opc === '0') break;
     if (opc === '') continue;
 
     switch (opc) {
-      case '1': await acaoListarDigital(false); break;
-      case '2': 
+      case '1': 
         if (usuarioLogado.tipo === 'bibliotecario') await acaoCuradoriaDigital();
         else await acaoEnviarDigital();
         break;
@@ -168,25 +198,7 @@ async function menuAcervoDigital() {
   }
 }
 
-async function acaoListarDigital(pendentes = false) {
-  limparTela();
-  imprimirTitulo(pendentes ? 'PENDÊNCIAS DE APROVAÇÃO' : 'BIBLIOTECA DIGITAL', cores.magenta);
-  try {
-    const url = pendentes ? '/acervo-digital/pendentes' : '/acervo-digital';
-    const { data } = await api.get(url);
-    const lista = data.data || data;
 
-    if (lista.length === 0) {
-      console.log('\nNenhum documento encontrado.');
-    } else {
-      lista.forEach((d: any) => {
-        console.log(`  ${colorir(String(d.id).padStart(3), cores.cinza)}  ${colorir(d.titulo.padEnd(35), cores.branco + cores.negrito)}  ${colorir(d.categoria.padEnd(15), cores.ciano)}  ${d.paginas}p | ${d.tamanho_arquivo}`);
-      });
-      console.log(colorir(`\n  Total: ${lista.length} documentos`, cores.cinza));
-    }
-  } catch (erro: any) { logErro(erro); }
-  await aguardarEnter();
-}
 
 async function acaoEnviarDigital() {
   limparTela();
@@ -230,7 +242,7 @@ async function acaoCuradoriaDigital() {
 
     console.log('  1. Aprovar');
     console.log('  2. Rejeitar / Remover');
-    const decisao = await perguntar('Ação: ');
+    const decisao = await perguntar(colorir('Opção: ', cores.amarelo + cores.negrito));
 
     if (decisao === '1') {
       await api.patch(`/acervo-digital/${id}/aprovar`);
@@ -244,23 +256,22 @@ async function acaoCuradoriaDigital() {
 }
 
 
-async function acaoConsultarAcervo() {
-  limparTela();
-  imprimirTitulo('CONSULTA AO ACERVO', cores.magenta);
-  const filtro = await perguntar('Digite termo de busca (Enter para todos): ');
-  try {
-    const url = filtro.trim() ? `/livros?busca=${encodeURIComponent(filtro.trim())}` : '/livros';
-    const { data } = await api.get(url);
-    const lista = data.data || [];
-    if (lista.length === 0) {
-      console.log('\nNenhum livro corresponde à sua pesquisa.');
-    } else {
-      lista.forEach((livro: any) => {
-        console.log(`  ${colorir(String(livro.id).padStart(3), cores.cinza)}  ${colorir(livro.titulo.padEnd(35), cores.branco + cores.negrito)}  ${colorir(livro.autor.padEnd(20), cores.ciano)}  disp:${colorir(String(livro.exemplares_disponiveis) + '/' + livro.exemplares, cores.amarelo)}`);
-      });
-    }
-  } catch (erro: any) { logErro(erro); }
-  await aguardarEnter();
+async function acaoDefinirFiltrosAcervo() {
+  console.log(colorir('\n--- Filtros Opcionais (Pressione Enter para pular) ---', cores.cinza));
+  const filtroBusca = await perguntar('Pesquisa (título/autor): ');
+  const filtroCategoria = await perguntar('Categoria (Ex: Ficção Científica): ');
+  const filtroAno = await perguntar('Ano (Ex: 2024): ');
+  const filtroStatus = await perguntar('Status (disponivel/alugado): ');
+  const filtroCondicao = await perguntar('Condição (bom/danificado/perdido): ');
+  
+  const params = [];
+  if (filtroBusca.trim()) params.push(`busca=${encodeURIComponent(filtroBusca.trim())}`);
+  if (filtroCategoria.trim()) params.push(`categoria=${encodeURIComponent(filtroCategoria.trim())}`);
+  if (filtroAno.trim()) params.push(`ano=${encodeURIComponent(filtroAno.trim())}`);
+  if (filtroStatus.trim()) params.push(`status=${encodeURIComponent(filtroStatus.trim())}`);
+  if (filtroCondicao.trim()) params.push(`condicao=${encodeURIComponent(filtroCondicao.trim())}`);
+  
+  filtroAtualAcervo = params.length > 0 ? `/livros?${params.join('&')}` : '/livros';
 }
 
 async function acaoCadastrarLivro() {
@@ -333,7 +344,7 @@ async function menuEmprestimos() {
     imprimirOpcao('0', 'Voltar ao menu');
     desenharDivisor();
 
-    const opc = await validarEscolha(colorir('Ação: ', cores.amarelo + cores.negrito), ['1', '2', '3', '4', '5', '6', '0']);
+    const opc = await validarEscolha(colorir('Opção: ', cores.amarelo + cores.negrito), ['1', '2', '3', '4', '5', '6', '0']);
     if (opc === '' || opc === '0') break;
 
     switch (opc) {
@@ -349,7 +360,7 @@ async function menuEmprestimos() {
 
 async function acaoListarEmprestimosAtivos() {
   try {
-    const { data } = await api.get('/alugueis/todos?limit=100');
+    const { data } = await api.get('/alugueis/todos?limit=100&sort=id&order=desc');
     data.data.forEach((item: any) => {
       console.log(`  ${colorir(String(item.id).padStart(3), cores.cinza)}  ${item.usuario.padEnd(20)}  ${item.titulo.substring(0, 30)}  ${item.prazo.substring(0, 10)}  ${item.status}`);
     });
@@ -360,7 +371,7 @@ async function acaoListarEmprestimosAtivos() {
 async function acaoListarAtrasados() {
   try {
     // Busca empréstimos ativos e filtra localmente ou usa a contagem do back
-    const { data } = await api.get('/alugueis/todos?limit=100');
+    const { data } = await api.get('/alugueis/todos?limit=100&sort=id&order=desc');
     const atrasados = data.data.filter((i: any) => i.status === 'atrasado');
     
     if (atrasados.length === 0) {
@@ -376,7 +387,7 @@ async function acaoListarAtrasados() {
 
 async function acaoVerHistoricoGlobal() {
   try {
-    const { data } = await api.get('/alugueis/historico');
+    const { data } = await api.get('/alugueis/historico?sort=id&order=desc');
     data.data.forEach((reg: any) => {
       console.log(`  ${colorir(String(reg.id).padStart(3), cores.cinza)}  ${reg.usuario.padEnd(20)}  ${reg.titulo.substring(0, 30)}  devolvido:${reg.data_devolucao.substring(0,10)}`);
     });
@@ -431,7 +442,7 @@ async function menuUsuarios() {
     imprimirOpcao('1', 'Listar todos');
     imprimirOpcao('0', 'Voltar');
     desenharDivisor();
-    const opc = await validarEscolha(colorir('Escolha: ', cores.amarelo + cores.negrito), ['1', '0']);
+    const opc = await validarEscolha(colorir('Opção: ', cores.amarelo + cores.negrito), ['1', '0']);
     if (opc === '0' || opc === '') break;
     if (opc === '1') {
       try {
@@ -458,7 +469,7 @@ async function menuMeusDados() {
     imprimirOpcao('3', 'Pagar multas pendentes');
     imprimirOpcao('0', 'Voltar');
     desenharDivisor();
-    const opc = await validarEscolha(colorir('Escolha: ', cores.amarelo + cores.negrito), ['1', '2', '3', '0']);
+    const opc = await validarEscolha(colorir('Opção: ', cores.amarelo + cores.negrito), ['1', '2', '3', '0']);
     if (opc === '0' || opc === '') break;
     switch (opc) {
       case '1': await acaoListarMeusLivros(); break;
@@ -515,7 +526,7 @@ async function menuPrincipal() {
       imprimirOpcao('6', 'Alertas');
       imprimirOpcao('7', 'Meu Perfil');
       imprimirOpcao('0', 'Logout');
-      const opc = await validarEscolha('Ação: ', ['1', '2', '3', '4', '5', '6', '7', '0']);
+      const opc = await validarEscolha(colorir('Opção: ', cores.amarelo + cores.negrito), ['1', '2', '3', '4', '5', '6', '7', '0']);
       if (opc === '0' || opc === '') break;
       switch (opc) {
         case '1': await menuAcervo(); break;
@@ -533,7 +544,7 @@ async function menuPrincipal() {
       imprimirOpcao('4', 'Alertas');
       imprimirOpcao('5', 'Meu Perfil');
       imprimirOpcao('0', 'Logout');
-      const opc = await validarEscolha('Ação: ', ['1', '2', '3', '4', '5', '0']);
+      const opc = await validarEscolha(colorir('Opção: ', cores.amarelo + cores.negrito), ['1', '2', '3', '4', '5', '0']);
       if (opc === '0' || opc === '') break;
       switch (opc) {
         case '1': await menuAcervo(); break;
@@ -591,7 +602,7 @@ async function telaInicial() {
   imprimirOpcao('1', 'Login');
   imprimirOpcao('2', 'Novo Cadastro');
   imprimirOpcao('0', 'Sair');
-  const v = await validarEscolha('\nOpção: ', ['1', '2', '0']);
+  const v = await validarEscolha(colorir('\nOpção: ', cores.amarelo + cores.negrito), ['1', '2', '0']);
   if (v === '0') process.exit(0);
   if (v === '') return telaInicial();
 
