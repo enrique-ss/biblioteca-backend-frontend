@@ -23,42 +23,37 @@ function carregarPerfil() {
 }
 
 // Processa a atualização dos dados do perfil
-function setupPerfilForms() {
-    const editPerfilForm = document.getElementById('editPerfilForm');
-    if (editPerfilForm) {
-        editPerfilForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+document.getElementById('editPerfilForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-            const nome = document.getElementById('perfilNome').value;
-            const email = document.getElementById('perfilEmail').value;
-            const senha = document.getElementById('perfilSenha').value;
+    const nome = document.getElementById('perfilNome').value;
+    const email = document.getElementById('perfilEmail').value;
+    const senha = document.getElementById('perfilSenha').value;
 
-            const dadosParaAtualizar = { nome, email };
-            
-            // Só envia a senha se o usuário tiver preenchido o campo
-            if (senha) {
-                dadosParaAtualizar.senha = senha;
-            }
-
-            try {
-                const resposta = await api('/auth/perfil', { 
-                    method: 'PUT', 
-                    body: JSON.stringify(dadosParaAtualizar) 
-                });
-
-                // Atualiza o estado global com os novos dados vindos do servidor
-                currentUser.nome = resposta.usuario.nome;
-                currentUser.email = resposta.usuario.email;
-
-                // Persiste a nova sessão e atualiza a interface
-                salvarSessao();
-                atualizarNavbar();
-                carregarPerfil();
-
-                exibirAlerta(resposta.message || 'Perfil atualizado com sucesso!');
-            } catch (erro) {
-                exibirAlerta(erro.message, 'danger');
-            }
-        });
+    const dadosParaAtualizar = { nome, email };
+    
+    // Só envia a senha se o usuário tiver preenchido o campo
+    if (senha) {
+        dadosParaAtualizar.senha = senha;
     }
-}
+
+    try {
+        const resposta = await api('/auth/perfil', { 
+            method: 'PUT', 
+            body: JSON.stringify(dadosParaAtualizar) 
+        });
+
+        // Atualiza o estado global com os novos dados vindos do servidor
+        currentUser.nome = resposta.usuario.nome;
+        currentUser.email = resposta.usuario.email;
+
+        // Persiste a nova sessão e atualiza a interface
+        salvarSessao();
+        atualizarNavbar();
+        carregarPerfil();
+
+        exibirAlerta(resposta.message || 'Perfil atualizado com sucesso!');
+    } catch (erro) {
+        exibirAlerta(erro.message, 'danger');
+    }
+});

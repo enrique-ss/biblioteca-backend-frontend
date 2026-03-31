@@ -1,11 +1,3 @@
-/* 
- * --------------------------------------------------------------------------
- * LuizaTeca - Empréstimos e Histórico
- * --------------------------------------------------------------------------
- * Gerencia o registro de novos empréstimos, devoluções, multas e a exportação
- * do histórico de circulação da biblioteca.
- */
-
 // Gerenciamento de Empréstimos e Histórico
 
 const carregarAlugueisDebounced = debounce((busca) => carregarAlugueis(1, busca));
@@ -237,6 +229,42 @@ async function prepararModalNovoAluguel() {
     }
 }
 
+// Processa o envio do formulário de novo empréstimo
+document.getElementById('addAluguelForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        const livroId = parseInt(document.getElementById('aluguelLivro').value);
+        const usuarioId = parseInt(document.getElementById('aluguelUsuario').value);
+        const exemplarIdStr = document.getElementById('aluguelExemplar').value;
+        const exemplarId = exemplarIdStr ? parseInt(exemplarIdStr) : null;
+            
+        const payload = {
+            livro_id: livroId,
+            usuario_id: usuarioId
+        };
+        
+        if (exemplarId) {
+            payload.exemplar_id = exemplarId;
+        }
+        
+        await api('/alugueis', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        exibirAlerta('Empréstimo registrado com sucesso!');
+        fecharModal('addAluguelModal');
+        e.target.reset();
+        
+        carregarAlugueis(); 
+        mostrarTela('alugueisScreen');
+    } catch (erro) { 
+        exibirAlerta(erro.message, 'danger'); 
+    }
+});
+
+// --- Processo de Devolução ---
+
 function abrirModalDevolucao(aluguelId) {
     document.getElementById('devolucaoAluguelId').value = aluguelId;
     document.getElementById('devolucaoEstado').value = 'bom';
@@ -245,95 +273,57 @@ function abrirModalDevolucao(aluguelId) {
     abrirModal('devolucaoModal');
 }
 
-function setupAlugueisForms() {
-    const addAluguelForm = document.getElementById('addAluguelForm');
-    if (addAluguelForm) {
-        addAluguelForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const livroId = parseInt(document.getElementById('aluguelLivro').value);
-                const usuarioId = parseInt(document.getElementById('aluguelUsuario').value);
-                const exemplarIdStr = document.getElementById('aluguelExemplar').value;
-                const exemplarId = exemplarIdStr ? parseInt(exemplarIdStr) : null;
-                    
-                const payload = {
-                    livro_id: livroId,
-                    usuario_id: usuarioId
-                };
-                
-                if (exemplarId) {
-                    payload.exemplar_id = exemplarId;
-                }
-                
-                await api('/alugueis', {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-
-                exibirAlerta('Empréstimo registrado com sucesso!');
-                fecharModal('addAluguelModal');
-                e.target.reset();
-                
-                carregarAlugueis(); 
-                mostrarTela('alugueisScreen');
-            } catch (erro) { 
-                exibirAlerta(erro.message, 'danger'); 
-            }
-        });
-    }
-
+// Listener para exibir campo de observação apenas se o estado for ruim
+document.addEventListener('DOMContentLoaded', () => {
     const seletorEstado = document.getElementById('devolucaoEstado');
     if (seletorEstado) {
         seletorEstado.addEventListener('change', () => {
             const ehRuim = seletorEstado.value === 'danificado' || seletorEstado.value === 'perdido';
-            const obsWrap = document.getElementById('devolucaoObsWrap');
-            if (obsWrap) obsWrap.style.display = ehRuim ? 'block' : 'none';
+            document.getElementById('devolucaoObsWrap').style.display = ehRuim ? 'block' : 'none';
         });
     }
 
-    const devolucaoForm = document.getElementById('devolucaoForm');
-    if (devolucaoForm) {
-        devolucaoForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('devolucaoAluguelId').value;
-            const estado = document.getElementById('devolucaoEstado').value;
-            const obs = document.getElementById('devolucaoObs').value;
+    document.getElementById('devolucaoForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('devolucaoAluguelId').value;
+        const estado = document.getElementById('devolucaoEstado').value;
+        const obs = document.getElementById('devolucaoObs').value;
 
-            try {
-                const resultado = await api(`/alugueis/${id}/devolver`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ 
-                        estado_exemplar: estado, 
-                        observacao: obs 
-                    })
-                });
+        try {
+            const resultado = await api(`/alugueis/${id}/devolver`, {
+                method: 'PUT',
+                body: JSON.stringify({ 
+                    estado_exemplar: estado, 
+                    observacao: obs 
+                })
+            });
 
-                fecharModal('devolucaoModal');
+            fecharModal('devolucaoModal');
 
-                if (resultado.aviso) {
-                    exibirAlerta(resultado.aviso, 'warning');
-                    
-                    if (resultado.multas && resultado.multas.length > 0) {
-                        const textoMultas = resultado.multas.map(m => {
-                            const motivo = m.tipo === 'atraso' ? `Atraso (${m.dias} dias)` : 'Perda do exemplar';
-                            return `${motivo}: R$ ${m.valor.toFixed(2)}`;
-                        }).join(' | ');
+            if (resultado.aviso) {
+                exibirAlerta(resultado.aviso, 'warning');
+                
+                // Exibe detalhes das multas geradas se houver atraso ou perda
+                if (resultado.multas && resultado.multas.length > 0) {
+                    const textoMultas = resultado.multas.map(m => {
+                        const motivo = m.tipo === 'atraso' ? `Atraso (${m.dias} dias)` : 'Perda do exemplar';
+                        return `${motivo}: R$ ${m.valor.toFixed(2)}`;
+                    }).join(' | ');
 
-                        setTimeout(() => {
-                            exibirAlerta(`Multas: ${textoMultas} | Total: R$ ${resultado.total_multa.toFixed(2)}`, 'info');
-                        }, 2000);
-                    }
-                } else {
-                    exibirAlerta(resultado.message || 'Livro devolvido com sucesso!');
+                    setTimeout(() => {
+                        exibirAlerta(`Multas: ${textoMultas} | Total: R$ ${resultado.total_multa.toFixed(2)}`, 'info');
+                    }, 2000);
                 }
-
-                carregarAlugueis();
-            } catch (erro) { 
-                exibirAlerta(erro.message, 'danger'); 
+            } else {
+                exibirAlerta(resultado.message || 'Livro devolvido com sucesso!');
             }
-        });
-    }
-}
+
+            carregarAlugueis();
+        } catch (erro) { 
+            exibirAlerta(erro.message, 'danger'); 
+        }
+    });
+});
 
 function renovarEmprestimo(id) {
     exibirConfirmacao({
