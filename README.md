@@ -1,4 +1,4 @@
-# LuizaTeca — Sistema de Biblioteca Premium
+# Cristalário — Sistema de Biblioteca Premium
 
 Sistema completo para gestão de acervo físico e **digital**, com arquitetura moderna em Node.js, autenticação protegida e interfaces de alto desempenho (Web e CLI).
 

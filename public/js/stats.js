@@ -191,7 +191,7 @@ function exportarEstatisticasCSV() {
 
 // Atualizar ao trocar o tema
 window.addEventListener('storage', (e) => {
-    if (e.key === 'luizateca_theme') renderizarTodosGraficos();
+    if (e.key === 'cristalario_theme') renderizarTodosGraficos();
 });
 // Redesenhar ao clicar no botão de tema (via MutationObserver simplificado)
 const obTema = new MutationObserver(() => {

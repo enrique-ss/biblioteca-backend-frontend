@@ -13,6 +13,7 @@ dotenv.config();
 
 const app = express();
 const PORTA = process.env.PORT || 3000;
+const SEGREDO_JWT = process.env.JWT_SECRET || 'cristalario-chave-secreta-2024';
 
 // Configuração de CORS e middlewares básicos para JSON e URL-encoded
 app.use(cors({ 
@@ -42,7 +43,7 @@ app.use('/api/acervo-digital', rotasAcervoDigital);
 // Rota de verificação de integridade (Health Check)
 app.get('/', (req, res) => {
   res.json({ 
-    message: '📚 API da Biblioteca Online (LUIZATECA)', 
+    message: '📚 API da Biblioteca Online (CRISTALÁRIO)', 
     version: '1.0.0', 
     status: 'online' 
   });

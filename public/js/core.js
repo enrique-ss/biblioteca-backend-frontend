@@ -62,24 +62,24 @@ function toggleTheme() {
     
     html.setAttribute('data-theme', novoTema);
     document.getElementById('btnThemeIcon').textContent = isDark ? '☀️' : '🌙';
-    localStorage.setItem('luizateca_theme', novoTema);
+    localStorage.setItem('cristalario_theme', novoTema);
 }
 
 function restoreTheme() {
-    const saved = localStorage.getItem('luizateca_theme') || 'dark';
+    const saved = localStorage.getItem('cristalario_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
     document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
 
 // Gerenciamento de Sessão do Usuário
 function salvarSessao() {
-    sessionStorage.setItem('luizateca_token', token);
-    sessionStorage.setItem('luizateca_user', JSON.stringify(currentUser));
+    sessionStorage.setItem('cristalario_token', token);
+    sessionStorage.setItem('cristalario_user', JSON.stringify(currentUser));
 }
 
 function restaurarSessao() {
-    const t = sessionStorage.getItem('luizateca_token');
-    const u = sessionStorage.getItem('luizateca_user');
+    const t = sessionStorage.getItem('cristalario_token');
+    const u = sessionStorage.getItem('cristalario_user');
     if (t && u) {
         token = t; 
         currentUser = JSON.parse(u);

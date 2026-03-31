@@ -73,7 +73,7 @@ export class AuthController {
       });
 
       res.status(201).json({
-        message: '✅ Conta criada com sucesso! Bem-vindo(a) à Luizateca.',
+        message: '✅ Conta criada com sucesso! Bem-vindo(a) ao Cristalário.',
         token: tokenAcesso,
         usuario: { 
           id: usuarioCriado.id, 
