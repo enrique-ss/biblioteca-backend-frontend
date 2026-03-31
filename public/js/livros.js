@@ -17,8 +17,8 @@ async function carregarLivros(busca = '', pagina = 1) {
 
     try {
         // Obter valores dos filtros
-        const filtroCategoria = document.getElementById('filtroCategoriaFisico')?.value || '';
-        const filtroAno = document.getElementById('filtroAnoFisico')?.value || '';
+        const filtroCategoria = document.getElementById('filtroCategoria')?.value || '';
+        const filtroAno = document.getElementById('filtroAno')?.value || '';
 
         const parametros = new URLSearchParams({ 
             page: pagina, 
@@ -105,8 +105,8 @@ async function carregarLivros(busca = '', pagina = 1) {
 
                     ${ehBibliotecario ? `
                     <div class="digital-card-actions">
-                        <button class="btn btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
-                        <button class="btn btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
+                        <button class="btn" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
+                        <button class="btn" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
                     </div>` : ''}
                 </div>
             `;
@@ -380,7 +380,7 @@ async function carregarExemplares(livroId) {
                         <strong>${esc(ultimo.usuario)}</strong><br>
                         <strong>${esc(ultimo.usuario)}</strong><br>
                         <span style="color:var(--text)">${formatarData(ultimo.data_aluguel)}</span>
-                        ${ultimo.status_aluguel === 'ativo' ? '<span class="badge badge-warning" style="margin-left:4px;font-size:.55rem">em mãos</span>' : ''}
+                        ${ultimo.status_aluguel === 'ativo' ? '<span class="badge badge-warning" style="margin-left:4px;">em mãos</span>' : ''}
                     ` : '<span style="color:var(--text-dim)">Nunca alugado</span>'}
                 </td>
                 <td>
@@ -451,14 +451,14 @@ async function carregarFiltrosLivrosFisicos() {
         const { categorias, anos } = response;
 
         // Preencher filtro de categorias
-        const categoriaSelect = document.getElementById('filtroCategoriaFisico');
+        const categoriaSelect = document.getElementById('filtroCategoria');
         categoriaSelect.innerHTML = '<option value="">Todas Categorias</option>';
         categorias.forEach(cat => {
             categoriaSelect.innerHTML += `<option value="${esc(cat)}">${esc(cat)}</option>`;
         });
 
         // Preencher filtro de anos
-        const anoSelect = document.getElementById('filtroAnoFisico');
+        const anoSelect = document.getElementById('filtroAno');
         anoSelect.innerHTML = '<option value="">Todos Anos</option>';
         anos.forEach(ano => {
             anoSelect.innerHTML += `<option value="${ano}">${ano}</option>`;
@@ -481,8 +481,8 @@ async function carregarLivros(busca = '', pagina = 1) {
 
     try {
         // Obter valores dos filtros
-        const filtroCategoria = document.getElementById('filtroCategoriaFisico')?.value || '';
-        const filtroAno = document.getElementById('filtroAnoFisico')?.value || '';
+        const filtroCategoria = document.getElementById('filtroCategoria')?.value || '';
+        const filtroAno = document.getElementById('filtroAno')?.value || '';
 
         const parametros = new URLSearchParams({ 
             page: pagina, 
@@ -601,8 +601,8 @@ async function carregarLivros(busca = '', pagina = 1) {
 
                     ${ehBibliotecario ? `
                     <div class="digital-card-actions">
-                        <button class="btn btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
-                        <button class="btn btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
+                        <button class="btn" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
+                        <button class="btn" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
                     </div>` : ''}
                 </div>
             `;

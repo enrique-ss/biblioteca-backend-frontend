@@ -115,7 +115,7 @@ async function carregarAcervoDigital(pagina = 1) {
                         <span style="color: #e2e8f0;">📄 ${esc(item.paginas)} págs | 💾 ${esc(item.tamanho_arquivo)}</span>
                     </div>
                     <div class="digital-card-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')">Baixar</button>
+                        <button class="btn btn-ghost" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')">Baixar</button>
                     </div>
                 </div>
             `;
@@ -190,9 +190,9 @@ async function carregarPendencias() {
                 <td><span class="badge" style="background:var(--accent-bg); color:var(--accent);">${esc(item.categoria)}</span></td>
                 <td>
                     <div style="display:flex; gap:8px;">
-                        <button class="btn btn-success btn-sm" onclick="resolverPendencia(${item.id}, 'aprovar')" title="Aprovar e Publicar">✓</button>
-                        <button class="btn btn-danger btn-sm" onclick="resolverPendencia(${item.id}, 'rejeitar')" title="Rejeitar e Apagar">✗</button>
-                        <button class="btn btn-ghost btn-sm" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')" title="Baixar PDF">⬇</button>
+                        <button class="btn btn-success" onclick="resolverPendencia(${item.id}, 'aprovar')" title="Aprovar e Publicar">✓</button>
+                        <button class="btn btn-danger" onclick="resolverPendencia(${item.id}, 'rejeitar')" title="Rejeitar e Apagar">✗</button>
+                        <button class="btn btn-ghost" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')" title="Baixar PDF">⬇</button>
                     </div>
                 </td>
             </tr>

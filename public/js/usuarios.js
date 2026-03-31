@@ -40,15 +40,15 @@ async function carregarUsuarios(pagina = 1, busca = '') {
             // Define botões de ação (bloquear/desbloquear)
             let botaoBloqueio = '';
             if (u.bloqueado) {
-                botaoBloqueio = `<button class="btn btn-ghost btn-sm" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`;
+                botaoBloqueio = `<button class="btn btn-ghost" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`;
             } else {
-                botaoBloqueio = `<button class="btn btn-danger btn-sm" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`;
+                botaoBloqueio = `<button class="btn btn-danger" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`;
             }
 
             // Adiciona botão de multas se houver
             let botaoMultas = '';
             if (u.multa_pendente) {
-                botaoMultas = `<button class="btn btn-warning btn-sm" onclick="verMultasUsuario(${u.id},'${esc(u.nome)}')">Multas</button>`;
+                botaoMultas = `<button class="btn btn-warning" onclick="verMultasUsuario(${u.id},'${esc(u.nome)}')">Multas</button>`;
             }
 
             tr.innerHTML = `
@@ -57,7 +57,7 @@ async function carregarUsuarios(pagina = 1, busca = '') {
                 <td style="color:var(--text)">${esc(u.email)}</td>
                 <td>${badgeTipo(u.tipo)}</td>
                 <td><div class="td-actions">
-                    <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
+                    <button class="btn btn-ghost" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
                     ${botaoMultas}
                     ${botaoBloqueio}
                 </div></td>`;

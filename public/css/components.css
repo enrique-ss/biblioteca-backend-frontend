@@ -48,13 +48,13 @@
 .btn:active { transform: scale(0.96); }
 
 .btn-primary  { background: var(--accent); color: var(--bg); }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-bg); filter: brightness(1.1); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow); filter: brightness(1.1); }
 
 .btn-success  { background: var(--success); color: white; border: none; }
-.btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(42, 157, 143, 0.4); }
+.btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
 .btn-danger   { background: var(--danger); color: white; border: none; }
-.btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(230, 57, 70, 0.4); }
+.btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
 .btn-ghost    { background: rgba(28, 34, 30, 0.9); color: white; border: none; }
 .btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
@@ -62,7 +62,7 @@
 .btn-gold     { background: var(--accent); color: var(--bg); }
 
 .btn-block  { width: 100%; }
-.btn-sm     { padding: 8px 20px; font-size: 0.75rem; letter-spacing: 0.05em; }
+.btn-sm     { padding: 10px 24px; font-size: 0.8rem; letter-spacing: 0.05em; min-height: 38px; }
 .btn-action { display: block; margin: 0 auto; min-width: 220px; padding: 14px 36px; }
 
 .btn-pair { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
@@ -143,40 +143,31 @@
 .badge { 
     display: inline-flex; 
     align-items: center; 
-    gap: 4px; 
-    padding: 8px 16px; 
+    padding: 8px 18px; 
     border-radius: var(--r-pill); 
     font-family: 'Cinzel', serif; 
     font-size: .75rem; 
     font-weight: 600; 
     letter-spacing: .05em; 
     text-transform: uppercase; 
-    border: none; /* Removendo bordas */
+    border: none; 
     white-space: nowrap; 
     line-height: 1;
-    min-height: 36px; /* Mesma altura do btn-sm */
+    min-height: 38px; /* Altura padronizada para badges */
+    justify-content: center;
 }
-.badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
 .badge-success { background: rgba(42, 157, 143, 0.9); color: white; }
-.badge-success .badge-dot { background: white; }
 .badge-info { background: rgba(212, 175, 55, 0.3); color: var(--accent); }
-.badge-info .badge-dot { background: var(--accent); }
 .badge-danger  { background: rgba(230, 57, 70, 0.9); color: white; }
-.badge-danger .badge-dot  { background: white; }
 .badge-warning { background: rgba(233, 196, 106, 0.9); color: #0a0c0b; }
-.badge-warning .badge-dot { background: #0a0c0b; }
 .badge-gold    { background: rgba(212, 175, 55, 0.9); color: #0a0c0b; }
 .badge-usuario  { background: rgba(28, 34, 30, 0.9); color: white; }
 
 [data-theme="light"] .badge-success { background: rgba(16, 185, 129, 0.9); color: white; }
-[data-theme="light"] .badge-success .badge-dot { background: white; }
 [data-theme="light"] .badge-info { background: rgba(37, 99, 235, 0.3); color: #2563EB; }
-[data-theme="light"] .badge-info .badge-dot { background: #2563EB; }
 [data-theme="light"] .badge-danger  { background: rgba(239, 68, 68, 0.9); color: white; }
-[data-theme="light"] .badge-danger .badge-dot  { background: white; }
 [data-theme="light"] .badge-warning { background: rgba(245, 158, 11, 0.9); color: white; }
-[data-theme="light"] .badge-warning .badge-dot { background: white; }
 [data-theme="light"] .badge-gold    { background: rgba(37, 99, 235, 0.9); color: white; }
 [data-theme="light"] .badge-usuario  { background: rgba(248, 250, 252, 0.9); color: #0F172A; }
 

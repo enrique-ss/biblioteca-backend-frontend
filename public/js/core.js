@@ -109,6 +109,17 @@ function mostrarTela(id) {
         elementoTela.classList.add('active');
     }
     
+    // Remove active de todos os botões
+    document.querySelectorAll('.side-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Adiciona active ao botão correto
+    const botoes = document.querySelectorAll('.side-btn');
+    botoes.forEach(btn => {
+        if (btn.onclick && btn.onclick.toString().includes(id)) {
+            btn.classList.add('active');
+        }
+    });
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
     // Dispara animação de transição se disponível
@@ -239,11 +250,11 @@ function debounce(funcao, atraso = 350) {
 // Badges de Status e Tipos (Visual)
 function badgeStatus(status) {
     const mapas = {
-        disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
-        alugado: `<span class="badge badge-danger"><span class="badge-dot"></span>Indisponível</span>`,
-        ativo: `<span class="badge badge-warning"><span class="badge-dot"></span>Ativo</span>`,
-        atrasado: `<span class="badge badge-danger"><span class="badge-dot"></span>Atrasado</span>`,
-        devolvido: `<span class="badge badge-success"><span class="badge-dot"></span>Devolvido</span>`,
+        disponivel: `<span class="badge badge-success">Disponível</span>`,
+        alugado: `<span class="badge badge-danger">Indisponível</span>`,
+        ativo: `<span class="badge badge-warning">Ativo</span>`,
+        atrasado: `<span class="badge badge-danger">Atrasado</span>`,
+        devolvido: `<span class="badge badge-success">Devolvido</span>`,
     };
     return mapas[status] || `<span class="badge">${esc(status)}</span>`;
 }
@@ -258,10 +269,10 @@ function badgeTipo(tipo) {
 
 function badgeExemplar(status) {
     const mapas = {
-        disponivel: `<span class="badge badge-success"><span class="badge-dot"></span>Disponível</span>`,
-        indisponivel: `<span class="badge badge-danger"><span class="badge-dot"></span>Indisponível</span>`,
-        emprestado: `<span class="badge badge-info"><span class="badge-dot"></span>Emprestado</span>`,
-        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white"><span class="badge-dot" style="background:white"></span>Perdido</span>`,
+        disponivel: `<span class="badge badge-success">Disponível</span>`,
+        indisponivel: `<span class="badge badge-danger">Indisponível</span>`,
+        emprestado: `<span class="badge badge-info">Emprestado</span>`,
+        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white">Perdido</span>`,
     };
     return mapas[status] || `<span class="badge">${esc(status)}</span>`;
 }
@@ -287,9 +298,9 @@ function badgeCondicao(condicao = {}) {
 
 function badgeCondicaoExemplar(condicao) {
     const mapas = {
-        bom: `<span class="badge badge-success"><span class="badge-dot"></span>Bom</span>`,
-        danificado: `<span class="badge badge-danger"><span class="badge-dot"></span>Danificado</span>`,
-        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white"><span class="badge-dot" style="background:white"></span>Perdido</span>`,
+        bom: `<span class="badge badge-success">Bom</span>`,
+        danificado: `<span class="badge badge-danger">Danificado</span>`,
+        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white">Perdido</span>`,
     };
     return mapas[condicao] || `<span class="badge">${esc(condicao)}</span>`;
 }

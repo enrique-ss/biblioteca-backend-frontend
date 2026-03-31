@@ -5,6 +5,9 @@ function criarTexturaEstrela() {
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
     
+    // Aplicar blur moderado na estrela
+    ctx.filter = 'blur(4px)';
+    
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.moveTo(64, 4); 
@@ -14,7 +17,9 @@ function criarTexturaEstrela() {
     ctx.quadraticCurveTo(64, 64, 64, 4); 
     ctx.fill();
     
-    return new THREE.CanvasTexture(canvas);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true; // Forçar atualização
+    return texture;
 }
 
 // Inicializa o fundo 3D com Three.js
@@ -64,9 +69,9 @@ function inicializarFundo3D() {
 
         const material = new THREE.PointsMaterial({
             size: temaEhClaro ? camada.tamClaro : camada.tamEscuro,
-            color: temaEhClaro ? 0x0D6EFD : 0xD4AF37,
+            color: temaEhClaro ? 0x2563EB : 0xD4AF37,
             transparent: true,
-            opacity: temaEhClaro ? 0.85 : camada.opEscuro, 
+            opacity: temaEhClaro ? 0.6 : camada.opEscuro * 0.2, 
             map: texturaEstrela,
             depthWrite: false,
             blending: THREE.AdditiveBlending,
@@ -86,8 +91,8 @@ function inicializarFundo3D() {
             if (mutation.attributeName === 'data-theme') {
                 const ehClaro = document.documentElement.getAttribute('data-theme') === 'light';
                 materiais.forEach(m => {
-                    const novaCor = ehClaro ? 0x0D6EFD : 0xD4AF37;
-                    const novaOpacidade = ehClaro ? 0.85 : (m.camada.opEscuro || 0.6);
+                    const novaCor = ehClaro ? 0x2563EB : 0xD4AF37;
+                    const novaOpacidade = ehClaro ? 0.6 : (m.camada.opEscuro * 0.2);
                     const novoTamanho = ehClaro ? m.camada.tamClaro : m.camada.tamEscuro;
                     
                     m.mat.color.setHex(novaCor);

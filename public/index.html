@@ -93,7 +93,7 @@
                     <h2 class="page-title"><span>Acervo</span> Físico</h2>
                     <div class="page-actions">
                         <button class="btn btn-primary" id="btnAddLivro" style="display:none;"
-                            onclick="prepararAddLivro('fisico')">+ Adicionar Livro</button>
+                            onclick="prepararAddLivro('fisico')">Adicionar Livro</button>
                     </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
@@ -101,12 +101,12 @@
                         <input type="text" id="buscaLivros" class="form-input" placeholder="Buscar por título, autor ou gênero…" oninput="carregarLivrosDebounced(this.value)">
                     </div>
                     <div style="width:180px">
-                        <select id="filtroCategoriaFisico" class="form-select" onchange="carregarLivros()">
+                        <select id="filtroCategoria" class="form-select" onchange="carregarLivros()">
                             <option value="">Todas Categorias</option>
                         </select>
                     </div>
                     <div style="width:120px">
-                        <select id="filtroAnoFisico" class="form-select" onchange="carregarLivros()">
+                        <select id="filtroAno" class="form-select" onchange="carregarLivros()">
                             <option value="">Todos Anos</option>
                         </select>
                     </div>
@@ -123,7 +123,7 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Acervo</span> Digital</h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary" onclick="prepararAddLivro('digital')">+ Adicionar Livro</button>
+                        <button class="btn btn-primary" onclick="prepararAddLivro('digital')">Adicionar Livro</button>
                     </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px;">
@@ -186,7 +186,7 @@
                         <button class="btn btn-ghost" id="btnHistorico" style="display:none;"
                             onclick="mostrarTela('historicoScreen'); carregarHistorico();">Histórico</button>
                         <button class="btn btn-primary" id="btnNovoAluguel" style="display:none;"
-                            onclick="prepararModalNovoAluguel()">+ Novo Aluguel</button>
+                            onclick="prepararModalNovoAluguel()">Novo Aluguel</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaAlugueis" class="form-input"
