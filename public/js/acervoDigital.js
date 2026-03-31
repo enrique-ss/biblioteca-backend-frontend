@@ -68,14 +68,14 @@ async function carregarAcervoDigital(pagina = 1) {
                 margin-bottom: 20px;
                 position: relative;
                 overflow: hidden;
-                border: 1px solid var(--border);
+                border: none;
             `;
             hero.innerHTML = `
                 <div style="max-width: 500px; z-index: 2;">
                     <span class="badge badge-gold" style="margin-bottom: 16px;">Novidade</span>
                     <h2 style="font-family: 'Cinzel', serif; font-size: 2.5rem; color: #fff; margin-bottom: 8px; line-height: 1.1;">${esc(destaque.titulo)}</h2>
-                    <p style="color: var(--accent); font-size: 1.1rem; margin-bottom: 12px; font-weight: 500;">por ${esc(destaque.autor)}</p>
-                    <p style="color: var(--text-dim); margin-bottom: 24px;">Explore este documento digital exclusivo de ${esc(destaque.ano)}. Uma adição recente ao nosso acervo de ${esc(destaque.categoria)}.</p>
+                    <p style="color: #fff; font-size: 1.1rem; margin-bottom: 12px; font-weight: 500;">por ${esc(destaque.autor)}</p>
+                    <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 24px;">Explore este documento digital exclusivo de ${esc(destaque.ano)}. Uma adição recente ao nosso acervo de ${esc(destaque.categoria)}.</p>
                     <div style="display: flex; gap: 12px;">
                         <button class="btn btn-ghost" onclick="downloadPDF('${esc(destaque.url_arquivo)}', '${esc(destaque.titulo)}')">Baixar</button>
                     </div>
