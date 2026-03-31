@@ -2,10 +2,6 @@
 
 const carregarAlugueisDebounced = debounce((busca) => carregarAlugueis(1, busca));
 
-function voltarParaMenu() { 
-    mostrarTela('menuScreen'); 
-}
-
 async function carregarAlugueis(pagina = 1, busca = '') {
     // Define o título e cabeçalho da tabela de controle geral
     document.getElementById('alugueisTitle').innerHTML = `<span>Controle</span> de Empréstimos`;

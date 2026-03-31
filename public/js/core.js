@@ -251,7 +251,7 @@ function badgeStatus(status) {
 function badgeTipo(tipo) {
     const mapas = {
         bibliotecario: `<span class="badge badge-gold">Bibliotecário</span>`,
-        usuario: `<span class="badge" style="background:var(--gold-bg-bold);color:var(--text);border-color:var(--gold)">Usuário</span>`,
+        usuario: `<span class="badge badge-usuario">Usuário</span>`,
     };
     return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
 }

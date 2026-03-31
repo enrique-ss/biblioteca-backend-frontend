@@ -64,7 +64,7 @@ export class LivroController {
   // Listagem de livros com filtros avançados
   listar = async (req: RequisicaoAutenticada, res: Response) => {
     try {
-      const { status, busca, page, limit, sort, order } = req.query;
+      const { status, busca, page, limit, sort, order, categoria, ano } = req.query;
 
       // Sanitização de paginação e ordenação
       const pagina = Math.max(1, parseInt(String(page || 1)));
@@ -82,6 +82,16 @@ export class LivroController {
         consulta = consulta.where('exemplares_disponiveis', '>', 0);
       } else if (status === 'alugado') {
         consulta = consulta.where({ status: 'alugado' });
+      }
+
+      // Filtro por categoria/gênero
+      if (categoria && String(categoria).trim()) {
+        consulta = consulta.whereILike('genero', String(categoria).trim());
+      }
+
+      // Filtro por ano de lançamento
+      if (ano && String(ano).trim()) {
+        consulta = consulta.where('ano_lancamento', parseInt(String(ano)));
       }
 
       // Filtro de busca textual (Título, Autor ou Gênero)
@@ -103,6 +113,16 @@ export class LivroController {
 
       const listaLivros = registros as any[];
       const totalGeral = Number(contagem[0].total);
+
+      // Buscar o livro mais recente para destaque (apenas na primeira página sem filtros)
+      let latestBook = null;
+      if (pagina === 1 && !busca && !categoria && !ano && !status) {
+        const latest = await db('livros')
+          .whereNull('deleted_at')
+          .orderBy('created_at', 'desc')
+          .first();
+        latestBook = latest;
+      }
 
       // Agrupa informações de condição física para cada livro na lista
       const idsLivros = listaLivros.map(r => r.id);
@@ -133,14 +153,42 @@ export class LivroController {
 
       res.json({ 
         data: dadosFormatados, 
-        total: totalGeral, 
-        page: pagina, 
-        limit: limite, 
-        pages: Math.ceil(totalGeral / limite) 
+        pages: Math.ceil(totalGeral / limite),
+        latest_book: latestBook
       });
     } catch (erro) {
       console.error('Erro ao listar livros:', erro);
       res.status(500).json({ error: 'Erro ao carregar o acervo de livros.' });
+    }
+  };
+
+  // Endpoint para carregar filtros de categoria e ano
+  carregarFiltros = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+      // Buscar categorias únicas
+      const categorias = await db('livros')
+        .whereNull('deleted_at')
+        .select('genero')
+        .distinct()
+        .orderBy('genero', 'asc');
+
+      // Buscar anos únicos
+      const anos = await db('livros')
+        .whereNull('deleted_at')
+        .select('ano_lancamento')
+        .distinct()
+        .orderBy('ano_lancamento', 'desc');
+
+      const listaCategorias = categorias.map((c: any) => c.genero);
+      const listaAnos = anos.map((a: any) => a.ano_lancamento);
+
+      res.json({
+        categorias: listaCategorias,
+        anos: listaAnos
+      });
+    } catch (erro) {
+      console.error('Erro ao carregar filtros:', erro);
+      res.status(500).json({ error: 'Erro ao carregar filtros.' });
     }
   };
 

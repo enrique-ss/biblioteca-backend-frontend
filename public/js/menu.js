@@ -21,6 +21,7 @@ function carregarMenu() {
             title: 'Acervo Físico', 
             action() { 
                 carregarLivros(); 
+                carregarFiltrosLivrosFisicos(); // Carregar filtros de categoria e ano
                 mostrarTela('livrosScreen'); 
             } 
         },

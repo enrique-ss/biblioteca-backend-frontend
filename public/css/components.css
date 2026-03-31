@@ -53,12 +53,12 @@
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-bg); filter: brightness(1.1); }
 
 .btn-success  { background: var(--success); color: white; border: none; }
-.btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2); }
+.btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(42, 157, 143, 0.4); }
 
 .btn-danger   { background: var(--danger); color: white; border: none; }
-.btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2); }
+.btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(230, 57, 70, 0.4); }
 
-.btn-ghost    { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--border-m); }
+.btn-ghost    { background: rgba(28, 34, 30, 0.9); color: white; border: none; }
 .btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
 
 .btn-gold     { background: var(--accent); color: var(--bg); }
@@ -142,26 +142,45 @@
 }
 
 /* ── BADGES ── */
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: var(--r-pill); font-family: 'Cinzel', serif; font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; border: 1px solid; white-space: nowrap; }
+.badge { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 4px; 
+    padding: 8px 16px; 
+    border-radius: var(--r-pill); 
+    font-family: 'Cinzel', serif; 
+    font-size: .75rem; 
+    font-weight: 600; 
+    letter-spacing: .05em; 
+    text-transform: uppercase; 
+    border: none; /* Removendo bordas */
+    white-space: nowrap; 
+    line-height: 1;
+    min-height: 36px; /* Mesma altura do btn-sm */
+}
 .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
-.badge-success { background: var(--success-dim); color: #3fb950; border-color: rgba(63,185,80,.28); }
-.badge-success .badge-dot { background: #3fb950; }
-.badge-info { background: rgba(56,139,253,.12); color: #388bfd; border-color: rgba(56,139,253,.28); }
-.badge-info .badge-dot { background: #388bfd; }
-.badge-danger  { background: var(--crimson-dim); color: #f85149; border-color: rgba(248,81,73,.28); }
-.badge-danger .badge-dot  { background: #f85149; }
-.badge-warning { background: var(--warning-dim); color: #d29922; border-color: rgba(210,153,34,.28); }
-.badge-warning .badge-dot { background: #d29922; }
-.badge-gold    { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.badge-success { background: rgba(42, 157, 143, 0.9); color: white; }
+.badge-success .badge-dot { background: white; }
+.badge-info { background: rgba(212, 175, 55, 0.3); color: var(--accent); }
+.badge-info .badge-dot { background: var(--accent); }
+.badge-danger  { background: rgba(230, 57, 70, 0.9); color: white; }
+.badge-danger .badge-dot  { background: white; }
+.badge-warning { background: rgba(233, 196, 106, 0.9); color: #0a0c0b; }
+.badge-warning .badge-dot { background: #0a0c0b; }
+.badge-gold    { background: rgba(212, 175, 55, 0.9); color: #0a0c0b; }
+.badge-usuario  { background: rgba(28, 34, 30, 0.9); color: white; }
 
-[data-theme="light"] .badge-success { background: rgba(26,122,54,.10); color: #1a7a36; border-color: rgba(26,122,54,.28); }
-[data-theme="light"] .badge-success .badge-dot { background: #1a7a36; }
-[data-theme="light"] .badge-danger  { background: rgba(192,57,43,.08); color: #c0392b; border-color: rgba(192,57,43,.25); }
-[data-theme="light"] .badge-danger .badge-dot  { background: #c0392b; }
-[data-theme="light"] .badge-warning { background: rgba(154,98,0,.10); color: #9a6200; border-color: rgba(154,98,0,.25); }
-[data-theme="light"] .badge-warning .badge-dot { background: #9a6200; }
-[data-theme="light"] .badge-gold    { background: rgba(52,81,178,.08); color: #3451b2; border-color: rgba(52,81,178,.22); }
+[data-theme="light"] .badge-success { background: rgba(16, 185, 129, 0.9); color: white; }
+[data-theme="light"] .badge-success .badge-dot { background: white; }
+[data-theme="light"] .badge-info { background: rgba(37, 99, 235, 0.3); color: #2563EB; }
+[data-theme="light"] .badge-info .badge-dot { background: #2563EB; }
+[data-theme="light"] .badge-danger  { background: rgba(239, 68, 68, 0.9); color: white; }
+[data-theme="light"] .badge-danger .badge-dot  { background: white; }
+[data-theme="light"] .badge-warning { background: rgba(245, 158, 11, 0.9); color: white; }
+[data-theme="light"] .badge-warning .badge-dot { background: white; }
+[data-theme="light"] .badge-gold    { background: rgba(37, 99, 235, 0.9); color: white; }
+[data-theme="light"] .badge-usuario  { background: rgba(248, 250, 252, 0.9); color: #0F172A; }
 
 .modal { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; padding: 20px; }
 .modal.active { display: flex; }

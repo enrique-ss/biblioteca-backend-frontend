@@ -16,6 +16,10 @@ async function carregarLivros(busca = '', pagina = 1) {
     grid.innerHTML = '<div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;"><span class="spinner"></span> Carregando acervo físico...</div>';
 
     try {
+        // Obter valores dos filtros
+        const filtroCategoria = document.getElementById('filtroCategoriaFisico')?.value || '';
+        const filtroAno = document.getElementById('filtroAnoFisico')?.value || '';
+
         const parametros = new URLSearchParams({ 
             page: pagina, 
             limit: 20
@@ -23,6 +27,12 @@ async function carregarLivros(busca = '', pagina = 1) {
 
         if (busca.trim()) {
             parametros.set('busca', busca.trim());
+        }
+        if (filtroCategoria) {
+            parametros.set('categoria', filtroCategoria);
+        }
+        if (filtroAno) {
+            parametros.set('ano', filtroAno);
         }
 
         // Realiza a chamada manual para suportar o sinal de cancelamento (AbortSignal)
@@ -431,5 +441,181 @@ async function atualizarCondicaoExemplar(livroId, exemplarId, novaCondicao) {
         carregarLivros(buscaAtual);
     } catch (erro) {
         exibirAlerta(erro.message, 'danger');
+    }
+}
+
+// Carregar filtros de categoria e ano para o acervo físico
+async function carregarFiltrosLivrosFisicos() {
+    try {
+        const response = await api('/livros/filtros');
+        const { categorias, anos } = response;
+
+        // Preencher filtro de categorias
+        const categoriaSelect = document.getElementById('filtroCategoriaFisico');
+        categoriaSelect.innerHTML = '<option value="">Todas Categorias</option>';
+        categorias.forEach(cat => {
+            categoriaSelect.innerHTML += `<option value="${esc(cat)}">${esc(cat)}</option>`;
+        });
+
+        // Preencher filtro de anos
+        const anoSelect = document.getElementById('filtroAnoFisico');
+        anoSelect.innerHTML = '<option value="">Todos Anos</option>';
+        anos.forEach(ano => {
+            anoSelect.innerHTML += `<option value="${ano}">${ano}</option>`;
+        });
+    } catch (erro) {
+        console.error('Erro ao carregar filtros:', erro);
+    }
+}
+
+// Modificar a função principal para incluir destaque de novidade
+async function carregarLivros(busca = '', pagina = 1) {
+    // Cancela a requisição anterior se houver uma em andamento
+    if (controladorAbortarLivros) {
+        controladorAbortarLivros.abort();
+    }
+    controladorAbortarLivros = new AbortController();
+
+    const grid = document.getElementById('livrosGrid');
+    grid.innerHTML = '<div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;"><span class="spinner"></span> Carregando acervo físico...</div>';
+
+    try {
+        // Obter valores dos filtros
+        const filtroCategoria = document.getElementById('filtroCategoriaFisico')?.value || '';
+        const filtroAno = document.getElementById('filtroAnoFisico')?.value || '';
+
+        const parametros = new URLSearchParams({ 
+            page: pagina, 
+            limit: 20
+        });
+
+        if (busca.trim()) {
+            parametros.set('busca', busca.trim());
+        }
+        if (filtroCategoria) {
+            parametros.set('categoria', filtroCategoria);
+        }
+        if (filtroAno) {
+            parametros.set('ano', filtroAno);
+        }
+
+        // Realiza a chamada manual para suportar o sinal de cancelamento (AbortSignal)
+        const cabecalhos = { 'Content-Type': 'application/json' };
+        if (token) {
+            cabecalhos['Authorization'] = `Bearer ${token}`;
+        }
+
+        const resposta = await fetch(`${API_URL}/livros?${parametros}`, { 
+            headers: cabecalhos, 
+            signal: controladorAbortarLivros.signal 
+        });
+
+        if (!resposta.ok) {
+            const erroJson = await resposta.json();
+            throw new Error(erroJson.error || 'Erro ao carregar livros');
+        }
+
+        const { data, pages, latest_book } = await resposta.json();
+        const grid = document.getElementById('livrosGrid');
+        grid.innerHTML = '';
+
+        // Mostrar seção Hero (Destaque) - Só na primeira página e se houver dados
+        if (pagina === 1 && data.length > 0 && !busca && !filtroCategoria && !filtroAno && latest_book) {
+            const hero = document.createElement('div');
+            hero.className = 'digital-hero';
+            hero.style.cssText = `
+                grid-column: 1 / -1;
+                height: 350px;
+                background: linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%), var(--surface);
+                border-radius: var(--r-xl);
+                display: flex;
+                align-items: center;
+                padding: 40px;
+                margin-bottom: 20px;
+                position: relative;
+                overflow: hidden;
+                border: none;
+            `;
+            hero.innerHTML = `
+                <div style="max-width: 500px; z-index: 2;">
+                    <span class="badge badge-gold" style="margin-bottom: 16px;">Novidade na Biblioteca</span>
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 2.5rem; color: #fff; margin-bottom: 8px; line-height: 1.1;">${esc(latest_book.titulo)}</h2>
+                    <p style="color: #fff; font-size: 1.1rem; margin-bottom: 12px; font-weight: 500;">por ${esc(latest_book.autor)}</p>
+                    <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 24px;">Explore este livro exclusivo de ${esc(latest_book.ano_lancamento)}. Uma adição recente ao nosso acervo de ${esc(latest_book.genero)}.</p>
+                    <div style="display: flex; gap: 12px;">
+                        <span class="badge" style="background: var(--success);">${esc(latest_book.exemplares_disponiveis)}/${esc(latest_book.exemplares)} disponíveis</span>
+                    </div>
+                </div>
+                <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 50%; background: ${latest_book.capa_url ? `url('${esc(latest_book.capa_url)}') center/cover no-repeat` : 'linear-gradient(135deg, var(--accent-bg), var(--surface))'}; opacity: 0.3; clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%); mix-blend-mode: luminosity;"></div>
+            `;
+            grid.appendChild(hero);
+        }
+
+        if (!data.length) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-dim); font-style: italic;">Nenhum livro físico encontrado.</div>';
+            document.getElementById('livrosPagination').innerHTML = '';
+            return;
+        }
+
+        const gradientes = [
+            'linear-gradient(135deg, #1e3a8a, #1e40af)', // Blue
+            'linear-gradient(135deg, #312e81, #3730a3)', // Indigo
+            'linear-gradient(135deg, #4c1d95, #5b21b6)', // Violet
+            'linear-gradient(135deg, #701a75, #86198f)', // Fuchsia
+            'linear-gradient(135deg, #831843, #9d174d)', // Pink
+            'linear-gradient(135deg, #111827, #1f2937)'  // Dark Gray
+        ];
+
+        data.forEach((livro, index) => {
+            const ehBibliotecario = currentUser?.permissions?.is_admin || false;
+            const card = document.createElement('div');
+            card.className = 'digital-card';
+            
+            const fundo = gradientes[index % gradientes.length];
+            const estaDisponivel = livro.status === 'disponivel';
+            const badgeCor = estaDisponivel ? 'var(--success)' : 'var(--danger)';
+            const badgeLabel = estaDisponivel ? 'Disponível' : 'Alugado';
+            const textCor = '#fff';
+
+            const bgStyle = livro.capa_url 
+                ? `background: url('${esc(livro.capa_url)}') center/cover no-repeat; border-bottom: 2px solid var(--accent-bg);`
+                : `background: ${fundo}; border-bottom: 2px solid var(--accent-bg);`;
+
+            card.innerHTML = `
+                <div class="digital-card-poster" style="${bgStyle}">
+                    ${!livro.capa_url ? `<div class="digital-card-cover-text" style="font-size:1.5rem;text-transform:uppercase;color:#fff;">${esc(livro.titulo)}</div>` : ''}
+                </div>
+                <div class="digital-card-content">
+                    <h3 class="digital-card-title" style="margin-bottom: 4px;">${esc(livro.titulo)}</h3>
+                    <p style="font-size: 0.9em; color: #e2e8f0; margin-bottom: 12px; font-style: italic;">por ${esc(livro.autor)}</p>
+                    
+                    <div class="digital-card-meta">
+                        <span style="color: #e2e8f0;">📂 ${esc(livro.genero)}</span>
+                        <span style="color: #e2e8f0;">Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
+                    </div>
+
+                    <div style="margin-bottom:16px; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;">
+                        <span class="badge" style="background:${badgeCor}; color:${textCor}">${badgeLabel}</span>
+                        <span style="font-size:12px;color:#e2e8f0;float:right;margin-top:2px;">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)} unid.</span>
+                    </div>
+
+                    ${ehBibliotecario ? `
+                    <div class="digital-card-actions">
+                        <button class="btn btn-sm" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
+                        <button class="btn btn-sm" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
+                    </div>` : ''}
+                </div>
+            `;
+            
+            grid.appendChild(card);
+        });
+
+        renderizarPaginacao('livrosPagination', pagina, pages, (p) => carregarLivros(busca, p));
+
+    } catch (erro) {
+        if (erro.name === 'AbortError') return;
+        const grid = document.getElementById('livrosGrid');
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--danger);">${erro.message}</div>`;
+        exibirAlerta(erro.message, 'error');
     }
 }

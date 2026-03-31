@@ -247,6 +247,28 @@
     color: #ffffff !important;
 }
 
+/* Alinhamento consistente de badges e botões nos cards */
+.digital-card-content > div[style*="border-top"] {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.digital-card-content > div[style*="border-top"] .badge {
+    flex-shrink: 0;
+}
+
+.digital-card-content > div[style*="border-top"] span[style*="float:right"] {
+    float: none !important;
+    margin-left: auto !important;
+    margin-top: 0 !important;
+}
+
+/* Remover borda do bottom dos cards */
+.digital-card-poster {
+    border-bottom: none !important;
+}
+
 .digital-card-title {
     font-family: 'Cinzel', serif;
     font-size: var(--fs-base);

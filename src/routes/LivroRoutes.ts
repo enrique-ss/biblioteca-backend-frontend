@@ -14,6 +14,9 @@ router.use(verificarToken);
 // Listagem pública para todos os usuários logados
 router.get('/', controller.listar);
 
+// Filtros para categoria e ano
+router.get('/filtros', controller.carregarFiltros);
+
 // Operações restritas a Bibliotecários (Administradores)
 router.post('/', verificarBibliotecario, controller.cadastrar);
 router.put('/:id', verificarBibliotecario, controller.editar);

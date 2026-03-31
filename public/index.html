@@ -61,7 +61,6 @@
                                     id="regSenha" class="form-input" placeholder="Mínimo 8 caracteres" required></div>
                             <div class="btn-group" style="margin-top: 20px;">
                                 <button type="submit" class="btn btn-primary">Criar conta</button>
-                                <button type="button" class="btn btn-ghost" onclick="mostrarTela('loginScreen')">Voltar ao login</button>
                             </div>
                         </form>
                     </div>
@@ -93,14 +92,23 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Acervo</span> Físico</h2>
                     <div class="page-actions">
-                        <button class="btn btn-success" id="btnAddLivro" style="display:none;"
+                        <button class="btn btn-primary" id="btnAddLivro" style="display:none;"
                             onclick="prepararAddLivro('fisico')">+ Adicionar Livro</button>
-                        <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
                     </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
                         <input type="text" id="buscaLivros" class="form-input" placeholder="Buscar por título, autor ou gênero…" oninput="carregarLivrosDebounced(this.value)">
+                    </div>
+                    <div style="width:180px">
+                        <select id="filtroCategoriaFisico" class="form-select" onchange="carregarLivros()">
+                            <option value="">Todas Categorias</option>
+                        </select>
+                    </div>
+                    <div style="width:120px">
+                        <select id="filtroAnoFisico" class="form-select" onchange="carregarLivros()">
+                            <option value="">Todos Anos</option>
+                        </select>
                     </div>
                 </div>
                 <div id="livrosGrid" class="digital-grid">
@@ -115,8 +123,7 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Acervo</span> Digital</h2>
                     <div class="page-actions">
-                        <button class="btn btn-success" onclick="prepararAddLivro('digital')">+ Adicionar Livro</button>
-                        <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
+                        <button class="btn btn-primary" onclick="prepararAddLivro('digital')">+ Adicionar Livro</button>
                     </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px;">
@@ -146,8 +153,7 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Histórico</span> de Empréstimos</h2>
                     <div class="page-actions">
-                        <button class="btn btn-success btn-sm" onclick="exportarHistoricoCSV()">Exportar CSV</button>
-                        <button class="btn btn-ghost" onclick="mostrarTela('alugueisScreen')">← Voltar</button>
+                        <button class="btn btn-primary" onclick="exportarHistoricoCSV()">Exportar CSV</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaHistorico" class="form-input"
@@ -179,9 +185,8 @@
                     <div class="page-actions">
                         <button class="btn btn-ghost" id="btnHistorico" style="display:none;"
                             onclick="mostrarTela('historicoScreen'); carregarHistorico();">Histórico</button>
-                        <button class="btn btn-success" id="btnNovoAluguel" style="display:none;"
+                        <button class="btn btn-primary" id="btnNovoAluguel" style="display:none;"
                             onclick="prepararModalNovoAluguel()">+ Novo Aluguel</button>
-                        <button class="btn btn-ghost" onclick="voltarParaMenu()">← Voltar</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaAlugueis" class="form-input"
@@ -199,8 +204,7 @@
             <section id="usuariosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Gerenciar</span> Usuários</h2>
-                    <div class="page-actions"><button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">←
-                            Voltar</button></div>
+                    <div class="page-actions"></div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaUsuarios" class="form-input"
                         placeholder="Buscar por nome ou email…" oninput="carregarUsuariosDebounced(this.value)"></div>
@@ -228,8 +232,7 @@
             <section id="perfilScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Meu</span> Perfil</h2>
-                    <div class="page-actions"><button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">←
-                            Voltar</button></div>
+                    <div class="page-actions"></div>
                 </div>
                 <div class="auth-wrap" style="min-height:auto;padding-top:0;align-items:flex-start;">
                     <div class="auth-card" style="margin-top:0;">
@@ -259,8 +262,7 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Estatísticas</span></h2>
                     <div class="page-actions">
-                        <button class="btn btn-success btn-sm" onclick="exportarEstatisticasCSV()">Exportar CSV</button>
-                        <button class="btn btn-ghost" onclick="mostrarTela('menuScreen')">← Voltar</button>
+                        <button class="btn btn-primary" onclick="exportarEstatisticasCSV()">Exportar CSV</button>
                     </div>
                 </div>
                 <div id="statsLoading" class="stats-loading"><span class="spinner"></span> Carregando estatísticas...
@@ -390,7 +392,7 @@
                 </div>
 
                 <div class="btn-group">
-                    <button type="submit" id="btnAddSubmit" class="btn btn-success">Cadastrar</button>
+                    <button type="submit" id="btnAddSubmit" class="btn btn-primary">Cadastrar</button>
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('addLivroModal')">Cancelar</button>
                 </div>
             </form>
@@ -483,7 +485,7 @@
                         placeholder="Descreva o problema encontrado…">
                 </div>
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-success">Confirmar Devolução</button>
+                    <button type="submit" class="btn btn-primary">Confirmar Devolução</button>
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('devolucaoModal')">Cancelar</button>
                 </div>
             </form>
@@ -508,7 +510,7 @@
                         class="form-select" required>
                         <option value="">Selecione um usuário…</option>
                     </select></div>
-                <div class="btn-group"><button type="submit" class="btn btn-success">Registrar</button><button
+                <div class="btn-group"><button type="submit" class="btn btn-primary">Registrar</button><button
                         type="button" class="btn btn-ghost" onclick="fecharModal('addAluguelModal')">Cancelar</button>
                 </div>
             </form>
@@ -570,7 +572,7 @@
                 <span id="multasTotalPendente"
                     style="font-family:'Cinzel',serif;font-size:var(--fs-sm);color:var(--text-dim);"></span>
                 <div class="btn-group" style="margin-top:0;">
-                    <button id="btnQuitarMultas" class="btn btn-success" style="display:none;"
+                    <button id="btnQuitarMultas" class="btn btn-primary" style="display:none;"
                         onclick="quitarMultasUsuario()">Quitar todas</button>
                     <button class="btn btn-ghost" onclick="fecharModal('multasModal')">Fechar</button>
                 </div>
