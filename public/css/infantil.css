@@ -1,0 +1,625 @@
+/* ============================================================
+   ESPAÇO LITERÁRIO INFANTIL - Estilo Glassmorphism
+   ============================================================ */
+
+/* Variáveis específicas do tema infantil - Tons mais sofisticados */
+:root {
+    --infantil-primary: #6a5ae0;
+    --infantil-secondary: #00d68f;
+    --infantil-accent: var(--accent); /* Usa o dourado/azul do sistema */
+    --infantil-warning: var(--warning);
+    --infantil-success: var(--success);
+    --infantil-danger: var(--danger);
+}
+
+/* Container principal do espaço infantil */
+#espacoInfantilScreen.active {
+    min-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tela de Seleção de Faixa Etária */
+.age-select-card {
+    text-align: center;
+    padding: 60px 40px !important;
+    margin: 20px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.age-select-title {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-lg);
+    margin-bottom: 40px;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+}
+
+.age-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    width: 100%;
+}
+
+/* Individual Age Cards */
+.age-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    border-radius: var(--r-xl);
+    padding: 40px 30px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.age-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.age-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: var(--shadow);
+    border-color: var(--accent);
+}
+
+.age-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.age-card:hover .age-icon {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.age-title {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-md);
+    margin-bottom: 12px;
+}
+
+.age-title.infantil { color: var(--accent); }
+.age-title.infantojuvenil { color: var(--infantil-primary); }
+.age-title.preadolescente { color: var(--infantil-secondary); }
+
+.age-badge {
+    padding: 6px 18px;
+    border-radius: var(--r-pill);
+    display: inline-block;
+    margin-bottom: 18px;
+    font-weight: 700;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: white;
+}
+
+.age-badge-inf { background: var(--accent); }
+.age-badge-ij { background: var(--infantil-primary); }
+.age-badge-pa { background: var(--infantil-secondary); }
+
+.age-desc {
+    opacity: 0.8;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    max-width: 220px;
+}
+
+.age-card:hover::before {
+    opacity: 1;
+}
+
+.age-card.infantil:hover {
+    background: linear-gradient(135deg, rgba(255, 82, 99, 0.2), rgba(255, 82, 99, 0.1));
+}
+
+.age-card.infantojuvenil:hover {
+    background: linear-gradient(135deg, rgba(106, 90, 224, 0.2), rgba(106, 90, 224, 0.1));
+}
+
+.age-card.preadolescente:hover {
+    background: linear-gradient(135deg, rgba(0, 214, 143, 0.2), rgba(0, 214, 143, 0.1));
+}
+
+/* Navbar infantil com Glassmorphism */
+.infantil-navbar {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--r-lg);
+    padding: 18px 28px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.infantil-navbar .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.infantil-navbar .avatar {
+    background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
+    width: 52px;
+    height: 52px;
+    border-radius: var(--r-pill);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.infantil-navbar .user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.infantil-navbar .user-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+
+.infantil-navbar .user-sub {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    font-weight: 600;
+}
+
+.infantil-navbar .xp-container {
+    flex: 1;
+    max-width: 300px;
+    margin: 0 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.infantil-navbar .xp-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+}
+
+.infantil-navbar .xp-bg {
+    background: var(--bg);
+    height: 10px;
+    border-radius: var(--r-pill);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.infantil-navbar .xp-bar {
+    background: linear-gradient(90deg, var(--accent), var(--infantil-secondary));
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    height: 100%;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.infantil-navbar .stat-pill {
+    background: var(--accent-bg);
+    backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    border-radius: var(--r-pill);
+    font-weight: 700;
+    padding: 10px 20px;
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-xs);
+    color: var(--text);
+}
+
+/* Banner especial com Glassmorphism */
+.march-banner {
+    background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
+    backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    box-shadow: var(--shadow);
+    padding: 20px 30px;
+    border-radius: var(--r-lg);
+    margin-bottom: 20px;
+    text-align: center;
+    color: white;
+    animation: pulse-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+    100% { box-shadow: 0 8px 40px rgba(255, 82, 99, 0.4); }
+}
+
+/* Cards de categorias */
+.grid-categories .glass-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    border-radius: var(--r-lg);
+    padding: 32px 24px;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.grid-categories .glass-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.6s ease;
+    opacity: 0;
+}
+
+.grid-categories .glass-card:hover::before {
+    animation: shimmer 0.6s ease;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+}
+
+.grid-categories .glass-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Grid de categorias */
+.grid-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    margin-top: 40px;
+}
+
+/* Subtitles for sections */
+.section-subtitle {
+    opacity: 0.8;
+    font-size: var(--fs-base);
+    margin-top: 4px;
+}
+
+/* Cards de lições */
+.lesson-list .glass-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    border-radius: var(--r-md);
+    padding: 24px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.lesson-list .glass-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateX(10px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.lesson-list .glass-card.locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lesson-list .glass-card.locked::after {
+    content: '🔒';
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.2rem;
+}
+
+.lesson-list {
+    display: grid;
+    gap: 24px;
+    margin-top: 32px;
+}
+
+/* Quiz cards */
+.quiz-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--accent);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    padding: 40px;
+}
+
+.quiz-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.progress-quiz-bg {
+    flex: 1;
+    background: var(--bg);
+    height: 12px;
+    border-radius: var(--r-pill);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.progress-quiz-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--infantil-accent), var(--infantil-primary));
+    width: 33%;
+    transition: width 0.3s ease;
+}
+
+.options-grid .glass-card {
+    background: var(--surface-solid);
+    border: var(--glass-border);
+    border-radius: var(--r-md);
+    padding: 18px 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.options-grid {
+    display: grid;
+    gap: 20px;
+    margin-top: 32px;
+}
+
+.options-grid .glass-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.options-grid .glass-card.selected {
+    background: rgba(106, 90, 224, 0.2);
+    border-color: var(--infantil-primary);
+}
+
+.options-grid .glass-card.correct {
+    background: rgba(39, 174, 96, 0.2);
+    border-color: var(--infantil-success);
+    animation: correct-pulse 0.6s ease;
+}
+
+.options-grid .glass-card.incorrect {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: var(--infantil-danger);
+    animation: shake 0.5s ease;
+}
+
+@keyframes correct-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+/* Result card */
+.result-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--accent);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow);
+    padding: 50px;
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.level-up-card {
+    background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
+    backdrop-filter: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin: 24px 0;
+    border-radius: var(--r-lg);
+    animation: level-up-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes level-up-glow {
+    0% { box-shadow: 0 10px 30px rgba(106, 90, 224, 0.4); }
+    100% { box-shadow: 0 10px 40px rgba(255, 82, 99, 0.6); }
+}
+
+.reward-badge {
+    background: var(--accent-bg);
+    backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    border-radius: var(--r-pill);
+    font-weight: 700;
+    padding: 12px 24px;
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-xs);
+    transition: all 0.3s ease;
+}
+
+.reward-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.reward-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 25px 0;
+}
+
+/* Content card */
+.content-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    border: var(--glass-border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    padding: 40px;
+    margin-top: 24px;
+}
+
+/* Animações de entrada */
+.infantil-screen {
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsividade */
+@media (max-width: 900px) {
+    .age-cards, .grid-categories {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .age-select-card { padding: 40px 20px !important; }
+    .age-select-title { font-size: var(--fs-md); }
+    
+    .age-cards {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .infantil-navbar {
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px;
+        text-align: center;
+    }
+
+    .infantil-navbar .profile-info {
+        flex-direction: column;
+    }
+    
+    .grid-categories {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .quiz-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .reward-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .stat-pill {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Animações especiais para elementos infantis */
+.age-card > div:first-child {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   REFINAMENTOS FINAIS: BOTÕES E ESPAÇAMENTO 
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Botão Voltar Premium */
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 22px;
+    border-radius: var(--r-pill);
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-xs);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 32px;
+    width: fit-content;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-back:hover {
+    background: var(--surface-2);
+    border-color: var(--accent);
+    transform: translateX(-6px);
+    box-shadow: var(--shadow);
+    color: var(--accent);
+}
+
+.btn-back i {
+    font-size: 1.1em;
+}
+
+/* Ajustes de Cabeçalho dentro do Espaço Infantil */
+#espacoInfantilScreen .page-header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    text-align: left;
+}
+
+#espacoInfantilScreen .page-header .page-title {
+    margin-bottom: 8px;
+}

@@ -290,6 +290,7 @@ body {
 /* ── SCREENS ── */
 .screen { display: none; }
 .screen.active { display: block; animation: screenIn .32s cubic-bezier(.22,1,.36,1); }
+.hidden { display: none !important; }
 @keyframes screenIn {
     from { opacity: 0; transform: translateY(12px) }
     to   { opacity: 1; transform: translateY(0) }

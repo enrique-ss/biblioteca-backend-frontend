@@ -32,6 +32,16 @@ function carregarMenu() {
                 carregarAcervoDigital(); 
                 mostrarTela('acervoDigitalScreen'); 
             } 
+        },
+        { 
+            icon: '🎓', 
+            title: 'Espaço Literário', 
+            action() { 
+                mostrarTela('espacoInfantilScreen'); 
+                if (typeof initializeInfantilSpace === 'function') {
+                    initializeInfantilSpace();
+                }
+            } 
         }
     ];
 

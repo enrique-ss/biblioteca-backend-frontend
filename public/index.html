@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/screens.css">
     <link rel="stylesheet" href="css/stats.css">
+    <link rel="stylesheet" href="css/infantil.css">
 </head>
 
 <body>
@@ -263,6 +264,133 @@
                             <button type="submit" class="btn btn-gold btn-action" style="margin-top:4px;">Salvar
                                 alterações</button>
                         </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== ESPAÇO LITERÁRIO INFANTIL ===== -->
+            <section id="espacoInfantilScreen" class="screen">
+                <!-- TELA SELEÇÃO DE FAIXA ETÁRIA -->
+                <div id="screen-age" class="age-select-screen hidden">
+                    <div class="page-header">
+                        <h2 class="page-title"><span>🎓 Espaço</span> Literário</h2>
+                    </div>
+                    <div class="glass-card age-select-card">
+                        <h3 class="age-select-title">Olá! Antes de começar, selecione sua faixa etária:</h3>
+                        <div class="age-cards">
+                            <div class="glass-card age-card infantil" onclick="selectAge('infantil')">
+                                <div class="age-icon">🌱</div>
+                                <h3 class="age-title infantil">Infantil</h3>
+                                <div class="age-badge age-badge-inf">6 a 8 anos</div>
+                                <p class="age-desc">Primeiros passos no mundo das histórias!</p>
+                            </div>
+                            <div class="glass-card age-card infantojuvenil" onclick="selectAge('infantojuvenil')">
+                                <div class="age-icon">📖</div>
+                                <h3 class="age-title infantojuvenil">Infanto-Juvenil</h3>
+                                <div class="age-badge age-badge-ij">9 a 11 anos</div>
+                                <p class="age-desc">Explorando autores e gêneros literários!</p>
+                            </div>
+                            <div class="glass-card age-card preadolescente" onclick="selectAge('preadolescente')">
+                                <div class="age-icon">🔭</div>
+                                <h3 class="age-title preadolescente">Pré-Adolescente</h3>
+                                <div class="age-badge age-badge-pa">11 a 14 anos</div>
+                                <p class="age-desc">Mergulhando na teoria e na literatura mundial!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTEÚDO APÓS SELEÇÃO DE FAIXA ETÁRIA -->
+                <div id="content-after-age" class="hidden">
+                    <!-- NAVBAR INFANTIL -->
+                    <div class="infantil-navbar" id="infantil-navbar">
+                        <div class="profile-info">
+                            <div class="avatar" id="infantil-avatar">🌱</div>
+                            <div class="user-details">
+                                <div class="user-name" id="infantil-user-name">Leitor Curioso</div>
+                                <div class="user-sub">Nível <span id="infantil-user-level">1</span></div>
+                            </div>
+                        </div>
+
+                        <div class="xp-container">
+                            <div class="xp-label">Progresso do Nível</div>
+                            <div class="xp-bg">
+                                <div class="xp-bar" id="infantil-xp-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px;">
+                            <div class="stat-pill">❤️ <span id="infantil-lives">3</span></div>
+                            <div class="stat-pill">✨ <span id="infantil-xp-text">0</span> XP</div>
+                        </div>
+                    </div>
+
+                    <!-- TELA INICIAL INFANTIL -->
+                    <div id="screen-home-infantil" class="infantil-screen hidden">
+                        <div class="march-banner glass-card" id="infantil-march-banner">
+                            <span id="infantil-march-banner-text">🌸 Março é o Mês da Mulher — explore a literatura feminina!</span>
+                        </div>
+                        <div class="page-header">
+                            <h2 class="page-title" id="infantil-hero-greeting">Olá, Pequeno Leitor! 📚</h2>
+                            <p class="section-subtitle">Escolha um mundo literário para começar sua aventura:</p>
+                        </div>
+                        <div class="grid-categories" id="infantil-cat-grid"></div>
+                    </div>
+
+                    <!-- TELA LIÇÕES INFANTIL -->
+                    <div id="screen-lessons-infantil" class="infantil-screen hidden">
+                        <div class="btn-back" onclick="showInfantilScreen('home')">
+                            <span>←</span> Voltar
+                        </div>
+                        <div class="page-header">
+                            <h2 class="page-title" id="infantil-lesson-cat-title">Mundo Literário</h2>
+                        </div>
+                        <div class="lesson-list" id="infantil-lesson-list-container"></div>
+                    </div>
+
+                    <!-- TELA CONTEÚDO INFANTIL -->
+                    <div id="screen-content-infantil" class="infantil-screen hidden">
+                        <div class="btn-back" onclick="showInfantilScreen('lessons')">
+                            <span>←</span> Voltar
+                        </div>
+                        <div class="glass-card content-card">
+                            <div id="infantil-content-body"></div>
+                            <button class="btn btn-primary" onclick="startQuiz()">Estou Pronta/Pronto! 🎯</button>
+                        </div>
+                    </div>
+
+                    <!-- TELA QUIZ INFANTIL -->
+                    <div id="screen-quiz-infantil" class="infantil-screen hidden">
+                        <div class="quiz-header">
+                            <button class="btn btn-ghost" onclick="showInfantilScreen('content')">←</button>
+                            <div class="progress-quiz-bg">
+                                <div id="infantil-quiz-progress-bar" class="progress-quiz-fill"></div>
+                            </div>
+                            <span id="infantil-quiz-step-text">1/3</span>
+                        </div>
+                        <div class="glass-card quiz-card">
+                            <h2 id="infantil-quiz-question">Pergunta?</h2>
+                            <div id="infantil-quiz-options" class="options-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- TELA RESULTADO INFANTIL -->
+                    <div id="screen-result-infantil" class="infantil-screen hidden">
+                        <div class="glass-card result-card">
+                            <div id="infantil-result-icon" class="result-emoji"></div>
+                            <h2 id="infantil-result-title" style="font-family:'Cinzel',serif; color:var(--accent); font-size:var(--fs-lg); margin-bottom:10px;">Incrível!</h2>
+                            <p id="infantil-result-desc"></p>
+                            <div id="infantil-level-up-box" class="glass-card level-up-card hidden">
+                                <h3>🎉 SUBIU DE NÍVEL! 🎉</h3>
+                                <p>Você agora é <strong id="infantil-new-level">Nível 2</strong></p>
+                                <p>Novas lições foram desbloqueadas!</p>
+                            </div>
+                            <div class="reward-row">
+                                <div class="reward-badge glass-card">⭐ +<span id="infantil-xp-gain">0</span> XP</div>
+                                <div class="reward-badge glass-card">❤️ +<span id="infantil-hp-gain">0</span> Vidas</div>
+                            </div>
+                            <button class="btn btn-primary" onclick="showInfantilScreen('home')">Voltar ao Início 🏠</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -645,6 +773,7 @@
     <script src="js/usuarios.js"></script>
     <script src="js/perfil.js"></script>
     <script src="js/stats.js"></script>
+    <script src="js/infantil.js"></script>
     <script>restaurarSessao();</script>
 </body>
 
