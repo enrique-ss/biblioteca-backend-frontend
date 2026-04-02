@@ -139,10 +139,48 @@ body {
     flex-shrink: 0;
 }
 .sidebar-brand:hover { background: var(--accent-bg); }
-.brand-logo-short { font-family: 'Cinzel', serif; font-weight: 700; color: var(--accent); font-size: 1.8rem; width: 80px; text-align: center; flex-shrink: 0; }
-.brand-logo-full { font-family: 'Cinzel', serif; font-weight: 700; color: var(--accent); font-size: 1.35rem; letter-spacing: 0.08em; display: none; white-space: nowrap; }
+.brand-logo-short {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.4rem;
+    width: 80px;
+    text-align: center;
+    flex-shrink: 0;
+    transition: opacity 0.2s ease;
+}
+.brand-logo-full {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.4rem;
+    letter-spacing: 0.08em;
+    display: none;
+    white-space: nowrap;
+    overflow: hidden;
+    padding-left: 24px;
+}
+/* Typewriter cursor blink */
+.brand-logo-full::after {
+    content: '|';
+    animation: blink-cursor 0.8s step-end infinite;
+    margin-left: 2px;
+    opacity: 0.7;
+}
+@keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+@keyframes typewriter {
+    from { width: 0; }
+    to { width: 100%; }
+}
 .sidebar:hover .brand-logo-short { display: none; }
-.sidebar:hover .brand-logo-full { display: block; padding-left: 32px; animation: fadeIn .4s ease; }
+.sidebar:hover .brand-logo-full {
+    display: block;
+    animation: typewriter 0.45s steps(12, end) forwards;
+    max-width: 200px;
+}
 
 .sidebar-nav { padding: 10px 0; display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto; overflow-x: hidden; }
 .sidebar-nav::-webkit-scrollbar { width: 0px; } /* Hide inner scroll */
