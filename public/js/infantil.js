@@ -25,8 +25,18 @@ let INFANTIL_BACKEND_DATA = null;
 async function fetchInfantilData() {
     try {
         const response = await api('/infantil/data');
-        INFANTIL_BACKEND_DATA = response;
-        console.log('✅ Dados do Espaço Literário carregados do backend.');
+        INFANTIL_BACKEND_DATA = response.infantil;
+        
+        // Sincroniza o estado inicial
+        if (response.userProfile) {
+            infantilState.userXP = response.userProfile.xp;
+            infantilState.userLevel = response.userProfile.level;
+            infantilState.userHearts = response.userProfile.hearts;
+            infantilState.completedLessons = new Set(response.userProfile.completedLessons || []);
+            updateUI();
+        }
+        
+        console.log('✅ Dados do Espaço Literário carregados (Smart Backend).');
         return true;
     } catch (error) {
         console.error('❌ Erro ao buscar dados do Espaço Literário:', error);
@@ -264,103 +274,107 @@ function loadQuizQuestion() {
     });
 }
 
-function selectQuizOption(selectedIndex, cardElement) {
+/**
+ * Valida a opção selecionada com o servidor (Smart Backend)
+ */
+async function selectQuizOption(selectedIndex, cardElement) {
     const lesson = infantilState.currentLesson;
-    const question = lesson.quiz[infantilState.quizStep];
-    const isCorrect = selectedIndex === question.a;
     
-    const allCards = document.querySelectorAll('#infantil-quiz-options .glass-card');
-    allCards.forEach(card => {
-        card.style.pointerEvents = 'none';
-        if (card === cardElement) {
-            card.classList.add(isCorrect ? 'correct' : 'incorrect');
-        }
-    });
-    
-    if (!isCorrect) {
-        infantilState.userHearts--;
-        updateUI();
+    try {
+        // Bloquear novas seleções
+        const allCards = document.querySelectorAll('#infantil-quiz-options .glass-card');
+        allCards.forEach(card => card.style.pointerEvents = 'none');
+
+        // Perguntar ao servidor se está correto
+        const result = await api('/infantil/validate-answer', 'POST', {
+            lessonId: lesson.id,
+            questionIndex: infantilState.quizStep,
+            selectedIndex: selectedIndex
+        });
+
+        const isCorrect = result.isCorrect;
+        cardElement.classList.add(isCorrect ? 'correct' : 'incorrect');
         
-        if (infantilState.userHearts <= 0) {
-            setTimeout(() => {
-                showQuizResult(true); // Flag de game over por falta de vidas
-            }, 1000);
+        // Atualiza vidas com base no que o servidor disse
+        infantilState.userHearts = result.hearts;
+        updateUI();
+
+        if (isCorrect) {
+            infantilState.quizCorrect++;
+        }
+
+        if (result.gameOver) {
+            setTimeout(() => showQuizResult(true), 1500);
             return;
         }
+
+        setTimeout(() => {
+            infantilState.quizStep++;
+            loadQuizQuestion();
+        }, 1800);
+
+    } catch (error) {
+        console.error('Erro ao validar resposta:', error);
+        exibirAlerta('Erro de conexão com o servidor.', 'danger');
     }
-    
-    if (isCorrect) {
-        infantilState.quizCorrect++;
-    }
-    
-    setTimeout(() => {
-        infantilState.quizStep++;
-        loadQuizQuestion();
-    }, 1800);
 }
 
-function showQuizResult(gameOverByHearts = false) {
+/**
+ * Finaliza o quiz pedindo ao servidor para calcular recompensas
+ */
+async function showQuizResult(gameOverByHearts = false) {
     const lesson = infantilState.currentLesson;
-    const percentage = (infantilState.quizCorrect / lesson.quiz.length) * 100;
-    const passed = percentage >= 50 && !gameOverByHearts;
-    
-    let icon, title, desc, xpGain, hpGain;
-    
-    if (gameOverByHearts) {
-        icon = '💔';
-        title = 'Vidas Esgotadas!';
-        desc = 'Você perdeu todas as suas vidas. Releia a lição com atenção e tente novamente para ganhar XP!';
-        xpGain = 0;
-        hpGain = 0;
-    } else if (passed) {
-        icon = '🎉';
-        title = 'Excelente Trabalho!';
-        desc = `Você acertou ${infantilState.quizCorrect} de ${lesson.quiz.length} perguntas e demonstrou ser um ótimo leitor!`;
+
+    try {
+        const response = await api('/infantil/finish-quiz', 'POST', {
+            lessonId: lesson.id,
+            correctCount: infantilState.quizCorrect,
+            totalQuestions: lesson.quiz.length,
+            gameOverByHearts: gameOverByHearts
+        });
+
+        const { result, userProfile } = response;
+
+        // Renderiza o resultado usando EXATAMENTE o que o servidor mandou
+        document.getElementById('infantil-result-icon').textContent = result.icon;
+        document.getElementById('infantil-result-title').textContent = result.title;
+        document.getElementById('infantil-result-desc').textContent = result.desc;
+        document.getElementById('infantil-xp-gain').textContent = result.xpGain;
+        document.getElementById('infantil-hp-gain').textContent = result.hpGain;
+
+        // Atualiza estado local com os dados oficiais do servidor
+        infantilState.userXP = userProfile.xp;
+        infantilState.userLevel = userProfile.level;
+        infantilState.userHearts = userProfile.hearts;
         
-        if (!infantilState.completedLessons.has(lesson.id)) {
-            xpGain = 50; // Regra de negócio: 50 XP por lição nova
-            hpGain = infantilState.quizCorrect === lesson.quiz.length ? 1 : 0;
+        if (result.xpGain > 0) {
             infantilState.completedLessons.add(lesson.id);
-        } else {
-            xpGain = 10; // Bônus por repetir
-            hpGain = 0;
         }
-    } else {
-        icon = '📖';
-        title = 'Quase lá!';
-        desc = `Você acertou ${infantilState.quizCorrect} de ${lesson.quiz.length}. Releia a lição com atenção e tente novamente!`;
-        xpGain = 0;
-        hpGain = 0;
-    }
-    
-    document.getElementById('infantil-result-icon').textContent = icon;
-    document.getElementById('infantil-result-title').textContent = title;
-    document.getElementById('infantil-result-desc').textContent = desc;
-    document.getElementById('infantil-xp-gain').textContent = xpGain;
-    document.getElementById('infantil-hp-gain').textContent = hpGain;
-    
-    if (passed) {
-        infantilState.userXP += xpGain;
-        infantilState.userHearts = Math.min(5, infantilState.userHearts + hpGain);
-        
-        const xpForNextLevel = infantilState.userLevel * 100;
-        if (infantilState.userXP >= xpForNextLevel) {
-            infantilState.userLevel++;
-            infantilState.userXP = infantilState.userXP - xpForNextLevel;
-            
-            const levelUpBox = document.getElementById('infantil-level-up-box');
-            const newLevelText = document.getElementById('infantil-new-level');
-            if (levelUpBox) levelUpBox.classList.remove('hidden');
-            if (newLevelText) newLevelText.textContent = `Nível ${infantilState.userLevel}`;
-        } else {
-            const levelUpBox = document.getElementById('infantil-level-up-box');
-            if (levelUpBox) levelUpBox.classList.add('hidden');
-        }
-        
+
         updateUI();
+        showInfantilScreen('result');
+
+    } catch (error) {
+        console.error('Erro ao finalizar quiz:', error);
+        exibirAlerta('Erro ao processar recompensas.', 'danger');
     }
-    
-    showInfantilScreen('result');
+}
+
+/**
+ * Envia o progresso atual para o banco de dados
+ */
+async function syncProgress(completedLessonId = null) {
+    try {
+        await api('/infantil/save-progress', 'POST', {
+            xp: infantilState.userXP,
+            level: infantilState.userLevel,
+            hearts: infantilState.userHearts,
+            completedLessonId: completedLessonId
+        });
+        console.log('☁️ Progresso sincronizado com o servidor.');
+    } catch (error) {
+        console.error('❌ Erro ao sincronizar progresso:', error);
+    }
 }
 
 function updateUI() {
@@ -369,7 +383,7 @@ function updateUI() {
     const xpBarEl = document.getElementById('infantil-xp-bar');
     const livesEl = document.getElementById('infantil-lives');
     
-    if (levelEl) levelEl.textContent = infantilState.userLevel;
+    if (levelEl) levelEl.textContent = String(infantilState.userLevel);
     if (xpTextEl) xpTextEl.textContent = `${infantilState.userXP}/${infantilState.userLevel * 100}`;
     
     if (xpBarEl) {
@@ -377,7 +391,7 @@ function updateUI() {
         xpBarEl.style.width = `${xpPercentage}%`;
     }
     
-    if (livesEl) livesEl.textContent = infantilState.userHearts;
+    if (livesEl) livesEl.textContent = String(infantilState.userHearts);
 }
 
 function changeAge() {
@@ -401,30 +415,21 @@ function showInfantilScreen(screen) {
 // Inicialização e Persistência
 document.addEventListener('DOMContentLoaded', () => {
     initializeInfantilSpace();
-    
-    const savedState = localStorage.getItem('infantilState');
-    if (savedState) {
-        const parsed = JSON.parse(savedState);
-        infantilState = { ...infantilState, ...parsed };
-        infantilState.completedLessons = new Set(parsed.completedLessons || []);
-    }
-    
-    updateUI();
-    
-    // Auto-save a cada 10 segundos
-    setInterval(() => {
-        const stateToSave = {
-            ...infantilState,
-            completedLessons: Array.from(infantilState.completedLessons)
-        };
-        localStorage.setItem('infantilState', JSON.stringify(stateToSave));
-    }, 10000);
+    fetchInfantilData(); 
     
     // Regeneração de Vidas (1 a cada 6 horas)
     setInterval(() => {
         if (infantilState.userHearts < 5) {
             infantilState.userHearts++;
             updateUI();
+            // A regeneração de vidas idealmente também deveria ser no backend,
+            // mas por simplificação mantemos no front com sync posterior se necessário.
+            // Para ser 100% fiel, o backend deveria calcular vidas baseado no tempo.
+            api('/infantil/save-progress', 'POST', {
+                hearts: infantilState.userHearts,
+                xp: infantilState.userXP,
+                level: infantilState.userLevel
+            }).catch(() => {});
         }
     }, 1000 * 60 * 60 * 6);
 });

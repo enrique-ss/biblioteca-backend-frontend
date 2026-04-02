@@ -1,9 +1,11 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import db from '../database';
+import { RequisicaoAutenticada } from '../middlewares/auth';
 
 export class InfantilController {
-  
-  public getData = async (req: Request, res: Response) => {
-    const data = {
+
+  private getFullData = () => {
+    return {
       infantil: {
         greeting: "Olá, Pequeno Leitor! 📚",
         avatar: "🌱",
@@ -53,7 +55,7 @@ export class InfantilController {
           poesia: [
             {
               id: 'inf_p1', title: 'O que é Poesia?', icon: '🎵', requiredLevel: 1,
-              description: "A *poesia* é a arte de pintar com as palavras. É quando escrevemos não apenas para informar, mas para fazer o coração *sentir* a música que existe no papel.",
+              description: "A *poesia* é a arte de pintar com as palavras. Escrever não apenas para informar, mas para fazer o coração *sentir* a música que existe no papel.",
               highlights: [
                 { icon: '🎶', title: 'O Ritmo', text: 'É o batimento cardíaco do poema! As palavras são escolhidas para terem um *som* que parece uma canção.' },
                 { icon: '🔤', title: 'A Rima', text: 'Quando o final das palavras combina, criando uma *harmonia* gostosa de ouvir e recitar.' },
@@ -70,11 +72,11 @@ export class InfantilController {
           classicos: [
             {
               id: 'inf_cl1', title: 'Contos de Andersen', icon: '❄️', requiredLevel: 1,
-              description: "Hans Christian Andersen nasceu na *Dinamarca* e transformou seus sentimentos em contos que o mundo inteiro lê até hoje. Ele amava criar seres *mágicos*!",
+              description: "Hans Christian Andersen transformou seus sentimentos em contos que o mundo inteiro lê. Ele amava criar seres *mágicos*!",
               meta: "1805–1875 • Dinamarca",
               highlights: [
-                { icon: '🦢', title: 'O Patinho Feio', text: 'Uma história poderosa sobre *aceitação*. Mostra que todos temos nossa própria beleza, mesmo que demore a aparecer.' },
-                { icon: '🌊', title: 'A Pequena Sereia', text: 'Diferente do filme, o conto original fala sobre o desejo de ter uma *alma* e o sacrifício por quem amamos.' },
+                { icon: '🦢', title: 'O Patinho Feio', text: 'Uma história poderosa sobre *aceitação*. Mostra que todos temos nossa própria beleza.' },
+                { icon: '🌊', title: 'A Pequena Sereia', text: 'Diferente do filme, o conto original fala sobre o desejo de ter uma *alma* e o sacrifício por amor.' },
                 { icon: '❄️', title: 'A Rainha da Neve', text: 'Uma aventura épica sobre a *amizade* verdadeira que consegue derreter até o coração mais gelado do mundo.' }
               ],
               funFact: "Andersen era tão famoso que viajava por toda a Europa para contar suas histórias para *Reis e Rainhas*!",
@@ -88,14 +90,14 @@ export class InfantilController {
           escritoras: [
             {
               id: 'inf_e1', title: 'Cora Coralina', icon: '🌸', requiredLevel: 1,
-              description: "Cora era uma doceira que vivia em uma casa antiga no interior de *Goiás*. Ela escrevia sobre as coisas simples da vida: o fogão a lenha, os becos e as *pessoas simples*.",
+              description: "Cora era uma doceira que vivia em uma casa antiga em *Goiás*. Escrevia sobre as coisas simples da vida: fogão a lenha, becos e *pessoas simples*.",
               meta: "1889—1985 • Goiás, Brasil",
               highlights: [
                 { icon: '👵', title: 'Sabedoria', text: 'Ela provou que a *educação* e a arte não têm idade. Publicou seu primeiro grande livro aos *76 anos*!' },
-                { icon: '✍️', title: 'Poesia do Cotidiano', text: 'Suas palavras transformavam coisas comuns, como fazer um doce, em momentos de pura *magia literária*.' },
-                { icon: '🏘️', title: 'Os Becos de Goiás', text: 'Cora amava sua terra natal e descrevia as ruas de pedra com um *carinho* que transbordava em seus poemas.' }
+                { icon: '✍️', title: 'Poesia do Cotidiano', text: 'Suas palavras transformavam coisas comuns em momentos de pura *magia literária*.' },
+                { icon: '🏘️', title: 'Os Becos de Goiás', text: 'Cora amava sua terra natal e descrevia as ruas de pedra com um *carinho* único.' }
               ],
-              funFact: "Cora Coralina não terminou a escola, mas se tornou uma das maiores doutoras da literatura brasileira por causa de seu *talento puro*!",
+              funFact: "Cora Coralina não terminou a escola, mas se tornou uma das maiores doutoras da literatura brasileira!",
               quiz: [
                 { q: "Onde Cora Coralina nasceu?", opts: ["São Paulo", "Goiás", "Rio de Janeiro", "Bahia"], a: 1 },
                 { q: "Com quantos anos ela publicou seu primeiro livro?", opts: ["Com 10 anos", "Com 20 anos", "Aos 76 anos", "Nunca publicou"], a: 2 },
@@ -116,13 +118,13 @@ export class InfantilController {
           contos: [
             {
               id: 'ij_c1', title: 'Contos do Brasil', icon: '🏜️', requiredLevel: 1,
-              description: "A literatura brasileira é um caldeirão de culturas. Nossos contos viajam do sertão seco às cidades grandes, sempre com muita *brasilidade*!",
+              description: "A literatura brasileira é um caldeirão de culturas. Nossos contos viajam do sertão seco às cidades grandes com muita *brasilidade*!",
               highlights: [
-                { icon: '🌳', title: 'Raízes Indígenas', text: 'Muitas de nossas histórias vêm das lendas que explicam a *natureza* e a criação do mundo.' },
+                { icon: '🌳', title: 'Raízes Indígenas', text: 'Muitas de nossas histórias vêm das lendas que explicam a *natureza*.' },
                 { icon: '🌵', title: 'O Sertão Profundo', text: 'Escritores como Guimarães Rosa transformaram o interior do Brasil em um lugar de *mistério e filosofia*.' },
-                { icon: '🏙️', title: 'A Crônica Urbana', text: 'Mostra como a vida nas grandes cidades também pode ser cheia de *histórias emocionantes* e humanas.' }
+                { icon: '🏙️', title: 'A Crônica Urbana', text: 'Mostra como a vida nas grandes cidades também pode ser cheia de *histórias emocionantes*.' }
               ],
-              funFact: "Machado de Assis, nosso maior escritor, começou escrevendo contos em jornais antes de se tornar o mestre que conhecemos!",
+              funFact: "Machado de Assis, nosso maior escritor, começou escrevendo contos em jornais!",
               quiz: [
                 { q: "O que torna os contos brasileiros especiais?", opts: ["Só falam de reis", "Misturam culturas indígenas, africanas e europeias", "São todos iguais", "Só falam de animais"], a: 1 },
                 { q: "Qual é um tema comum nos contos brasileiros?", opts: ["Castelos medievais", "Sertão e caatinga", "Ninjas", "Dragões"], a: 1 }
@@ -132,13 +134,13 @@ export class InfantilController {
           poesia: [
             {
               id: 'ij_p1', title: 'Lira dos Vinte Anos', icon: '🎭', requiredLevel: 1,
-              description: "Álvares de Azevedo foi o maior poeta do nosso *Ultrarromantismo*. Sua poesia fala de sonhos, mistérios e uma melancolia profunda.",
+              description: "Álvares de Azevedo foi o maior poeta do nosso *Ultrarromantismo*. Sua poesia fala de sonhos, mistérios e melancolia.",
               meta: "1831—1852 • São Paulo, Brasil",
               highlights: [
-                { icon: '🌙', title: 'O Lado Sombrio', text: 'Sua poesia explora temas como a *noite*, o mistério e o sonho, típicos da segunda geração romântica.' },
-                { icon: '💔', title: 'Sentimentalismo', text: 'A expressão máxima dos *sentimentos* juvenis, entre o amor idealizado e a tristeza.' }
+                { icon: '🌙', title: 'O Lado Sombrio', text: 'Sua poesia explora temas como a *noite*, o mistério e o sonho.' },
+                { icon: '💔', title: 'Sentimentalismo', text: 'A expressão máxima dos *sentimentos* juvenis entre o amor idealizado e a tristeza.' }
               ],
-              funFact: "Ele morreu com apenas 20 anos, mas deixou uma obra tão importante que influenciou gerações de poetas brasileiros!",
+              funFact: "Ele morreu com apenas 20 anos, mas deixou uma obra que influenciou gerações de poetas!",
               quiz: [
                 { q: "Quem foi o autor de 'Lira dos Vinte Anos'?", opts: ["Casimiro de Abreu", "Álvares de Azevedo", "Castro Alves", "Machado de Assis"], a: 1 },
                 { q: "Qual era a principal característica de sua poesia?", opts: ["Realismo", "Ultrarromantismo e melancolia", "Poesia social", "Modernismo"], a: 1 }
@@ -152,19 +154,18 @@ export class InfantilController {
         avatar: "🎓",
         categories: [
           { id: 'teoria', name: 'Teoria Literária', icon: '📖', color: 'var(--accent)' },
-          { id: 'brasileira', name: 'Literatura Brasileira', icon: '🇧🇷', color: '#00d68f' }
+          { id: 'brasileira', name: 'Literatura Brasileira', icon: '🦜', color: '#00d68f' }
         ],
         lessons: {
           teoria: [
             {
               id: 'pa_t1', title: 'Teoria Literária', icon: '📖', requiredLevel: 1,
-              description: "A teoria literária nos dá as *lentes* para enxergar o que está escondido nas entrelinhas de um livro. É a ciência de *interpretar* a arte!",
+              description: "A teoria literária nos dá as *lentes* para enxergar o que está escondido nas entrelinhas de um livro.",
               highlights: [
                 { icon: '📚', title: 'Estruturalismo', text: 'Analisa como o texto é montado, como se fosse a *engenharia* de uma ponte feita de palavras.' },
-                { icon: '👤', title: 'Psicanálise', text: 'Investiga os desejos e medos dos *personagens*, tratando-os como se fossem pessoas reais com subconsciente.' },
-                { icon: '🌍', title: 'Sociocrítica', text: 'Mostra como o momento *histórico* e a sociedade influenciam o que o autor escreveu.' }
+                { icon: '👤', title: 'Psicanálise', text: 'Investiga os desejos e medos dos *personagens*, tratando-os como se fossem pessoas reais.' }
               ],
-              funFact: "A teoria literária moderna começou pra valer no início do século XX, quando estudiosos decidiram tratar a literatura como algo *científico*!",
+              funFact: "A teoria literária moderna decidiu tratar a literatura como algo *científico* no início do século XX!",
               quiz: [
                 { q: "O que é teoria literária?", opts: ["Só ler livros", "Estudo dos princípios para analisar obras", "Escrever poesia", "Fazer resumos"], a: 1 },
                 { q: "Qual abordagem foca na estrutura do texto?", opts: ["Psicanálise", "Estruturalismo", "Marxismo", "Feminismo"], a: 1 }
@@ -178,11 +179,11 @@ export class InfantilController {
               meta: "1839—1908 • Rio de Janeiro",
               highlights: [
                 { icon: '🔍', title: 'Análise Psicológica', text: 'Ele não descrevia apenas o exterior, mas o que os personagens *pensavam* de verdade.' },
-                { icon: '😏', title: 'Ironia Machadiana', text: 'Uma forma elegante de criticar a sociedade carioca do século XIX com muito *humor ácido*.' }
+                { icon: '😏', title: 'Ironia Machadiana', text: 'Uma forma elegante de criticar a sociedade carioca com muito *humor ácido*.' }
               ],
-              funFact: "Machado foi um dos fundadores da *Academia Brasileira de Letras* e seu primeiro presidente!",
+              funFact: "Machado foi um dos fundadores da *Academia Brasileira de Letras*!",
               quiz: [
-                { q: "Qual era a principal característica do Realismo de Machado?", opts: ["Falar de fadas", "Análise psicológica e ironia", "Aventuras no mar", "Poesia religiosa"], a: 1 },
+                { q: "Qual era a característica do Realismo de Machado?", opts: ["Falar de fadas", "Análise psicológica e ironia", "Aventuras no mar", "Poesia religiosa"], a: 1 },
                 { q: "Onde Machado de Assis nasceu?", opts: ["São Paulo", "Rio de Janeiro", "Goiás", "Minas Gerais"], a: 1 }
               ]
             }
@@ -190,7 +191,199 @@ export class InfantilController {
         }
       }
     };
+  };
 
-    res.json(data);
+  /**
+   * Retorna os dados do Espaço Literário e o progresso do usuário.
+   * AS RESPOSTAS SÃO REMOVIDAS DAQUI (DUMB FRONTEND).
+   */
+  public getData = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+      const userId = req.usuario?.id;
+      if (!userId) return res.status(401).json({ error: 'Usuário não identificado.' });
+
+      const user = await db('usuarios')
+        .where({ id: userId })
+        .select('infantil_xp', 'infantil_level', 'infantil_hearts')
+        .first();
+
+      const completedLessonsRecords = await db('usuarios_leicoes_infantis')
+        .where({ usuario_id: userId })
+        .select('leicao_id');
+      
+      const completedLessons = completedLessonsRecords.map(r => r.leicao_id);
+
+      // Busca todos os dados e remove o campo 'a' (resposta correta) do quiz
+      const fullData: any = this.getFullData();
+      
+      const removeAnswers = (obj: any) => {
+        for (const age in obj) {
+          if (obj[age].lessons) {
+            for (const cat in obj[age].lessons) {
+              obj[age].lessons[cat].forEach((lesson: any) => {
+                if (lesson.quiz) {
+                  lesson.quiz.forEach((q: any) => delete q.a);
+                }
+              });
+            }
+          }
+        }
+      };
+
+      removeAnswers(fullData);
+
+      res.json({
+        userProfile: {
+          xp: user?.infantil_xp || 0,
+          level: user?.infantil_level || 1,
+          hearts: user?.infantil_hearts || 5,
+          completedLessons: completedLessons
+        },
+        infantil: fullData
+      });
+    } catch (error) {
+      console.error('Erro ao buscar dados infantis:', error);
+      res.status(500).json({ error: 'Erro interno ao carregar o Espaço Literário.' });
+    }
+  };
+
+  /**
+   * Valida uma resposta do quiz (SMART BACKEND).
+   */
+  public validateAnswer = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+      const userId = req.usuario?.id;
+      const { lessonId, questionIndex, selectedIndex } = req.body;
+
+      if (!userId) return res.status(401).json({ error: 'Não autorizado.' });
+
+      // Localizar a lição e a pergunta certa no "banco central" do controlador
+      const fullData: any = this.getFullData();
+      let foundQuestion: any = null;
+
+      for (const age in fullData) {
+        for (const cat in fullData[age].lessons) {
+          const lesson = fullData[age].lessons[cat].find((l: any) => l.id === lessonId);
+          if (lesson && lesson.quiz[questionIndex]) {
+            foundQuestion = lesson.quiz[questionIndex];
+            break;
+          }
+        }
+        if (foundQuestion) break;
+      }
+
+      if (!foundQuestion) return res.status(404).json({ error: 'Questão não encontrada.' });
+
+      const isCorrect = selectedIndex === foundQuestion.a;
+      
+      const user = await db('usuarios').where({ id: userId }).first();
+      let currentHearts = user.infantil_hearts;
+
+      if (!isCorrect) {
+        currentHearts = Math.max(0, currentHearts - 1);
+        await db('usuarios').where({ id: userId }).update({ infantil_hearts: currentHearts });
+      }
+
+      res.json({
+        isCorrect,
+        hearts: currentHearts,
+        gameOver: currentHearts <= 0
+      });
+
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao validar resposta.' });
+    }
+  };
+
+  /**
+   * Finaliza o quiz e calcula recompensas (SMART BACKEND).
+   */
+  public finishQuiz = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+      const userId = req.usuario?.id;
+      const { lessonId, correctCount, totalQuestions, gameOverByHearts } = req.body;
+
+      if (!userId) return res.status(401).json({ error: 'Acesso negado.' });
+
+      const percentage = (correctCount / totalQuestions) * 100;
+      const passed = percentage >= 50 && !gameOverByHearts;
+      
+      const user = await db('usuarios').where({ id: userId }).first();
+      const completedRecord = await db('usuarios_leicoes_infantis')
+        .where({ usuario_id: userId, leicao_id: lessonId })
+        .first();
+
+      let xpGain = 0;
+      let hpGain = 0;
+      let icon, title, desc;
+
+      if (gameOverByHearts) {
+        icon = '💔';
+        title = 'Vidas Esgotadas!';
+        desc = 'Você perdeu todas as suas vidas. Releia a lição com atenção e tente novamente!';
+      } else if (passed) {
+        icon = '🎉';
+        title = 'Excelente Trabalho!';
+        desc = `Você acertou ${correctCount} de ${totalQuestions} perguntas e provou sua sabedoria!`;
+        
+        if (!completedRecord) {
+          xpGain = 50;
+          hpGain = correctCount === totalQuestions ? 1 : 0;
+          await db('usuarios_leicoes_infantis').insert({ usuario_id: userId, leicao_id: lessonId });
+        } else {
+          xpGain = 10;
+        }
+      } else {
+        icon = '📖';
+        title = 'Quase lá!';
+        desc = `Você acertou ${correctCount} de ${totalQuestions}. Tente novamente para ganhar XP!`;
+      }
+
+      // Atualiza XP e Nível
+      let newXP = user.infantil_xp + xpGain;
+      let newLevel = user.infantil_level;
+      let newHearts = Math.min(5, user.infantil_hearts + hpGain);
+
+      while (newXP >= (newLevel * 100)) {
+        newXP -= (newLevel * 100);
+        newLevel++;
+      }
+
+      await db('usuarios').where({ id: userId }).update({
+        infantil_xp: newXP,
+        infantil_level: newLevel,
+        infantil_hearts: newHearts
+      });
+
+      res.json({
+        result: { icon, title, desc, xpGain, hpGain },
+        userProfile: { xp: newXP, level: newLevel, hearts: newHearts }
+      });
+
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao processar resultado.' });
+    }
+  };
+
+  /**
+   * Atualização genérica de progresso (ex: regeneração de vidas).
+   */
+  public saveProgress = async (req: RequisicaoAutenticada, res: Response) => {
+    try {
+      const userId = req.usuario?.id;
+      if (!userId) return res.status(401).json({ error: 'Acesso negado.' });
+
+      const { xp, level, hearts } = req.body;
+
+      await db('usuarios').where({ id: userId }).update({
+        infantil_xp: xp,
+        infantil_level: level,
+        infantil_hearts: hearts
+      });
+
+      res.json({ message: '✅ Dados sincronizados.' });
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao sincronizar.' });
+    }
   };
 }

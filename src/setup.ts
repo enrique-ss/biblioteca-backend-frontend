@@ -58,8 +58,23 @@ async function configurarBanco() {
       
       t.index(['tipo'], 'idx_usuarios_tipo');
       t.index(['deleted_at'], 'idx_usuarios_deleted_at');
+
+      // --- ESPAÇO INFANTIL: PROGRESSÃO ---
+      t.integer('infantil_xp').notNullable().defaultTo(0);
+      t.integer('infantil_level').notNullable().defaultTo(1);
+      t.integer('infantil_hearts').notNullable().defaultTo(5);
     });
     console.log('✅ Tabela [usuarios] criada.');
+
+    // --- Criação da Tabela: USUÁRIOS_LEICOES_INFANTIS ---
+    await db.schema.createTable('usuarios_leicoes_infantis', (t) => {
+      t.integer('usuario_id').unsigned().notNullable();
+      t.string('leicao_id', 50).notNullable();
+      
+      t.foreign('usuario_id').references('usuarios.id').onDelete('CASCADE');
+      t.primary(['usuario_id', 'leicao_id']);
+    });
+    console.log('✅ Tabela [usuarios_leicoes_infantis] criada.');
 
     // Criação do usuário Administrador padrão
     const hashSenhaAdmin = await bcrypt.hash('admin123', 10);
