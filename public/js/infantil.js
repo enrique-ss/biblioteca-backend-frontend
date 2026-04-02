@@ -278,7 +278,15 @@ function selectQuizOption(selectedIndex, cardElement) {
     });
     
     if (!isCorrect) {
-        allCards[question.a].classList.add('correct');
+        infantilState.userHearts--;
+        updateUI();
+        
+        if (infantilState.userHearts <= 0) {
+            setTimeout(() => {
+                showQuizResult(true); // Flag de game over por falta de vidas
+            }, 1000);
+            return;
+        }
     }
     
     if (isCorrect) {
@@ -291,24 +299,30 @@ function selectQuizOption(selectedIndex, cardElement) {
     }, 1800);
 }
 
-function showQuizResult() {
+function showQuizResult(gameOverByHearts = false) {
     const lesson = infantilState.currentLesson;
     const percentage = (infantilState.quizCorrect / lesson.quiz.length) * 100;
-    const passed = percentage >= 50;
+    const passed = percentage >= 50 && !gameOverByHearts;
     
     let icon, title, desc, xpGain, hpGain;
     
-    if (passed) {
+    if (gameOverByHearts) {
+        icon = '💔';
+        title = 'Vidas Esgotadas!';
+        desc = 'Você perdeu todas as suas vidas. Releia a lição com atenção e tente novamente para ganhar XP!';
+        xpGain = 0;
+        hpGain = 0;
+    } else if (passed) {
         icon = '🎉';
         title = 'Excelente Trabalho!';
         desc = `Você acertou ${infantilState.quizCorrect} de ${lesson.quiz.length} perguntas e demonstrou ser um ótimo leitor!`;
         
         if (!infantilState.completedLessons.has(lesson.id)) {
-            xpGain = 30 + (infantilState.quizCorrect * 15);
+            xpGain = 50; // Regra de negócio: 50 XP por lição nova
             hpGain = infantilState.quizCorrect === lesson.quiz.length ? 1 : 0;
             infantilState.completedLessons.add(lesson.id);
         } else {
-            xpGain = 5; // Bônus simbólico por repetir
+            xpGain = 10; // Bônus por repetir
             hpGain = 0;
         }
     } else {
@@ -356,7 +370,7 @@ function updateUI() {
     const livesEl = document.getElementById('infantil-lives');
     
     if (levelEl) levelEl.textContent = infantilState.userLevel;
-    if (xpTextEl) xpTextEl.textContent = `${infantilState.userXP}/${infantilState.userLevel * 100} XP`;
+    if (xpTextEl) xpTextEl.textContent = `${infantilState.userXP}/${infantilState.userLevel * 100}`;
     
     if (xpBarEl) {
         const xpPercentage = (infantilState.userXP / (infantilState.userLevel * 100)) * 100;
