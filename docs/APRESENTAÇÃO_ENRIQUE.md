@@ -1,4 +1,4 @@
-# 🗺️ Biblio Verso: Guia Técnico de Engenharia (Apresentação Enrique)
+# 🗺️ Biblio Verso (Apresentação Enrique)
 
 Este documento é a "Caixa Preta" do Biblio Verso. O objetivo é demonstrar para a banca as métricas técnicas, regras de negócios estritas (if/elses lógicos de banco de dados), arquiteturas de servidor Node e modelagens 1:N que sustentam todo o site.
 
