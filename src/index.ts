@@ -8,6 +8,7 @@ import rotasAlugueis from './routes/aluguelRoutes';
 import rotasUsuarios from './routes/UsuarioRoutes';
 import rotasEstatisticas from './routes/StatsRoutes';
 import rotasAcervoDigital from './routes/AcervoDigitalRoutes';
+import rotasInfantil from './routes/infantilRoutes';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use('/api/alugueis', rotasAlugueis);
 app.use('/api/usuarios', rotasUsuarios);
 app.use('/api/stats', rotasEstatisticas);
 app.use('/api/acervo-digital', rotasAcervoDigital);
+app.use('/api/infantil', rotasInfantil);
 
 // Rota de verificação de integridade (Health Check)
 app.get('/', (req, res) => {

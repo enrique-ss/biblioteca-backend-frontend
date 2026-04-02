@@ -14,7 +14,6 @@ function carregarMenu() {
         navLateral.innerHTML = ''; // Limpa os itens anteriores para reconstrução
     }
 
-    // Define os itens do menu baseados nas permissões do usuário
     const itensMenu = [
         { 
             icon: '📚', 
@@ -32,30 +31,46 @@ function carregarMenu() {
                 carregarAcervoDigital(); 
                 mostrarTela('acervoDigitalScreen'); 
             } 
-        },
-        { 
-            icon: '🎓', 
-            title: 'Espaço Literário', 
-            action() { 
-                mostrarTela('espacoInfantilScreen'); 
-                if (typeof initializeInfantilSpace === 'function') {
-                    initializeInfantilSpace();
-                }
-            } 
         }
     ];
 
     if (ehBibliotecario) {
-        // Opções exclusivas para bibliotecários
+        // Opções exclusivas para bibliotecários - Empréstimos primeiro
+        itensMenu.push({ 
+            icon: '📋', 
+            title: 'Empréstimos',  
+            action() { 
+                carregarAlugueis(); 
+                mostrarTela('alugueisScreen'); 
+            } 
+        });
+    } else {
+        // Opções para usuários comuns - Meus Livros primeiro
+        itensMenu.push({ 
+            icon: '📖', 
+            title: 'Meus Livros', 
+            action() { 
+                carregarMeusAlugueis(); 
+                mostrarTela('alugueisScreen'); 
+            } 
+        });
+    }
+
+    // Espaço Literário agora fica abaixo de Empréstimos/Meus Livros
+    itensMenu.push({ 
+        icon: '🎓', 
+        title: 'Espaço Literário', 
+        action() { 
+            mostrarTela('espacoInfantilScreen'); 
+            if (typeof initializeInfantilSpace === 'function') {
+                initializeInfantilSpace();
+            }
+        } 
+    });
+
+    if (ehBibliotecario) {
+        // Outras opções administrativas
         itensMenu.push(
-            { 
-                icon: '📋', 
-                title: 'Empréstimos',  
-                action() { 
-                    carregarAlugueis(); 
-                    mostrarTela('alugueisScreen'); 
-                } 
-            },
             { 
                 icon: '👥', 
                 title: 'Usuários',     
@@ -63,26 +78,13 @@ function carregarMenu() {
                     carregarUsuarios(); 
                     mostrarTela('usuariosScreen'); 
                 } 
-            }
-        );
-        // Estatísticas só para bibliotecários
-        itensMenu.push({ 
-            icon: '📊', 
-            title: 'Estatísticas', 
-            action() { 
-                mostrarTela('statsScreen'); 
-                carregarEstatisticasDetalhadas(); 
-            } 
-        });
-    } else {
-        // Opções para usuários comuns
-        itensMenu.push(
+            },
             { 
-                icon: '📖', 
-                title: 'Meus Livros', 
+                icon: '📊', 
+                title: 'Estatísticas', 
                 action() { 
-                    carregarMeusAlugueis(); 
-                    mostrarTela('alugueisScreen'); 
+                    mostrarTela('statsScreen'); 
+                    carregarEstatisticasDetalhadas(); 
                 } 
             }
         );

@@ -623,3 +623,191 @@
 #espacoInfantilScreen .page-header .page-title {
     margin-bottom: 8px;
 }
+
+/* ============================================================
+   ESTILOS MODERNOS PARA CONTEÚDO DE LIÇÕES
+   ============================================================ */
+
+/* ============================================================
+   ESTILOS MODERNOS PARA CONTEÚDO DE LIÇÕES (V2 - PREMIUM)
+   ============================================================ */
+
+.lesson-content-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.lesson-header-modern {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px 0;
+}
+
+.lesson-icon-large {
+    font-size: 5rem;
+    margin-bottom: 24px;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+    display: block;
+    animation: floating 4s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+}
+
+.lesson-title-modern {
+    font-family: 'Cinzel', serif;
+    color: var(--accent);
+    font-size: 2.8rem;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.lesson-info-meta {
+    display: inline-block;
+    padding: 10px 28px;
+    background: var(--surface-2);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--r-pill);
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-sm);
+}
+
+.lesson-description-modern {
+    font-size: 1.4rem;
+    line-height: 1.8;
+    color: var(--text);
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    opacity: 0.95;
+}
+
+.accent-word {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.lesson-highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.lesson-highlight-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.lesson-highlight-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-sm);
+}
+
+.highlight-icon {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.highlight-content h4 {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-xs);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 0;
+}
+
+.highlight-content p {
+    font-size: var(--fs-sm);
+    color: var(--text);
+    line-height: 1.4;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Seção de Curiosidade (Fun Fact) */
+.lesson-fun-fact {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(106, 90, 224, 0.05));
+    border: 1px dashed var(--accent);
+    border-radius: var(--r-xl);
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.fun-fact-icon {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 0 10px var(--accent));
+}
+
+.fun-fact-content {
+    flex: 1;
+}
+
+.fun-fact-content h5 {
+    font-family: 'Cinzel', serif;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+}
+
+.fun-fact-content p {
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+#screen-content-infantil .content-card {
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.modern-btn-wrap {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .lesson-title-modern { font-size: 1.8rem; }
+    .lesson-description-modern { font-size: 1.1rem; }
+    .lesson-highlight-card { padding: 24px; gap: 20px; }
+    .highlight-icon { width: 60px; height: 60px; min-width: 60px; font-size: 2rem; }
+}
