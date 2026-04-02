@@ -63,24 +63,24 @@ function toggleTheme() {
     
     html.setAttribute('data-theme', novoTema);
     document.getElementById('btnThemeIcon').textContent = isDark ? '☀️' : '🌙';
-    localStorage.setItem('cristalario_theme', novoTema);
+    localStorage.setItem('biblioverso_theme', novoTema);
 }
 
 function restoreTheme() {
-    const saved = localStorage.getItem('cristalario_theme') || 'dark';
+    const saved = localStorage.getItem('biblioverso_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
     document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? '🌙' : '☀️';
 }
 
 // Gerenciamento de Sessão do Usuário
 function salvarSessao() {
-    sessionStorage.setItem('cristalario_token', token);
-    sessionStorage.setItem('cristalario_user', JSON.stringify(currentUser));
+    sessionStorage.setItem('biblioverso_token', token);
+    sessionStorage.setItem('biblioverso_user', JSON.stringify(currentUser));
 }
 
 function restaurarSessao() {
-    const t = sessionStorage.getItem('cristalario_token');
-    const u = sessionStorage.getItem('cristalario_user');
+    const t = sessionStorage.getItem('biblioverso_token');
+    const u = sessionStorage.getItem('biblioverso_user');
     if (t && u) {
         token = t; 
         currentUser = JSON.parse(u);
@@ -348,6 +348,7 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
     
     html += `<button class="pg-btn" ${paginaAtual >= totalPaginas ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual + 1})">›</button>`;
     html += `<span class="pg-info">Pág. ${paginaAtual} de ${totalPaginas}</span>`;
+    document.getElementById('loading-text').textContent = 'Iniciando Biblio Verso...';
     el.innerHTML = html;
 }
 

@@ -73,7 +73,7 @@ export class AuthController {
       });
 
       res.status(201).json({
-        message: '✅ Conta criada com sucesso! Bem-vindo(a) ao Cristalário.',
+        message: '✅ Conta criada com sucesso! Bem-vindo(a) ao Biblio Verso.',
         token: tokenAcesso,
         usuario: { 
           id: usuarioCriado.id, 

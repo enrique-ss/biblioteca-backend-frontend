@@ -1,4 +1,4 @@
-# 🏗️ Documentação Técnica: Ecossistema API Teca
+# 🏗️ Documentação Técnica: Ecossistema Biblio Verso
 
 Esta documentação detalha a engenharia do sistema, focando no **Modelo Entidade-Relacionamento (ER)** e na arquitetura **Smart Backend**.
 
@@ -53,7 +53,7 @@ erDiagram
 ## 3. Fluxos de Inteligência (Business Logic)
 
 ### 🎮 Motor de Gamificação (Quiz)
-Diferente de quizes comuns onde a resposta correta está no HTML/JS do frontend, o **API Teca** implementa validação servidora:
+Diferente de quizes comuns onde a resposta correta está no HTML/JS do frontend, o **Biblio Verso** implementa validação servidora:
 1.  O Frontend envia a opção selecionável via POST.
 2.  O **Backend** busca a resposta certa no seu `controller` privado.
 3.  O Backend subtrai vida (`hearts`) ou soma `XP` no SQL.

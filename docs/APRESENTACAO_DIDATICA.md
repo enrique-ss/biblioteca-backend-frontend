@@ -1,11 +1,11 @@
-# 🎤 Roteiro de Apresentação: Ecossistema API Teca
+# 🎤 Roteiro de Apresentação: Ecossistema Biblio Verso
 
 Este roteiro foi desenvolvido para uma apresentação de alto nível, focada na experiência do usuário e na robustez da engenharia por trás da interface.
 
 ---
 
 ## 🏛️ 1. Abertura: O Problema e a Solução
-**Fala:** "Bom dia a todos. O projeto **API Teca** nasceu para resolver um problema clássico de bibliotecas universitárias e escolares: a fragmentação entre o acervo físico e o digital. Criamos um ecossistema único, onde a gestão é extremamente rigorosa e a interface é imersiva."
+**Fala:** "Bom dia a todos. O projeto **Biblio Verso** nasceu para resolver um problema clássico de bibliotecas universitárias e escolares: a fragmentação entre o acervo físico e o digital. Criamos um ecossistema único, onde a gestão é extremamente rigorosa e a interface é imersiva."
 
 > **[Nota Técnica]:** Destaque que o sistema é uma **Single Page Application (SPA)**, ou seja, o usuário navega sem recarregar a página, proporcionando uma fluidez comparável a aplicativos desktop.
 
@@ -32,7 +32,7 @@ Este roteiro foi desenvolvido para uma apresentação de alto nível, focada na 
 
 ## 📚 4. Acervo Físico: A Máquina por Trás do Livro
 **Demonstração:** Clique em "Acervo Físico" e use a barra de busca.
-**Fala:** "Aqui é onde a complexidade do banco de dados se torna visível. No API Teca, um livro não é apenas um registro. Temos a distinção entre a **Obra** (o título) e os **Exemplares** (as cópias físicas)."
+**Fala:** "Aqui é onde a complexidade do banco de dados se torna visível. No Biblio Verso, um livro não é apenas um registro. Temos a distinção entre a **Obra** (o título) e os **Exemplares** (as cópias físicas)."
 *   Mostre a busca instantânea.
 *   Explique que cada cópia tem seu próprio ID, estado de conservação e localização na prateleira.
 
@@ -60,7 +60,7 @@ Este roteiro foi desenvolvido para uma apresentação de alto nível, focada na 
 
 ---
 
-## 🚀 7. Conclusão: Por que o API Teca é diferente?
+## 🚀 7. Conclusão: Por que o Biblio Verso é diferente?
 **Fala:** "O projeto não é apenas um site; é um sistema robusto. Ele possui um **Dumb Frontend** (um visual refinado que não contém lógica) e um **Smart Backend** que orquestra tudo, desde a segurança JWT até o controle de multas. O resultado é uma plataforma rápida, segura e escalável."
 
 ---

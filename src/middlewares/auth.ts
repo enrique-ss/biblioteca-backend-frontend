@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 // Carrega a chave secreta das variáveis de ambiente
-const SEGREDO_JWT = process.env.JWT_SECRET || 'cristalario-chave-secreta-2024';
+const SEGREDO_JWT = process.env.JWT_SECRET || 'biblioverso-chave-secreta-2024';
 
 /**
  * Estrutura de dados contida dentro do Token de Autenticação.

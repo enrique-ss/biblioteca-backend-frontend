@@ -92,7 +92,7 @@ function exibirBanner() {
   ${cores.ciano}██║     ██╔══██╗██║╚════██║   ██║   ██╔══██║██║     ██╔══██║██╔══██╗██║██║   ██║${cores.reset}
   ${cores.azul}╚██████╗██║  ██║██║███████║   ██║   ██║  ██║███████╗██║  ██║██║  ██║██║╚██████╔╝${cores.reset}
   ${cores.azul} ╚═════╝╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ${cores.reset}`);
-  console.log(colorir('           Sistema de Biblioteca Cristalário - Backend Shell', cores.cinza));
+  console.log(colorir(' 📚 Sistema de Biblioteca Biblio Verso - Backend Shell', cores.cinza));
 }
 
 async function exibirMiniDashboard() {

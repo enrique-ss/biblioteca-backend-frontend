@@ -1,6 +1,6 @@
-# 🎨 Padrões de Frontend e Design UI/UX: API Teca
+# 🎨 Padrões de Frontend e Design UI/UX: Biblio Verso
 
-Esta documentação descreve os fundamentos visuais e técnicos que tornam a interface do **API Teca** uma experiência moderna, fluida e imersiva.
+Esta documentação descreve os fundamentos visuais e técnicos que tornam a interface do **Biblio Verso** uma experiência moderna, fluida e imersiva.
 
 ---
 
