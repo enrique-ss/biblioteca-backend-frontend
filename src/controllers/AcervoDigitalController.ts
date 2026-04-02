@@ -164,11 +164,11 @@ export class AcervoDigitalController {
         }
 
         const { id } = req.params;
-        await db('acervo_digital').where({ id }).update({ 
-            status: 'pendente', 
-            deleted_at: db.fn.now() 
-        });
-        res.json({ message: 'Documento rejeitado e arquivado (não visível).' });
+        
+        // Se ainda está pendente, não há histórico. Deletamos permanentemente.
+        await db('acervo_digital').where({ id, status: 'pendente' }).delete();
+        
+        res.json({ message: 'Documento rejeitado e excluído permanentemente do sistema.' });
     } catch (erro) {
         console.error('Erro ao processar rejeição:', erro);
         res.status(500).json({ error: 'Falha ao processar solicitação.' });

@@ -4,6 +4,15 @@ Este documento detalha cada funcionalidade do Biblio Verso, pensado para uma apr
 
 ---
 
+## 🚀 O Diferencial: Um Sistema, Duas Portas de Entrada
+O Biblio Verso não é apenas um site. Ele possui o que chamamos de **Interface Dupla**:
+- **Interface Web**: Visual, moderna e colorida para facilitar o uso no dia a dia.
+- **Interface de Terminal (CLI)**: Uma porta de entrada para quem prefere rapidez ou para situações técnicas. 
+
+Ambas funcionam como "espelhos" do mesmo cérebro central. O que você faz em uma, aparece instantaneamente na outra. Isso mostra o quanto o sistema é versátil e preparado para qualquer tipo de dispositivo.
+
+---
+
 ## 🔐 1. Acesso e Segurança (Login e Cadastro)
 O sistema é um ambiente seguro e privado. Cada aluno ou bibliotecário possui suas próprias credenciais. Ao entrar, o Biblio Verso identifica o nível de acesso da pessoa para liberar as ferramentas corretas. O cadastro solicita nome, e-mail e senha, criando um perfil único onde todo o histórico de leituras, conquistas no RPG e situações financeiras ficam salvos para sempre.
 
@@ -12,13 +21,14 @@ Nesta seção, o usuário visualiza todos os livros que existem fisicamente na b
 - **Busca Inteligente**: É possível pesquisar por título, autor, gênero ou até pelo ano de lançamento.
 - **Localização Precisa**: Para cada livro, o sistema informa em qual Corredor e em qual Prateleira ele se encontra, eliminando a perda de tempo procurando nas estantes.
 - **Status em Tempo Real**: O sistema mostra se o livro está "Disponível" para empréstimo ou se todas as cópias já foram alugadas.
-- **Informação de Conservação**: Podemos ver se o livro está em "Bom estado" ou se possui algum dano, ajudando na preservação do patrimônio da escola.
+- **Segurança Antecipada**: Um livro nunca pode ser "apagado" do sistema se algum aluno ainda estiver com ele. Isso previne o erro humano do bibliotecário esquecer de cobrar a devolução, protegendo o patrimônio da escola.
+- **Informação de Conservação**: Podemos ver se o livro está em "Bom estado" ou se possui algum dano, ajudando na preservação física da biblioteca.
 
 ## 📱 3. Acervo Digital (Biblioteca Virtual Colaborativa)
 O Acervo Digital é o espaço para leitura instantânea de PDFs e e-books.
 - **Leitura no Navegador**: O aluno não precisa baixar arquivos; ele abre e lê o livro diretamente no sistema.
 - **Colaboração**: Alunos podem enviar seus próprios arquivos digitais para enriquecer a biblioteca. 
-- **Curadoria**: Todo livro enviado por um aluno entra em um estado de "Pendente" e só aparece para os outros após um bibliotecário revisar e aprovar o conteúdo, garantindo a qualidade e segurança do material.
+- **Curadoria**: Todo livro enviado por um aluno entra em um estado de "Pendente" e só aparece para os outros após um bibliotecário revisar e aprovar o conteúdo. Se o livro não for adequado, o bibliotecário o rejeita e o sistema o exclui permanentemente para manter a biblioteca limpa.
 
 ## 📋 4. Gestão de Empréstimos e Multas (Balcão de Atendimento)
 Esta funcionalidade simula o balcão de atendimento de uma biblioteca física.
