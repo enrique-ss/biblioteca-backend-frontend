@@ -86,13 +86,11 @@ async function validarEscolha(mensagem: string, opcoesValidas: string[]): Promis
  */
 function exibirBanner() {
   console.log(`
-  ${cores.magenta} ██████╗██████╗ ██╗███████╗████████╗█████╗ ██╗      █████╗ ██████╗ ██╗ ██████╗ ${cores.reset}
-  ${cores.magenta}██╔════╝██╔══██╗██║██╔════╝╚══██╔══╝██╔══██╗██║     ██╔══██╗██╔══██╗██║██╔═══██╗${cores.reset}
-  ${cores.ciano}██║     ██████╔╝██║███████╗   ██║   ███████║██║     ███████║██████╔╝██║██║   ██║${cores.reset}
-  ${cores.ciano}██║     ██╔══██╗██║╚════██║   ██║   ██╔══██║██║     ██╔══██║██╔══██╗██║██║   ██║${cores.reset}
-  ${cores.azul}╚██████╗██║  ██║██║███████║   ██║   ██║  ██║███████╗██║  ██║██║  ██║██║╚██████╔╝${cores.reset}
-  ${cores.azul} ╚═════╝╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ${cores.reset}`);
-  console.log(colorir(' 📚 Sistema de Biblioteca Biblio Verso - Backend Shell', cores.cinza));
+  ${cores.magenta} ██████╗ ██╗██████╗ ██╗     ██╗ ██████╗     ██╗   ██╗███████╗██████╗ ███████╗ ██████╗ ${cores.reset}
+  ${cores.magenta} ██╔══██╗██║██╔══██╗██║     ██║██╔═══██╗    ██║   ██║██╔════╝██╔══██╗██╔════╝██╔═══██╗${cores.reset}
+  ${cores.ciano} ██████╔╝██║██████╔╝██║     ██║██║   ██║    ██║   ██║█████╗  ██████╔╝███████╗██║   ██║${cores.reset}
+  ${cores.ciano} ██╔══██╗██║██╔══██╗██║     ██║██║   ██║    ╚██╗ ██╔╝██╔══╝  ██╔══██╗╚════██║██║   ██║${cores.reset}
+  ${cores.azul} ██████╔╝██║██████╔╝███████╗██║╚██████╔╝     ╚████╔╝ ███████╗██║  ██║███████║╚██████╔╝${cores.reset}`);
 }
 
 async function exibirMiniDashboard() {

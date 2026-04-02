@@ -23,6 +23,8 @@ let INFANTIL_BACKEND_DATA = null;
  * Busca os dados do espaço literário no servidor
  */
 async function fetchInfantilData() {
+    if (!token) return false;
+    
     try {
         const response = await api('/infantil/data');
         INFANTIL_BACKEND_DATA = response.infantil;
@@ -98,11 +100,6 @@ async function initializeInfantilSpace() {
     document.querySelectorAll('.infantil-screen').forEach(screen => {
         screen.classList.add('hidden');
     });
-
-    // Pré-carregamento dos dados se necessário
-    if (!INFANTIL_BACKEND_DATA) {
-        fetchInfantilData();
-    }
 }
 
 function loadCategories() {
@@ -415,7 +412,6 @@ function showInfantilScreen(screen) {
 // Inicialização e Persistência
 document.addEventListener('DOMContentLoaded', () => {
     initializeInfantilSpace();
-    fetchInfantilData(); 
     
     // Regeneração de Vidas (1 a cada 6 horas)
     setInterval(() => {
