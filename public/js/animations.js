@@ -5,8 +5,8 @@ function criarTexturaEstrela() {
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
     
-    // Aplicar blur moderado na estrela
-    ctx.filter = 'blur(4px)';
+    // Aplicar blur leve para manter nitidez
+    ctx.filter = 'blur(2px)';
     
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
@@ -46,10 +46,11 @@ function inicializarFundo3D() {
     const temaEhClaro = document.documentElement.getAttribute('data-theme') === 'light';
 
     // Configurações das camadas de partículas (Quantidade reduzida para elegância)
+    // Configurações unificadas para consistência entre temas
     const camadas = [
-        { total: 600, tamClaro: 0.14, tamEscuro: 0.12, opEscuro: 0.8 }, 
-        { total: 500, tamClaro: 0.22, tamEscuro: 0.18, opEscuro: 0.85 }, 
-        { total: 400, tamClaro: 0.35, tamEscuro: 0.28, opEscuro: 0.9 }  
+        { total: 200, size: 0.15, opacity: 0.7 }, 
+        { total: 150, size: 0.25, opacity: 0.8 }, 
+        { total: 100, size: 0.40, opacity: 0.9 }  
     ];
 
     const materiais = [];
@@ -68,13 +69,13 @@ function inicializarFundo3D() {
         geometria.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
         const material = new THREE.PointsMaterial({
-            size: temaEhClaro ? camada.tamClaro : camada.tamEscuro,
-            color: temaEhClaro ? 0x2563EB : 0xD4AF37,
+            size: camada.size,
+            color: temaEhClaro ? 0x2D6A4F : 0xD4AF37,
             transparent: true,
-            opacity: temaEhClaro ? 0.6 : camada.opEscuro * 0.2, 
+            opacity: camada.opacity, 
             map: texturaEstrela,
             depthWrite: false,
-            blending: THREE.AdditiveBlending,
+            blending: temaEhClaro ? THREE.NormalBlending : THREE.AdditiveBlending,
             sizeAttenuation: true 
         });
         
@@ -91,13 +92,11 @@ function inicializarFundo3D() {
             if (mutation.attributeName === 'data-theme') {
                 const ehClaro = document.documentElement.getAttribute('data-theme') === 'light';
                 materiais.forEach(m => {
-                    const novaCor = ehClaro ? 0x2563EB : 0xD4AF37;
-                    const novaOpacidade = ehClaro ? 0.6 : (m.camada.opEscuro * 0.2);
-                    const novoTamanho = ehClaro ? m.camada.tamClaro : m.camada.tamEscuro;
+                    const novaCor = ehClaro ? 0x2D6A4F : 0xD4AF37;
+                    const novoBlending = ehClaro ? THREE.NormalBlending : THREE.AdditiveBlending;
                     
                     m.mat.color.setHex(novaCor);
-                    m.mat.opacity = novaOpacidade;
-                    m.mat.size = novoTamanho;
+                    m.mat.blending = novoBlending;
                     m.mat.needsUpdate = true;
                 });
             }

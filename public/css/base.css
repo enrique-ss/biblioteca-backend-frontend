@@ -37,23 +37,23 @@
     --lh: 1.6;
 }
 
-/* ── TOKENS LIGHT ── */
+/* ── TOKENS LIGHT (Premium Forest) ── */
 [data-theme="light"] {
-    --bg: #F8FAFC;
-    --surface: rgba(255, 255, 255, 0.5);
-    --surface-solid: #ffffff;
-    --text: #0F172A;
-    --text-dim: #64748B;
-    --accent: #2563EB;
-    --accent-bg: rgba(37, 99, 235, 0.08);
-    --danger: #EF4444;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --border: rgba(0, 0, 0, 0.06);
-    --border-m: rgba(0, 0, 0, 0.12);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.08);
-    --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+    --bg: #F0F9F4; /* Light pastel green */
+    --surface: rgba(255, 255, 255, 0.65);
+    --surface-solid: #F9FCFA; /* Very light green tinted white */
+    --text: #1A3026; /* Dark forest green */
+    --text-dim: #507261; /* Muted sage */
+    --accent: #2D6A4F; /* Deep emerald */
+    --accent-bg: rgba(45, 106, 79, 0.1);
+    --danger: #D62828;
+    --success: #1B4332;
+    --warning: #F4A261;
+    --border: rgba(45, 106, 79, 0.1);
+    --border-m: rgba(45, 106, 79, 0.2);
+    --shadow: 0 8px 32px rgba(28, 52, 40, 0.12);
+    --shadow-sm: 0 4px 16px rgba(28, 52, 40, 0.08);
+    --glass-border: 1px solid rgba(45, 106, 79, 0.08);
 }
 
 /* ── RESET ── */
@@ -81,7 +81,8 @@ body {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
     z-index: 0; pointer-events: none;
-    opacity: 0.8;
+    opacity: 0.5;
+    filter: blur(1.5px);
 }
 
 .app-wrapper {
@@ -208,9 +209,9 @@ body {
 
 .sidebar-bottom { padding-bottom: 24px; padding-top: 16px; flex-shrink: 0; }
 
-/* Sidebar opacity adjustment for light mode */
+/* Sidebar background for light mode - subtle mint tint */
 [data-theme="light"] .sidebar {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: rgba(240, 249, 244, 0.95) !important;
     backdrop-filter: blur(32px) saturate(180%) !important; 
     -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
 }
