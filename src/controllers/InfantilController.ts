@@ -277,6 +277,11 @@ export class InfantilController {
       const isCorrect = selectedIndex === foundQuestion.a;
       
       const user = await db('usuarios').where({ id: userId }).first();
+      
+      if (!user) {
+        return res.status(401).json({ error: 'Sua conta não foi encontrada. Por favor, faça login novamente.' });
+      }
+
       let currentHearts = user.infantil_hearts;
 
       if (!isCorrect) {
@@ -291,7 +296,8 @@ export class InfantilController {
       });
 
     } catch (error) {
-      res.status(500).json({ error: 'Erro ao validar resposta.' });
+      console.error('❌ Erro no backend (validateAnswer):', error);
+      res.status(500).json({ error: 'Erro interno ao validar resposta.' });
     }
   };
 
@@ -309,6 +315,11 @@ export class InfantilController {
       const passed = percentage >= 50 && !gameOverByHearts;
       
       const user = await db('usuarios').where({ id: userId }).first();
+      
+      if (!user) {
+        return res.status(401).json({ error: 'Sua conta não foi encontrada. Por favor, faça login novamente.' });
+      }
+
       const completedRecord = await db('usuarios_leicoes_infantis')
         .where({ usuario_id: userId, leicao_id: lessonId })
         .first();
@@ -361,7 +372,8 @@ export class InfantilController {
       });
 
     } catch (error) {
-      res.status(500).json({ error: 'Erro ao processar resultado.' });
+      console.error('❌ Erro no backend (finishQuiz):', error);
+      res.status(500).json({ error: 'Erro interno ao processar recompensas.' });
     }
   };
 
@@ -376,14 +388,15 @@ export class InfantilController {
       const { xp, level, hearts } = req.body;
 
       await db('usuarios').where({ id: userId }).update({
-        infantil_xp: xp,
-        infantil_level: level,
-        infantil_hearts: hearts
+        infantil_xp: xp || 0,
+        infantil_level: level || 1,
+        infantil_hearts: typeof hearts !== 'undefined' ? hearts : 5
       });
 
       res.json({ message: '✅ Dados sincronizados.' });
     } catch (error) {
-      res.status(500).json({ error: 'Erro ao sincronizar.' });
+      console.error('❌ Erro no backend (saveProgress):', error);
+      res.status(500).json({ error: 'Erro ao sincronizar progresso.' });
     }
   };
 }

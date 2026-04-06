@@ -43,7 +43,7 @@ async function fetchInfantilData() {
     } catch (error) {
         console.error('❌ Erro ao buscar dados do Espaço Literário:', error);
         if (typeof exibirAlerta === 'function') {
-            exibirAlerta('Erro ao carregar conteúdo pedagógico.', 'danger');
+            exibirAlerta(error.message || 'Erro ao carregar conteúdo pedagógico.', 'danger');
         }
         return false;
     }
@@ -283,10 +283,13 @@ async function selectQuizOption(selectedIndex, cardElement) {
         allCards.forEach(card => card.style.pointerEvents = 'none');
 
         // Perguntar ao servidor se está correto
-        const result = await api('/infantil/validate-answer', 'POST', {
-            lessonId: lesson.id,
-            questionIndex: infantilState.quizStep,
-            selectedIndex: selectedIndex
+        const result = await api('/infantil/validate-answer', {
+            method: 'POST',
+            body: JSON.stringify({
+                lessonId: lesson.id,
+                questionIndex: infantilState.quizStep,
+                selectedIndex: selectedIndex
+            })
         });
 
         const isCorrect = result.isCorrect;
@@ -311,8 +314,8 @@ async function selectQuizOption(selectedIndex, cardElement) {
         }, 1800);
 
     } catch (error) {
-        console.error('Erro ao validar resposta:', error);
-        exibirAlerta('Erro de conexão com o servidor.', 'danger');
+        console.error('❌ Erro ao validar resposta:', error);
+        exibirAlerta(error.message || 'Erro ao validar resposta no servidor.', 'danger');
     }
 }
 
@@ -323,11 +326,14 @@ async function showQuizResult(gameOverByHearts = false) {
     const lesson = infantilState.currentLesson;
 
     try {
-        const response = await api('/infantil/finish-quiz', 'POST', {
-            lessonId: lesson.id,
-            correctCount: infantilState.quizCorrect,
-            totalQuestions: lesson.quiz.length,
-            gameOverByHearts: gameOverByHearts
+        const response = await api('/infantil/finish-quiz', {
+            method: 'POST',
+            body: JSON.stringify({
+                lessonId: lesson.id,
+                correctCount: infantilState.quizCorrect,
+                totalQuestions: lesson.quiz.length,
+                gameOverByHearts: gameOverByHearts
+            })
         });
 
         const { result, userProfile } = response;
@@ -352,8 +358,8 @@ async function showQuizResult(gameOverByHearts = false) {
         showInfantilScreen('result');
 
     } catch (error) {
-        console.error('Erro ao finalizar quiz:', error);
-        exibirAlerta('Erro ao processar recompensas.', 'danger');
+        console.error('❌ Erro ao finalizar quiz:', error);
+        exibirAlerta(error.message || 'Erro ao processar recompensas.', 'danger');
     }
 }
 
@@ -362,11 +368,14 @@ async function showQuizResult(gameOverByHearts = false) {
  */
 async function syncProgress(completedLessonId = null) {
     try {
-        await api('/infantil/save-progress', 'POST', {
-            xp: infantilState.userXP,
-            level: infantilState.userLevel,
-            hearts: infantilState.userHearts,
-            completedLessonId: completedLessonId
+        await api('/infantil/save-progress', {
+            method: 'POST',
+            body: JSON.stringify({
+                xp: infantilState.userXP,
+                level: infantilState.userLevel,
+                hearts: infantilState.userHearts,
+                completedLessonId: completedLessonId
+            })
         });
         console.log('☁️ Progresso sincronizado com o servidor.');
     } catch (error) {
@@ -421,11 +430,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // A regeneração de vidas idealmente também deveria ser no backend,
             // mas por simplificação mantemos no front com sync posterior se necessário.
             // Para ser 100% fiel, o backend deveria calcular vidas baseado no tempo.
-            api('/infantil/save-progress', 'POST', {
+        api('/infantil/save-progress', {
+            method: 'POST',
+            body: JSON.stringify({
                 hearts: infantilState.userHearts,
                 xp: infantilState.userXP,
                 level: infantilState.userLevel
-            }).catch(() => {});
+            })
+        }).catch(() => {});
         }
     }, 1000 * 60 * 60 * 6);
 });
