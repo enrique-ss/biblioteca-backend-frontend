@@ -55,3 +55,14 @@ Sem planilhas Excel. Os relatórios são visuais e lindos. O sistema diz qual g�
 
 ## 👤 11. Perfil Dinâmico do Leitor
 Na tela de perfil, o aluno acompanha sua estante pessoal e seu XP. Além disso, o sistema conta com customização total: ao clique de um botão, ele troca as cores inteiras do site, do fundo de estrelas brilhantes para um modo "Dark", focado em descanso visual noturno.
+
+## 🛠️ Tecnologias de Impacto
+
+O Biblio Verso utiliza o que há de mais moderno no desenvolvimento de software para garantir que a biblioteca seja rápida, segura e escalável:
+
+- **Arquitetura Moderna**: Construído com **Node.js** e **API RESTful**, permitindo que o sistema cresça sem perder performance.
+- **Segurança Bancária**: As senhas são protegidas com criptografia **Bcrypt** e o acesso é controlado via **Tokens (JWT)**, impedindo acessos não autorizados.
+- **Interface Inteligente**: Uso de **Single Page Application (SPA)** para navegação instantânea e **Three.js** para visuais imersivos e dinâmicos.
+- **Banco de Dados Robusto**: Gerenciamento profissional com **MySQL** e **Knex.js**, garantindo que nenhum dado se perca (Propriedades **ACID**).
+- **Gamificação Real**: Lógica de **Cálculo de XP** e **Níveis** processada diretamente no servidor, garantindo uma jornada justa e motivadora para os alunos.
+- **Design de Ponta**: Layout responsivo com **CSS3 Avançado**, **Glassmorphism** e **Animações GSAP** para uma experiência visual premium.

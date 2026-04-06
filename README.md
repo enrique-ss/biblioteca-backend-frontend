@@ -25,11 +25,16 @@ Configure o `.env` com base no `.env.example`, instale as dependências com `npm
 - **Administrador**: Use a opção secreta "admin" na criação de conta via CLI para privilégios de Bibliotecário.
 - **Segurança**: Autenticação via JWT com senhas criptografadas em Bcrypt.
 
-## 🛠 Stack
 
-- **Backend**: TypeScript, Node.js, Express, Knex.js e MySQL.
-- **Frontend Web**: JavaScript Vanilla, CSS Moderno (Glassmorphism), GSAP e Three.js para fundos dinâmicos.
-- **Frontend CLI**: TypeScript e Inquirer para navegação interativa.
+## 🛠️ Arquitetura e Engenharia
+
+O projeto foi construído utilizando práticas modernas de desenvolvimento:
+
+- **Frontend Web**: SPA (Single Page Application), Vanilla JS, CSS3 (Mobile First), GSAP, Three.js, MutationObserver.
+- **Backend API**: Node.js, Express, Knex.js, MySQL, RESTful (Headless), Stateless, Middlewares.
+- **Segurança**: JWT (Authentication), Bcrypt (Hashing), RBAC (Access Control).
+- **Consistência**: ACID, Transactions, Relational Modeling (1:N), Soft/Hard Deletes.
+- **Lógica**: Async/Await, Promise.all(), Date Math, Regex, Gamificação via Server-side algorithms.
 
 ---
 

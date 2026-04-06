@@ -72,4 +72,48 @@ Toda regra descrita em gráficos sai de um processador `COUNT()...GROUP BY` limp
 ---
 
 ## 🪐 11. Customização Fina do Perfil e Fundo Imersivo
-Interface premium criada controlando polígonos estáticos WebGL em uma Scene Câmera no arquivo. Um observer JS complexo (`MutationObserver`) roda oculto detectando flags strings globais no DOM Root. Se um usuário trocar tema `data-theme` "Dark" no Perfil, em vez do navegador dar reload para ler novo estilo CSS, alteramos o buffer na placa gráfica re-pintando todas as esferas `Three.js` (Hex decimal) com fade natural em runtime na mesma fração de segundo. Performance e requinte absolutos.
+Interface premium criada controlando polígonos estáticos WebGL em uma Scene Câmera no arquivo. Um observer JS complexo (`MutationObserver`) roda oculto detectando flags strings globais no DOM Root. Se um usuário trocar tema `data-theme` "Dark" no Perfil, em vez do navegador dar reload para ler novo estilo CSS, alteramos o buffer na placa gráfica re-pintando todas as esferas `Three.js` (Hex decimal) com fade natural em runtime na mesma fração de segundo. 
+## 🛠️ Mapa de Engenharia (Keywords Essenciais)
+
+Utilize estas terminologias técnicas para demonstrar domínio arquitetural durante a banca:
+
+### 🏗️ Estrutura e Semântica
+- **HTML5 Semântico**: Tags estruturais para SEO e Acessibilidade (A11y).
+- **Manipulação de DOM**: Gerenciamento de elementos via JavaScript nativo.
+
+### 🎨 Estilização e Layout
+- **CSS3 Avançado**: Uso de Flexbox, Grid Layout e Responsividade (Mobile First).
+- **Variáveis CSS (Root)**: Tematização dinâmica e Design Tokens.
+- **UI/UX Design**: Foco em Feedback Visual, Animações e Keyframes (GSAP).
+
+### 🧠 Lógica e Dinâmica
+- **JavaScript (ES6+)**: Event Listeners, manipulação de Promessas e Estados (State Management).
+- **SPA (Single Page Application)**: Navegação fluida sem refresh de página.
+- **LocalStorage**: Persistência de dados locais (como a escolha do Tema).
+
+### 🌐 Arquitetura & Servidor
+- **Node.js & Express**: Servidor escalável com arquitetura MVC (Model-View-Controller).
+- **API RESTful (Headless)**: Comunicação via JSON Payloads e Middlewares de controle.
+- **Protocolo Stateless**: Segurança via Headers de Requisição (Autenticação JWT).
+- **Status Codes HTTP**: Gestão de erros e sucessos (200, 400, 403, 500).
+
+### 💾 Banco de Dados (SQL)
+- **Modelagem Relacional (1:N)**: Query Builder (Knex.js) com Foreign Keys e Constraints.
+- **Propriedades ACID**: Transactions (Rollback/Commit) para consistência absoluta.
+- **Operações Avançadas**: Agrupamentos (GROUP BY / COUNT), Hard Delete vs. Soft Delete.
+
+### 🔐 Segurança & Autenticação
+- **JWT (JSON Web Token)**: Tokens assinados para controle de sessão.
+- **Criptografia Bcrypt**: Hashing & Salt para proteção de senhas.
+- **RBAC**: Controle de Acesso Baseado em Funções (Admin vs. Usuário).
+
+### ⚡ Lógica & Performance
+- **Programação Assíncrona**: Async/Await e Promise.all() (Processamento Paralelo).
+- **Business Logic**: Regras de negócio isoladas no Server-side Validation.
+- **Utilidades**: Regex (Expressões Regulares) e Date Math (Manipulação UTC/Datas).
+
+### 🚀 O "Pulo do Gato" (Avançado)
+- **MutationObserver**: Detecção de mudanças no DOM em tempo real.
+- **WebGL / Three.js Buffer**: Renderização de alta performance na placa gráfica.
+- **State Machine**: Controle de estados complexos (ex: aprovação de PDFs).
+- **Cálculo Algorítmico**: Lógica de progressão de nível e XP via backend.
