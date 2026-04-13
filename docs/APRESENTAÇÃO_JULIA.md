@@ -1,68 +1,115 @@
-# 💎 Biblio Verso (Apresentação Julia)
+# **Biblio Verso** (Apresentação Julia)
 
-Este documento foi desenhado para **apresentar o projeto**. O foco é mostrar para uma instituição, escola ou diretor por que o Biblio Verso é a solução definitiva de mercado. Destaca a modernidade, as funcionalidades automáticas e a facilidade de uso do sistema.
+**Contexto**: Trabalho Final de Curso
+**Dinâmica**: Apresentação inicial leve sobre o que o projeto faz
 
 ---
 
-## 🚀 1. O Conceito: Um Ecossistema Multicanal
-O Biblio Verso não é apenas um portal web. Ele foi desenhado como um sistema corporativo acessível através de **duas portas**:
-- **Interface Web Visual**: Uma experiência premium, imersiva e colorida para alunos e gestão no dia a dia.
-- **Interface de Terminal (CLI)**: Uma ferramenta de linha de comando para administradores que preferem agilidade máxima.
-O sistema é um só: o que acontece no terminal, aparece instantaneamente no site e vice versa.
+## **SLIDES** (Conteúdo Visual)
 
-## 🔐 2. Recepção e Segurança (Onboarding)
-A experiência começa no momento em que a pessoa abre o sistema.
-- **Cadastro Simples**: Os novos leitores podem criar a conta rapidamente preenchendo apenas nome, e-mail e senha. Não existem processos lentos.
-- **Segurança de Alto Nível**: O login é inteligente. O sistema reconhece no mesmo segundo se a pessoa é um Aluno ou o Bibliotecário, ativando imediatamente os menus e poderes respectivos.
+### **Slide 1: O Que é o Biblio Verso**
+- **Sistema Completo**: Gestão moderna para bibliotecas
+- **Tudo em Um**: Do livro físico ao digital, do empréstimo à gamificação
+- **Fácil de Usar**: Interface intuitiva como aplicativo de celular
+- **Para Todos**: Leitores e bibliotecários
 
-## 🏗️ 3. Navegação "Zero Reload" (O Feeling de App)
-Diferente dos sistemas acadêmicos tradicionais que são lentos, o Biblio Verso utiliza a tecnologia de "Aplicativo de Página Única" (SPA). 
-- **O Benefício**: Você clica e a página não carrega nem pisca. A transição de telas é feita com animações, prendendo a atenção do usuário e entregando uma percepção de extrema velocidade e qualidade.
+### **Slide 2: Experiência Diferenciada**
+- **Navegação Fluida**: Sem travamentos, como usar um app
+- **Visual Moderno**: Design bonito e agradável
+- **Acesso Rápido**: Cadastro simples em 3 passos
+- **Reconhecimento Inteligente**: Sistema sabe quem é você automaticamente
 
-## 📚 4. Gestão Automatizada de Acervo Físico
-O módulo físico substitui todo o trabalho manual e de prancheta das bibliotecas:
-- **Busca Cirúrgica**: O leitor pesquisa o título e o sistema devolve o Exibidor de Prateleira (Ex: Corredor da 'Literatura', Prateleira '4'), a disponibilidade e o status de qualidade de cada exemplar do livro.
-- **Controle de Inventário**: Um livro pode ter 50 cópias. O Biblio Verso rastreia todas individualmente. Sabemos quais estão em bom estado, quais estão machucadas e quais sumiram, quais estão com quem.
-- **Segurança de Patrimônio**: Se um bibliotecário tentar excluir o registro de um livro no sistema enquanto um aluno ainda está com ele em casa, o Biblio Verso exibe um bloqueio vermelho. A regra é clara: *Nenhum livro sai do banco de dados antes de voltar pra estante.*
+### **Slide 3: Demonstração ao Vivo: Acervo Físico**
+- **[AO VIVO]** Acesso ao menu "Acervo Físico"
+- **[DEMO]** Busca instantânea de livros (ex: "Dom Casmurro")
+- **[DEMO]** Localização exata: "Corredor Literatura, Prateleira 4, Posição 3"
+- **[DEMO]** Status do exemplar: "Disponível - Bom estado"
+- **[DEMO]** Controle individual de cada exemplar
 
-## 📱 5. Acervo Digital e Curadoria Colaborativa
-- **Leitura Sem Download**: O aluno pode baixar PDFs gratuitamente diretamente do site.
-- **Acervo Comunitário (Curadoria)**: Tanto os bibliotecários quanto os próprios estudantes podem fazer upload de novos livros. Porém, focando em manter a biblioteca segura, o material enviado fica "Pendente" até que um Bibliotecário aprove. Se for um PDF com vírus ou material incorreto, o bibliotecário clica em "Rejeitar" e o documento é removido permanentemente do banco de dados, mantendo o banco de dados limpo.
+### **Slide 4: Demonstração ao Vivo: Acervo Digital**
+- **[AO VIVO]** Colegas adicionando livros ao acervo digital
+- **[DEMO]** Upload de PDFs e status "Pendente" aparecendo
+- **[DEMO]** Acesso como bibliotecário para aprovar/rejeitar
+- **[DEMO]** Download de PDFs aprovados
+- **[DEMO]** Busca instantânea nos livros recém-adicionados
 
-## 📋 6. Balcão de Atendimento (Empréstimos e Multas)
-Criamos o **corpo corporativo** do sistema aqui, blindando a biblioteca contra perdas.
-- **Alocação Exata**: O bibliotecário escolhe no sistema exatamente o exemplar que está entregando para o aluno.
-- **O Porteiro Inteligente**: Se o aluno vier alugar um livro, mas ele tiver multas pendentes, ou já tiver pego o limite máximo de livros, o sistema barra o empréstimo na hora.
-- **Automação Financeira**: Na hora da devolução, o sistema vê os dias de atraso e gera uma multa real matemática. Se o exemplar foi danificado ou perdido, gera-se uma multa de regularização rígida que bloqueia a conta do aluno de pegar novos livros até ser paga.
+### **Slide 5: Demonstração ao Vivo: Empréstimos**
+- **[AO VIVO]** Login como bibliotecário e acesso ao "Balcão"
+- **[DEMO]** Seleção de exemplar específico para empréstimo
+- **[DEMO]** Tentativa de empréstimo com multa pendente (bloqueio)
+- **[DEMO]** Processo aprovado: empréstimo realizado com sucesso
+- **[DEMO]** Devolução e cálculo automático de multa
 
-## 🎓 7. Espaço Literário: A Jornada RPG
-Como fazer alunos lerem mais? Transformando livros em videogames.
-- **O Jogo**: O Biblio Verso tem trilhas literárias separadas por idades. O aluno lê e, em seguida, faz um Quiz.
-- **Vidas e Conquistas**: Se errar, perde vidas. Se acertar, ganha XP (Pontos de Experiência), passa de nível no sistema e sua patente pública sobe de "Iniciante" para "Mestre da Leitura". É a super gamificação da educação.
+### **Slide 6: Demonstração ao Vivo: Estatísticas**
+- **[AO VIVO]** Acesso ao painel de "Estatísticas"
+- **[DEMO]** Gráficos de gêneros mais populares
+- **[DEMO]** Ranking dos melhores leitores
+- **[DEMO]** Relatórios visuais de empréstimos
+- **[DEMO]** Insights para decisões da biblioteca
 
-## 👥 8. Controle de Moderação
-O administrador tem um controle sobre a infraestrutura humana da sua biblioteca.
-- Pode **promover** ajudantes ao cargo de Bibliotecário num clique e também pode remover o cargo de Bibliotecário.
-- Tem o **Martelo do Banimento**: Bloqueio manual completo de pessoas que infringem repetidamente as normas do local. O aluno banido entra no sistema, mas vira um espectador fantasma, incapaz de adicionar livros ou pegar livros emprestados.
+### **Slide 7: Demonstração ao Vivo: Usuários e Alertas**
+- **[AO VIVO]** Acesso ao menu "Usuários"
+- **[DEMO]** Gestão de permissões e promoção de cargos
+- **[AO VIVO]** Navegação para "Alertas"
+- **[DEMO]** Alertas automáticos: "5 livros atrasados hoje"
+- **[DEMO]** Ações priorizadas e organizadas
 
-## 🔔 9. Centro de Comando Visual (Alertas)
-O painel de Alertas vasculha os dados sozinho e diz para o bibliotecário, em uma tela central:
-- *5 livros estouraram o prazo de devolução hoje.*
-- *3 novos envios de PDF digital aguardam sua vistoria.*
+### **Slide 8: Demonstração ao Vivo: Espaço Literário e Temas**
+- **[AO VIVO]** Login como leitor e acesso ao "Espaço Literário"
+- **[DEMO]** Trilhas disponíveis: "Clássicos Brasileiros"
+- **[DEMO]** Leitura de trecho e quiz correspondente
+- **[DEMO]** Ganho de XP e progressão de nível ao vivo
+- **[DEMO]** Acesso a "Temas" e personalização visual
 
-## 📊 10. Dashboard de Business Intelligence
-Sem planilhas Excel. Os relatórios são visuais e lindos. O sistema diz qual gênero literário faz mais sucesso no mês e o ranking dos melhores leitores, provendo insights reais do que a escola deve investir.
+### **Slide 9: Demonstração ao Vivo: Meu Perfil**
+- **[AO VIVO]** Acesso ao "Meu Perfil"
+- **[DEMO]** Estante pessoal com histórico de leitura
+- **[DEMO]** XP acumulado e patente atual
+- **[DEMO]** Customização de cores e temas
+- **[DEMO]** Informações pessoais e preferências
 
-## 👤 11. Perfil Dinâmico do Leitor
-Na tela de perfil, o aluno acompanha sua estante pessoal e seu XP. Além disso, o sistema conta com customização total: ao clique de um botão, ele troca as cores inteiras do site, do fundo de estrelas brilhantes para um modo "Dark", focado em descanso visual noturno.
+### **Slide 10: Projeto Conclusivo**
+- **Solução Completa**: Todos os problemas resolvidos
+- **Moderno e Seguro**: Tecnologia de ponta protegendo dados
+- **Escalável**: Cresce com sua instituição
+- **Resultado Final**: Alunos lendo mais, biblioteca organizada
 
-## 🛠️ Tecnologias de Impacto
+---
 
-O Biblio Verso utiliza o que há de mais moderno no desenvolvimento de software para garantir que a biblioteca seja rápida, segura e escalável:
+## **ROTEIRO DE FALA** (Explicações Detalhadas)
 
-- **Arquitetura Moderna**: Construído com **Node.js** e **API RESTful**, permitindo que o sistema cresça sem perder performance.
-- **Segurança Bancária**: As senhas são protegidas com criptografia **Bcrypt** e o acesso é controlado via **Tokens (JWT)**, impedindo acessos não autorizados.
-- **Interface Inteligente**: Uso de **Single Page Application (SPA)** para navegação instantânea e **Three.js** para visuais imersivos e dinâmicos.
-- **Banco de Dados Robusto**: Gerenciamento profissional com **MySQL** e **Knex.js**, garantindo que nenhum dado se perca (Propriedades **ACID**).
-- **Gamificação Real**: Lógica de **Cálculo de XP** e **Níveis** processada diretamente no servidor, garantindo uma jornada justa e motivadora para os alunos.
-- **Design de Ponta**: Layout responsivo com **CSS3 Avançado**, **Glassmorphism** e **Animações GSAP** para uma experiência visual premium.
+### **Apresentação Inicial**
+"Bom dia a todos. Sou Julia e hoje apresento o Biblio Verso, nosso trabalho final de curso que vai transformar completamente a forma como as bibliotecas funcionam."
+
+### **Slide 1: O Que é o Biblio Verso**
+"Imagine um sistema que faz tudo que sua biblioteca precisa: gerencia livros físicos, oferece acervo digital, controla empréstimos e ainda transforma leitura em um jogo envolvente. Tudo isso com uma interface fácil de usar, como se fosse um aplicativo de celular."
+
+### **Slide 2: Experiência Diferenciada**
+"Sabe aquela frustração de sistemas lentos que travam? Esqueça. O Biblio Verso é super rápido e fluido. O cadastro é simples, só 3 informações, e o sistema reconhece automaticamente se você é leitor ou bibliotecário. Uma experiência moderna que agrada a todos."
+
+### **Slide 3: Demonstração ao Vivo: Acervo Físico**
+"Vamos começar pelo Acervo Físico? [ABRINDO MENU] Aqui estou no menu 'Acervo Físico'. [BUSCANDO] Digito 'Dom Casmurro'... instantaneamente o sistema mostra: 'Corredor Literatura, Prateleira 4, Posição 3, Status: Disponível - Bom estado'. [DEMONSTRANDO] Cada exemplar é controlado individualmente! Vejam só, posso ver o histórico completo de cada um."
+
+### **Slide 4: Demonstração ao Vivo: Acervo Digital**
+"Agora o Acervo Digital! [CONVIDANDO] Maria, adiciona um PDF para nós testarmos. [UPLOAD] Vejam só, ela fez upload... [APARECENDO] Olhem! O livro já apareceu aqui como 'Pendente'. [TROCANDO PERFIL] Vou acessar como bibliotecária... [APROVANDO] Pronto! Aprovado! [DOWNLOAD] E agora qualquer um pode baixar. Sistema organizou automaticamente por autor!"
+
+### **Slide 5: Demonstração ao Vivo: Empréstimos**
+"Hora dos empréstimos! [LOGIN] Login como bibliotecário... [BALCÃO] Acesso ao 'Balcão'. [SELECIONANDO] João, pega este exemplar específico... [BLOQUEIO] Agora vou tentar com Maria - olhem! Sistema barra: 'Multa pendente'. [APROVADO] Com Pedro funciona! Empréstimo realizado. Na devolução, cálculo automático de multa."
+
+### **Slide 6: Demonstração ao Vivo: Estatísticas**
+"Vamos às Estatísticas! [ACESSANDO] Painel de 'Estatísticas'... [GRÁFICOS] Vejam só! Gráficos mostrando gêneros mais populares, ranking dos leitores, relatórios de empréstimos. [INSIGHTS] Isso ajuda a tomar decisões: 'Romance é o favorito do mês', 'João é o melhor leitor'."
+
+### **Slide 7: Demonstração ao Vivo: Usuários e Alertas**
+"Gestão de usuários! [USUÁRIOS] Aqui posso gerenciar permissões... [PROMOVENDO] Promovo funcionário a bibliotecário em um clique. [ALERTAS] Agora os alertas: '5 livros atrasados hoje', '3 novos materiais para aprovar'. [ORGANIZADO] Tudo priorizado, pronto para ação!"
+
+### **Slide 8: Demonstração ao Vivo: Espaço Literário e Temas**
+"A parte divertida! [LOGIN LEITOR] Login como leitor... [ESPAÇO LITERÁRIO] Acesso ao 'Espaço Literário'! [TRILHAS] Vejam as trilhas disponíveis... [QUIZ] Faço o quiz... [XP] +50 XP! [NÍVEL] Subi de nível! [TEMAS] E agora vou em 'Temas'... [PERSONALIZANDO] Posso mudar todo o visual do sistema!"
+
+### **Slide 9: Demonstração ao Vivo: Meu Perfil**
+"Finalmente, Meu Perfil! [PERFIL] Aqui está minha estante pessoal com histórico... [XP] Vejo meu XP acumulado e patente 'Mestre da Leitura'. [CUSTOMIZAÇÃO] Posso customizar cores, temas... [INFORMAÇÕES] E gerenciar minhas informações pessoais. Cada usuário com sua identidade única!"
+
+### **Slide 10: Projeto Conclusivo**
+"O Biblio Verso é a solução completa que resolvemos no nosso trabalho final. Moderno, seguro, e que cresce com sua instituição. O resultado final? Alunos lendo muito mais, biblioteca perfeitamente organizada, e gestão simplificada para todos."
+
+### **Encerramento**
+"Este é o Biblio Verso: a transformação digital que sua biblioteca merece. Agora entrego para o Enrique, que vai mostrar os detalhes técnicos de como construímos tudo isso."
