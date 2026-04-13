@@ -17,6 +17,9 @@ const app = express();
 const PORTA = process.env.PORT || 3000;
 const SEGREDO_JWT = process.env.JWT_SECRET || 'biblioverso-chave-secreta-2024';
 
+// Configura trust proxy para funcionar corretamente no Render
+app.set('trust proxy', true);
+
 // Configuração de CORS e middlewares básicos para JSON e URL-encoded
 app.use(cors({ 
   origin: process.env.CORS_ORIGIN || '*', 

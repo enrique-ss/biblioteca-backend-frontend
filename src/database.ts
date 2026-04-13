@@ -4,18 +4,18 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
- * Instância principal do Knex para comunicação com o banco de dados MySQL.
+ * Instância principal do Knex para comunicação com o banco de dados PostgreSQL (Supabase).
  */
 const db = knex({
-  client: 'mysql2',
+  client: 'pg',
   connection: {
     host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
+    port: Number(process.env.DB_PORT) || 5432,
+    user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'biblioteca',
-    // Timeout para conexão inicial (10 segundos)
-    connectTimeout: 10000,
+    // Para Supabase, pode usar connection string direta
+    // connectionString: process.env.DATABASE_URL,
   },
   pool: {
     min: 2,

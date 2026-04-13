@@ -13,37 +13,38 @@ async function configurarBanco() {
 
   // Conexão inicial sem banco de dados selecionado para poder criar o schema
   const conexaoRaiz = knex({
-    client: 'mysql2',
+    client: 'pg',
     connection: {
       host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT) || 3306,
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || ''
+      port: Number(process.env.DB_PORT) || 5432,
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || '',
+      database: 'postgres' // Conecta ao banco padrão postgres para criar o banco
     }
   });
 
   try {
     const nomeBanco = process.env.DB_NAME || 'biblioteca';
-    
+
     // Em produção, não deleta o banco, apenas cria se não existir
     if (process.env.NODE_ENV === 'production') {
-      await conexaoRaiz.raw(`CREATE DATABASE IF NOT EXISTS \`${nomeBanco}\``);
+      await conexaoRaiz.raw(`CREATE DATABASE IF NOT EXISTS "${nomeBanco}"`);
       console.log(`✅ Banco de dados '${nomeBanco}' verificado/criado.`);
     } else {
       // Em desenvolvimento, deleta e recria
-      await conexaoRaiz.raw(`DROP DATABASE IF EXISTS \`${nomeBanco}\``);
-      await conexaoRaiz.raw(`CREATE DATABASE \`${nomeBanco}\``);
+      await conexaoRaiz.raw(`DROP DATABASE IF EXISTS "${nomeBanco}"`);
+      await conexaoRaiz.raw(`CREATE DATABASE "${nomeBanco}"`);
       console.log(`✅ Banco de dados '${nomeBanco}' criado (modo desenvolvimento).`);
     }
     await conexaoRaiz.destroy();
 
     // Nova conexão agora apontando para o banco recém-criado
     const db = knex({
-      client: 'mysql2',
+      client: 'pg',
       connection: {
         host: process.env.DB_HOST || 'localhost',
-        port: Number(process.env.DB_PORT) || 3306,
-        user: process.env.DB_USER || 'root',
+        port: Number(process.env.DB_PORT) || 5432,
+        user: process.env.DB_USER || 'postgres',
         password: process.env.DB_PASSWORD || '',
         database: nomeBanco
       }
