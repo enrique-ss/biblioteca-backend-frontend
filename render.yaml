@@ -4,7 +4,7 @@ services:
     name: biblio-verso-api
     runtime: node
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
