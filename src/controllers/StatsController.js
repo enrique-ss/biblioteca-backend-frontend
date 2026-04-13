@@ -1,23 +1,16 @@
-import { Response } from 'express';
-import { RequisicaoAutenticada } from '../middlewares/auth';
-import db from '../database';
+const db = require('../database');
 
-/**
- * Controlador de Estatísticas: Fornece dados consolidados para o Dashboard e Relatórios.
- */
-export class StatsController {
+class StatsController {
 
-    // Resumo simplificado para os cartões da tela inicial (Dashboard)
-    resumo = async (req: RequisicaoAutenticada, res: Response) => {
+    resumo = async (req, res) => {
         try {
-            const ehBibliotecario = req.usuario!.tipo === 'bibliotecario';
-            const usuarioId = req.usuario!.id;
+            const ehBibliotecario = req.usuario.tipo === 'bibliotecario';
+            const usuarioId = req.usuario.id;
             
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
             if (ehBibliotecario) {
-                // Visão Geral do Sistema (Apenas para Administradores)
                 const [dadosLivros, dadosEmprestimos, contagemUsuarios] = await Promise.all([
                     db('livros').select(
                         db.raw('COUNT(*) as total'),
@@ -41,7 +34,6 @@ export class StatsController {
                     ]
                 });
             } else {
-                // Visão Individual (Para Alunos)
                 const [dadosPessoais, totalHistorico] = await Promise.all([
                     db('alugueis').where({ usuario_id: usuarioId, status: 'ativo' }).select(
                         db.raw('COUNT(*) as ativos'),
@@ -65,13 +57,11 @@ export class StatsController {
         }
     };
 
-    // Dados detalhados para gráficos e análise profunda (Exclusivo Bibliotecário)
-    detalhado = async (req: RequisicaoAutenticada, res: Response) => {
+    detalhado = async (req, res) => {
         try {
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 
-            // Coleta múltiplas análises em paralelo para otimizar o tempo de resposta
             const [
                 generosMaisProcurados,
                 autoresPopulares,
@@ -86,7 +76,6 @@ export class StatsController {
                 evolucaoAtrasos,
             ] = await Promise.all([
 
-                // Top 8 gêneros com maior circulação
                 db('alugueis')
                     .join('livros', 'alugueis.livro_id', 'livros.id')
                     .select('livros.genero as label')
@@ -96,7 +85,6 @@ export class StatsController {
                     .orderBy('valor', 'desc')
                     .limit(8),
 
-                // Top 8 autores com mais retiradas
                 db('alugueis')
                     .join('livros', 'alugueis.livro_id', 'livros.id')
                     .select('livros.autor as label')
@@ -105,7 +93,6 @@ export class StatsController {
                     .orderBy('valor', 'desc')
                     .limit(8),
 
-                // Os 8 livros mais emprestados de todos os tempos
                 db('alugueis')
                     .join('livros', 'alugueis.livro_id', 'livros.id')
                     .select('livros.titulo as label')
@@ -114,7 +101,6 @@ export class StatsController {
                     .orderBy('valor', 'desc')
                     .limit(8),
 
-                // Alunos que mais utilizam a biblioteca
                 db('alugueis')
                     .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
                     .select('usuarios.nome as label')
@@ -123,7 +109,6 @@ export class StatsController {
                     .orderBy('valor', 'desc')
                     .limit(8),
 
-                // Evolução mensal de empréstimos (último ano)
                 db('alugueis')
                     .select(
                         db.raw("DATE_FORMAT(data_aluguel, '%Y-%m') as label"),
@@ -133,7 +118,6 @@ export class StatsController {
                     .groupByRaw("DATE_FORMAT(data_aluguel, '%Y-%m')")
                     .orderBy('label', 'asc'),
 
-                // Crescimento da base de usuários
                 db('usuarios')
                     .select(
                         db.raw("DATE_FORMAT(created_at, '%Y-%m') as label"),
@@ -143,7 +127,6 @@ export class StatsController {
                     .groupByRaw("DATE_FORMAT(created_at, '%Y-%m')")
                     .orderBy('label', 'asc'),
 
-                // Monitoramento de saúde de prazos
                 db('alugueis')
                     .select(
                         db.raw('COUNT(*) as total'),
@@ -152,14 +135,12 @@ export class StatsController {
                         db.raw(`SUM(CASE WHEN status = 'devolvido' AND data_devolucao <= data_prevista_devolucao THEN 1 ELSE 0 END) as entregues_no_prazo`)
                     ).first(),
 
-                // Status atual das obras no catálogo
                 db('livros')
                     .select('status as label')
                     .count('id as valor')
                     .whereNull('deleted_at')
                     .groupBy('status'),
 
-                // Métricas de tempo de posse do livro
                 db('alugueis')
                     .where({ status: 'devolvido' })
                     .select(
@@ -168,7 +149,6 @@ export class StatsController {
                         db.raw('MAX(DATEDIFF(data_devolucao, data_aluguel)) as max_dias')
                     ).first(),
 
-                // Distribuição cronológica das obras
                 db('livros')
                     .select(
                         db.raw('CONCAT(FLOOR(ano_lancamento/10)*10, "s") as label'),
@@ -178,7 +158,6 @@ export class StatsController {
                     .groupByRaw('CONCAT(FLOOR(ano_lancamento/10)*10, "s")')
                     .orderByRaw('MIN(ano_lancamento) asc'),
 
-                // Histórico mensal de atrasos
                 db('alugueis')
                     .select(
                         db.raw("DATE_FORMAT(data_prevista_devolucao, '%Y-%m') as label"),
@@ -220,3 +199,5 @@ export class StatsController {
         }
     };
 }
+
+module.exports = new StatsController();

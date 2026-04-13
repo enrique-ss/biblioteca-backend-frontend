@@ -1,17 +1,12 @@
-import knex from 'knex';
-import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
+const knex = require('knex');
+const dotenv = require('dotenv');
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
-/**
- * Script de inicialização (Setup) do Banco de Dados.
- * Este script cria as tabelas se não existirem (modo seguro para produção).
- */
 async function configurarBanco() {
   console.log('🔧 Iniciando configuração do banco de dados...\n');
 
-  // Conexão inicial sem banco de dados selecionado para poder criar o schema
   const conexaoRaiz = knex({
     client: 'pg',
     connection: process.env.DATABASE_URL || {
@@ -19,26 +14,23 @@ async function configurarBanco() {
       port: Number(process.env.DB_PORT) || 5432,
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || '',
-      database: 'postgres' // Conecta ao banco padrão postgres para criar o banco
+      database: 'postgres'
     }
   });
 
   try {
     const nomeBanco = process.env.DB_NAME || 'biblioteca';
 
-    // Em produção, não deleta o banco, apenas cria se não existir
     if (process.env.NODE_ENV === 'production') {
       await conexaoRaiz.raw(`CREATE DATABASE IF NOT EXISTS "${nomeBanco}"`);
       console.log(`✅ Banco de dados '${nomeBanco}' verificado/criado.`);
     } else {
-      // Em desenvolvimento, deleta e recria
       await conexaoRaiz.raw(`DROP DATABASE IF EXISTS "${nomeBanco}"`);
       await conexaoRaiz.raw(`CREATE DATABASE "${nomeBanco}"`);
       console.log(`✅ Banco de dados '${nomeBanco}' criado (modo desenvolvimento).`);
     }
     await conexaoRaiz.destroy();
 
-    // Nova conexão agora apontando para o banco recém-criado
     const db = knex({
       client: 'pg',
       connection: process.env.DATABASE_URL?.replace(/\/postgres$/, `/${nomeBanco}`) || {
@@ -50,7 +42,6 @@ async function configurarBanco() {
       }
     });
 
-    // --- Criação da Tabela: USUÁRIOS ---
     await db.schema.createTableIfNotExists('usuarios', (t) => {
       t.increments('id').primary();
       t.string('nome', 100).notNullable();
@@ -66,14 +57,12 @@ async function configurarBanco() {
       t.index(['tipo'], 'idx_usuarios_tipo');
       t.index(['deleted_at'], 'idx_usuarios_deleted_at');
 
-      // --- ESPAÇO INFANTIL: PROGRESSÃO ---
       t.integer('infantil_xp').notNullable().defaultTo(0);
       t.integer('infantil_level').notNullable().defaultTo(1);
       t.integer('infantil_hearts').notNullable().defaultTo(5);
     });
     console.log('✅ Tabela [usuarios] criada.');
 
-    // --- Criação da Tabela: USUÁRIOS_LEICOES_INFANTIS ---
     await db.schema.createTableIfNotExists('usuarios_leicoes_infantis', (t) => {
       t.integer('usuario_id').unsigned().notNullable();
       t.string('leicao_id', 50).notNullable();
@@ -83,7 +72,6 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [usuarios_leicoes_infantis] criada.');
 
-    // Criação do usuário Administrador padrão (apenas se não existir)
     const adminExistente = await db('usuarios').where('email', 'admin@admin').first();
     if (!adminExistente) {
       const hashSenhaAdmin = await bcrypt.hash('admin123', 10);
@@ -99,7 +87,6 @@ async function configurarBanco() {
       console.log('⭐ Usuário admin já existe, pulando criação.');
     }
 
-    // Criação do usuário comum padrão (apenas se não existir)
     const userExistente = await db('usuarios').where('email', 'user@user').first();
     if (!userExistente) {
       const hashSenhaUser = await bcrypt.hash('user123', 10);
@@ -115,7 +102,6 @@ async function configurarBanco() {
       console.log('👤 Usuário comum já existe, pulando criação.');
     }
 
-    // --- Criação da Tabela: LIVROS ---
     await db.schema.createTableIfNotExists('livros', (t) => {
       t.increments('id').primary();
       t.string('titulo', 200).notNullable();
@@ -139,15 +125,11 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [livros] criada.');
 
-    // --- Criação da Tabela: EXEMPLARES ---
-    // Representa a cópia física individual de um livro.
     await db.schema.createTableIfNotExists('exemplares', (t) => {
       t.increments('id').primary();
       t.integer('livro_id').unsigned().notNullable();
       t.string('codigo', 50).nullable();
-      // Disponibilidade: disponivel / emprestado / indisponivel (manutenção) / perdido
       t.enum('disponibilidade', ['disponivel', 'emprestado', 'indisponivel', 'perdido']).notNullable().defaultTo('disponivel');
-      // Condição física: bom / danificado / perdido
       t.enum('condicao', ['bom', 'danificado', 'perdido']).notNullable().defaultTo('bom');
       t.text('observacao').nullable();
       t.timestamp('deleted_at').nullable();
@@ -160,7 +142,6 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [exemplares] criada.');
 
-    // --- Criação da Tabela: ALUGUÉIS ---
     await db.schema.createTableIfNotExists('alugueis', (t) => {
       t.increments('id').primary();
       t.integer('livro_id').unsigned().notNullable();
@@ -185,7 +166,6 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [alugueis] criada.');
 
-    // --- Criação da Tabela: MULTAS ---
     await db.schema.createTableIfNotExists('multas', (t) => {
       t.increments('id').primary();
       t.integer('aluguel_id').unsigned().notNullable();
@@ -203,7 +183,7 @@ async function configurarBanco() {
       t.index(['usuario_id', 'status'], 'idx_multas_usuario_status');
       t.index(['aluguel_id'], 'idx_multas_aluguel');
     });
-    // --- Criação da Tabela: ACERVO DIGITAL ---
+
     await db.schema.createTableIfNotExists('acervo_digital', (t) => {
       t.increments('id').primary();
       t.string('titulo', 200).notNullable();
@@ -213,9 +193,9 @@ async function configurarBanco() {
       t.integer('paginas').unsigned().notNullable();
       t.string('tamanho_arquivo', 20).notNullable();
       t.text('url_arquivo', 'longtext').notNullable();
-      t.text('capa_url', 'longtext').nullable(); // Base64 da thumb (capa)
+      t.text('capa_url', 'longtext').nullable();
       t.enum('status', ['pendente', 'aprovado']).notNullable().defaultTo('aprovado');
-      t.integer('usuario_id').unsigned().nullable(); // Quem enviou
+      t.integer('usuario_id').unsigned().nullable();
       t.timestamp('deleted_at').nullable();
       t.timestamp('created_at').defaultTo(db.fn.now());
       
@@ -227,8 +207,6 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [acervo_digital] criada.');
 
-    // Acervo Digital inicia vazio
-
     console.log('\n🎉 Banco de dados configurado com sucesso!');
     await db.destroy();
     return true;
@@ -239,10 +217,8 @@ async function configurarBanco() {
   }
 }
 
-// Executa o script de inicialização apenas se chamado diretamente
 if (require.main === module) {
   configurarBanco();
 }
 
-// Exporta a função para ser chamada por outros módulos
-export { configurarBanco };
+module.exports = { configurarBanco };

@@ -1,16 +1,8 @@
-import { Response } from 'express';
-import db from '../database';
-import { RequisicaoAutenticada } from '../middlewares/auth';
+const db = require('../database');
 
-/**
- * Controlador do Acervo Digital: Gerencia documentos em formato PDF.
- */
-export class AcervoDigitalController {
+class AcervoDigitalController {
 
-  /**
-   * Listagem de documentos digitais homologados (aprovados).
-   */
-  listar = async (req: RequisicaoAutenticada, res: Response) => {
+  listar = async (req, res) => {
     try {
       const colunasPermitidas = ['titulo', 'autor', 'categoria', 'ano', 'created_at'];
       const { status, busca, categoria, ano, page, limit, sort, order } = req.query;
@@ -24,7 +16,6 @@ export class AcervoDigitalController {
 
       let consulta = db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at');
 
-      // Filtro de busca textual (Título ou Autor)
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         const queryTermo = `%${termoBusca}%`;
@@ -36,17 +27,14 @@ export class AcervoDigitalController {
         );
       }
 
-      // Filtro por categoria
       if (categoria) {
         consulta = consulta.where({ categoria });
       }
 
-      // Filtro por ano
       if (ano) {
         consulta = consulta.where({ ano: parseInt(String(ano)) });
       }
 
-      // Executa consulta dos dados e contagem total
       const [registros, contagem, categoriasDisp, anosDisp] = await Promise.all([
         consulta.clone().select('*').orderBy(colunaOrdenacao, direcaoOrdenacao).limit(limite).offset(deslocamento),
         consulta.clone().count('id as total'),
@@ -54,17 +42,16 @@ export class AcervoDigitalController {
         db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at').distinct('ano').orderBy('ano', 'desc')
       ]);
 
-      const data = registros as any[];
       const total = Number(contagem[0].total);
 
       res.json({
-        data,
+        data: registros,
         total,
         page: pagina,
         limit: limite,
         pages: Math.ceil(total / limite),
-        categorias: categoriasDisp.map((c: any) => c.categoria),
-        anos: anosDisp.map((a: any) => a.ano)
+        categorias: categoriasDisp.map((c) => c.categoria),
+        anos: anosDisp.map((a) => a.ano)
       });
     } catch (erro) {
       console.error('Erro ao listar acervo digital:', erro);
@@ -72,10 +59,7 @@ export class AcervoDigitalController {
     }
   };
 
-  /**
-   * Listagem de documentos pendentes de aprovação (Apenas Bibliotecários)
-   */
-  listarPendentes = async (req: RequisicaoAutenticada, res: Response) => {
+  listarPendentes = async (req, res) => {
     try {
       if (req.usuario?.tipo !== 'bibliotecario') {
          return res.status(403).json({ error: 'Acesso negado. Apenas bibliotecários podem listar pendências.' });
@@ -95,12 +79,7 @@ export class AcervoDigitalController {
     }
   };
 
-  /**
-   * Adiciona um novo documento digital. 
-   * Bibliotecários: Aprovado automaticamente.
-   * Usuários: Requer aprovação.
-   */
-  cadastrar = async (req: RequisicaoAutenticada, res: Response) => {
+  cadastrar = async (req, res) => {
       try {
           const { titulo, autor, categoria, ano, paginas, tamanho_arquivo, url_arquivo, capa_url } = req.body;
           const usuarioId = req.usuario?.id;
@@ -136,10 +115,7 @@ export class AcervoDigitalController {
       }
   };
 
-  /**
-   * Aprova um documento pendente
-   */
-  aprovar = async (req: RequisicaoAutenticada, res: Response) => {
+  aprovar = async (req, res) => {
       try {
           if (req.usuario?.tipo !== 'bibliotecario') {
              return res.status(403).json({ error: 'Acesso negado.' });
@@ -154,20 +130,14 @@ export class AcervoDigitalController {
       }
   };
 
-  /**
-   * Rejeita um documento pendente (Soft Delete)
-   */
-  rejeitar = async (req: RequisicaoAutenticada, res: Response) => {
+  rejeitar = async (req, res) => {
     try {
         if (req.usuario?.tipo !== 'bibliotecario') {
            return res.status(403).json({ error: 'Acesso negado.' });
         }
 
         const { id } = req.params;
-        
-        // Se ainda está pendente, não há histórico. Deletamos permanentemente.
         await db('acervo_digital').where({ id, status: 'pendente' }).delete();
-        
         res.json({ message: 'Documento rejeitado e excluído permanentemente do sistema.' });
     } catch (erro) {
         console.error('Erro ao processar rejeição:', erro);
@@ -175,3 +145,5 @@ export class AcervoDigitalController {
     }
 };
 }
+
+module.exports = new AcervoDigitalController();

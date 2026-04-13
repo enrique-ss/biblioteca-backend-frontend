@@ -1,10 +1,8 @@
-import { Response } from 'express';
-import db from '../database';
-import { RequisicaoAutenticada } from '../middlewares/auth';
+const db = require('../database');
 
-export class InfantilController {
+class InfantilController {
 
-  private getFullData = () => {
+  getFullData = () => {
     return {
       infantil: {
         greeting: "Olá, Pequeno Leitor! 📚",
@@ -193,11 +191,7 @@ export class InfantilController {
     };
   };
 
-  /**
-   * Retorna os dados do Espaço Literário e o progresso do usuário.
-   * AS RESPOSTAS SÃO REMOVIDAS DAQUI (DUMB FRONTEND).
-   */
-  public getData = async (req: RequisicaoAutenticada, res: Response) => {
+  getData = async (req, res) => {
     try {
       const userId = req.usuario?.id;
       if (!userId) return res.status(401).json({ error: 'Usuário não identificado.' });
@@ -213,16 +207,15 @@ export class InfantilController {
       
       const completedLessons = completedLessonsRecords.map(r => r.leicao_id);
 
-      // Busca todos os dados e remove o campo 'a' (resposta correta) do quiz
-      const fullData: any = this.getFullData();
+      const fullData = this.getFullData();
       
-      const removeAnswers = (obj: any) => {
+      const removeAnswers = (obj) => {
         for (const age in obj) {
           if (obj[age].lessons) {
             for (const cat in obj[age].lessons) {
-              obj[age].lessons[cat].forEach((lesson: any) => {
+              obj[age].lessons[cat].forEach((lesson) => {
                 if (lesson.quiz) {
-                  lesson.quiz.forEach((q: any) => delete q.a);
+                  lesson.quiz.forEach((q) => delete q.a);
                 }
               });
             }
@@ -247,23 +240,19 @@ export class InfantilController {
     }
   };
 
-  /**
-   * Valida uma resposta do quiz (SMART BACKEND).
-   */
-  public validateAnswer = async (req: RequisicaoAutenticada, res: Response) => {
+  validateAnswer = async (req, res) => {
     try {
       const userId = req.usuario?.id;
       const { lessonId, questionIndex, selectedIndex } = req.body;
 
       if (!userId) return res.status(401).json({ error: 'Não autorizado.' });
 
-      // Localizar a lição e a pergunta certa no "banco central" do controlador
-      const fullData: any = this.getFullData();
-      let foundQuestion: any = null;
+      const fullData = this.getFullData();
+      let foundQuestion = null;
 
       for (const age in fullData) {
         for (const cat in fullData[age].lessons) {
-          const lesson = fullData[age].lessons[cat].find((l: any) => l.id === lessonId);
+          const lesson = fullData[age].lessons[cat].find((l) => l.id === lessonId);
           if (lesson && lesson.quiz[questionIndex]) {
             foundQuestion = lesson.quiz[questionIndex];
             break;
@@ -301,10 +290,7 @@ export class InfantilController {
     }
   };
 
-  /**
-   * Finaliza o quiz e calcula recompensas (SMART BACKEND).
-   */
-  public finishQuiz = async (req: RequisicaoAutenticada, res: Response) => {
+  finishQuiz = async (req, res) => {
     try {
       const userId = req.usuario?.id;
       const { lessonId, correctCount, totalQuestions, gameOverByHearts } = req.body;
@@ -350,7 +336,6 @@ export class InfantilController {
         desc = `Você acertou ${correctCount} de ${totalQuestions}. Tente novamente para ganhar XP!`;
       }
 
-      // Atualiza XP e Nível
       let newXP = user.infantil_xp + xpGain;
       let newLevel = user.infantil_level;
       let newHearts = Math.min(5, user.infantil_hearts + hpGain);
@@ -377,10 +362,7 @@ export class InfantilController {
     }
   };
 
-  /**
-   * Atualização genérica de progresso (ex: regeneração de vidas).
-   */
-  public saveProgress = async (req: RequisicaoAutenticada, res: Response) => {
+  saveProgress = async (req, res) => {
     try {
       const userId = req.usuario?.id;
       if (!userId) return res.status(401).json({ error: 'Acesso negado.' });
@@ -400,3 +382,5 @@ export class InfantilController {
     }
   };
 }
+
+module.exports = new InfantilController();

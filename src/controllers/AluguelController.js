@@ -1,32 +1,20 @@
-import { Response } from 'express';
-import { RequisicaoAutenticada } from '../middlewares/auth';
-import db from '../database';
+const db = require('../database');
 
-// Definição de valores de multa (Regras de Negócio)
 const VALOR_MULTA_DIARIA = 1.00;
 const VALOR_MULTA_PERDA = 100.00;
 
-/**
- * Controlador de Empréstimos: Gerencia a circulação de livros, multas e devoluções.
- */
-export class AluguelController {
+class AluguelController {
 
-  /**
-   * Registra um novo empréstimo no sistema.
-   * Regras: Usuário não pode estar bloqueado ou ter multas, e o livro deve ter exemplar disponível.
-   */
-  criar = async (req: RequisicaoAutenticada, res: Response) => {
+  criar = async (req, res) => {
     try {
       const { livro_id, usuario_id, exemplar_id } = req.body;
 
-      // Validação de existência do usuário
       const usuario = await db('usuarios').where({ id: usuario_id }).first();
       
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não localizado no sistema.' });
       }
 
-      // Verificação de Impedimentos (Bloqueios e Débitos)
       if (usuario.bloqueado) {
         return res.status(400).json({ 
           error: `O usuário está impedido de realizar novos empréstimos. Motivo: ${usuario.motivo_bloqueio || 'Bloqueio administrativo.'}` 
@@ -42,16 +30,13 @@ export class AluguelController {
         });
       }
 
-      // Cálculo do prazo de devolução (Padrão: 14 dias)
       const dataAluguel = new Date();
       const dataPrevista = new Date();
       dataPrevista.setDate(dataAluguel.getDate() + 14);
 
-      // Transação Atômica: Garante que tudo seja atualizado ou nada seja salvo em caso de erro.
       await db.transaction(async (trx) => {
         let exemplarSelecionado;
         
-        // Se um exemplar específico foi escolhido (pelo código), verificamos sua disponibilidade física.
         if (exemplar_id) {
           exemplarSelecionado = await trx('exemplares')
             .where({ id: exemplar_id, livro_id: livro_id, disponibilidade: 'disponivel' })
@@ -60,9 +45,7 @@ export class AluguelController {
           if (!exemplarSelecionado) {
             throw new Error('O exemplar físico solicitado não está disponível para empréstimo.');
           }
-        } 
-        // Caso contrário, o sistema seleciona automaticamente o primeiro disponível na estante.
-        else {
+        } else {
           exemplarSelecionado = await trx('exemplares')
             .where({ livro_id: livro_id, disponibilidade: 'disponivel' })
             .orderBy('id', 'asc')
@@ -76,8 +59,6 @@ export class AluguelController {
         const livroPai = await trx('livros').where({ id: livro_id }).first();
         const novaQtdDisponivel = Math.max(0, livroPai.exemplares_disponiveis - 1);
 
-        // Atualizações sequenciais para evitar deadlocks no MySQL
-        // 1. Cria o registro do empréstimo
         await trx('alugueis').insert({
           livro_id: livro_id, 
           exemplar_id: exemplarSelecionado.id, 
@@ -86,10 +67,8 @@ export class AluguelController {
           status: 'ativo'
         });
 
-        // 2. Muda o status da cópia física para 'emprestado'
         await trx('exemplares').where({ id: exemplarSelecionado.id }).update({ disponibilidade: 'emprestado' });
 
-        // 3. Atualiza o contador global do livro no catálogo
         await trx('livros').where({ id: livro_id }).update({
           exemplares_disponiveis: novaQtdDisponivel,
           status: novaQtdDisponivel === 0 ? 'alugado' : 'disponivel'
@@ -101,15 +80,12 @@ export class AluguelController {
         prazo_devolucao: dataPrevista.toLocaleDateString('pt-BR') 
       });
 
-    } catch (erro: any) { 
+    } catch (erro) { 
       res.status(400).json({ error: erro.message }); 
     }
   };
 
-  /**
-   * Processa a devolução de um livro e calcula multas se houver atraso ou dano.
-   */
-  devolver = async (req: RequisicaoAutenticada, res: Response) => {
+  devolver = async (req, res) => {
     try {
       const { id } = req.params;
       const { estado_exemplar = 'bom', observacao = '' } = req.body;
@@ -119,10 +95,9 @@ export class AluguelController {
         return res.status(400).json({ error: 'Estado físico inválido na devolução.' });
       }
 
-      const listaMultas: { tipo: string; valor: number; dias?: number }[] = [];
+      const listaMultas = [];
 
       await db.transaction(async (trx) => {
-        // Recupera o registro do empréstimo ativo
         const emprestimo = await trx('alugueis')
           .join('livros', 'alugueis.livro_id', 'livros.id')
           .where('alugueis.id', id)
@@ -138,7 +113,6 @@ export class AluguelController {
           throw new Error('Não foi encontrado um empréstimo ativo para este registro.');
         }
 
-        // --- Cálculo de Multa por Atraso ---
         const hoje = new Date(); 
         hoje.setHours(0, 0, 0, 0);
         
@@ -163,7 +137,6 @@ export class AluguelController {
           listaMultas.push({ tipo: 'atraso', valor: valorAtraso, dias: diasDeAtraso });
         }
 
-        // --- Cálculo de Multa por Perda/Extravio ---
         if (estado_exemplar === 'perdido') {
           await trx('multas').insert({ 
             aluguel_id: emprestimo.id, 
@@ -176,44 +149,36 @@ export class AluguelController {
           listaMultas.push({ tipo: 'perda', valor: VALOR_MULTA_PERDA });
         }
 
-        // Bloqueia o usuário se houver qualquer multa gerada
         if (listaMultas.length > 0) {
           await trx('usuarios').where({ id: emprestimo.usuario_id }).update({ multa_pendente: true });
         }
 
-        // --- Atualização de Inventário ---
         const exemplarSumiu = estado_exemplar === 'perdido';
         const novaDisponibilidade = exemplarSumiu ? 'perdido' : 'disponivel';
         
-        // O estoque total do livro só aumenta se o exemplar físico retornar
         let novaQtdEstoque = emprestimo.exemplares_disponiveis;
         if (!exemplarSumiu) {
           novaQtdEstoque = novaQtdEstoque + 1;
         }
 
-        // Atualizações sequenciais para evitar deadlocks no MySQL
-        // Fecha o ciclo do empréstimo
         await trx('alugueis').where({ id }).update({
           status: 'devolvido', 
           data_devolucao: new Date(), 
           estado_devolucao: estado_exemplar
         });
 
-        // Atualiza a ficha médica da cópia física
         await trx('exemplares').where({ id: emprestimo.exemplar_id }).update({
           disponibilidade: novaDisponibilidade,
           condicao: estado_exemplar,
           observacao: observacao?.trim() || null
         });
 
-        // Reajusta o catálogo global
         await trx('livros').where({ id: emprestimo.livro_id }).update({
           exemplares_disponiveis: novaQtdEstoque,
           status: novaQtdEstoque > 0 ? 'disponivel' : 'alugado'
         });
       });
 
-      // Consolidação do retorno para o usuário
       const totalMultas = listaMultas.reduce((acc, m) => acc + m.valor, 0);
       let msgSucesso = 'Livro devolvido com sucesso!';
       
@@ -231,15 +196,12 @@ export class AluguelController {
         aviso: totalMultas > 0 ? `Atenção: Multa acumulada de R$ ${totalMultas.toFixed(2)}. Cadastro bloqueado até a quitação.` : null
       });
 
-    } catch (erro: any) { 
+    } catch (erro) { 
       res.status(400).json({ error: erro.message }); 
     }
   };
 
-  /**
-   * Quita todas as multas pendentes de um usuário de uma vez.
-   */
-  pagarMulta = async (req: RequisicaoAutenticada, res: Response) => {
+  pagarMulta = async (req, res) => {
     try {
       const { usuario_id } = req.params;
       
@@ -254,12 +216,10 @@ export class AluguelController {
       const totalPago = multasEmAberto.reduce((sum, m) => sum + Number(m.valor), 0);
 
       await db.transaction(async (trx) => {
-        // Marca todas como pagas
         await trx('multas')
           .whereIn('id', multasEmAberto.map(m => m.id))
           .update({ status: 'paga', pago_em: new Date() });
           
-        // Libera o usuário para novos empréstimos
         await trx('usuarios').where({ id: usuario_id }).update({ multa_pendente: false });
       });
 
@@ -273,10 +233,7 @@ export class AluguelController {
     }
   };
 
-  /**
-   * Lista histórico de multas (Bibliotecário visualizando um usuário específico).
-   */
-  listarMultas = async (req: RequisicaoAutenticada, res: Response) => {
+  listarMultas = async (req, res) => {
     try {
       const { usuario_id } = req.params;
       
@@ -306,12 +263,9 @@ export class AluguelController {
     }
   };
 
-  /**
-   * Extrato de multas do próprio usuário logado.
-   */
-  minhasMultas = async (req: RequisicaoAutenticada, res: Response) => {
+  minhasMultas = async (req, res) => {
     try {
-      const usuarioId = req.usuario!.id;
+      const usuarioId = req.usuario.id;
       
       const multas = await db('multas')
         .join('alugueis', 'multas.aluguel_id', 'alugueis.id')
@@ -333,12 +287,9 @@ export class AluguelController {
     }
   };
 
-  /**
-   * Permite que o próprio usuário quite suas multas pendentes.
-   */
-  pagarMinhasMultas = async (req: RequisicaoAutenticada, res: Response) => {
+  pagarMinhasMultas = async (req, res) => {
     try {
-      const usuarioId = req.usuario!.id;
+      const usuarioId = req.usuario.id;
       
       const multasEmAberto = await db('multas')
         .where({ usuario_id: usuarioId, status: 'pendente' })
@@ -351,12 +302,10 @@ export class AluguelController {
       const totalPago = multasEmAberto.reduce((sum, m) => sum + Number(m.valor), 0);
 
       await db.transaction(async (trx) => {
-        // Marca todas como pagas
         await trx('multas')
           .whereIn('id', multasEmAberto.map(m => m.id))
           .update({ status: 'paga', pago_em: new Date() });
           
-        // Libera o usuário para novos empréstimos
         await trx('usuarios').where({ id: usuarioId }).update({ multa_pendente: false });
       });
 
@@ -369,10 +318,7 @@ export class AluguelController {
     }
   };
 
-  /**
-   * Listagem mestre de todos os empréstimos ativos (Para o Painel Administrativo).
-   */
-  listarTodos = async (req: RequisicaoAutenticada, res: Response) => {
+  listarTodos = async (req, res) => {
     try {
       const hoje = new Date(); 
       hoje.setHours(0, 0, 0, 0);
@@ -392,7 +338,6 @@ export class AluguelController {
         .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
         .where('alugueis.status', 'ativo');
 
-      // Busca por Nome do Usuário, Título do Livro ou Código da Cópia
       const termo = String(busca || '').trim();
       if (termo) {
         const queryTermo = `%${termo}%`;
@@ -422,7 +367,7 @@ export class AluguelController {
       const totalGeral = Number(contagem[0].total);
       const totalAtrasados = Number(atrasadosCount[0].totalAtrasados);
       
-      const dadosFormatados = registros.map((r: any) => ({
+      const dadosFormatados = registros.map((r) => ({
         ...r,
         multa_acumulada_formatada: r.valor_multa_num > 0 ? `R$ ${Number(r.valor_multa_num).toFixed(2)}` : '—',
         multa_acumulada: r.valor_multa_num
@@ -441,12 +386,9 @@ export class AluguelController {
     }
   };
 
-  /**
-   * Retorna os empréstimos (ativos ou históricos) específicos do usuário logado.
-   */
-  meus = async (req: RequisicaoAutenticada, res: Response) => {
+  meus = async (req, res) => {
     try {
-      const usuarioId = req.usuario!.id;
+      const usuarioId = req.usuario.id;
       const hoje = new Date(); 
       hoje.setHours(0, 0, 0, 0);
 
@@ -465,7 +407,7 @@ export class AluguelController {
         )
         .orderBy('alugueis.id', 'desc');
 
-      const dadosFormatados = alugueis.map((a: any) => ({
+      const dadosFormatados = alugueis.map((a) => ({
         ...a,
         multa_acumulada_formatada: a.valor_multa_num > 0 ? `R$ ${Number(a.valor_multa_num).toFixed(2)}` : '—',
         multa_acumulada: a.valor_multa_num
@@ -477,10 +419,7 @@ export class AluguelController {
     }
   };
 
-  /**
-   * Exibe o histórico de todos os livros já devolvidos no sistema.
-   */
-  historico = async (req: RequisicaoAutenticada, res: Response) => {
+  historico = async (req, res) => {
     try {
       const { page, limit, usuario_id, sort, order } = req.query;
       const pagina = Math.max(1, parseInt(String(page || 1)));
@@ -497,7 +436,6 @@ export class AluguelController {
         .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
         .where('alugueis.status', 'devolvido');
 
-      // Opcional: Filtra histórico de um aluno específico
       if (usuario_id) {
         baseQuery = baseQuery.where('alugueis.usuario_id', Number(usuario_id));
       }
@@ -527,11 +465,7 @@ export class AluguelController {
     }
   };
 
-
-  /**
-   * Adiciona mais 14 dias ao prazo de devolução. Limite de 2 renovações.
-   */
-  renovar = async (req: RequisicaoAutenticada, res: Response) => {
+  renovar = async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -558,8 +492,10 @@ export class AluguelController {
         novo_prazo: novoPrazo.toLocaleDateString('pt-BR'), 
         renovacoes_restantes: 2 - (aluguelActual.renovacoes + 1)
       });
-    } catch (erro: any) { 
+    } catch (erro) { 
       res.status(400).json({ error: erro.message }); 
     }
   };
 }
+
+module.exports = new AluguelController();

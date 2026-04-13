@@ -1,24 +1,15 @@
-import { Response } from 'express';
-import db from '../database';
-import { RequisicaoAutenticada } from '../middlewares/auth';
+const db = require('../database');
 
-/**
- * Controlador de Usuários exclusivo para Bibliotecários.
- * Gerencia a listagem, edição, bloqueio e exclusão de contas.
- */
-export class UsuarioController {
+class UsuarioController {
 
-  // Listagem de usuários com suporte a busca, paginação e ordenação
-  listar = async (req: RequisicaoAutenticada, res: Response) => {
+  listar = async (req, res) => {
     try {
       const { busca, page, limit, sort, order } = req.query;
 
-      // Sanitização de paginação
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      // Configuração de colunas permitidas para ordenação (Evita SQL Injection)
       const colunasPermitidas = ['nome', 'email', 'tipo', 'created_at'];
       const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'nome';
       const direcaoOrdenacao = order === 'desc' ? 'desc' : 'asc';
@@ -29,7 +20,6 @@ export class UsuarioController {
           'id', 'nome', 'email', 'tipo', 'multa_pendente', 'bloqueado', 'motivo_bloqueio', 'created_at'
         );
 
-      // Aplica filtro de busca se fornecido (Nome ou E-mail)
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         const queryTermo = `%${termoBusca}%`;
@@ -40,7 +30,6 @@ export class UsuarioController {
         );
       }
 
-      // Executa a busca dos dados e a contagem total de forma paralela
       const [registros, [{ total }]] = await Promise.all([
         consulta.clone()
           .orderBy(colunaOrdenacao, direcaoOrdenacao)
@@ -71,19 +60,17 @@ export class UsuarioController {
     }
   };
 
-  // Atualização administrativa de dados de usuário
-  atualizar = async (req: RequisicaoAutenticada, res: Response) => {
+  atualizar = async (req, res) => {
     try {
       const { id } = req.params;
       const { nome, email, tipo } = req.body;
 
-      // Verifica se o usuário alvo existe no sistema e não está deletado
       const usuarioAlvo = await db('usuarios').where({ id }).where('deleted_at', null).first();
       if (!usuarioAlvo) {
         return res.status(404).json({ error: 'Usuário não encontrado ou já desativado.' });
       }
 
-      const dadosParaAtualizar: any = {};
+      const dadosParaAtualizar = {};
 
       if (nome !== undefined) {
         if (nome.trim().length < 3) {
@@ -98,7 +85,6 @@ export class UsuarioController {
           return res.status(400).json({ error: 'Formato de e-mail inválido.' });
         }
         
-        // Verifica se o novo e-mail já não pertence a outra pessoa ativa
         const emailEmUso = await db('usuarios')
           .where({ email: emaisFormatado })
           .whereNot({ id })
@@ -118,7 +104,6 @@ export class UsuarioController {
         dadosParaAtualizar.tipo = tipo;
       }
 
-      // Aplica as mudanças se houver alguma
       if (Object.keys(dadosParaAtualizar).length > 0) {
         await db('usuarios').where({ id }).update(dadosParaAtualizar);
       }
@@ -138,8 +123,7 @@ export class UsuarioController {
     }
   };
 
-  // Arquivamento (Soft Delete) de um usuário
-  excluir = async (req: RequisicaoAutenticada, res: Response) => {
+  excluir = async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -148,7 +132,6 @@ export class UsuarioController {
         return res.status(404).json({ error: 'Usuário não encontrado ou já desativado.' });
       }
 
-      // Regra de segurança: Não desativar usuário com livros em mãos
       const [{ totalAtivos }] = await db('alugueis')
         .where({ usuario_id: id, status: 'ativo' })
         .count('id as totalAtivos');
@@ -159,7 +142,6 @@ export class UsuarioController {
         });
       }
 
-      // Soft Delete: Marcar momento do arquivamento
       await db('usuarios').where({ id }).update({ deleted_at: db.fn.now() });
       res.json({ message: '✅ Usuário arquivado com sucesso. Os registros históricos permanecem no banco para auditoria.' });
     } catch (erro) {
@@ -168,8 +150,7 @@ export class UsuarioController {
     }
   };
 
-  // Bloqueio manual de acesso (impede novos empréstimos)
-  bloquear = async (req: RequisicaoAutenticada, res: Response) => {
+  bloquear = async (req, res) => {
     try {
       const { id } = req.params;
       const { motivo } = req.body;
@@ -199,8 +180,7 @@ export class UsuarioController {
     }
   };
 
-  // Remove o bloqueio de um usuário
-  desbloquear = async (req: RequisicaoAutenticada, res: Response) => {
+  desbloquear = async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -225,3 +205,5 @@ export class UsuarioController {
     }
   };
 }
+
+module.exports = new UsuarioController();

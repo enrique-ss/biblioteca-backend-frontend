@@ -1,5 +1,5 @@
-import knex from 'knex';
-import dotenv from 'dotenv';
+const knex = require('knex');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
@@ -18,20 +18,17 @@ const db = knex({
   pool: {
     min: 2,
     max: 20,
-    // Finaliza conexões ociosas após 30 segundos para otimizar recursos
     idleTimeoutMillis: 30000,
-    // Tempo máximo de espera para obter uma conexão livre do pool
     acquireTimeoutMillis: 10000,
   },
-  // Habilita logs de depuração apenas se explicitamente configurado em desenvolvimento
   debug: process.env.NODE_ENV === 'development' && process.env.DB_DEBUG === 'true',
 });
 
 // Log de configuração para debug
 if (process.env.NODE_ENV === 'production') {
-  console.log(' Configuração do banco de dados:');
+  console.log('🔗 Configuração do banco de dados:');
   console.log('  Host:', process.env.DB_HOST || process.env.DATABASE_URL ? 'CONFIGURADO' : 'NÃO CONFIGURADO');
   console.log('  Database:', process.env.DB_NAME || 'NÃO CONFIGURADO');
 }
 
-export default db;
+module.exports = db;

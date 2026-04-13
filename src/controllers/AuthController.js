@@ -1,14 +1,10 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import db from '../database';
-import { gerarToken, RequisicaoAutenticada } from '../middlewares/auth';
+const bcrypt = require('bcryptjs');
+const db = require('../database');
+const { gerarToken } = require('../middlewares/auth');
 
-/**
- * Controlador responsável pelos processos de autenticação e gestão de perfil.
- */
-export class AuthController {
+class AuthController {
   
-  private getPermissions(tipo: string) {
+  getPermissions(tipo) {
     const ehAdmin = tipo === 'bibliotecario';
     return {
       can_manage: ehAdmin,
@@ -19,32 +15,28 @@ export class AuthController {
       is_admin: ehAdmin
     };
   }
-  registrar = async (req: Request, res: Response) => {
+
+  registrar = async (req, res) => {
     try {
       const { nome, email, senha, tipo } = req.body;
 
-      // Validação básica de nome
       if (!nome || nome.trim().length < 3) {
         return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
       }
 
-      // Validação rigurosa de formato de e-mail
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email || !emailRegex.test(email)) {
         return res.status(400).json({ error: 'Formato de e-mail inválido (exemplo: usuario@dominio.com).' });
       }
 
-      // Validação de força de senha
       if (!senha || senha.length < 8) {
         return res.status(400).json({ error: 'A senha deve conter no mínimo 8 caracteres.' });
       }
 
-      // Validação de papéis de usuário permitidos
       if (!['usuario', 'bibliotecario'].includes(tipo)) {
         return res.status(400).json({ error: 'Tipo de conta inválido. Escolha entre "usuario" ou "bibliotecario".' });
       }
 
-      // Verifica se o e-mail já está cadastrado para evitar duplicidade
       const emaisFormatado = email.toLowerCase().trim();
       const usuarioExistente = await db('usuarios').where({ email: emaisFormatado }).first();
       
@@ -52,10 +44,8 @@ export class AuthController {
         return res.status(400).json({ error: 'Este endereço de e-mail já está em uso por outra conta.' });
       }
 
-      // Criptografia da senha antes de salvar no banco
       const senhaCriptografada = await bcrypt.hash(senha, 10);
 
-      // Insere o novo usuário e recupera o ID gerado
       const [novoId] = await db('usuarios').insert({
         nome: nome.trim(),
         email: emaisFormatado,
@@ -65,7 +55,6 @@ export class AuthController {
 
       const usuarioCriado = await db('usuarios').where({ id: novoId }).first();
 
-      // Gera o token de acesso (JWT) para o novo usuário
       const tokenAcesso = gerarToken({ 
         id: usuarioCriado.id, 
         email: usuarioCriado.email, 
@@ -89,8 +78,7 @@ export class AuthController {
     }
   }
 
-  // Autenticação de usuários existentes
-  login = async (req: Request, res: Response) => {
+  login = async (req, res) => {
     try {
       const { email, senha } = req.body;
 
@@ -101,7 +89,6 @@ export class AuthController {
       const emailFormatado = email.toLowerCase().trim();
       const usuarioEncontrado = await db('usuarios').where({ email: emailFormatado }).first();
 
-      // Verifica se o usuário existe e se a senha coincide com o hash salvo
       if (!usuarioEncontrado || !(await bcrypt.compare(senha, usuarioEncontrado.senha))) {
         return res.status(401).json({ error: 'Credenciais inválidas. Verifique seu e-mail e senha.' });
       }
@@ -129,14 +116,12 @@ export class AuthController {
     }
   }
 
-  // Permite que qualquer usuário autenticado edite suas próprias informações
-  editarPerfil = async (req: RequisicaoAutenticada, res: Response) => {
+  editarPerfil = async (req, res) => {
     try {
-      // O ID vem do token decodificado pelo middleware de autenticação
-      const usuarioId = req.usuario!.id;
+      const usuarioId = req.usuario.id;
       const { nome, email, senha } = req.body;
 
-      const mudancas: any = {};
+      const mudancas = {};
 
       if (nome !== undefined) {
         if (nome.trim().length < 3) {
@@ -153,7 +138,6 @@ export class AuthController {
           return res.status(400).json({ error: 'O formato do novo e-mail é inválido.' });
         }
 
-        // Garante que o novo e-mail não pertença a outra pessoa
         const outroUsuarioComEmail = await db('usuarios')
           .where({ email: emailFormatado })
           .whereNot({ id: usuarioId })
@@ -172,7 +156,6 @@ export class AuthController {
         mudancas.senha = await bcrypt.hash(senha, 10);
       }
 
-      // Só executa o update se houver algo para mudar
       if (Object.keys(mudancas).length > 0) {
         await db('usuarios').where({ id: usuarioId }).update(mudancas);
       }
@@ -195,3 +178,5 @@ export class AuthController {
     }
   }
 }
+
+module.exports = new AuthController();
