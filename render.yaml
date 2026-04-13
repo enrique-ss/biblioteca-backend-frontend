@@ -1,0 +1,58 @@
+services:
+  # Backend API
+  - type: web
+    name: biblio-verso-api
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: biblio-verso-db
+          property: host
+      - key: DB_PORT
+        fromService:
+          type: pserv
+          name: biblio-verso-db
+          property: port
+      - key: DB_USER
+        fromService:
+          type: pserv
+          name: biblio-verso-db
+          property: username
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: biblio-verso-db
+          property: password
+      - key: DB_NAME
+        fromService:
+          type: pserv
+          name: biblio-verso-db
+          property: database
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://biblio-verso.onrender.com
+
+  # Banco de Dados MySQL
+  - type: pserv
+    name: biblio-verso-db
+    runtime: mysql
+    plan: free
+    region: oregon
+
+  # Frontend Estático
+  - type: web
+    name: biblio-verso-frontend
+    runtime: static
+    buildCommand: echo "No build needed"
+    staticPublishPath: ./public
+    envVars:
+      - key: API_URL
+        value: https://biblio-verso-api.onrender.com

@@ -6,7 +6,7 @@ dotenv.config();
 
 /**
  * Script de inicialização (Setup) do Banco de Dados.
- * Este script recria o banco de dados e as tabelas do zero.
+ * Este script cria as tabelas se não existirem (modo seguro para produção).
  */
 async function configurarBanco() {
   console.log('🔧 Iniciando configuração do banco de dados...\n');
@@ -25,10 +25,16 @@ async function configurarBanco() {
   try {
     const nomeBanco = process.env.DB_NAME || 'biblioteca';
     
-    // Deleta e recria o banco de dados principal
-    await conexaoRaiz.raw(`DROP DATABASE IF EXISTS \`${nomeBanco}\``);
-    await conexaoRaiz.raw(`CREATE DATABASE \`${nomeBanco}\``);
-    console.log(`✅ Banco de dados '${nomeBanco}' criado.`);
+    // Em produção, não deleta o banco, apenas cria se não existir
+    if (process.env.NODE_ENV === 'production') {
+      await conexaoRaiz.raw(`CREATE DATABASE IF NOT EXISTS \`${nomeBanco}\``);
+      console.log(`✅ Banco de dados '${nomeBanco}' verificado/criado.`);
+    } else {
+      // Em desenvolvimento, deleta e recria
+      await conexaoRaiz.raw(`DROP DATABASE IF EXISTS \`${nomeBanco}\``);
+      await conexaoRaiz.raw(`CREATE DATABASE \`${nomeBanco}\``);
+      console.log(`✅ Banco de dados '${nomeBanco}' criado (modo desenvolvimento).`);
+    }
     await conexaoRaiz.destroy();
 
     // Nova conexão agora apontando para o banco recém-criado
@@ -44,7 +50,7 @@ async function configurarBanco() {
     });
 
     // --- Criação da Tabela: USUÁRIOS ---
-    await db.schema.createTable('usuarios', (t) => {
+    await db.schema.createTableIfNotExists('usuarios', (t) => {
       t.increments('id').primary();
       t.string('nome', 100).notNullable();
       t.string('email', 100).notNullable().unique();
@@ -67,7 +73,7 @@ async function configurarBanco() {
     console.log('✅ Tabela [usuarios] criada.');
 
     // --- Criação da Tabela: USUÁRIOS_LEICOES_INFANTIS ---
-    await db.schema.createTable('usuarios_leicoes_infantis', (t) => {
+    await db.schema.createTableIfNotExists('usuarios_leicoes_infantis', (t) => {
       t.integer('usuario_id').unsigned().notNullable();
       t.string('leicao_id', 50).notNullable();
       
@@ -76,30 +82,40 @@ async function configurarBanco() {
     });
     console.log('✅ Tabela [usuarios_leicoes_infantis] criada.');
 
-    // Criação do usuário Administrador padrão
-    const hashSenhaAdmin = await bcrypt.hash('admin123', 10);
-    await db('usuarios').insert({
-      nome: 'Administrador Master',
-      email: 'admin@admin',
-      senha: hashSenhaAdmin,
-      tipo: 'bibliotecario',
-      multa_pendente: false
-    });
-    console.log('⭐ Usuário admin padrão criado: admin@admin | senha: admin123');
+    // Criação do usuário Administrador padrão (apenas se não existir)
+    const adminExistente = await db('usuarios').where('email', 'admin@admin').first();
+    if (!adminExistente) {
+      const hashSenhaAdmin = await bcrypt.hash('admin123', 10);
+      await db('usuarios').insert({
+        nome: 'Administrador Master',
+        email: 'admin@admin',
+        senha: hashSenhaAdmin,
+        tipo: 'bibliotecario',
+        multa_pendente: false
+      });
+      console.log('⭐ Usuário admin padrão criado: admin@admin | senha: admin123');
+    } else {
+      console.log('⭐ Usuário admin já existe, pulando criação.');
+    }
 
-    // Criação do usuário comum padrão (para testes)
-    const hashSenhaUser = await bcrypt.hash('user123', 10);
-    await db('usuarios').insert({
-      nome: 'Usuário Teste',
-      email: 'user@user',
-      senha: hashSenhaUser,
-      tipo: 'usuario',
-      multa_pendente: false
-    });
-    console.log('👤 Usuário comum padrão criado: user@user | senha: user123');
+    // Criação do usuário comum padrão (apenas se não existir)
+    const userExistente = await db('usuarios').where('email', 'user@user').first();
+    if (!userExistente) {
+      const hashSenhaUser = await bcrypt.hash('user123', 10);
+      await db('usuarios').insert({
+        nome: 'Usuário Teste',
+        email: 'user@user',
+        senha: hashSenhaUser,
+        tipo: 'usuario',
+        multa_pendente: false
+      });
+      console.log('👤 Usuário comum padrão criado: user@user | senha: user123');
+    } else {
+      console.log('👤 Usuário comum já existe, pulando criação.');
+    }
 
     // --- Criação da Tabela: LIVROS ---
-    await db.schema.createTable('livros', (t) => {
+    await db.schema.createTableIfNotExists('livros', (t) => {
       t.increments('id').primary();
       t.string('titulo', 200).notNullable();
       t.string('autor', 150).notNullable();
@@ -124,7 +140,7 @@ async function configurarBanco() {
 
     // --- Criação da Tabela: EXEMPLARES ---
     // Representa a cópia física individual de um livro.
-    await db.schema.createTable('exemplares', (t) => {
+    await db.schema.createTableIfNotExists('exemplares', (t) => {
       t.increments('id').primary();
       t.integer('livro_id').unsigned().notNullable();
       t.string('codigo', 50).nullable();
@@ -144,7 +160,7 @@ async function configurarBanco() {
     console.log('✅ Tabela [exemplares] criada.');
 
     // --- Criação da Tabela: ALUGUÉIS ---
-    await db.schema.createTable('alugueis', (t) => {
+    await db.schema.createTableIfNotExists('alugueis', (t) => {
       t.increments('id').primary();
       t.integer('livro_id').unsigned().notNullable();
       t.integer('exemplar_id').unsigned().notNullable();
@@ -169,7 +185,7 @@ async function configurarBanco() {
     console.log('✅ Tabela [alugueis] criada.');
 
     // --- Criação da Tabela: MULTAS ---
-    await db.schema.createTable('multas', (t) => {
+    await db.schema.createTableIfNotExists('multas', (t) => {
       t.increments('id').primary();
       t.integer('aluguel_id').unsigned().notNullable();
       t.integer('usuario_id').unsigned().notNullable();
@@ -187,7 +203,7 @@ async function configurarBanco() {
       t.index(['aluguel_id'], 'idx_multas_aluguel');
     });
     // --- Criação da Tabela: ACERVO DIGITAL ---
-    await db.schema.createTable('acervo_digital', (t) => {
+    await db.schema.createTableIfNotExists('acervo_digital', (t) => {
       t.increments('id').primary();
       t.string('titulo', 200).notNullable();
       t.string('autor', 150).nullable();
@@ -214,13 +230,18 @@ async function configurarBanco() {
 
     console.log('\n🎉 Banco de dados configurado com sucesso!');
     await db.destroy();
-    process.exit(0);
+    return true;
     
   } catch (erro) {
     console.error('❌ Erro crítico ao configurar banco:', erro);
-    process.exit(1);
+    return false;
   }
 }
 
-// Executa o script de inicialização
-configurarBanco();
+// Executa o script de inicialização apenas se chamado diretamente
+if (require.main === module) {
+  configurarBanco();
+}
+
+// Exporta a função para ser chamada por outros módulos
+export { configurarBanco };

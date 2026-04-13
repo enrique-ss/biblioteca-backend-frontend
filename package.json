@@ -6,6 +6,7 @@
     "dev": "npx kill-port 3000 && nodemon src/index.ts",
     "cli": "ts-node src/cli.ts",
     "start": "ts-node src/index.ts",
+    "build": "tsc",
     "web": "npx kill-port 8080 && npx live-server public --port=8080 --host=0.0.0.0 --open=/index.html",
     "full": "npm run setup && concurrently \"npm run dev\" \"npm run web\""
   },

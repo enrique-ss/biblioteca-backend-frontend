@@ -9,6 +9,7 @@ import rotasUsuarios from './routes/UsuarioRoutes';
 import rotasEstatisticas from './routes/StatsRoutes';
 import rotasAcervoDigital from './routes/AcervoDigitalRoutes';
 import rotasInfantil from './routes/infantilRoutes';
+import { configurarBanco } from './setup';
 
 dotenv.config();
 
@@ -69,24 +70,36 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// Inicialização do servidor HTTP
-const servidor = app.listen(PORTA, () => {
-  console.log(`\n🚀 Servidor backend iniciado com sucesso na porta ${PORTA}`);
-  console.log(`📍 Link local: http://localhost:${PORTA}`);
-  console.log(`🌍 Ambiente atual: ${process.env.NODE_ENV || 'desenvolvimento'}\n`);
-  console.log('📖 Para gerenciar via CLI, execute em outro terminal: npm run cli');
-});
+// Configuração automática do banco de dados antes de iniciar o servidor
+const iniciarServidor = async () => {
+  // Executa o setup do banco de dados automaticamente
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🔧 Executando setup automático do banco de dados...');
+    await configurarBanco();
+  }
 
-// Gerenciamento de encerramento gracioso (SIGTERM/SIGINT)
-const finalizarServidor = () => {
-  console.log('\n🔴 Encerrando o servidor...');
-  servidor.close(() => {
-    console.log('👋 Servidor finalizado.');
-    process.exit(0);
+  // Inicialização do servidor HTTP
+  const servidor = app.listen(PORTA, () => {
+    console.log(`\n🚀 Servidor backend iniciado com sucesso na porta ${PORTA}`);
+    console.log(`📍 Link local: http://localhost:${PORTA}`);
+    console.log(`🌍 Ambiente atual: ${process.env.NODE_ENV || 'desenvolvimento'}\n`);
+    console.log('📖 Para gerenciar via CLI, execute em outro terminal: npm run cli');
   });
+
+  // Gerenciamento de encerramento gracioso (SIGTERM/SIGINT)
+  const finalizarServidor = () => {
+    console.log('\n🔴 Encerrando o servidor...');
+    servidor.close(() => {
+      console.log('👋 Servidor finalizado.');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', finalizarServidor);
+  process.on('SIGINT', finalizarServidor);
 };
 
-process.on('SIGTERM', finalizarServidor);
-process.on('SIGINT', finalizarServidor);
+// Inicia o servidor
+iniciarServidor();
 
 export default app;
