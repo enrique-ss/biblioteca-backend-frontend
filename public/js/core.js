@@ -1,6 +1,7 @@
-// Configurações Globais (Detecta automaticamente se está rodando em rede local ou localhost)
+// Configurações Globais (Detecta automaticamente se está rodando em produção ou localhost)
 const HOST_IP = window.location.hostname;
-const API_URL = `http://${HOST_IP}:3000/api`;
+const isProduction = window.location.protocol === 'https:' || HOST_IP !== 'localhost' && HOST_IP !== '127.0.0.1';
+const API_URL = isProduction ? `https://${HOST_IP}/api` : `http://${HOST_IP}:3000/api`;
 let token = null;
 let currentUser = null;
 

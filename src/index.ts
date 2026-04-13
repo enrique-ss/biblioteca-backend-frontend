@@ -25,6 +25,9 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Servir arquivos estáticos da pasta public (frontend)
+app.use(express.static('public'));
+
 // Limitador de requisições: máximo de 20 tentativas de autenticação por IP em 15 minutos
 const limitadorAutenticacao = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -44,12 +47,17 @@ app.use('/api/acervo-digital', rotasAcervoDigital);
 app.use('/api/infantil', rotasInfantil);
 
 // Rota de verificação de integridade (Health Check)
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ 
     message: '📚 API da Biblioteca Online (Biblio Verso)', 
     version: '1.0.0', 
     status: 'online' 
   });
+});
+
+// Rota padrão serve o index.html (frontend)
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: 'public' });
 });
 
 // Middleware para tratamento de rotas não existentes (404)
