@@ -1,57 +1,67 @@
-const db = require('../database');
+const supabase = require('../database');
 
 class AcervoDigitalController {
 
   listar = async (req, res) => {
     try {
-      const colunasPermitidas = ['titulo', 'autor', 'categoria', 'ano', 'created_at'];
-      const { status, busca, categoria, ano, page, limit, sort, order } = req.query;
+      const { busca, categoria, ano, page, limit, sort, order } = req.query;
 
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'created_at';
-      const direcaoOrdenacao = order === 'asc' ? 'asc' : 'desc';
+      const colunaOrdenacao = sort === 'titulo' ? 'titulo' : 'created_at';
+      const direcaoOrdenacao = order === 'asc' ? { ascending: true } : { ascending: false };
 
-      let consulta = db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at');
+      let consulta = supabase
+        .from('acervo_digital')
+        .select('*', { count: 'exact' })
+        .eq('status', 'aprovado')
+        .is('deleted_at', null);
 
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
-        const queryTermo = `%${termoBusca}%`;
-        consulta = consulta.where(builder =>
-          builder.whereILike('titulo', queryTermo)
-            .orWhereILike('autor', queryTermo)
-            .orWhereILike('categoria', queryTermo)
-            .orWhereRaw('CAST(ano AS CHAR) LIKE ?', [queryTermo])
-        );
+        consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%,categoria.ilike.%${termoBusca}%`);
       }
 
       if (categoria) {
-        consulta = consulta.where({ categoria });
+        consulta = consulta.eq('categoria', categoria);
       }
 
       if (ano) {
-        consulta = consulta.where({ ano: parseInt(String(ano)) });
+        consulta = consulta.eq('ano', parseInt(String(ano)));
       }
 
-      const [registros, contagem, categoriasDisp, anosDisp] = await Promise.all([
-        consulta.clone().select('*').orderBy(colunaOrdenacao, direcaoOrdenacao).limit(limite).offset(deslocamento),
-        consulta.clone().count('id as total'),
-        db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at').distinct('categoria').orderBy('categoria', 'asc'),
-        db('acervo_digital').where({ status: 'aprovado' }).whereNull('deleted_at').distinct('ano').orderBy('ano', 'desc')
-      ]);
+      consulta = consulta.order(colunaOrdenacao, direcaoOrdenacao).range(deslocamento, deslocamento + limite - 1);
 
-      const total = Number(contagem[0].total);
+      const { data: registros, count: total, error } = await consulta;
+
+      if (error) throw error;
+
+      const { data: categoriasData } = await supabase
+        .from('acervo_digital')
+        .select('categoria')
+        .eq('status', 'aprovado')
+        .is('deleted_at', null);
+
+      const { data: anosData } = await supabase
+        .from('acervo_digital')
+        .select('ano')
+        .eq('status', 'aprovado')
+        .is('deleted_at', null)
+        .not('ano', 'is', null);
+
+      const categoriasDisp = [...new Set((categoriasData || []).map(c => c.categoria).filter(Boolean))];
+      const anosDisp = [...new Set((anosData || []).map(a => a.ano).filter(Boolean))];
 
       res.json({
         data: registros,
-        total,
+        total: total || 0,
         page: pagina,
         limit: limite,
-        pages: Math.ceil(total / limite),
-        categorias: categoriasDisp.map((c) => c.categoria),
-        anos: anosDisp.map((a) => a.ano)
+        pages: Math.ceil((total || 0) / limite),
+        categorias: categoriasDisp,
+        anos: anosDisp
       });
     } catch (erro) {
       console.error('Erro ao listar acervo digital:', erro);
@@ -65,14 +75,19 @@ class AcervoDigitalController {
          return res.status(403).json({ error: 'Acesso negado. Apenas bibliotecários podem listar pendências.' });
       }
 
-      const pendentes = await db('acervo_digital')
-        .join('usuarios', 'acervo_digital.usuario_id', 'usuarios.id')
-        .select('acervo_digital.*', 'usuarios.nome as usuario_nome')
-        .where({ 'acervo_digital.status': 'pendente' })
-        .whereNull('acervo_digital.deleted_at')
-        .orderBy('acervo_digital.created_at', 'desc');
+      const { data: pendentes } = await supabase
+        .from('acervo_digital')
+        .select('*, usuarios(nome)')
+        .eq('status', 'pendente')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
 
-      res.json(pendentes);
+      const dadosFormatados = (pendentes || []).map(p => ({
+        ...p,
+        usuario_nome: p.usuarios?.nome
+      }));
+
+      res.json(dadosFormatados);
     } catch (erro) {
       console.error('Erro ao listar pendências:', erro);
       res.status(500).json({ error: 'Erro ao carregar documentos pendentes.' });
@@ -91,7 +106,7 @@ class AcervoDigitalController {
 
           const status = ehBibliotecario ? 'aprovado' : 'pendente';
 
-          await db('acervo_digital').insert({
+          const { error } = await supabase.from('acervo_digital').insert({
               titulo,
               autor,
               categoria,
@@ -103,6 +118,8 @@ class AcervoDigitalController {
               status,
               usuario_id: usuarioId
           });
+
+          if (error) throw error;
 
           const mensagem = ehBibliotecario 
             ? 'Documento digital cadastrado com sucesso!' 
@@ -122,7 +139,8 @@ class AcervoDigitalController {
           }
 
           const { id } = req.params;
-          await db('acervo_digital').where({ id }).update({ status: 'aprovado' });
+          const { error } = await supabase.from('acervo_digital').update({ status: 'aprovado' }).eq('id', id);
+          if (error) throw error;
           res.json({ message: 'Documento aprovado e adicionado ao acervo!' });
       } catch (erro) {
           console.error('Erro ao processar aprovação:', erro);
@@ -137,7 +155,8 @@ class AcervoDigitalController {
         }
 
         const { id } = req.params;
-        await db('acervo_digital').where({ id, status: 'pendente' }).delete();
+        const { error } = await supabase.from('acervo_digital').delete().eq('id', id).eq('status', 'pendente');
+        if (error) throw error;
         res.json({ message: 'Documento rejeitado e excluído permanentemente do sistema.' });
     } catch (erro) {
         console.error('Erro ao processar rejeição:', erro);

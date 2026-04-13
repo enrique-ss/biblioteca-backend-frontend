@@ -1,4 +1,4 @@
-const db = require('../database');
+const supabase = require('../database');
 
 const VALOR_MULTA_DIARIA = 1.00;
 const VALOR_MULTA_PERDA = 100.00;
@@ -9,7 +9,7 @@ class AluguelController {
     try {
       const { livro_id, usuario_id, exemplar_id } = req.body;
 
-      const usuario = await db('usuarios').where({ id: usuario_id }).first();
+      const { data: usuario } = await supabase.from('usuarios').select('*').eq('id', usuario_id).single();
       
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não localizado no sistema.' });
@@ -22,8 +22,8 @@ class AluguelController {
       }
 
       if (usuario.multa_pendente) {
-        const multas = await db('multas').where({ usuario_id, status: 'pendente' }).select('valor');
-        const totalDevido = multas.reduce((total, m) => total + Number(m.valor), 0);
+        const { data: multas } = await supabase.from('multas').select('valor').eq('usuario_id', usuario_id).eq('status', 'pendente');
+        const totalDevido = (multas || []).reduce((total, m) => total + Number(m.valor), 0);
         
         return res.status(400).json({ 
           error: `Usuário possui débitos pendentes de R$ ${totalDevido.toFixed(2)}. Regularize a situação para continuar.` 
@@ -34,46 +34,43 @@ class AluguelController {
       const dataPrevista = new Date();
       dataPrevista.setDate(dataAluguel.getDate() + 14);
 
-      await db.transaction(async (trx) => {
-        let exemplarSelecionado;
-        
-        if (exemplar_id) {
-          exemplarSelecionado = await trx('exemplares')
-            .where({ id: exemplar_id, livro_id: livro_id, disponibilidade: 'disponivel' })
-            .first();
+      let exemplarSelecionado;
+      
+      if (exemplar_id) {
+        const { data } = await supabase.from('exemplares').select('*').eq('id', exemplar_id).eq('livro_id', livro_id).eq('disponibilidade', 'disponivel').single();
+        exemplarSelecionado = data;
             
-          if (!exemplarSelecionado) {
-            throw new Error('O exemplar físico solicitado não está disponível para empréstimo.');
-          }
-        } else {
-          exemplarSelecionado = await trx('exemplares')
-            .where({ livro_id: livro_id, disponibilidade: 'disponivel' })
-            .orderBy('id', 'asc')
-            .first();
-            
-          if (!exemplarSelecionado) {
-            throw new Error('Não há exemplares deste livro disponíveis na estante no momento.');
-          }
+        if (!exemplarSelecionado) {
+          throw new Error('O exemplar físico solicitado não está disponível para empréstimo.');
         }
+      } else {
+        const { data } = await supabase.from('exemplares').select('*').eq('livro_id', livro_id).eq('disponibilidade', 'disponivel').order('id', { ascending: true }).limit(1).single();
+        exemplarSelecionado = data;
+            
+        if (!exemplarSelecionado) {
+          throw new Error('Não há exemplares deste livro disponíveis na estante no momento.');
+        }
+      }
 
-        const livroPai = await trx('livros').where({ id: livro_id }).first();
-        const novaQtdDisponivel = Math.max(0, livroPai.exemplares_disponiveis - 1);
+      const { data: livroPai } = await supabase.from('livros').select('*').eq('id', livro_id).single();
+      const novaQtdDisponivel = Math.max(0, (livroPai.exemplares_disponiveis || 0) - 1);
 
-        await trx('alugueis').insert({
-          livro_id: livro_id, 
-          exemplar_id: exemplarSelecionado.id, 
-          usuario_id: usuario_id,
-          data_prevista_devolucao: dataPrevista, 
-          status: 'ativo'
-        });
-
-        await trx('exemplares').where({ id: exemplarSelecionado.id }).update({ disponibilidade: 'emprestado' });
-
-        await trx('livros').where({ id: livro_id }).update({
-          exemplares_disponiveis: novaQtdDisponivel,
-          status: novaQtdDisponivel === 0 ? 'alugado' : 'disponivel'
-        });
+      const { error: insertError } = await supabase.from('alugueis').insert({
+        livro_id: livro_id, 
+        exemplar_id: exemplarSelecionado.id, 
+        usuario_id: usuario_id,
+        data_prevista_devolucao: dataPrevista.toISOString(), 
+        status: 'ativo'
       });
+
+      if (insertError) throw insertError;
+
+      await supabase.from('exemplares').update({ disponibilidade: 'emprestado' }).eq('id', exemplarSelecionado.id);
+
+      await supabase.from('livros').update({
+        exemplares_disponiveis: novaQtdDisponivel,
+        status: novaQtdDisponivel === 0 ? 'alugado' : 'disponivel'
+      }).eq('id', livro_id);
 
       res.status(201).json({ 
         message: '✅ Empréstimo registrado com sucesso!', 
@@ -97,87 +94,86 @@ class AluguelController {
 
       const listaMultas = [];
 
-      await db.transaction(async (trx) => {
-        const emprestimo = await trx('alugueis')
-          .join('livros', 'alugueis.livro_id', 'livros.id')
-          .where('alugueis.id', id)
-          .where('alugueis.status', 'ativo')
-          .select(
-            'alugueis.id', 'alugueis.livro_id', 'alugueis.exemplar_id',
-            'alugueis.usuario_id', 'alugueis.data_prevista_devolucao',
-            'livros.exemplares_disponiveis'
-          )
-          .first();
+      const { data: emprestimo } = await supabase
+        .from('alugueis')
+        .select('*, livros(*)')
+        .eq('id', id)
+        .eq('status', 'ativo')
+        .single();
 
-        if (!emprestimo) {
-          throw new Error('Não foi encontrado um empréstimo ativo para este registro.');
-        }
+      if (!emprestimo) {
+        throw new Error('Não foi encontrado um empréstimo ativo para este registro.');
+      }
 
-        const hoje = new Date(); 
-        hoje.setHours(0, 0, 0, 0);
+      const hoje = new Date(); 
+      hoje.setHours(0, 0, 0, 0);
+      
+      const dataVencimento = new Date(emprestimo.data_prevista_devolucao); 
+      dataVencimento.setHours(0, 0, 0, 0);
+
+      const diffMilis = hoje.getTime() - dataVencimento.getTime();
+      const diasDeAtraso = Math.floor(diffMilis / (1000 * 60 * 60 * 24));
+      
+      if (diasDeAtraso > 0) {
+        const valorAtraso = diasDeAtraso * VALOR_MULTA_DIARIA;
         
-        const dataVencimento = new Date(emprestimo.data_prevista_devolucao); 
-        dataVencimento.setHours(0, 0, 0, 0);
-
-        const diffMilis = hoje.getTime() - dataVencimento.getTime();
-        const diasDeAtraso = Math.floor(diffMilis / (1000 * 60 * 60 * 24));
+        const { error: multaError } = await supabase.from('multas').insert({ 
+          aluguel_id: emprestimo.id, 
+          usuario_id: emprestimo.usuario_id, 
+          tipo: 'atraso', 
+          valor: valorAtraso, 
+          dias_atraso: diasDeAtraso, 
+          status: 'pendente' 
+        });
         
-        if (diasDeAtraso > 0) {
-          const valorAtraso = diasDeAtraso * VALOR_MULTA_DIARIA;
-          
-          await trx('multas').insert({ 
-            aluguel_id: emprestimo.id, 
-            usuario_id: emprestimo.usuario_id, 
-            tipo: 'atraso', 
-            valor: valorAtraso, 
-            dias_atraso: diasDeAtraso, 
-            status: 'pendente' 
-          });
-          
-          listaMultas.push({ tipo: 'atraso', valor: valorAtraso, dias: diasDeAtraso });
-        }
-
-        if (estado_exemplar === 'perdido') {
-          await trx('multas').insert({ 
-            aluguel_id: emprestimo.id, 
-            usuario_id: emprestimo.usuario_id, 
-            tipo: 'perda', 
-            valor: VALOR_MULTA_PERDA, 
-            dias_atraso: 0, 
-            status: 'pendente' 
-          });
-          listaMultas.push({ tipo: 'perda', valor: VALOR_MULTA_PERDA });
-        }
-
-        if (listaMultas.length > 0) {
-          await trx('usuarios').where({ id: emprestimo.usuario_id }).update({ multa_pendente: true });
-        }
-
-        const exemplarSumiu = estado_exemplar === 'perdido';
-        const novaDisponibilidade = exemplarSumiu ? 'perdido' : 'disponivel';
+        if (multaError) throw multaError;
         
-        let novaQtdEstoque = emprestimo.exemplares_disponiveis;
-        if (!exemplarSumiu) {
-          novaQtdEstoque = novaQtdEstoque + 1;
-        }
+        listaMultas.push({ tipo: 'atraso', valor: valorAtraso, dias: diasDeAtraso });
+      }
 
-        await trx('alugueis').where({ id }).update({
-          status: 'devolvido', 
-          data_devolucao: new Date(), 
-          estado_devolucao: estado_exemplar
+      if (estado_exemplar === 'perdido') {
+        const { error: perdaError } = await supabase.from('multas').insert({ 
+          aluguel_id: emprestimo.id, 
+          usuario_id: emprestimo.usuario_id, 
+          tipo: 'perda', 
+          valor: VALOR_MULTA_PERDA, 
+          dias_atraso: 0, 
+          status: 'pendente' 
         });
+        
+        if (perdaError) throw perdaError;
+        
+        listaMultas.push({ tipo: 'perda', valor: VALOR_MULTA_PERDA });
+      }
 
-        await trx('exemplares').where({ id: emprestimo.exemplar_id }).update({
-          disponibilidade: novaDisponibilidade,
-          condicao: estado_exemplar,
-          observacao: observacao?.trim() || null
-        });
+      if (listaMultas.length > 0) {
+        await supabase.from('usuarios').update({ multa_pendente: true }).eq('id', emprestimo.usuario_id);
+      }
 
-        await trx('livros').where({ id: emprestimo.livro_id }).update({
-          exemplares_disponiveis: novaQtdEstoque,
-          status: novaQtdEstoque > 0 ? 'disponivel' : 'alugado'
-        });
-      });
+      const exemplarSumiu = estado_exemplar === 'perdido';
+      const novaDisponibilidade = exemplarSumiu ? 'perdido' : 'disponivel';
+      
+      let novaQtdEstoque = (emprestimo.livros?.exemplares_disponiveis || 0);
+      if (!exemplarSumiu) {
+        novaQtdEstoque = novaQtdEstoque + 1;
+      }
+
+      await supabase.from('alugueis').update({
+        status: 'devolvido', 
+        data_devolucao: new Date().toISOString(), 
+        estado_devolucao: estado_exemplar
+      }).eq('id', id);
+
+      await supabase.from('exemplares').update({
+        disponibilidade: novaDisponibilidade,
+        condicao: estado_exemplar,
+        observacao: observacao?.trim() || null
+      }).eq('id', emprestimo.exemplar_id);
+
+      await supabase.from('livros').update({
+        exemplares_disponiveis: novaQtdEstoque,
+        status: novaQtdEstoque > 0 ? 'disponivel' : 'alugado'
+      }).eq('id', emprestimo.livro_id);
 
       const totalMultas = listaMultas.reduce((acc, m) => acc + m.valor, 0);
       let msgSucesso = 'Livro devolvido com sucesso!';
@@ -205,23 +201,17 @@ class AluguelController {
     try {
       const { usuario_id } = req.params;
       
-      const multasEmAberto = await db('multas')
-        .where({ usuario_id, status: 'pendente' })
-        .select('id', 'valor');
+      const { data: multasEmAberto } = await supabase.from('multas').select('id, valor').eq('usuario_id', usuario_id).eq('status', 'pendente');
       
-      if (!multasEmAberto.length) {
+      if (!multasEmAberto || multasEmAberto.length === 0) {
         return res.status(404).json({ error: 'Este usuário não possui multas em aberto.' });
       }
 
       const totalPago = multasEmAberto.reduce((sum, m) => sum + Number(m.valor), 0);
 
-      await db.transaction(async (trx) => {
-        await trx('multas')
-          .whereIn('id', multasEmAberto.map(m => m.id))
-          .update({ status: 'paga', pago_em: new Date() });
-          
-        await trx('usuarios').where({ id: usuario_id }).update({ multa_pendente: false });
-      });
+      const ids = multasEmAberto.map(m => m.id);
+      await supabase.from('multas').update({ status: 'paga', pago_em: new Date().toISOString() }).in('id', ids);
+      await supabase.from('usuarios').update({ multa_pendente: false }).eq('id', usuario_id);
 
       res.json({ 
         message: '✅ Pagamento processado com sucesso!', 
@@ -237,23 +227,19 @@ class AluguelController {
     try {
       const { usuario_id } = req.params;
       
-      const multas = await db('multas')
-        .join('alugueis', 'multas.aluguel_id', 'alugueis.id')
-        .join('livros', 'alugueis.livro_id', 'livros.id')
-        .where('multas.usuario_id', usuario_id)
-        .select(
-          'multas.id', 'multas.tipo', 'multas.valor', 'multas.dias_atraso', 
-          'multas.status', 'multas.pago_em', 'multas.created_at', 
-          'livros.titulo as livro'
-        )
-        .orderBy('multas.created_at', 'desc');
+      const { data: multas } = await supabase
+        .from('multas')
+        .select('*, alugueis(*), livros(*)')
+        .eq('usuario_id', usuario_id)
+        .order('created_at', { ascending: false });
 
-      const totalPendente = multas
+      const totalPendente = (multas || [])
         .filter(m => m.status === 'pendente')
         .reduce((sum, m) => sum + Number(m.valor), 0);
 
-      const dadosFormatados = multas.map(m => ({
+      const dadosFormatados = (multas || []).map(m => ({
         ...m,
+        livro: m.alugueis?.livros?.titulo,
         valor_formatado: `R$ ${Number(m.valor).toFixed(2)}`
       }));
 
@@ -267,21 +253,22 @@ class AluguelController {
     try {
       const usuarioId = req.usuario.id;
       
-      const multas = await db('multas')
-        .join('alugueis', 'multas.aluguel_id', 'alugueis.id')
-        .join('livros', 'alugueis.livro_id', 'livros.id')
-        .where('multas.usuario_id', usuarioId)
-        .select(
-          'multas.id', 'multas.tipo', 'multas.valor', 'multas.dias_atraso', 
-          'multas.status', 'multas.created_at', 'livros.titulo as livro'
-        )
-        .orderBy('multas.created_at', 'desc');
+      const { data: multas } = await supabase
+        .from('multas')
+        .select('*, alugueis(*), livros(*)')
+        .eq('usuario_id', usuarioId)
+        .order('created_at', { ascending: false });
 
-      const totalPendente = multas
+      const totalPendente = (multas || [])
         .filter(m => m.status === 'pendente')
         .reduce((sum, m) => sum + Number(m.valor), 0);
 
-      res.json({ multas, total_pendente: totalPendente });
+      const dadosFormatados = (multas || []).map(m => ({
+        ...m,
+        livro: m.alugueis?.livros?.titulo
+      }));
+
+      res.json({ multas: dadosFormatados, total_pendente: totalPendente });
     } catch { 
       res.status(500).json({ error: 'Não foi possível carregar seu histórico de multas.' }); 
     }
@@ -291,23 +278,17 @@ class AluguelController {
     try {
       const usuarioId = req.usuario.id;
       
-      const multasEmAberto = await db('multas')
-        .where({ usuario_id: usuarioId, status: 'pendente' })
-        .select('id', 'valor');
+      const { data: multasEmAberto } = await supabase.from('multas').select('id, valor').eq('usuario_id', usuarioId).eq('status', 'pendente');
       
-      if (!multasEmAberto.length) {
+      if (!multasEmAberto || multasEmAberto.length === 0) {
         return res.status(404).json({ error: 'Você não possui multas pendentes para pagar.' });
       }
 
       const totalPago = multasEmAberto.reduce((sum, m) => sum + Number(m.valor), 0);
 
-      await db.transaction(async (trx) => {
-        await trx('multas')
-          .whereIn('id', multasEmAberto.map(m => m.id))
-          .update({ status: 'paga', pago_em: new Date() });
-          
-        await trx('usuarios').where({ id: usuarioId }).update({ multa_pendente: false });
-      });
+      const ids = multasEmAberto.map(m => m.id);
+      await supabase.from('multas').update({ status: 'paga', pago_em: new Date().toISOString() }).in('id', ids);
+      await supabase.from('usuarios').update({ multa_pendente: false }).eq('id', usuarioId);
 
       res.json({ 
         message: '✅ Pagamento das multas processado com sucesso!', 
@@ -328,58 +309,47 @@ class AluguelController {
       const limite = Math.min(50, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      const colunasAceitas = ['alugueis.id', 'usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao'];
-      const colOrdenacao = colunasAceitas.includes(String(sort)) ? String(sort) : 'alugueis.data_aluguel';
-      const dirOrdenacao = order === 'desc' ? 'desc' : 'asc';
-
-      let baseQuery = db('alugueis')
-        .join('livros', 'alugueis.livro_id', 'livros.id')
-        .join('exemplares', 'alugueis.exemplar_id', 'exemplares.id')
-        .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
-        .where('alugueis.status', 'ativo');
+      let consulta = supabase
+        .from('alugueis')
+        .select('*, livros(*), exemplares(*), usuarios(*)', { count: 'exact' })
+        .eq('status', 'ativo');
 
       const termo = String(busca || '').trim();
       if (termo) {
-        const queryTermo = `%${termo}%`;
-        baseQuery = baseQuery.where(builder => 
-          builder.whereILike('usuarios.nome', queryTermo)
-            .orWhereILike('livros.titulo', queryTermo)
-            .orWhereILike('exemplares.codigo', queryTermo)
-            .orWhereRaw('CAST(alugueis.id AS CHAR) LIKE ?', [queryTermo])
-        );
+        consulta = consulta.or(`usuarios.nome.ilike.%${termo}%,livros.titulo.ilike.%${termo}%`);
       }
 
-      const [registros, contagem, atrasadosCount] = await Promise.all([
-        baseQuery.clone().select(
-          'alugueis.id', 'usuarios.nome as usuario', 'usuarios.multa_pendente',
-          'livros.titulo', 'exemplares.id as exemplar_id', 'exemplares.codigo as exemplar_codigo',
-          'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao as prazo',
-          db.raw(`CASE WHEN alugueis.data_prevista_devolucao < ? THEN 'atrasado' ELSE 'ativo' END as status`, [hoje]),
-          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) as dias_atraso`),
-          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) * ${VALOR_MULTA_DIARIA} as valor_multa_num`),
-          db.raw('TRUE as pode_devolver'), 
-          db.raw('TRUE as pode_renovar')
-        ).orderBy(colOrdenacao, dirOrdenacao).limit(limite).offset(deslocamento),
-        baseQuery.clone().count('alugueis.id as total'),
-        db('alugueis').where('status', 'ativo').where('data_prevista_devolucao', '<', hoje).count('id as totalAtrasados')
-      ]);
+      consulta = consulta.order('data_aluguel', { ascending: true }).range(deslocamento, deslocamento + limite - 1);
 
-      const totalGeral = Number(contagem[0].total);
-      const totalAtrasados = Number(atrasadosCount[0].totalAtrasados);
-      
-      const dadosFormatados = registros.map((r) => ({
-        ...r,
-        multa_acumulada_formatada: r.valor_multa_num > 0 ? `R$ ${Number(r.valor_multa_num).toFixed(2)}` : '—',
-        multa_acumulada: r.valor_multa_num
+      const { data: registros, count: total, error } = await consulta;
+
+      if (error) throw error;
+
+      const { count: totalAtrasados } = await supabase
+        .from('alugueis')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'ativo')
+        .lt('data_prevista_devolucao', hoje.toISOString());
+
+      const dadosFormatados = (registros || []).map((r) => ({
+        id: r.id,
+        usuario: r.usuarios?.nome,
+        titulo: r.livros?.titulo,
+        exemplar_codigo: r.exemplares?.codigo,
+        data_aluguel: r.data_aluguel,
+        prazo: r.data_prevista_devolucao,
+        status: new Date(r.data_prevista_devolucao) < hoje ? 'atrasado' : 'ativo',
+        multa_acumulada: 0,
+        multa_acumulada_formatada: 'R$ 0,00'
       }));
 
       res.json({ 
         data: dadosFormatados, 
-        total: totalGeral, 
-        total_atrasados: totalAtrasados,
+        total: total || 0, 
+        total_atrasados: totalAtrasados || 0,
         page: pagina, 
         limit: limite, 
-        pages: Math.ceil(totalGeral / limite) 
+        pages: Math.ceil((total || 0) / limite) 
       });
     } catch { 
       res.status(500).json({ error: 'Erro ao listar empréstimos ativos.' }); 
@@ -392,25 +362,22 @@ class AluguelController {
       const hoje = new Date(); 
       hoje.setHours(0, 0, 0, 0);
 
-      const alugueis = await db('alugueis')
-        .join('livros', 'alugueis.livro_id', 'livros.id')
-        .join('exemplares', 'alugueis.exemplar_id', 'exemplares.id')
-        .where({ 'alugueis.usuario_id': usuarioId })
-        .select(
-          'alugueis.id', 'livros.titulo', 'exemplares.codigo as exemplar_codigo',
-          'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao as prazo',
-          db.raw(`CASE WHEN alugueis.status='devolvido' THEN 'devolvido' WHEN alugueis.data_prevista_devolucao < ? THEN 'atrasado' ELSE 'ativo' END as status`, [hoje]),
-          db.raw('COALESCE(alugueis.renovacoes, 0) as renovacoes'),
-          db.raw(`CASE WHEN alugueis.status='ativo' AND COALESCE(alugueis.renovacoes,0)<2 THEN TRUE ELSE FALSE END as pode_renovar`),
-          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) as dias_atraso`),
-          db.raw(`GREATEST(0, DATEDIFF(NOW(), alugueis.data_prevista_devolucao)) * ${VALOR_MULTA_DIARIA} as valor_multa_num`)
-        )
-        .orderBy('alugueis.id', 'desc');
+      const { data: alugueis } = await supabase
+        .from('alugueis')
+        .select('*, livros(*), exemplares(*)')
+        .eq('usuario_id', usuarioId)
+        .order('id', { ascending: false });
 
-      const dadosFormatados = alugueis.map((a) => ({
-        ...a,
-        multa_acumulada_formatada: a.valor_multa_num > 0 ? `R$ ${Number(a.valor_multa_num).toFixed(2)}` : '—',
-        multa_acumulada: a.valor_multa_num
+      const dadosFormatados = (alugueis || []).map((a) => ({
+        id: a.id,
+        titulo: a.livros?.titulo,
+        exemplar_codigo: a.exemplares?.codigo,
+        data_aluguel: a.data_aluguel,
+        prazo: a.data_prevista_devolucao,
+        status: a.status === 'devolvido' ? 'devolvido' : new Date(a.data_prevista_devolucao) < hoje ? 'atrasado' : 'ativo',
+        renovacoes: a.renovacoes || 0,
+        multa_acumulada: 0,
+        multa_acumulada_formatada: 'R$ 0,00'
       }));
 
       res.json(dadosFormatados);
@@ -426,39 +393,40 @@ class AluguelController {
       const limite = Math.min(50, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      const colunasValidas = ['alugueis.id', 'usuarios.nome', 'livros.titulo', 'alugueis.data_aluguel', 'alugueis.data_devolucao'];
-      const colOrd = colunasValidas.includes(String(sort)) ? String(sort) : 'alugueis.data_devolucao';
-      const dirOrd = order === 'desc' ? 'desc' : 'asc';
-
-      let baseQuery = db('alugueis')
-        .join('livros', 'alugueis.livro_id', 'livros.id')
-        .join('exemplares', 'alugueis.exemplar_id', 'exemplares.id')
-        .join('usuarios', 'alugueis.usuario_id', 'usuarios.id')
-        .where('alugueis.status', 'devolvido');
+      let consulta = supabase
+        .from('alugueis')
+        .select('*, livros(*), exemplares(*), usuarios(*)', { count: 'exact' })
+        .eq('status', 'devolvido');
 
       if (usuario_id) {
-        baseQuery = baseQuery.where('alugueis.usuario_id', Number(usuario_id));
+        consulta = consulta.eq('usuario_id', usuario_id);
       }
 
-      const [registros, contagem] = await Promise.all([
-        baseQuery.clone().select(
-          'alugueis.id', 'usuarios.nome as usuario', 'livros.titulo',
-          'exemplares.codigo as exemplar_codigo',
-          'alugueis.data_aluguel', 'alugueis.data_prevista_devolucao as prazo',
-          'alugueis.data_devolucao', 'alugueis.estado_devolucao',
-          db.raw('COALESCE(alugueis.renovacoes,0) as renovacoes'),
-          db.raw(`'devolvido' as status`)
-        ).orderBy(colOrd, dirOrd).limit(limite).offset(deslocamento),
-        baseQuery.clone().count('alugueis.id as total')
-      ]);
+      consulta = consulta.order('data_devolucao', { ascending: false }).range(deslocamento, deslocamento + limite - 1);
 
-      const totalGeral = Number(contagem[0].total);
+      const { data: registros, count: total, error } = await consulta;
+
+      if (error) throw error;
+
+      const dadosFormatados = (registros || []).map(r => ({
+        id: r.id,
+        usuario: r.usuarios?.nome,
+        titulo: r.livros?.titulo,
+        exemplar_codigo: r.exemplares?.codigo,
+        data_aluguel: r.data_aluguel,
+        prazo: r.data_prevista_devolucao,
+        data_devolucao: r.data_devolucao,
+        estado_devolucao: r.estado_devolucao,
+        renovacoes: r.renovacoes || 0,
+        status: 'devolvido'
+      }));
+
       res.json({ 
-        data: registros, 
-        total: totalGeral, 
+        data: dadosFormatados, 
+        total: total || 0, 
         page: pagina, 
         limit: limite, 
-        pages: Math.ceil(totalGeral / limite) 
+        pages: Math.ceil((total || 0) / limite) 
       });
     } catch { 
       res.status(500).json({ error: 'Erro ao carregar o histórico de devoluções.' }); 
@@ -469,7 +437,7 @@ class AluguelController {
     try {
       const { id } = req.params;
       
-      const aluguelActual = await db('alugueis').where({ id, status: 'ativo' }).first();
+      const { data: aluguelActual } = await supabase.from('alugueis').select('*').eq('id', id).eq('status', 'ativo').single();
       
       if (!aluguelActual) {
         throw new Error('Este empréstimo não está mais ativo ou não existe.');
@@ -482,10 +450,12 @@ class AluguelController {
       const novoPrazo = new Date(aluguelActual.data_prevista_devolucao);
       novoPrazo.setDate(novoPrazo.getDate() + 14);
 
-      await db('alugueis').where({ id }).update({
-        data_prevista_devolucao: novoPrazo,
+      const { error } = await supabase.from('alugueis').update({
+        data_prevista_devolucao: novoPrazo.toISOString(),
         renovacoes: (aluguelActual.renovacoes ?? 0) + 1
-      });
+      }).eq('id', id);
+
+      if (error) throw error;
 
       res.json({ 
         message: '🔄 Empréstimo renovado com sucesso!', 

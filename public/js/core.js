@@ -1,9 +1,24 @@
 // Configurações Globais (Detecta automaticamente se está rodando em produção ou localhost)
 const HOST_IP = window.location.hostname;
 const isProduction = window.location.protocol === 'https:' || HOST_IP !== 'localhost' && HOST_IP !== '127.0.0.1';
-const API_URL = isProduction ? `https://${HOST_IP}/api` : `http://${HOST_IP}:3000/api`;
+const BASE_URL = isProduction ? `https://${HOST_IP}` : `http://${HOST_IP}:3000`;
+const API_URL = `${BASE_URL}/api`;
 let token = null;
 let currentUser = null;
+
+// Inicializa WebSocket
+const socket = typeof io !== 'undefined' ? io(BASE_URL) : { on: () => {} };
+
+socket.on('connect', () => console.log('🟢 Conectado ao servidor WebSocket!', socket.id));
+socket.on('refreshData', (tipo) => {
+    // Escuta eventos de atualização global disparados pelo backend
+    if (tipo === 'livros' && typeof loadLivros === 'function') {
+        const busca = document.getElementById('buscaLivros')?.value || '';
+        loadLivros(busca, 1);
+    } else if (tipo === 'alugueis' && typeof loadAlugueis === 'function') {
+        loadAlugueis(1);
+    }
+});
 
 // Sistema de Ordenação de Tabelas
 const sortState = {

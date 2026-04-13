@@ -1,32 +1,42 @@
-const jwt = require('jsonwebtoken');
+const { createClient } = require('@supabase/supabase-js');
+const dotenv = require('dotenv');
 
-// Carrega a chave secreta das variáveis de ambiente
-const SEGREDO_JWT = process.env.JWT_SECRET || 'biblioverso-chave-secreta-2024';
+dotenv.config();
 
-/**
- * Gera um novo Token JWT (JSON Web Token) com validade de 7 dias.
- */
-function gerarToken(dados) {
-  return jwt.sign(dados, SEGREDO_JWT, { expiresIn: '7d' });
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL || 'https://db.mtjrxenjffwjytjfkock.supabase.co',
+  process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anJ4ZW5qZmZ3anl0amZrb2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI0NzU2NzQsImV4cCI6MjAzODA1MTY3NH0.5V2yFjK3H8X7mZ9L2k4Y5Q6R1P8N7K9J2L4M5X8Y3Z'
+);
 
 /**
- * Middleware para verificar se o usuário está autenticado via cabeçalho Authorization.
+ * Middleware para verificar se o usuário está autenticado via Supabase Auth.
  */
-function verificarToken(req, res, next) {
-  // O token geralmente vem no formato "Bearer [token]"
-  const tokenHeader = req.headers.authorization?.replace('Bearer ', '');
+async function verificarToken(req, res, next) {
+  const authorization = req.headers.authorization;
 
-  if (!tokenHeader) {
+  if (!authorization) {
     return res.status(401).json({ error: 'Acesso negado. Nenhum token de autenticação foi fornecido.' });
   }
 
+  const token = authorization.replace('Bearer ', '');
+
   try {
-    const dadosDecodificados = jwt.verify(tokenHeader, SEGREDO_JWT);
-    
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      return res.status(401).json({ 
+        error: 'Sua sessão expirou ou o acesso é inválido. Por favor, realize o login novamente.' 
+      });
+    }
+
     // Anexa os dados do usuário à requisição para acesso nos controladores
-    req.usuario = dadosDecodificados; 
-    
+    req.usuario = {
+      id: user.id,
+      email: user.email,
+      nome: user.user_metadata?.nome,
+      tipo: user.user_metadata?.tipo || 'usuario'
+    };
+
     next();
   } catch (erro) {
     return res.status(401).json({ 
@@ -54,7 +64,6 @@ function verificarBibliotecario(req, res, next) {
 }
 
 module.exports = {
-  gerarToken,
   verificarToken,
   verificarBibliotecario
 };

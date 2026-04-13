@@ -1,34 +1,15 @@
-const knex = require('knex');
+const { createClient } = require('@supabase/supabase-js');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-/**
- * Instância principal do Knex para comunicação com o banco de dados PostgreSQL (Supabase).
- */
-const db = knex({
-  client: 'pg',
-  connection: process.env.DATABASE_URL || {
-    host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 5432,
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'biblioteca',
-  },
-  pool: {
-    min: 2,
-    max: 20,
-    idleTimeoutMillis: 30000,
-    acquireTimeoutMillis: 10000,
-  },
-  debug: process.env.NODE_ENV === 'development' && process.env.DB_DEBUG === 'true',
-});
+const supabaseUrl = process.env.SUPABASE_URL || 'https://db.mtjrxenjffwjytjfkock.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anJ4ZW5qZmZ3anl0amZrb2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI0NzU2NzQsImV4cCI6MjAzODA1MTY3NH0.5V2yFjK3H8X7mZ9L2k4Y5Q6R1P8N7K9J2L4M5X8Y3Z';
 
-// Log de configuração para debug
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 if (process.env.NODE_ENV === 'production') {
-  console.log('🔗 Configuração do banco de dados:');
-  console.log('  Host:', process.env.DB_HOST || process.env.DATABASE_URL ? 'CONFIGURADO' : 'NÃO CONFIGURADO');
-  console.log('  Database:', process.env.DB_NAME || 'NÃO CONFIGURADO');
+  console.log('🔗 Conectado ao Supabase');
 }
 
-module.exports = db;
+module.exports = supabase;

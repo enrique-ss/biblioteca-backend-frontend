@@ -1,32 +1,33 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  }
+});
+
+app.set('io', io); // Disponibilizar para os controllers
+
 const PORTA = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
 
-app.use(cors({ 
-  origin: process.env.CORS_ORIGIN || '*', 
-  credentials: true 
-}));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, '../public')));
-
-const limitadorAutenticacao = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: { error: 'Muitas tentativas detectadas. Por favor, aguarde 15 minutos.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 const rotasAutenticacao = require('./routes/authRoutes');
 const rotasLivros = require('./routes/LivroRoutes');
@@ -36,7 +37,7 @@ const rotasEstatisticas = require('./routes/StatsRoutes');
 const rotasAcervoDigital = require('./routes/AcervoDigitalRoutes');
 const rotasInfantil = require('./routes/infantilRoutes');
 
-app.use('/api/auth', limitadorAutenticacao, rotasAutenticacao);
+app.use('/api/auth', rotasAutenticacao);
 app.use('/api/livros', rotasLivros);
 app.use('/api/alugueis', rotasAlugueis);
 app.use('/api/usuarios', rotasUsuarios);
@@ -72,23 +73,30 @@ app.use((err, req, res, next) => {
   });
 });
 
-const { configurarBanco } = require('./setup');
-
 const iniciarServidor = async () => {
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🔧 Executando setup automático do banco de dados...');
-    await configurarBanco();
-  }
+  // Configuração global de conexões WebSockets
+  io.on('connection', (socket) => {
+    console.log(`🟢 Usuário conectado no Socket: ${socket.id}`);
+    
+    // Opcional: Entrar em "salas" baseadas em permissão no futuro
+    socket.on('joinRoom', (room) => {
+      socket.join(room);
+    });
 
-  const servidor = app.listen(PORTA, '0.0.0.0', () => {
-    console.log(`\n🚀 Servidor backend iniciado com sucesso na porta ${PORTA}`);
+    socket.on('disconnect', () => {
+      console.log(`🔴 Usuário desconectado: ${socket.id}`);
+    });
+  });
+
+  server.listen(PORTA, '0.0.0.0', () => {
+    console.log(`\n🚀 Servidor backend Node + Socket.io iniciado com sucesso na porta ${PORTA}`);
     console.log(`📍 Link local: http://localhost:${PORTA}`);
     console.log(`🌍 Ambiente atual: ${process.env.NODE_ENV || 'desenvolvimento'}\n`);
   });
 
   const finalizarServidor = () => {
     console.log('\n🔴 Encerrando o servidor...');
-    servidor.close(() => {
+    server.close(() => {
       console.log('👋 Servidor finalizado.');
       process.exit(0);
     });

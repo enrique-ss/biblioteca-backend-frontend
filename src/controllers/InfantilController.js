@@ -1,4 +1,4 @@
-const db = require('../database');
+const supabase = require('../database');
 
 class InfantilController {
 
@@ -196,16 +196,18 @@ class InfantilController {
       const userId = req.usuario?.id;
       if (!userId) return res.status(401).json({ error: 'Usuário não identificado.' });
 
-      const user = await db('usuarios')
-        .where({ id: userId })
-        .select('infantil_xp', 'infantil_level', 'infantil_hearts')
-        .first();
+      const { data: user } = await supabase
+        .from('usuarios')
+        .select('infantil_xp, infantil_level, infantil_hearts')
+        .eq('id', userId)
+        .single();
 
-      const completedLessonsRecords = await db('usuarios_leicoes_infantis')
-        .where({ usuario_id: userId })
-        .select('leicao_id');
+      const { data: completedLessonsRecords } = await supabase
+        .from('usuarios_leicoes_infantis')
+        .select('leicao_id')
+        .eq('usuario_id', userId);
       
-      const completedLessons = completedLessonsRecords.map(r => r.leicao_id);
+      const completedLessons = (completedLessonsRecords || []).map(r => r.leicao_id);
 
       const fullData = this.getFullData();
       
@@ -265,7 +267,7 @@ class InfantilController {
 
       const isCorrect = selectedIndex === foundQuestion.a;
       
-      const user = await db('usuarios').where({ id: userId }).first();
+      const { data: user } = await supabase.from('usuarios').select('*').eq('id', userId).single();
       
       if (!user) {
         return res.status(401).json({ error: 'Sua conta não foi encontrada. Por favor, faça login novamente.' });
@@ -275,7 +277,7 @@ class InfantilController {
 
       if (!isCorrect) {
         currentHearts = Math.max(0, currentHearts - 1);
-        await db('usuarios').where({ id: userId }).update({ infantil_hearts: currentHearts });
+        await supabase.from('usuarios').update({ infantil_hearts: currentHearts }).eq('id', userId);
       }
 
       res.json({
@@ -300,15 +302,18 @@ class InfantilController {
       const percentage = (correctCount / totalQuestions) * 100;
       const passed = percentage >= 50 && !gameOverByHearts;
       
-      const user = await db('usuarios').where({ id: userId }).first();
+      const { data: user } = await supabase.from('usuarios').select('*').eq('id', userId).single();
       
       if (!user) {
         return res.status(401).json({ error: 'Sua conta não foi encontrada. Por favor, faça login novamente.' });
       }
 
-      const completedRecord = await db('usuarios_leicoes_infantis')
-        .where({ usuario_id: userId, leicao_id: lessonId })
-        .first();
+      const { data: completedRecord } = await supabase
+        .from('usuarios_leicoes_infantis')
+        .select('*')
+        .eq('usuario_id', userId)
+        .eq('leicao_id', lessonId)
+        .single();
 
       let xpGain = 0;
       let hpGain = 0;
@@ -326,7 +331,7 @@ class InfantilController {
         if (!completedRecord) {
           xpGain = 50;
           hpGain = correctCount === totalQuestions ? 1 : 0;
-          await db('usuarios_leicoes_infantis').insert({ usuario_id: userId, leicao_id: lessonId });
+          await supabase.from('usuarios_leicoes_infantis').insert({ usuario_id: userId, leicao_id: lessonId });
         } else {
           xpGain = 10;
         }
@@ -345,11 +350,11 @@ class InfantilController {
         newLevel++;
       }
 
-      await db('usuarios').where({ id: userId }).update({
+      await supabase.from('usuarios').update({
         infantil_xp: newXP,
         infantil_level: newLevel,
         infantil_hearts: newHearts
-      });
+      }).eq('id', userId);
 
       res.json({
         result: { icon, title, desc, xpGain, hpGain },
@@ -369,11 +374,11 @@ class InfantilController {
 
       const { xp, level, hearts } = req.body;
 
-      await db('usuarios').where({ id: userId }).update({
+      await supabase.from('usuarios').update({
         infantil_xp: xp || 0,
         infantil_level: level || 1,
         infantil_hearts: typeof hearts !== 'undefined' ? hearts : 5
-      });
+      }).eq('id', userId);
 
       res.json({ message: '✅ Dados sincronizados.' });
     } catch (error) {

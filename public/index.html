@@ -51,6 +51,8 @@
             <section id="registerScreen" class="screen">
                 <div class="auth-wrap">
                     <div class="auth-card">
+                        <button type="button" class="link-btn" style="margin-bottom: 16px; color: var(--text-dim);"
+                            onclick="mostrarTela('loginScreen')">← Voltar</button>
                         <h1 class="auth-title">Biblio<span>Verso</span></h1>
                         <p class="auth-subtitle">Crie sua conta para acessar o sistema</p>
                         <form id="registerForm" novalidate>
@@ -754,6 +756,7 @@
     <!-- Bibliotecas Externas (GSAP + Three.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 
     <script src="js/animations.js"></script>
     <script src="js/core.js"></script>

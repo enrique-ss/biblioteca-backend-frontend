@@ -1,6 +1,19 @@
-const bcrypt = require('bcryptjs');
-const db = require('../database');
-const { gerarToken } = require('../middlewares/auth');
+const { createClient } = require('@supabase/supabase-js');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+// Supabase Admin client para bypass de RLS (igual ao RPG)
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL || 'https://db.mtjrxenjffwjytjfkock.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anJ4ZW5qZmZ3anl0amZrb2NrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTc0NDI1NCwiZXhwIjoyMDkxMzIwMjU0fQ.Qlmhp4kG3y0_X6d2O7aetFj8eYLLfLhobotP-Kk8bCI'
+);
+
+// Supabase Client para auth
+const supabase = createClient(
+  process.env.SUPABASE_URL || 'https://db.mtjrxenjffwjytjfkock.supabase.co',
+  process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anJ4ZW5qZmZ3anl0amZrb2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI0NzU2NzQsImV4cCI6MjAzODA1MTY3NH0.5V2yFjK3H8X7mZ9L2k4Y5Q6R1P8N7K9J2L4M5X8Y3Z'
+);
 
 class AuthController {
   
@@ -18,7 +31,7 @@ class AuthController {
 
   registrar = async (req, res) => {
     try {
-      const { nome, email, senha, tipo } = req.body;
+      const { nome, email, senha } = req.body;
 
       if (!nome || nome.trim().length < 3) {
         return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
@@ -33,43 +46,46 @@ class AuthController {
         return res.status(400).json({ error: 'A senha deve conter no mínimo 8 caracteres.' });
       }
 
-      if (!['usuario', 'bibliotecario'].includes(tipo)) {
-        return res.status(400).json({ error: 'Tipo de conta inválido. Escolha entre "usuario" ou "bibliotecario".' });
-      }
-
-      const emaisFormatado = email.toLowerCase().trim();
-      const usuarioExistente = await db('usuarios').where({ email: emaisFormatado }).first();
+      const emailFormatado = email.toLowerCase().trim();
+      const tipo = 'usuario'; // Sempre usuário por padrão
       
-      if (usuarioExistente) {
-        return res.status(400).json({ error: 'Este endereço de e-mail já está em uso por outra conta.' });
-      }
+      // Criar usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: emailFormatado,
+        password: senha,
+        options: {
+          data: {
+            nome: nome.trim(),
+            tipo: tipo
+          }
+        }
+      });
 
-      const senhaCriptografada = await bcrypt.hash(senha, 10);
+      if (authError) throw authError;
 
-      const [novoId] = await db('usuarios').insert({
+      // Criar registro na tabela usuarios com metadados adicionais
+      const { error: dbError } = await supabaseAdmin.from('usuarios').insert({
+        id: authData.user.id,
         nome: nome.trim(),
-        email: emaisFormatado,
-        senha: senhaCriptografada,
-        tipo
+        email: emailFormatado,
+        tipo: tipo,
+        multa_pendente: false,
+        infantil_xp: 0,
+        infantil_level: 1,
+        infantil_hearts: 5
       });
 
-      const usuarioCriado = await db('usuarios').where({ id: novoId }).first();
-
-      const tokenAcesso = gerarToken({ 
-        id: usuarioCriado.id, 
-        email: usuarioCriado.email, 
-        tipo: usuarioCriado.tipo 
-      });
+      if (dbError) throw dbError;
 
       res.status(201).json({
         message: '✅ Conta criada com sucesso! Bem-vindo(a) ao Biblio Verso.',
-        token: tokenAcesso,
+        session: authData.session,
         usuario: { 
-          id: usuarioCriado.id, 
-          nome: usuarioCriado.nome, 
-          email: usuarioCriado.email, 
-          tipo: usuarioCriado.tipo,
-          permissions: this.getPermissions(usuarioCriado.tipo)
+          id: authData.user.id, 
+          nome: nome.trim(), 
+          email: emailFormatado, 
+          tipo: tipo,
+          permissions: this.getPermissions(tipo)
         }
       });
     } catch (erro) {
@@ -87,27 +103,35 @@ class AuthController {
       }
 
       const emailFormatado = email.toLowerCase().trim();
-      const usuarioEncontrado = await db('usuarios').where({ email: emailFormatado }).first();
+      
+      // Login com Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: emailFormatado,
+        password: senha
+      });
 
-      if (!usuarioEncontrado || !(await bcrypt.compare(senha, usuarioEncontrado.senha))) {
+      if (authError) {
         return res.status(401).json({ error: 'Credenciais inválidas. Verifique seu e-mail e senha.' });
       }
 
-      const tokenAcesso = gerarToken({ 
-        id: usuarioEncontrado.id, 
-        email: usuarioEncontrado.email, 
-        tipo: usuarioEncontrado.tipo 
-      });
+      // Buscar dados adicionais do usuário
+      const { data: usuarioData } = await supabaseAdmin
+        .from('usuarios')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      const tipo = usuarioData?.tipo || authData.user.user_metadata?.tipo || 'usuario';
 
       res.json({
         message: '✅ Login realizado com sucesso!',
-        token: tokenAcesso,
+        session: authData.session,
         usuario: { 
-          id: usuarioEncontrado.id, 
-          nome: usuarioEncontrado.nome, 
-          email: usuarioEncontrado.email, 
-          tipo: usuarioEncontrado.tipo,
-          permissions: this.getPermissions(usuarioEncontrado.tipo)
+          id: authData.user.id, 
+          nome: usuarioData?.nome || authData.user.user_metadata?.nome, 
+          email: authData.user.email, 
+          tipo: tipo,
+          permissions: this.getPermissions(tipo)
         }
       });
     } catch (erro) {
@@ -118,7 +142,18 @@ class AuthController {
 
   editarPerfil = async (req, res) => {
     try {
-      const usuarioId = req.usuario.id;
+      const authorization = req.headers.authorization;
+      if (!authorization) {
+        return res.status(401).json({ error: 'Token não fornecido' });
+      }
+
+      const token = authorization.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+      if (authError || !user) {
+        return res.status(401).json({ error: 'Token inválido' });
+      }
+
       const { nome, email, senha } = req.body;
 
       const mudancas = {};
@@ -137,15 +172,14 @@ class AuthController {
         if (!emailRegex.test(emailFormatado)) {
           return res.status(400).json({ error: 'O formato do novo e-mail é inválido.' });
         }
-
-        const outroUsuarioComEmail = await db('usuarios')
-          .where({ email: emailFormatado })
-          .whereNot({ id: usuarioId })
-          .first();
         
-        if (outroUsuarioComEmail) {
-          return res.status(400).json({ error: 'Este e-mail já está sendo utilizado por outro cadastro.' });
-        }
+        // Atualizar email no Supabase Auth
+        const { error: updateEmailError } = await supabase.auth.updateUser({
+          email: emailFormatado
+        });
+        
+        if (updateEmailError) throw updateEmailError;
+        
         mudancas.email = emailFormatado;
       }
 
@@ -153,17 +187,29 @@ class AuthController {
         if (senha.length < 8) {
           return res.status(400).json({ error: 'A nova senha deve ter no mínimo 8 caracteres.' });
         }
-        mudancas.senha = await bcrypt.hash(senha, 10);
+        
+        // Atualizar senha no Supabase Auth
+        const { error: updatePasswordError } = await supabase.auth.updateUser({
+          password: senha
+        });
+        
+        if (updatePasswordError) throw updatePasswordError;
       }
 
       if (Object.keys(mudancas).length > 0) {
-        await db('usuarios').where({ id: usuarioId }).update(mudancas);
+        const { error } = await supabaseAdmin
+          .from('usuarios')
+          .update(mudancas)
+          .eq('id', user.id);
+        
+        if (error) throw error;
       }
 
-      const usuarioAtualizado = await db('usuarios')
-        .where({ id: usuarioId })
+      const { data: usuarioAtualizado } = await supabaseAdmin
+        .from('usuarios')
         .select('id', 'nome', 'email', 'tipo')
-        .first();
+        .eq('id', user.id)
+        .single();
 
       res.json({
         message: '✅ Perfil atualizado com sucesso!',

@@ -1,4 +1,4 @@
-const db = require('../database');
+const supabase = require('../database');
 
 class UsuarioController {
 
@@ -12,47 +12,30 @@ class UsuarioController {
 
       const colunasPermitidas = ['nome', 'email', 'tipo', 'created_at'];
       const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'nome';
-      const direcaoOrdenacao = order === 'desc' ? 'desc' : 'asc';
+      const direcaoOrdenacao = order === 'desc' ? { ascending: false } : { ascending: true };
 
-      let consulta = db('usuarios')
-        .where('deleted_at', null)
-        .select(
-          'id', 'nome', 'email', 'tipo', 'multa_pendente', 'bloqueado', 'motivo_bloqueio', 'created_at'
-        );
+      let consulta = supabase
+        .from('usuarios')
+        .select('id, nome, email, tipo, multa_pendente, bloqueado, motivo_bloqueio, created_at', { count: 'exact' })
+        .is('deleted_at', null);
 
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
-        const queryTermo = `%${termoBusca}%`;
-        consulta = consulta.where(builder => 
-          builder.whereILike('nome', queryTermo)
-            .orWhereILike('email', queryTermo)
-            .orWhereRaw('CAST(id AS CHAR) LIKE ?', [queryTermo])
-        );
+        consulta = consulta.or(`nome.ilike.%${termoBusca}%,email.ilike.%${termoBusca}%`);
       }
 
-      const [registros, [{ total }]] = await Promise.all([
-        consulta.clone()
-          .orderBy(colunaOrdenacao, direcaoOrdenacao)
-          .limit(limite)
-          .offset(deslocamento),
-        db('usuarios').where('deleted_at', null).modify(q => {
-          if (termoBusca) {
-            const queryTermo = `%${termoBusca}%`;
-            q.where(builder => 
-              builder.whereILike('nome', queryTermo)
-                .orWhereILike('email', queryTermo)
-                .orWhereRaw('CAST(id AS CHAR) LIKE ?', [queryTermo])
-            );
-          }
-        }).count('id as total')
-      ]);
+      consulta = consulta.order(colunaOrdenacao, direcaoOrdenacao).range(deslocamento, deslocamento + limite - 1);
+
+      const { data: registros, count: total, error } = await consulta;
+
+      if (error) throw error;
 
       res.json({ 
         data: registros, 
-        total: Number(total), 
+        total: total || 0, 
         page: pagina, 
         limit: limite, 
-        pages: Math.ceil(Number(total) / limite) 
+        pages: Math.ceil((total || 0) / limite) 
       });
     } catch (erro) {
       console.error('Erro ao listar usuários:', erro);
@@ -65,7 +48,13 @@ class UsuarioController {
       const { id } = req.params;
       const { nome, email, tipo } = req.body;
 
-      const usuarioAlvo = await db('usuarios').where({ id }).where('deleted_at', null).first();
+      const { data: usuarioAlvo } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', id)
+        .is('deleted_at', null)
+        .single();
+
       if (!usuarioAlvo) {
         return res.status(404).json({ error: 'Usuário não encontrado ou já desativado.' });
       }
@@ -80,21 +69,23 @@ class UsuarioController {
       }
 
       if (email !== undefined) {
-        const emaisFormatado = email.toLowerCase().trim();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emaisFormatado)) {
+        const emailFormatado = email.toLowerCase().trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailFormatado)) {
           return res.status(400).json({ error: 'Formato de e-mail inválido.' });
         }
         
-        const emailEmUso = await db('usuarios')
-          .where({ email: emaisFormatado })
-          .whereNot({ id })
-          .where('deleted_at', null)
-          .first();
+        const { data: emailEmUso } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('email', emailFormatado)
+          .neq('id', id)
+          .is('deleted_at', null)
+          .single();
         
         if (emailEmUso) {
           return res.status(400).json({ error: 'Este e-mail já está sendo utilizado por outro cadastro ativo.' });
         }
-        dadosParaAtualizar.email = emaisFormatado;
+        dadosParaAtualizar.email = emailFormatado;
       }
 
       if (tipo !== undefined) {
@@ -105,13 +96,19 @@ class UsuarioController {
       }
 
       if (Object.keys(dadosParaAtualizar).length > 0) {
-        await db('usuarios').where({ id }).update(dadosParaAtualizar);
+        const { error } = await supabase
+          .from('usuarios')
+          .update(dadosParaAtualizar)
+          .eq('id', id);
+        
+        if (error) throw error;
       }
 
-      const usuarioAtualizado = await db('usuarios')
-        .where({ id })
-        .select('id', 'nome', 'email', 'tipo')
-        .first();
+      const { data: usuarioAtualizado } = await supabase
+        .from('usuarios')
+        .select('id, nome, email, tipo')
+        .eq('id', id)
+        .single();
 
       res.json({ 
         message: '✅ Usuário atualizado com sucesso!', 
@@ -127,22 +124,36 @@ class UsuarioController {
     try {
       const { id } = req.params;
       
-      const usuario = await db('usuarios').where({ id }).where('deleted_at', null).first();
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', id)
+        .is('deleted_at', null)
+        .single();
+
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não encontrado ou já desativado.' });
       }
 
-      const [{ totalAtivos }] = await db('alugueis')
-        .where({ usuario_id: id, status: 'ativo' })
-        .count('id as totalAtivos');
+      const { count: totalAtivos } = await supabase
+        .from('alugueis')
+        .select('*', { count: 'exact', head: true })
+        .eq('usuario_id', id)
+        .eq('status', 'ativo');
       
-      if (Number(totalAtivos) > 0) {
+      if ((totalAtivos || 0) > 0) {
         return res.status(400).json({ 
           error: `❌ Bloqueio de Segurança: O usuário possui ${totalAtivos} livro(s) pendente(s) de devolução.` 
         });
       }
 
-      await db('usuarios').where({ id }).update({ deleted_at: db.fn.now() });
+      const { error } = await supabase
+        .from('usuarios')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+
       res.json({ message: '✅ Usuário arquivado com sucesso. Os registros históricos permanecem no banco para auditoria.' });
     } catch (erro) {
       console.error('Erro ao arquivar usuário:', erro);
@@ -159,7 +170,12 @@ class UsuarioController {
         return res.status(400).json({ error: 'É obrigatório informar o motivo do bloqueio.' });
       }
 
-      const usuario = await db('usuarios').where({ id }).first();
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', id)
+        .single();
+
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
@@ -168,10 +184,15 @@ class UsuarioController {
         return res.status(400).json({ error: 'Este usuário já se encontra bloqueado.' });
       }
 
-      await db('usuarios').where({ id }).update({
-        bloqueado: true,
-        motivo_bloqueio: motivo.trim()
-      });
+      const { error } = await supabase
+        .from('usuarios')
+        .update({
+          bloqueado: true,
+          motivo_bloqueio: motivo.trim()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
 
       res.json({ message: '✅ Usuário bloqueado com sucesso!' });
     } catch (erro) {
@@ -184,7 +205,12 @@ class UsuarioController {
     try {
       const { id } = req.params;
 
-      const usuario = await db('usuarios').where({ id }).first();
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', id)
+        .single();
+
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
@@ -193,10 +219,15 @@ class UsuarioController {
         return res.status(400).json({ error: 'Este usuário não está bloqueado.' });
       }
 
-      await db('usuarios').where({ id }).update({
-        bloqueado: false,
-        motivo_bloqueio: null
-      });
+      const { error } = await supabase
+        .from('usuarios')
+        .update({
+          bloqueado: false,
+          motivo_bloqueio: null
+        })
+        .eq('id', id);
+
+      if (error) throw error;
 
       res.json({ message: '✅ Usuário desbloqueado. O acesso está liberado novamente.' });
     } catch (erro) {

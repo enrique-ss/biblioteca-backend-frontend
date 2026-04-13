@@ -1,16 +1,33 @@
 # Biblio Verso — Sistema de Biblioteca Premium
 
-Sistema completo para gestão de acervo físico e **digital**, com arquitetura moderna em Node.js, autenticação protegida e interfaces de alto desempenho (Web e CLI).
+Sistema completo para gestão de acervo físico e **digital**, com arquitetura moderna em Node.js, autenticação Supabase e interface web de alto desempenho.
 
-## 🚀 Como rodar
+## 🚀 Como rodar localmente
 
-Configure o `.env` com base no `.env.example`, instale as dependências com `npm install` e inicialize o banco com `npm run setup`.
+1. **Configurar variáveis de ambiente**
+   - Copie `.env.example` para `.env`
+   - Configure as variáveis do Supabase (URL, ANON_KEY, SERVICE_ROLE_KEY)
 
-**Opções de execução:**
-- `npm run dev` - Inicia apenas a API Backend (Porta 3000)
-- `npm run web` - Inicia apenas o Frontend Web (Porta 8080)
-- `npm run full` - **[Recomendado]** Inicia o ecossistema completo simultaneamente
-- `npm run cli` - Interface interativa via Terminal
+2. **Configurar banco de dados no Supabase**
+   - Execute o SQL do arquivo `setup.sql` no SQL Editor do Supabase
+   - Isso cria todas as tabelas necessárias
+   - Crie usuários padrão no Supabase Auth (admin@admin.com/admin123, user@user.com/user123)
+
+3. **Instalar dependências**
+   ```bash
+   npm install
+   ```
+
+4. **Opções de execução**
+   ```bash
+   npm run setup  # Drop/criar tabelas no Supabase
+   npm run dev    # Iniciar servidor (porta 3000)
+   npm run full   # Setup + dev (recomendado)
+   npm start      # Iniciar servidor
+   ```
+
+5. **Acessar**
+   - Backend: http://localhost:3000
 
 ## ✨ O que o sistema faz
 
@@ -18,23 +35,20 @@ Configure o `.env` com base no `.env.example`, instale as dependências com `npm
 - **Autoatendimento**: Leitores consultam acervo, renovam empréstimos online e quitam multas via interface web.
 - **Gestão Administrativa**: Bibliotecários controlam estoque, processam devoluções com avaliação de estado físico e gerenciam bloqueios de usuários.
 - **Ecossistema Inteligente**: Cálculo automático de multas (R$ 1,00/dia), prazos de 14 dias e centro de notificações unificado para pendências críticas.
-- **Experiência Premium**: Interface Web com Glassmorphism, suporte nativo a Dark/Light mode e micro-animações GSAP.
+- **Experiência Premium**: Interface Web com Glassmorphism, suporte nativo a Dark/Light mode e micro-animações.
 
 ## 🔑 Regras de acesso
 
-- **Administrador**: Use a opção secreta "admin" na criação de conta via CLI para privilégios de Bibliotecário.
-- **Segurança**: Autenticação via JWT com senhas criptografadas em Bcrypt.
-
+- **Usuário comum**: Criado automaticamente com tipo 'usuario' ao se registrar
+- **Administrador**: Criado manualmente no Supabase Auth com tipo 'bibliotecario'
+- **Segurança**: Autenticação via Supabase Auth nativo (sem JWT)
 
 ## 🛠️ Arquitetura e Engenharia
 
-O projeto foi construído utilizando práticas modernas de desenvolvimento:
-
-- **Frontend Web**: SPA (Single Page Application), Vanilla JS, CSS3 (Mobile First), GSAP, Three.js, MutationObserver.
-- **Backend API**: Node.js, Express, Knex.js, MySQL, RESTful (Headless), Stateless, Middlewares.
-- **Segurança**: JWT (Authentication), Bcrypt (Hashing), RBAC (Access Control).
-- **Consistência**: ACID, Transactions, Relational Modeling (1:N), Soft/Hard Deletes.
-- **Lógica**: Async/Await, Promise.all(), Date Math, Regex, Gamificação via Server-side algorithms.
+- **Frontend Web**: SPA (Single Page Application), Vanilla JS, CSS3 (Mobile First), GSAP, Three.js
+- **Backend API**: Node.js, Express, Supabase Client, RESTful, Socket.io
+- **Banco de Dados**: Supabase (PostgreSQL) com Supabase Auth
+- **Segurança**: Supabase Auth, RBAC (Access Control)
 
 ---
 
