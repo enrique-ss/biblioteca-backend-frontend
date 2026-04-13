@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: 3000
       - key: DB_HOST
-        value: db.jzhsvslsehxkgevlbfuf.supabase.co
+        value: db.mtjrxenjffwjytjfkock.supabase.co
       - key: DB_PORT
         value: 5432
       - key: DB_USER
