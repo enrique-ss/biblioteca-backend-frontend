@@ -105,24 +105,6 @@
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
                         <input type="text" id="buscaLivros" class="form-input" placeholder="Buscar por título, autor, gênero ou ano…" oninput="carregarLivrosDebounced(this.value)">
                     </div>
-                    <div style="width:140px">
-                        <select id="filtroCategoria" class="form-select" onchange="carregarLivros()">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <div style="width:140px">
-                        <select id="filtroStatus" class="form-select" onchange="carregarLivros()">
-                            <option value="">Todos</option>
-                            <option value="disponivel">Disponíveis</option>
-                        </select>
-                    </div>
-                    <div style="width:140px">
-                        <select id="filtroCondicao" class="form-select" onchange="carregarLivros()">
-                            <option value="">Todos</option>
-                            <option value="bom">Bom</option>
-                            <option value="danificado">Danificado</option>
-                        </select>
-                    </div>
                 </div>
                 <div id="livrosGrid" class="digital-grid">
                     <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
@@ -143,17 +125,6 @@
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
                         <input type="text" id="buscaDigital" class="form-input"
                             placeholder="Buscar por título, autor, categoria ou ano…" oninput="carregarAcervoDigitalDebounced(this.value)">
-                    </div>
-                    <div style="width:160px">
-                        <select id="filtroCategoriaDigital" class="form-select" onchange="carregarAcervoDigital()">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <div style="width:140px">
-                        <select id="filtroStatusDigital" class="form-select" onchange="carregarAcervoDigital()">
-                            <option value="">Todos</option>
-                            <option value="disponivel">Disponíveis</option>
-                        </select>
                     </div>
                 </div>
                 
@@ -177,13 +148,13 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th class="sortable" onclick="sortTable('historico','usuario')">Usuário <span class="sort-indicator"></span></th>
-                                <th class="sortable" onclick="sortTable('historico','titulo')">Livro <span class="sort-indicator"></span></th>
+                                <th>Usuário</th>
+                                <th>Livro</th>
                                 <th>Exemplar</th>
-                                <th class="sortable" onclick="sortTable('historico','estado_devolucao')">Estado <span class="sort-indicator"></span></th>
-                                <th class="sortable" onclick="sortTable('historico','data_aluguel')">Empréstimo <span class="sort-indicator"></span></th>
-                                <th class="sortable" onclick="sortTable('historico','prazo')">Prazo <span class="sort-indicator"></span></th>
-                                <th class="sortable" onclick="sortTable('historico','data_devolucao')">Devolução <span class="sort-indicator"></span></th>
+                                <th>Estado</th>
+                                <th>Empréstimo</th>
+                                <th>Prazo</th>
+                                <th>Devolução</th>
                                 <th>Renovações</th>
                             </tr>
                         </thead>
@@ -227,9 +198,9 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th class="sortable" onclick="sortTable('usuarios','nome')">Nome <span class="sort-indicator"></span></th>
-                                <th class="sortable" onclick="sortTable('usuarios','email')">Email <span class="sort-indicator"></span></th>
-                                <th class="sortable" onclick="sortTable('usuarios','tipo')">Tipo <span class="sort-indicator"></span></th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Tipo</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -410,7 +381,6 @@
                             </div>
                             <div class="stats-chart-body">
                                 <div class="stats-canvas-wrap"><canvas id="chart-generos"></canvas></div>
-                                <div class="stats-list" id="list-generos"></div>
                             </div>
                         </div>
                         <div class="stats-chart-card">
@@ -419,7 +389,6 @@
                             </div>
                             <div class="stats-chart-body">
                                 <div class="stats-canvas-wrap"><canvas id="chart-autores"></canvas></div>
-                                <div class="stats-list" id="list-autores"></div>
                             </div>
                         </div>
                         <div class="stats-chart-card">
@@ -428,7 +397,6 @@
                             </div>
                             <div class="stats-chart-body">
                                 <div class="stats-canvas-wrap"><canvas id="chart-livros"></canvas></div>
-                                <div class="stats-list" id="list-livros"></div>
                             </div>
                         </div>
                         <div class="stats-chart-card">
@@ -437,34 +405,38 @@
                             </div>
                             <div class="stats-chart-body">
                                 <div class="stats-canvas-wrap"><canvas id="chart-usuarios"></canvas></div>
-                                <div class="stats-list" id="list-usuarios"></div>
                             </div>
                         </div>
-                        <div class="stats-chart-card stats-chart-wide">
+                        <div class="stats-chart-card">
                             <div class="stats-chart-header">
                                 <h3>Empréstimos por Mês</h3>
                             </div>
                             <div class="stats-chart-body">
                                 <div class="stats-canvas-wrap"><canvas id="chart-meses"></canvas></div>
-                                <div class="stats-list" id="list-meses"></div>
                             </div>
                         </div>
-                        <div class="stats-chart-card stats-chart-wide">
+                        <div class="stats-chart-card">
                             <div class="stats-chart-header">
                                 <h3>Novos Usuários por Mês</h3>
                             </div>
                             <div class="stats-chart-body">
                                 <div class="stats-canvas-wrap"><canvas id="chart-cadastros"></canvas></div>
-                                <div class="stats-list" id="list-cadastros"></div>
                             </div>
                         </div>
-                        <div class="stats-chart-card stats-chart-wide">
+                        <div class="stats-chart-card">
                             <div class="stats-chart-header">
-                                <h3>Acervo por Década de Publicação</h3>
+                                <h3>Funções Cadastradas</h3>
                             </div>
                             <div class="stats-chart-body">
-                                <div class="stats-canvas-wrap"><canvas id="chart-decadas"></canvas></div>
-                                <div class="stats-list" id="list-decadas"></div>
+                                <div class="stats-canvas-wrap stats-canvas-sm"><canvas id="chart-funcoes"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="stats-chart-card">
+                            <div class="stats-chart-header">
+                                <h3>Status do Acervo</h3>
+                            </div>
+                            <div class="stats-chart-body">
+                                <div class="stats-canvas-wrap stats-canvas-sm"><canvas id="chart-acervo"></canvas></div>
                             </div>
                         </div>
                         </div>
@@ -664,7 +636,7 @@
                         class="form-input" required></div>
                 <div class="form-group"><label class="form-label">Tipo</label>
                     <select id="editUsuarioTipo" class="form-select">
-                        <option value="usuario">Usuário</option>
+                        <option value="usuario">Leitor</option>
                         <option value="bibliotecario">Bibliotecário</option>
                     </select>
                 </div>

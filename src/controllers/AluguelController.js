@@ -304,7 +304,7 @@ class AluguelController {
       const hoje = new Date(); 
       hoje.setHours(0, 0, 0, 0);
 
-      const { page, limit, busca, sort, order } = req.query;
+      const { page, limit, busca } = req.query;
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(50, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
@@ -340,7 +340,8 @@ class AluguelController {
         prazo: r.data_prevista_devolucao,
         status: new Date(r.data_prevista_devolucao) < hoje ? 'atrasado' : 'ativo',
         multa_acumulada: 0,
-        multa_acumulada_formatada: 'R$ 0,00'
+        multa_acumulada_formatada: 'R$ 0,00',
+        pode_devolver: true
       }));
 
       res.json({ 
@@ -377,7 +378,8 @@ class AluguelController {
         status: a.status === 'devolvido' ? 'devolvido' : new Date(a.data_prevista_devolucao) < hoje ? 'atrasado' : 'ativo',
         renovacoes: a.renovacoes || 0,
         multa_acumulada: 0,
-        multa_acumulada_formatada: 'R$ 0,00'
+        multa_acumulada_formatada: 'R$ 0,00',
+        pode_renovar: a.status === 'ativo' && (a.renovacoes || 0) < 2
       }));
 
       res.json(dadosFormatados);
@@ -388,7 +390,7 @@ class AluguelController {
 
   historico = async (req, res) => {
     try {
-      const { page, limit, usuario_id, sort, order } = req.query;
+      const { page, limit, usuario_id } = req.query;
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(50, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;

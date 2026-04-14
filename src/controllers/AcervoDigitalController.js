@@ -4,14 +4,11 @@ class AcervoDigitalController {
 
   listar = async (req, res) => {
     try {
-      const { busca, categoria, ano, page, limit, sort, order } = req.query;
+      const { busca, page, limit } = req.query;
 
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
-
-      const colunaOrdenacao = sort === 'titulo' ? 'titulo' : 'created_at';
-      const direcaoOrdenacao = order === 'asc' ? { ascending: true } : { ascending: false };
 
       let consulta = supabase
         .from('acervo_digital')
@@ -24,44 +21,18 @@ class AcervoDigitalController {
         consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%,categoria.ilike.%${termoBusca}%`);
       }
 
-      if (categoria) {
-        consulta = consulta.eq('categoria', categoria);
-      }
-
-      if (ano) {
-        consulta = consulta.eq('ano', parseInt(String(ano)));
-      }
-
-      consulta = consulta.order(colunaOrdenacao, direcaoOrdenacao).range(deslocamento, deslocamento + limite - 1);
+      consulta = consulta.order('created_at', { ascending: false }).range(deslocamento, deslocamento + limite - 1);
 
       const { data: registros, count: total, error } = await consulta;
 
       if (error) throw error;
-
-      const { data: categoriasData } = await supabase
-        .from('acervo_digital')
-        .select('categoria')
-        .eq('status', 'aprovado')
-        .is('deleted_at', null);
-
-      const { data: anosData } = await supabase
-        .from('acervo_digital')
-        .select('ano')
-        .eq('status', 'aprovado')
-        .is('deleted_at', null)
-        .not('ano', 'is', null);
-
-      const categoriasDisp = [...new Set((categoriasData || []).map(c => c.categoria).filter(Boolean))];
-      const anosDisp = [...new Set((anosData || []).map(a => a.ano).filter(Boolean))];
 
       res.json({
         data: registros,
         total: total || 0,
         page: pagina,
         limit: limite,
-        pages: Math.ceil((total || 0) / limite),
-        categorias: categoriasDisp,
-        anos: anosDisp
+        pages: Math.ceil((total || 0) / limite)
       });
     } catch (erro) {
       console.error('Erro ao listar acervo digital:', erro);

@@ -161,7 +161,33 @@ class OfflineQueryBuilder {
   }
 
   getNestedValue(row, pathExpression) {
-    return String(pathExpression).split('.').reduce((acc, key) => acc?.[key], row);
+    const parts = String(pathExpression).split('.');
+    let current = row;
+    let currentTable = this.table;
+
+    for (const key of parts) {
+      if (current === null || current === undefined) return undefined;
+
+      if (Object.prototype.hasOwnProperty.call(current, key)) {
+        current = current[key];
+
+        const directRelation = RELATIONS[currentTable]?.[key];
+        if (directRelation) {
+          currentTable = directRelation.table;
+        }
+        continue;
+      }
+
+      const relation = RELATIONS[currentTable]?.[key];
+      if (!relation) return undefined;
+
+      current = this.client
+        .fetchAll(relation.table)
+        .find((candidate) => this.valuesEqual(candidate[relation.foreignKey], current[relation.localKey]));
+      currentTable = relation.table;
+    }
+
+    return current;
   }
 
   compareValues(left, right) {
@@ -179,23 +205,31 @@ class OfflineQueryBuilder {
     return String(left).localeCompare(String(right), 'pt-BR', { sensitivity: 'base' });
   }
 
+  valuesEqual(left, right) {
+    if (left === null || left === undefined || right === null || right === undefined) {
+      return left === right;
+    }
+
+    return this.compareValues(left, right) === 0;
+  }
+
   matchCondition(row, condition) {
     const value = this.getNestedValue(row, condition.column);
 
     switch (condition.op) {
-      case 'eq': return value === condition.value;
-      case 'neq': return value !== condition.value;
-      case 'is': return condition.value === null ? value === null || value === undefined : value === condition.value;
+      case 'eq': return this.valuesEqual(value, condition.value);
+      case 'neq': return !this.valuesEqual(value, condition.value);
+      case 'is': return condition.value === null ? value === null || value === undefined : this.valuesEqual(value, condition.value);
       case 'not':
         if (condition.operator === 'is') {
-          return condition.value === null ? value !== null && value !== undefined : value !== condition.value;
+          return condition.value === null ? value !== null && value !== undefined : !this.valuesEqual(value, condition.value);
         }
         return true;
       case 'gt': return this.compareValues(value, condition.value) > 0;
       case 'gte': return this.compareValues(value, condition.value) >= 0;
       case 'lt': return this.compareValues(value, condition.value) < 0;
       case 'lte': return this.compareValues(value, condition.value) <= 0;
-      case 'in': return Array.isArray(condition.value) && condition.value.includes(value);
+      case 'in': return Array.isArray(condition.value) && condition.value.some((item) => this.valuesEqual(value, item));
       case 'or': {
         const tests = String(condition.expression)
           .split(',')
@@ -234,7 +268,7 @@ class OfflineQueryBuilder {
 
         const baseRelatedRow = this.client
           .fetchAll(relation.table)
-          .find((candidate) => candidate[relation.foreignKey] === row[relation.localKey]);
+          .find((candidate) => this.valuesEqual(candidate[relation.foreignKey], row[relation.localKey]));
 
         output[relationName] = baseRelatedRow
           ? this.enrichRow(relation.table, baseRelatedRow, innerSelection)
@@ -331,11 +365,11 @@ class OfflineQueryBuilder {
 
   executeSelect() {
     let rows = this.client.fetchAll(this.table);
-    rows = this.projectRows(rows);
     rows = this.applyFilters(rows);
     const totalCount = rows.length;
     rows = this.applyOrdering(rows);
     rows = this.applyRange(rows);
+    rows = this.projectRows(rows);
     return this.buildResult(rows, totalCount);
   }
 

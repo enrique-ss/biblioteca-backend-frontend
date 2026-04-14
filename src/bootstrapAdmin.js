@@ -2,7 +2,7 @@ const supabaseAdmin = require('./database');
 
 const DEFAULT_ADMIN_EMAIL = (process.env.DEFAULT_ADMIN_EMAIL || 'admin@admin.com').trim().toLowerCase();
 const DEFAULT_ADMIN_PASSWORD = (process.env.DEFAULT_ADMIN_PASSWORD || 'admin123').trim();
-const DEFAULT_ADMIN_NAME = (process.env.DEFAULT_ADMIN_NAME || 'Administrador').trim();
+const DEFAULT_ADMIN_NAME = (process.env.DEFAULT_ADMIN_NAME || 'Bibliotecario').trim();
 const DEFAULT_ADMIN_TYPE = 'bibliotecario';
 
 async function ensureDefaultAdmin() {

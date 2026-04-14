@@ -48,7 +48,7 @@ function verificarBibliotecario(req, res, next) {
 
   if (req.usuario.tipo !== 'bibliotecario') {
     return res.status(403).json({
-      error: '❌ Acesso Negado: Esta funcionalidade é exclusiva para Administradores (Bibliotecários).'
+      error: '❌ Acesso Negado: Esta funcionalidade é exclusiva para Bibliotecarios.'
     });
   }
 

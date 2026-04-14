@@ -7,9 +7,7 @@ async function carregarUsuarios(pagina = 1, busca = '') {
     try {
         const parametros = new URLSearchParams({ 
             page: pagina, 
-            limit: 20,
-            sort: sortState.usuarios.col,
-            order: sortState.usuarios.dir
+            limit: 20
         });
         
         if (busca.trim()) {
@@ -68,18 +66,6 @@ async function carregarUsuarios(pagina = 1, busca = '') {
         });
 
         renderizarPaginacao('usuariosPagination', pagina, pages, (p) => carregarUsuarios(p, busca));
-        
-        // Atualiza visualmente as classes de ordenação nas colunas
-        const thsSelector = '#usuariosScreen .sortable';
-        document.querySelectorAll(thsSelector).forEach(th => {
-            th.classList.remove('sort-asc', 'sort-desc');
-        });
-        
-        const thAtual = document.querySelector(`#usuariosScreen [onclick="sortTable('usuarios','${sortState.usuarios.col}')"]`);
-        if (thAtual) {
-            const classe = sortState.usuarios.dir === 'asc' ? 'sort-asc' : 'sort-desc';
-            thAtual.classList.add(classe);
-        }
     } catch (erro) { 
         definirVazio('usuariosTbody', 5, erro.message); 
         exibirAlerta(erro.message, 'danger'); 

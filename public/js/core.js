@@ -12,56 +12,11 @@ const socket = typeof io !== 'undefined'
 socket.on('connect', () => console.log('Conectado ao servidor WebSocket!', socket.id));
 socket.on('refreshData', (tipo) => {
     if (tipo === 'livros' && typeof loadLivros === 'function') {
-        const busca = document.getElementById('buscaLivros')?.value || '';
-        loadLivros(busca, 1);
+        loadLivros(1);
     } else if (tipo === 'alugueis' && typeof loadAlugueis === 'function') {
         loadAlugueis(1);
     }
 });
-
-const sortState = {
-    livros: { col: 'titulo', dir: 'asc' },
-    usuarios: { col: 'nome', dir: 'asc' },
-    alugueis: { col: 'data_aluguel', dir: 'desc' },
-    historico: { col: 'id', dir: 'desc' },
-    acervoDigital: { col: 'created_at', dir: 'desc' }
-};
-
-function sortTable(table, col) {
-    const state = sortState[table];
-    if (!state) return;
-
-    if (state.col === col && state.dir === 'asc') {
-        state.dir = 'desc';
-    } else {
-        state.dir = 'asc';
-    }
-    state.col = col;
-
-    const thsSelector = `#${table}Screen .sortable`;
-    document.querySelectorAll(thsSelector).forEach((th) => {
-        th.classList.remove('sort-asc', 'sort-desc');
-    });
-
-    const thCliqueado = document.querySelector(`[onclick="sortTable('${table}','${col}')"]`);
-    if (thCliqueado) {
-        const classe = state.dir === 'asc' ? 'sort-asc' : 'sort-desc';
-        thCliqueado.classList.add(classe);
-    }
-
-    if (table === 'livros') {
-        const busca = document.getElementById('buscaLivros')?.value || '';
-        loadLivros(busca, 1);
-    } else if (table === 'usuarios') {
-        const busca = document.getElementById('buscaUsuarios')?.value || '';
-        loadUsuarios(1, busca);
-    } else if (table === 'alugueis') {
-        loadAlugueis(1);
-    } else if (table === 'historico') {
-        const busca = document.getElementById('buscaHistorico')?.value || '';
-        loadHistorico(1, busca);
-    }
-}
 
 function atualizarIconeTema(tema) {
     const themeIcon = document.getElementById('btnThemeIcon');
@@ -260,7 +215,7 @@ function badgeStatus(status) {
 function badgeTipo(tipo) {
     const mapas = {
         bibliotecario: `<span class="badge badge-gold">Bibliotecario</span>`,
-        usuario: `<span class="badge badge-usuario">Usuario</span>`
+        usuario: `<span class="badge badge-usuario">Leitor</span>`
     };
     return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
 }

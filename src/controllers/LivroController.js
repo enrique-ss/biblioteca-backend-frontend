@@ -44,32 +44,23 @@ class LivroController {
 
   listar = async (req, res) => {
     try {
-      const { status, busca, page, limit, sort, order } = req.query;
+      const { busca, page, limit } = req.query;
 
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
-
-      const colunaOrdenacao = sort === 'titulo' ? 'titulo' : 'created_at';
-      const direcaoOrdenacao = order === 'desc' ? { ascending: false } : { ascending: true };
 
       let consulta = supabase
         .from('livros')
         .select('*', { count: 'exact' })
         .is('deleted_at', null);
 
-      if (status === 'disponivel') {
-        consulta = consulta.gt('exemplares_disponiveis', 0);
-      } else if (status === 'alugado') {
-        consulta = consulta.eq('status', 'alugado');
-      }
-
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%`);
       }
 
-      consulta = consulta.order(colunaOrdenacao, direcaoOrdenacao).range(deslocamento, deslocamento + limite - 1);
+      consulta = consulta.order('created_at', { ascending: false }).range(deslocamento, deslocamento + limite - 1);
 
       const { data: registros, count: total, error } = await consulta;
 
@@ -82,32 +73,6 @@ class LivroController {
     } catch (erro) {
       console.error('Erro ao listar livros:', erro);
       res.status(500).json({ error: 'Erro ao carregar o acervo de livros.' });
-    }
-  };
-
-  carregarFiltros = async (req, res) => {
-    try {
-      const { data: categorias } = await supabase
-        .from('livros')
-        .select('genero')
-        .is('deleted_at', null);
-
-      const { data: anos } = await supabase
-        .from('livros')
-        .select('ano_lancamento')
-        .is('deleted_at', null)
-        .not('ano_lancamento', 'is', null);
-
-      const listaCategorias = [...new Set((categorias || []).map(c => c.genero).filter(Boolean))];
-      const listaAnos = [...new Set((anos || []).map(a => a.ano_lancamento).filter(Boolean))];
-
-      res.json({
-        categorias: listaCategorias,
-        anos: listaAnos
-      });
-    } catch (erro) {
-      console.error('Erro ao carregar filtros:', erro);
-      res.status(500).json({ error: 'Erro ao carregar filtros.' });
     }
   };
 

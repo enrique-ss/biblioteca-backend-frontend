@@ -7,7 +7,6 @@ const router = Router();
 router.use(verificarToken);
 
 router.get('/', controller.listar);
-router.get('/filtros', controller.carregarFiltros);
 router.post('/', verificarBibliotecario, controller.cadastrar);
 router.put('/:id', verificarBibliotecario, controller.editar);
 router.delete('/:id', verificarBibliotecario, controller.remover);

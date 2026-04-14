@@ -7,13 +7,13 @@ async function carregarAlugueis(pagina = 1, busca = '') {
     document.getElementById('alugueisTitle').innerHTML = `<span>Controle</span> de Empréstimos`;
     document.getElementById('alugueisHead').innerHTML = `
         <tr>
-            <th class="sortable" onclick="sortTable('alugueis','alugueis.id')"># <span class="sort-indicator"></span></th>
-            <th class="sortable" onclick="sortTable('alugueis','usuarios.nome')">Usuário <span class="sort-indicator"></span></th>
-            <th class="sortable" onclick="sortTable('alugueis','livros.titulo')">Livro <span class="sort-indicator"></span></th>
+            <th>#</th>
+            <th>Usuário</th>
+            <th>Livro</th>
             <th>Exemplar</th>
-            <th class="sortable" onclick="sortTable('alugueis','alugueis.data_aluguel')">Empréstimo <span class="sort-indicator"></span></th>
-            <th class="sortable" onclick="sortTable('alugueis','prazo')">Prazo <span class="sort-indicator"></span></th>
-            <th class="sortable" onclick="sortTable('alugueis','dias_atraso')">Atraso <span class="sort-indicator"></span></th>
+            <th>Empréstimo</th>
+            <th>Prazo</th>
+            <th>Atraso</th>
             <th>Status</th>
             <th>Ações</th>
         </tr>`;
@@ -23,9 +23,7 @@ async function carregarAlugueis(pagina = 1, busca = '') {
     try {
         const parametros = new URLSearchParams({ 
             page: pagina, 
-            limit: 20,
-            sort: sortState.alugueis.col,
-            order: sortState.alugueis.dir
+            limit: 20
         });
 
         if (busca.trim()) {
@@ -52,18 +50,6 @@ async function carregarAlugueis(pagina = 1, busca = '') {
         } else {
             banner.style.display = 'none';
         }
-        
-        // Atualiza visualmente a ordenação nas colunas
-        document.querySelectorAll('#alugueisScreen .sortable').forEach(th => {
-            th.classList.remove('sort-asc', 'sort-desc');
-        });
-        
-        const thAtual = document.querySelector(`#alugueisScreen [onclick="sortTable('alugueis','${sortState.alugueis.col}')"]`);
-        if (thAtual) {
-            const classe = sortState.alugueis.dir === 'asc' ? 'sort-asc' : 'sort-desc';
-            thAtual.classList.add(classe);
-        }
-
     } catch (erro) { 
         definirVazio('alugueisTbody', 9, erro.message); 
         exibirAlerta(erro.message, 'danger'); 
@@ -171,7 +157,7 @@ function renderizarTabelaAlugueisUsuario(lista) {
 async function prepararModalNovoAluguel() {
     try {
         const [livros, usuarios] = await Promise.all([
-            api('/livros?status=disponivel&limit=1000'),
+            api('/livros?limit=1000'),
             api('/usuarios?limit=1000')
         ]);
 
@@ -230,9 +216,14 @@ document.getElementById('addAluguelForm').addEventListener('submit', async (e) =
     e.preventDefault();
     try {
         const livroId = parseInt(document.getElementById('aluguelLivro').value);
-        const usuarioId = parseInt(document.getElementById('aluguelUsuario').value);
+        const usuarioId = document.getElementById('aluguelUsuario').value;
         const exemplarIdStr = document.getElementById('aluguelExemplar').value;
         const exemplarId = exemplarIdStr ? parseInt(exemplarIdStr) : null;
+
+        if (!livroId || !usuarioId) {
+            exibirAlerta('Selecione um livro e um usuário válidos.', 'danger');
+            return;
+        }
             
         const payload = {
             livro_id: livroId,
@@ -346,9 +337,7 @@ async function carregarHistorico(pagina = 1, usuarioId = '') {
     try {
         const parametros = new URLSearchParams({ 
             page: pagina, 
-            limit: 20,
-            sort: sortState.historico.col,
-            order: sortState.historico.dir
+            limit: 20
         });
 
         if (String(usuarioId).trim()) {
@@ -381,15 +370,6 @@ async function carregarHistorico(pagina = 1, usuarioId = '') {
         });
 
         renderizarPaginacao('historicoPagination', pagina, pages, (p) => carregarHistorico(p, usuarioId));
-        
-        // Atualiza indicadores de ordenação no histórico
-        document.querySelectorAll('#historicoScreen .sortable').forEach(th => {
-            th.classList.remove('sort-asc', 'sort-desc');
-        });
-        const thAtual = document.querySelector(`#historicoScreen [onclick="sortTable('historico','${sortState.historico.col}')"]`);
-        if (thAtual) {
-            thAtual.classList.add(sortState.historico.dir === 'asc' ? 'sort-asc' : 'sort-desc');
-        }
     } catch (erro) { 
         definirVazio('historicoTbody', 9, erro.message); 
         exibirAlerta(erro.message, 'danger'); 

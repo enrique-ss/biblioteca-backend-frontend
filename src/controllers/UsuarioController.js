@@ -4,15 +4,11 @@ class UsuarioController {
 
   listar = async (req, res) => {
     try {
-      const { busca, page, limit, sort, order } = req.query;
+      const { busca, page, limit } = req.query;
 
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
-
-      const colunasPermitidas = ['nome', 'email', 'tipo', 'created_at'];
-      const colunaOrdenacao = colunasPermitidas.includes(String(sort)) ? String(sort) : 'nome';
-      const direcaoOrdenacao = order === 'desc' ? { ascending: false } : { ascending: true };
 
       let consulta = supabase
         .from('usuarios')
@@ -24,7 +20,7 @@ class UsuarioController {
         consulta = consulta.or(`nome.ilike.%${termoBusca}%,email.ilike.%${termoBusca}%`);
       }
 
-      consulta = consulta.order(colunaOrdenacao, direcaoOrdenacao).range(deslocamento, deslocamento + limite - 1);
+      consulta = consulta.order('nome', { ascending: true }).range(deslocamento, deslocamento + limite - 1);
 
       const { data: registros, count: total, error } = await consulta;
 

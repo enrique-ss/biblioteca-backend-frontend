@@ -118,13 +118,20 @@ function applySchema(db) {
 
 function recreateDatabase() {
   fs.mkdirSync(dataDir, { recursive: true });
-
-  if (fs.existsSync(dbPath)) {
-    fs.unlinkSync(dbPath);
-  }
-
   const db = new Database(dbPath);
+  db.pragma('foreign_keys = OFF');
+  db.exec(`
+    DROP TABLE IF EXISTS multas;
+    DROP TABLE IF EXISTS alugueis;
+    DROP TABLE IF EXISTS exemplares;
+    DROP TABLE IF EXISTS acervo_digital;
+    DROP TABLE IF EXISTS usuarios_leicoes_infantis;
+    DROP TABLE IF EXISTS livros;
+    DROP TABLE IF EXISTS usuarios;
+  `);
+  db.pragma('foreign_keys = ON');
   applySchema(db);
+  db.exec('VACUUM;');
   db.close();
 }
 

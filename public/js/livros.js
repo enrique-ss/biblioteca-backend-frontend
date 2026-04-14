@@ -5,7 +5,7 @@ let controladorAbortarLivros = null;
 // Debounce para evitar múltiplas requisições enquanto o usuário digita na busca
 const carregarLivrosDebounced = debounce(() => carregarLivros(1));
 
-// Função principal de carga do acervo com filtros e destaque de novidade
+// Função principal de carga do acervo com busca textual e destaque de novidade
 async function carregarLivros(pagina = 1) {
     // Cancela a requisição anterior se houver uma em andamento
     if (controladorAbortarLivros) {
@@ -17,30 +17,15 @@ async function carregarLivros(pagina = 1) {
     grid.innerHTML = '<div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;"><span class="spinner"></span> Carregando acervo físico...</div>';
 
     try {
-        // Obter valores dos filtros e busca diretamente do DOM para consistência
         const busca = document.getElementById('buscaLivros')?.value || '';
-        const filtroCategoria = document.getElementById('filtroCategoria')?.value || '';
-        const filtroStatus = document.getElementById('filtroStatus')?.value || '';
-        const filtroCondicao = document.getElementById('filtroCondicao')?.value || '';
 
         const parametros = new URLSearchParams({ 
             page: pagina, 
-            limit: 20,
-            sort: sortState.livros.col,
-            order: sortState.livros.dir
+            limit: 20
         });
 
         if (busca.trim()) {
             parametros.set('busca', busca.trim());
-        }
-        if (filtroCategoria) {
-            parametros.set('categoria', filtroCategoria);
-        }
-        if (filtroStatus) {
-            parametros.set('status', filtroStatus);
-        }
-        if (filtroCondicao) {
-            parametros.set('condicao', filtroCondicao);
         }
 
         // Realiza a chamada manual para suportar o sinal de cancelamento (AbortSignal)
@@ -64,7 +49,7 @@ async function carregarLivros(pagina = 1) {
         grid.innerHTML = '';
 
         // Mostrar seção Hero (Destaque) - Só na primeira página e se houver dados
-        if (pagina === 1 && data.length > 0 && !busca && !filtroCategoria && !filtroStatus && !filtroCondicao && latest_book) {
+        if (pagina === 1 && data.length > 0 && !busca && latest_book) {
             const hero = document.createElement('div');
             hero.className = 'digital-hero';
             hero.style.cssText = `
@@ -248,7 +233,7 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
             exibirAlerta('Exemplar físico cadastrado com sucesso!');
             const termoBusca = document.getElementById('buscaLivros')?.value || '';
             const pageNum = document.getElementById('livrosPagination').querySelector('.active')?.textContent || 1;
-            carregarLivros(termoBusca, pageNum);
+            carregarLivros(Number(pageNum) || 1);
         } else {
             const fileInput = document.getElementById('livroArquivo');
             if (!fileInput.files.length) {
@@ -484,30 +469,4 @@ async function atualizarCondicaoExemplar(livroId, exemplarId, novaCondicao) {
     }
 }
 
-// Carregar filtros de categoria e ano para o acervo físico
-async function carregarFiltrosLivrosFisicos() {
-    try {
-        const response = await api('/livros/filtros');
-        const { categorias, anos } = response;
-
-        // Preencher filtro de categorias
-        const categoriaSelect = document.getElementById('filtroCategoria');
-        if (categoriaSelect) {
-            const valorAtual = categoriaSelect.value;
-            categoriaSelect.innerHTML = '<option value="">Todos</option>';
-            
-            if (categorias && Array.isArray(categorias)) {
-                categorias.filter(c => c).forEach(cat => {
-                    const opt = document.createElement('option');
-                    opt.value = cat;
-                    opt.textContent = cat;
-                    categoriaSelect.appendChild(opt);
-                });
-            }
-            categoriaSelect.value = valorAtual;
-        }
-    } catch (erro) {
-        console.error('Erro ao carregar filtros:', erro);
-    }
-}
 

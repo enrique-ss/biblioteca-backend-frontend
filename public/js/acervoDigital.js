@@ -8,8 +8,6 @@ const carregarAcervoDigitalDebounced = debounce((valor) => carregarAcervoDigital
 async function carregarAcervoDigital(pagina = 1) {
     const grid = document.getElementById('digitalGrid');
     const busca = document.getElementById('buscaDigital').value;
-    const categoria = document.getElementById('filtroCategoriaDigital').value;
-    const status = document.getElementById('filtroStatusDigital').value;
 
     // Cancela a requisição anterior se houver uma em andamento
     if (controladorAbortarDigital) {
@@ -22,14 +20,10 @@ async function carregarAcervoDigital(pagina = 1) {
     try {
         const query = new URLSearchParams({
             page: pagina,
-            limit: 12,
-            sort: sortState.acervoDigital.col,
-            order: sortState.acervoDigital.dir
+            limit: 12
         });
 
         if (busca.trim()) query.set('busca', busca.trim());
-        if (categoria) query.set('categoria', categoria);
-        if (status) query.set('status', status);
 
         const response = await fetch(`${API_URL}/acervo-digital?${query}`, {
             headers: { 
@@ -41,10 +35,7 @@ async function carregarAcervoDigital(pagina = 1) {
 
         if (!response.ok) throw new Error('Erro ao carregar acervo digital');
 
-        const { data, page, pages, categorias, anos } = await response.json();
-
-        // Atualiza os filtros se for a primeira carga ou se voltarem novos metadados
-        atualizarFiltrosDigital(categorias, anos);
+        const { data, page, pages } = await response.json();
 
         if (data.length === 0) {
             grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-dim); font-style: italic;">Nenhum documento digital encontrado para esta busca.</div>';
@@ -55,7 +46,7 @@ async function carregarAcervoDigital(pagina = 1) {
         grid.innerHTML = '';
         
         // Seção Hero (Destaque) - Só na primeira página e se houver dados
-        if (pagina === 1 && data.length > 0 && !busca && !categoria) {
+        if (pagina === 1 && data.length > 0 && !busca) {
             const destaque = data[0];
             const hero = document.createElement('div');
             hero.className = 'digital-hero';
@@ -130,27 +121,6 @@ async function carregarAcervoDigital(pagina = 1) {
         if (error.name === 'AbortError') return;
         console.error(error);
         grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--danger);">${error.message}</div>`;
-    }
-}
-
-function atualizarFiltrosDigital(categorias, anos) {
-    const selCat = document.getElementById('filtroCategoriaDigital');
-    const selStatus = document.getElementById('filtroStatusDigital');
-
-    if (!selCat || !selStatus) return;
-
-    // Preserva o valor selecionado se houver
-    const catAtual = selCat.value;
-
-    if (categorias && Array.isArray(categorias)) {
-        selCat.innerHTML = '<option value="">Todos</option>';
-        categorias.filter(c => c).forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat;
-            opt.textContent = cat;
-            selCat.appendChild(opt);
-        });
-        selCat.value = catAtual;
     }
 }
 
