@@ -33,7 +33,7 @@ async function carregarAcervoDigital(pagina = 1) {
 
         const response = await fetch(`${API_URL}/acervo-digital?${query}`, {
             headers: { 
-                'Authorization': `Bearer ${token || localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${token || ''}`,
                 'Content-Type': 'application/json'
             },
             signal: controladorAbortarDigital.signal
@@ -55,7 +55,7 @@ async function carregarAcervoDigital(pagina = 1) {
         grid.innerHTML = '';
         
         // Seção Hero (Destaque) - Só na primeira página e se houver dados
-        if (pagina === 1 && data.length > 0 && !busca && !categoria && !ano) {
+        if (pagina === 1 && data.length > 0 && !busca && !categoria) {
             const destaque = data[0];
             const hero = document.createElement('div');
             hero.className = 'digital-hero';
@@ -204,9 +204,11 @@ async function resolverPendencia(id, acao) {
     if(!confirm(`Tem certeza que deseja ${acao} este documento?`)) return;
 
     try {
-        const rsp = await api(`/acervo-digital/${id}/aprovar`, {
-            method: 'POST',
-            body: JSON.stringify({ acao })
+        const endpoint = acao === 'aprovar'
+            ? `/acervo-digital/${id}/aprovar`
+            : `/acervo-digital/${id}/rejeitar`;
+        const rsp = await api(endpoint, {
+            method: 'PATCH'
         });
         exibirAlerta(rsp.message, 'success');
         carregarPendencias(); // Recarrega a lista

@@ -177,7 +177,7 @@ async function bloquearUsuario(id, nome) {
             
             try {
                 await api(`/usuarios/${id}/bloquear`, {
-                    method: 'POST',
+                    method: 'PATCH',
                     body: JSON.stringify({ motivo: motivo.trim() })
                 });
                 exibirAlerta('Usuário bloqueado com sucesso!', 'success');
@@ -197,7 +197,7 @@ async function desbloquearUsuario(id, nome) {
         okLabel: 'Desbloquear',
         onOk: async () => {
             try {
-                await api(`/usuarios/${id}/desbloquear`, { method: 'POST' });
+                await api(`/usuarios/${id}/desbloquear`, { method: 'PATCH' });
                 exibirAlerta('Usuário desbloqueado com sucesso!', 'success');
                 carregarUsuarios();
             } catch (erro) {

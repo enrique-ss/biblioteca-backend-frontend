@@ -229,7 +229,7 @@ class AluguelController {
       
       const { data: multas } = await supabase
         .from('multas')
-        .select('*, alugueis(*), livros(*)')
+        .select('*, alugueis(*, livros(*))')
         .eq('usuario_id', usuario_id)
         .order('created_at', { ascending: false });
 
@@ -255,7 +255,7 @@ class AluguelController {
       
       const { data: multas } = await supabase
         .from('multas')
-        .select('*, alugueis(*), livros(*)')
+        .select('*, alugueis(*, livros(*))')
         .eq('usuario_id', usuarioId)
         .order('created_at', { ascending: false });
 

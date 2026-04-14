@@ -1,113 +1,109 @@
-// Central de Notificações e Alertas do Sistema
+// Central de notificacoes e alertas do sistema
 
 let dadosNotificacoes = [];
 
-// Carrega e renderiza as notificações na tela cheia
 async function carregarNotificacoesCompleto() {
     await buscarNotificacoes();
     renderizarNotificacoesTelaCheia();
 }
 
-// Busca as notificações do servidor baseadas no tipo de usuário
 async function buscarNotificacoes() {
     if (!currentUser) return;
-    
+
     try {
         const corpoNotificacoes = document.getElementById('notificationsFullScreenBody');
         if (corpoNotificacoes) {
             corpoNotificacoes.innerHTML = '<div style="text-align:center; padding:40px; color:var(--accent); font-family:\'Cinzel\', serif;">Buscando alertas do sistema...</div>';
         }
-        
-        const resultados = await (currentUser.tipo === 'bibliotecario' ? carregarNotificacoesAdmin() : carregarNotificacoesUsuario());
+
+        const resultados = await (currentUser.tipo === 'bibliotecario'
+            ? carregarNotificacoesAdmin()
+            : carregarNotificacoesUsuario());
+
         dadosNotificacoes = resultados || [];
-        
+
         renderizarNotificacoesTelaCheia();
         atualizarBadgeNotificacoes();
     } catch (erro) {
-        console.error('Erro ao buscar notificações:', erro);
+        console.error('Erro ao buscar notificacoes:', erro);
         const corpo = document.getElementById('notificationsFullScreenBody');
         if (corpo) {
-            corpo.innerHTML = '<div style="text-align:center; padding:40px; color:var(--danger);">Erro crítico ao carregar alertas</div>';
+            corpo.innerHTML = '<div style="text-align:center; padding:40px; color:var(--danger);">Erro critico ao carregar alertas.</div>';
         }
     }
 }
 
-// Lógica de busca para Administradores (Bibliotecários)
 async function carregarNotificacoesAdmin() {
     const lista = [];
-    
+
     try {
-        const [atrasadosRes, usuariosRes] = await Promise.all([
-            api('/alugueis/atrasados'),
+        const [emprestimosRes, usuariosRes] = await Promise.all([
+            api('/alugueis/todos?limit=20'),
             api('/usuarios?limit=100')
         ]);
 
-        const atrasados = atrasadosRes.data;
-        const usuarios = usuariosRes.data;
+        const atrasadosTotal = emprestimosRes.total_atrasados || 0;
+        const usuarios = usuariosRes.data || [];
 
-        // Alerta: Empréstimos com prazo vencido
-        if (atrasados?.total > 0) {
+        if (atrasadosTotal > 0) {
             lista.push({
                 type: 'warning',
                 icon: '⏰',
-                title: 'Empréstimos Atrasados',
-                message: `Existem <strong>${atrasados.total}</strong> empréstimo(s) com entrega pendente no sistema.`,
-                count: atrasados.total,
-                action: { label: 'Gerenciar Empréstimos', onClick: "mostrarTela('alugueisScreen')" }
+                title: 'Emprestimos Atrasados',
+                message: `Existem <strong>${atrasadosTotal}</strong> emprestimo(s) com entrega pendente no sistema.`,
+                count: atrasadosTotal,
+                action: { label: 'Gerenciar Emprestimos', onClick: "mostrarTela('alugueisScreen')" }
             });
         }
-        
-        // Alerta: Usuários que possuem multas não pagas
-        const usuariosComMulta = usuarios.filter(u => u.multa_pendente);
+
+        const usuariosComMulta = usuarios.filter((u) => u.multa_pendente);
         if (usuariosComMulta.length > 0) {
             lista.push({
                 type: 'danger',
                 icon: '💰',
                 title: 'Multas Pendentes',
-                message: `<strong>${usuariosComMulta.length}</strong> usuário(s) possuem débitos pendentes que precisam de regularização.`,
+                message: `<strong>${usuariosComMulta.length}</strong> usuario(s) possuem debitos pendentes que precisam de regularizacao.`,
                 count: usuariosComMulta.length,
-                action: { label: 'Gerenciar Usuários', onClick: "mostrarTela('usuariosScreen')" }
+                action: { label: 'Gerenciar Usuarios', onClick: "mostrarTela('usuariosScreen')" }
             });
         }
-        
-        // Alerta: Contas que foram bloqueadas
-        const usuariosBloqueados = usuarios.filter(u => u.bloqueado);
+
+        const usuariosBloqueados = usuarios.filter((u) => u.bloqueado);
         if (usuariosBloqueados.length > 0) {
             lista.push({
                 type: 'info',
                 icon: '🚫',
                 title: 'Contas Suspensas',
-                message: `Atualmente, <strong>${usuariosBloqueados.length}</strong> usuários estão com acesso bloqueado ao sistema.`,
+                message: `Atualmente, <strong>${usuariosBloqueados.length}</strong> usuario(s) estao com acesso bloqueado no sistema.`,
                 count: usuariosBloqueados.length
             });
         }
-        
-        // Alerta: Pendências do Acervo Digital
+
         try {
             const pendentesDigital = await api('/acervo-digital/pendentes');
             if (pendentesDigital?.length > 0) {
                 lista.push({
                     type: 'info',
                     icon: '📂',
-                    title: 'Novas Submissões',
+                    title: 'Novas Submissoes',
                     message: `Existem <strong>${pendentesDigital.length}</strong> novos documentos digitais aguardando curadoria.`,
                     count: pendentesDigital.length,
-                    action: { label: 'Revisar Agora', onClick: "carregarPendencias()" }
+                    action: { label: 'Revisar Agora', onClick: 'carregarPendencias()' }
                 });
             }
-        } catch (e) {}
-
+        } catch (erroPendencias) {
+            console.warn('Nao foi possivel carregar pendencias do acervo digital.', erroPendencias);
+        }
     } catch (erro) {
-        console.error('Erro ao carregar notificações administrativas:', erro);
+        console.error('Erro ao carregar notificacoes administrativas:', erro);
     }
-    
+
     return lista;
 }
 
-// Lógica de busca para Usuários Comuns
 async function carregarNotificacoesUsuario() {
     const lista = [];
-    
+
     try {
         const [resMultas, meusAlugueis] = await Promise.all([
             api('/alugueis/multas/minhas'),
@@ -115,48 +111,45 @@ async function carregarNotificacoesUsuario() {
         ]);
 
         const multas = resMultas.multas || [];
-        const total_pendente = resMultas.total_pendente || 0;
+        const totalPendente = resMultas.total_pendente || 0;
         const listaAlugueis = Array.isArray(meusAlugueis) ? meusAlugueis : [];
-        const atrasados = listaAlugueis.filter(a => a.status === 'atrasado');
+        const atrasados = listaAlugueis.filter((a) => a.status === 'atrasado');
 
-        // ── Bloco de Multas ──
-        if (total_pendente > 0) {
+        if (totalPendente > 0) {
             lista.push({
                 type: 'danger',
                 icon: '💳',
-                title: 'Débito Automático',
-                message: `Você possui um débito total de <strong>R$ ${total_pendente.toFixed(2)}</strong> referente a multas por atraso ou perda.`,
-                count: multas.filter(m => m.status === 'pendente').length,
-                action: { label: 'Quitar Débito', onClick: 'pagarMinhasMultas()' }
+                title: 'Debito Automatico',
+                message: `Voce possui um debito total de <strong>R$ ${totalPendente.toFixed(2)}</strong> referente a multas por atraso ou perda.`,
+                count: multas.filter((m) => m.status === 'pendente').length,
+                action: { label: 'Quitar Debito', onClick: 'pagarMinhasMultas()' }
             });
         } else if (multas.length > 0) {
             lista.push({
                 type: 'success',
                 icon: '✅',
-                title: 'Histórico Financeiro',
-                message: 'Parabéns! Todas as suas multas anteriores foram quitadas e não há débitos pendentes.',
+                title: 'Historico Financeiro',
+                message: 'Parabens! Todas as suas multas anteriores foram quitadas e nao ha debitos pendentes.',
                 count: 0
             });
         }
 
-        // ── Alerta: Livros atrasados ──
         if (atrasados.length > 0) {
             const multaTotalAtraso = atrasados.reduce((acc, a) => acc + Number(a.multa_acumulada || 0), 0);
             lista.push({
                 type: 'warning',
                 icon: '⚠️',
                 title: 'Entrega Atrasada',
-                message: `Você está com <strong>${atrasados.length}</strong> livro(s) fora do prazo. Multa acumulada prevista: <strong>R$ ${multaTotalAtraso.toFixed(2)}</strong>.`,
+                message: `Voce esta com <strong>${atrasados.length}</strong> livro(s) fora do prazo. Multa acumulada prevista: <strong>R$ ${multaTotalAtraso.toFixed(2)}</strong>.`,
                 count: atrasados.length,
-                action: { label: 'Ver Meus Empréstimos', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
+                action: { label: 'Ver Meus Emprestimos', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
             });
         }
 
-        // ── Alerta: Vencendo em breve ──
         const hoje = new Date();
         const em3dias = new Date();
         em3dias.setDate(hoje.getDate() + 3);
-        const vencendoEmBreve = listaAlugueis.filter(a => {
+        const vencendoEmBreve = listaAlugueis.filter((a) => {
             if (a.status !== 'ativo') return false;
             const prazo = new Date(a.prazo);
             return prazo >= hoje && prazo <= em3dias;
@@ -167,33 +160,31 @@ async function carregarNotificacoesUsuario() {
                 type: 'info',
                 icon: '⏰',
                 title: 'Final de Prazo',
-                message: `Você tem <strong>${vencendoEmBreve.length}</strong> livro(s) que devem ser devolvidos ou renovados em breve.`,
+                message: `Voce tem <strong>${vencendoEmBreve.length}</strong> livro(s) que devem ser devolvidos ou renovados em breve.`,
                 count: vencendoEmBreve.length,
                 action: { label: 'Renovar Online', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
             });
         }
-
     } catch (erro) {
-        console.error('Erro ao carregar notificações do usuário:', erro);
+        console.error('Erro ao carregar notificacoes do usuario:', erro);
     }
-    
+
     return lista;
 }
 
-// Renderiza a lista de notificações na interface principal
 function renderizarNotificacoesTelaCheia() {
     const corpo = document.getElementById('notificationsFullScreenBody');
     if (!corpo) return;
-    
+
     if (dadosNotificacoes.length === 0) {
         corpo.innerHTML = `
             <div style="text-align: center; padding: 60px; color: var(--text-dim); font-style: italic;">
-                Nenhum alerta ou pendência no momento. Tudo tranquilo!
+                Nenhum alerta ou pendencia no momento. Tudo tranquilo!
             </div>`;
         return;
     }
-    
-    corpo.innerHTML = dadosNotificacoes.map(notif => `
+
+    corpo.innerHTML = dadosNotificacoes.map((notif) => `
         <div class="notification-card ${notif.type}">
             <div class="notification-header">
                 <div class="notification-title-wrap">
@@ -215,14 +206,12 @@ function renderizarNotificacoesTelaCheia() {
         </div>`).join('');
 }
 
-// Atualiza a bolinha vermelha na navbar com a contagem de alertas
 function atualizarBadgeNotificacoes() {
     const badge = document.getElementById('notificationsBadge');
     if (!badge) return;
 
-    // Soma as pendências reais de cada item de alerta
     const totalPendencias = dadosNotificacoes.reduce((acc, item) => acc + (item.count || 0), 0);
-    
+
     if (totalPendencias > 0) {
         badge.textContent = totalPendencias > 99 ? '99+' : totalPendencias;
         badge.classList.add('show');
@@ -231,7 +220,6 @@ function atualizarBadgeNotificacoes() {
     }
 }
 
-// Controla a visibilidade do ícone na barra de navegação
 function gerenciarVisibilidadeNotificacoes() {
     const elementoNav = document.getElementById('navNotifications');
     if (elementoNav) {
@@ -242,39 +230,34 @@ function gerenciarVisibilidadeNotificacoes() {
 async function pagarMinhasMultas() {
     exibirConfirmacao({
         icon: '💳',
-        title: 'Quitar Débitos',
+        title: 'Quitar Debitos',
         msg: 'Deseja processar o pagamento de todas as multas pendentes?',
         okLabel: 'Sim, Pagar Agora',
         async onOk() {
             try {
                 const resultado = await api('/alugueis/multas/pagar/mim', { method: 'PUT' });
                 exibirAlerta(resultado.message, 'success');
-                // Atualiza o estado do usuário
                 if (currentUser) {
                     currentUser.multa_pendente = false;
                     salvarSessao();
                     atualizarNavbar();
                 }
-                // Recarrega os alertas para refletir o pagamento
                 await buscarNotificacoes();
-            } catch (erro) { 
-                exibirAlerta(erro.message, 'danger'); 
+            } catch (erro) {
+                exibirAlerta(erro.message, 'danger');
             }
         }
     });
 }
 
-// Estende a funcionalidade global de atualização da navbar
 const atualizarNavbarOriginal = window.updateNavbar;
 window.updateNavbar = function() {
-    // Chama a lógica original se existir
     if (atualizarNavbarOriginal) {
         atualizarNavbarOriginal();
     }
 
     gerenciarVisibilidadeNotificacoes();
-    
-    // Se o usuário estiver logado, busca alertas automaticamente
+
     if (currentUser) {
         buscarNotificacoes();
     }
