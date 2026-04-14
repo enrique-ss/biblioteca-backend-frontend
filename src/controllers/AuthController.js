@@ -1,5 +1,6 @@
 const supabaseAdmin = require('../database');
 const { supabaseAuth } = require('../database');
+const { isOfflineMode } = require('../database');
 
 class AuthController {
   getPermissions(tipo) {
@@ -48,18 +49,20 @@ class AuthController {
 
       if (authError) throw authError;
 
-      const { error: dbError } = await supabaseAdmin.from('usuarios').insert({
-        id: authData.user.id,
-        nome: nome.trim(),
-        email: emailFormatado,
-        tipo,
-        multa_pendente: false,
-        infantil_xp: 0,
-        infantil_level: 1,
-        infantil_hearts: 5
-      });
+      if (!isOfflineMode) {
+        const { error: dbError } = await supabaseAdmin.from('usuarios').insert({
+          id: authData.user.id,
+          nome: nome.trim(),
+          email: emailFormatado,
+          tipo,
+          multa_pendente: false,
+          infantil_xp: 0,
+          infantil_level: 1,
+          infantil_hearts: 5
+        });
 
-      if (dbError) throw dbError;
+        if (dbError) throw dbError;
+      }
 
       res.status(201).json({
         message: 'Conta criada com sucesso! Bem-vindo(a) ao Biblio Verso.',

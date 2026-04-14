@@ -24,8 +24,19 @@ Sistema completo para gestao de acervo fisico e digital, com backend Node.js, au
    npm run dev
    ```
 
+   Ou, se preferir manter o comando antigo:
+   ```bash
+   npm run full
+   ```
+
 5. Acesse
    - App completa: `http://localhost:3000`
+
+## Scripts
+
+- `npm run dev`: inicia o servidor local
+- `npm run full`: mesmo comportamento do `dev`, mantido por compatibilidade
+- `npm run setup`: checa se o ambiente local esta pronto
 
 ## Deploy no Render
 

@@ -100,10 +100,10 @@ function carregarMenu() {
                 carregarNotificacoesCompleto(); 
             } 
         },
-        { 
-            icon: `<span id="btnThemeIcon">${document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙'}</span>`, 
-            title: 'Tema', 
-            action() { toggleTheme(); } 
+        {
+            icon: `<span id="btnThemeIcon" aria-hidden="true">${document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙'}</span>`,
+            title: 'Tema',
+            action() { toggleTheme(); }
         }
     );
 

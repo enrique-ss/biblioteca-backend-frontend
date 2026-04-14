@@ -82,7 +82,7 @@ biblioteca-backend-frontend/
 ```javascript
 // Usa service_role key do Supabase diretamente
 const supabaseAdmin = createClient(
-    'https://wnsjluwxqkgjttpsrrtp.supabase.co', 
+    'https://your-project-ref.supabase.co', 
     'service_role_key'  // Permite bypass de RLS
 );
 
@@ -263,7 +263,7 @@ app.delete('/api/admin/characters/:id', async (req, res) => { ... });
 ### RPG (Hardcoded no código)
 ```javascript
 const supabaseAdmin = createClient(
-    'https://wnsjluwxqkgjttpsrrtp.supabase.co', 
+    'https://your-project-ref.supabase.co', 
     'service_role_key_hardcoded'  // Direto no código
 );
 ```

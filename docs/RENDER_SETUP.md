@@ -143,9 +143,9 @@ No mesmo SQL Editor do Supabase, execute o SQL abaixo para criar os usuários pa
 ```
 NODE_ENV=production
 PORT=10000
-SUPABASE_URL=https://db.mtjrxenjffwjytjfkock.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anJ4ZW5qZmZ3anl0amZrb2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI0NzU2NzQsImV4cCI6MjAzODA1MTY3NH0.5V2yFjK3H8X7mZ9L2k4Y5Q6R1P8N7K9J2L4M5X8Y3Z
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10anJ4ZW5qZmZ3anl0amZrb2NrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTc0NDI1NCwiZXhwIjoyMDkxMzIwMjU0fQ.Qlmhp4kG3y0_X6d2O7aetFj8eYLLfLhobotP-Kk8bCI
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=cole_sua_anon_key_aqui
+SUPABASE_SERVICE_ROLE_KEY=cole_sua_service_role_key_aqui
 CORS_ORIGIN=https://biblioteca-backend-frontend.onrender.com
 ```
 

@@ -5,14 +5,18 @@
   "scripts": {
     "setup": "node src/setup.js",
     "dev": "node src/index.js",
-    "full": "node src/setup.js && node src/index.js",
+    "web": "node scripts/open-browser.js",
+    "full": "node scripts/full.js",
     "start": "node src/index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.9.0",
     "cors": "^2.8.5",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "socket.io": "^4.8.3"
   }
 }

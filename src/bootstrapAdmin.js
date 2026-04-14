@@ -30,7 +30,6 @@ async function ensureDefaultAdmin() {
       if (createError) throw createError;
 
       authUser = data.user;
-      console.log(`Admin padrao criado no Auth: ${DEFAULT_ADMIN_EMAIL}`);
     } else {
       const nextMetadata = {
         ...(authUser.user_metadata || {}),
@@ -49,7 +48,6 @@ async function ensureDefaultAdmin() {
 
         if (updateError) throw updateError;
         authUser = data.user;
-        console.log(`Admin padrao sincronizado no Auth: ${DEFAULT_ADMIN_EMAIL}`);
       }
     }
 
@@ -74,7 +72,6 @@ async function ensureDefaultAdmin() {
 
     if (upsertError) throw upsertError;
 
-    console.log(`Admin padrao garantido na tabela usuarios: ${DEFAULT_ADMIN_EMAIL}`);
   } catch (error) {
     console.error('Falha ao garantir o admin padrao:', error.message);
   }

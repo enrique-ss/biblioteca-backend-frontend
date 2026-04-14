@@ -5,8 +5,9 @@ const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 const { ensureDefaultAdmin } = require('./bootstrapAdmin');
+const { runtimeMode } = require('./database');
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const app = express();
 const server = http.createServer(app);
@@ -56,7 +57,8 @@ app.get('/api/health', (req, res) => {
   res.json({
     message: 'API da Biblioteca Online (Biblio Verso)',
     version: '1.0.0',
-    status: 'online'
+    status: 'online',
+    mode: runtimeMode
   });
 });
 
@@ -84,26 +86,17 @@ const iniciarServidor = async () => {
   await ensureDefaultAdmin();
 
   io.on('connection', (socket) => {
-    console.log(`Usuario conectado no Socket: ${socket.id}`);
-
     socket.on('joinRoom', (room) => {
       socket.join(room);
-    });
-
-    socket.on('disconnect', () => {
-      console.log(`Usuario desconectado: ${socket.id}`);
     });
   });
 
   server.listen(PORTA, '0.0.0.0', () => {
-    console.log(`\nServidor backend Node + Socket.io iniciado com sucesso na porta ${PORTA}`);
-    console.log(`Ambiente atual: ${process.env.NODE_ENV || 'development'}\n`);
+    console.log(`Biblio Verso ativo em http://localhost:${PORTA} (${runtimeMode})`);
   });
 
   const finalizarServidor = () => {
-    console.log('\nEncerrando o servidor...');
     server.close(() => {
-      console.log('Servidor finalizado.');
       process.exit(0);
     });
   };

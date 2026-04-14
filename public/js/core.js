@@ -63,20 +63,30 @@ function sortTable(table, col) {
     }
 }
 
+function atualizarIconeTema(tema) {
+    const themeIcon = document.getElementById('btnThemeIcon');
+    if (!themeIcon) {
+        return;
+    }
+
+    themeIcon.textContent = tema === 'light' ? '☀️' : '🌙';
+    themeIcon.setAttribute('aria-label', tema === 'light' ? 'Tema claro' : 'Tema escuro');
+}
+
 function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.getAttribute('data-theme') === 'dark';
     const novoTema = isDark ? 'light' : 'dark';
 
     html.setAttribute('data-theme', novoTema);
-    document.getElementById('btnThemeIcon').textContent = isDark ? 'Claro' : 'Escuro';
+    atualizarIconeTema(novoTema);
     localStorage.setItem('biblioverso_theme', novoTema);
 }
 
 function restoreTheme() {
     const saved = localStorage.getItem('biblioverso_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
-    document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? 'Escuro' : 'Claro';
+    atualizarIconeTema(saved);
 }
 
 function salvarSessao() {

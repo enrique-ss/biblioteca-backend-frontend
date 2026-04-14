@@ -39,16 +39,18 @@ async function carregarUsuarios(pagina = 1, busca = '') {
 
             // Define botões de ação (bloquear/desbloquear)
             let botaoBloqueio = '';
+            const userId = JSON.stringify(String(u.id));
+            const userName = JSON.stringify(u.nome);
             if (u.bloqueado) {
-                botaoBloqueio = `<button class="btn btn-ghost" onclick="desbloquearUsuario(${u.id},'${esc(u.nome)}')">Desbloquear</button>`;
+                botaoBloqueio = `<button class="btn btn-ghost" onclick='desbloquearUsuario(${userId}, ${userName})'>Desbloquear</button>`;
             } else {
-                botaoBloqueio = `<button class="btn btn-danger" onclick="bloquearUsuario(${u.id},'${esc(u.nome)}')">Bloquear</button>`;
+                botaoBloqueio = `<button class="btn btn-danger" onclick='bloquearUsuario(${userId}, ${userName})'>Bloquear</button>`;
             }
 
             // Adiciona botão de multas se houver
             let botaoMultas = '';
             if (u.multa_pendente) {
-                botaoMultas = `<button class="btn btn-warning" onclick="verMultasUsuario(${u.id},'${esc(u.nome)}')">Multas</button>`;
+                botaoMultas = `<button class="btn btn-warning" onclick='verMultasUsuario(${userId}, ${userName})'>Multas</button>`;
             }
 
             tr.innerHTML = `
