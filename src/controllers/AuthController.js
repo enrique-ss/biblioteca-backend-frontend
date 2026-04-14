@@ -1,19 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
-// Supabase Admin client para bypass de RLS (igual ao RPG)
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL || 'https://wnsjluwxqkgjttpsrrtp.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Induc2psdXd4cWtnanR0cHNycnRwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTc0NDI1NCwiZXhwIjoyMDkxMzIwMjU0fQ.Qlmhp4kG3y0_X6d2O7aetFj8eYLLfLhobotP-Kk8bCI'
-);
-
-// Supabase Client para auth
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://wnsjluwxqkgjttpsrrtp.supabase.co',
-  process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Induc2psdXd4cWtnanR0cHNycnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDQyNTQsImV4cCI6MjA5MTMyMDI1NH0.1KGGvHBDA0wmNQXXvhywdJYyoXeRXrzylBTD8tsbHAI'
-);
+const supabaseAdmin = require('../database');
+const { supabaseAuth } = require('../database');
 
 class AuthController {
   
@@ -50,7 +36,7 @@ class AuthController {
       const tipo = 'usuario'; // Sempre usuário por padrão
       
       // Criar usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
         email: emailFormatado,
         password: senha,
         options: {
@@ -105,7 +91,7 @@ class AuthController {
       const emailFormatado = email.toLowerCase().trim();
       
       // Login com Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabaseAuth.auth.signInWithPassword({
         email: emailFormatado,
         password: senha
       });
@@ -148,7 +134,7 @@ class AuthController {
       }
 
       const token = authorization.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
 
       if (authError || !user) {
         return res.status(401).json({ error: 'Token inválido' });
@@ -173,10 +159,8 @@ class AuthController {
           return res.status(400).json({ error: 'O formato do novo e-mail é inválido.' });
         }
         
-        // Atualizar email no Supabase Auth
-        const { error: updateEmailError } = await supabase.auth.updateUser({
-          email: emailFormatado
-        });
+        // Atualizar email via Admin API (não precisa de sessão)
+        const { error: updateEmailError } = await supabaseAdmin.auth.admin.updateUserById(user.id, { email: emailFormatado });
         
         if (updateEmailError) throw updateEmailError;
         
@@ -188,10 +172,8 @@ class AuthController {
           return res.status(400).json({ error: 'A nova senha deve ter no mínimo 8 caracteres.' });
         }
         
-        // Atualizar senha no Supabase Auth
-        const { error: updatePasswordError } = await supabase.auth.updateUser({
-          password: senha
-        });
+        // Atualizar senha via Admin API (não precisa de sessão)
+        const { error: updatePasswordError } = await supabaseAdmin.auth.admin.updateUserById(user.id, { password: senha });
         
         if (updatePasswordError) throw updatePasswordError;
       }

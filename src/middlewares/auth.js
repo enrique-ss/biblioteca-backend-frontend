@@ -1,12 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://wnsjluwxqkgjttpsrrtp.supabase.co',
-  process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Induc2psdXd4cWtnanR0cHNycnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDQyNTQsImV4cCI6MjA5MTMyMDI1NH0.1KGGvHBDA0wmNQXXvhywdJYyoXeRXrzylBTD8tsbHAI'
-);
+const { supabaseAuth } = require('../database');
 
 /**
  * Middleware para verificar se o usuário está autenticado via Supabase Auth.
@@ -21,7 +13,7 @@ async function verificarToken(req, res, next) {
   const token = authorization.replace('Bearer ', '');
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
 
     if (error || !user) {
       return res.status(401).json({ 
