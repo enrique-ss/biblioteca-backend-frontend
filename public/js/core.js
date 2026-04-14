@@ -29,9 +29,7 @@ const sortState = {
 
 function sortTable(table, col) {
     const state = sortState[table];
-    if (!state) {
-        return;
-    }
+    if (!state) return;
 
     if (state.col === col && state.dir === 'asc') {
         state.dir = 'desc';
@@ -41,7 +39,7 @@ function sortTable(table, col) {
     state.col = col;
 
     const thsSelector = `#${table}Screen .sortable`;
-    document.querySelectorAll(thsSelector).forEach(th => {
+    document.querySelectorAll(thsSelector).forEach((th) => {
         th.classList.remove('sort-asc', 'sort-desc');
     });
 
@@ -71,14 +69,14 @@ function toggleTheme() {
     const novoTema = isDark ? 'light' : 'dark';
 
     html.setAttribute('data-theme', novoTema);
-    document.getElementById('btnThemeIcon').textContent = isDark ? 'â˜€ï¸' : 'ðŸŒ™';
+    document.getElementById('btnThemeIcon').textContent = isDark ? 'Claro' : 'Escuro';
     localStorage.setItem('biblioverso_theme', novoTema);
 }
 
 function restoreTheme() {
     const saved = localStorage.getItem('biblioverso_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
-    document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? 'ðŸŒ™' : 'â˜€ï¸';
+    document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? 'Escuro' : 'Claro';
 }
 
 function salvarSessao() {
@@ -108,17 +106,17 @@ function limparSessao() {
 }
 
 function mostrarTela(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
 
     const elementoTela = document.getElementById(id);
     if (elementoTela) {
         elementoTela.classList.add('active');
     }
 
-    document.querySelectorAll('.side-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.side-btn').forEach((btn) => btn.classList.remove('active'));
 
     const botoes = document.querySelectorAll('.side-btn');
-    botoes.forEach(btn => {
+    botoes.forEach((btn) => {
         if (btn.onclick && btn.onclick.toString().includes(id)) {
             btn.classList.add('active');
         }
@@ -147,7 +145,7 @@ function fecharModal(id) {
     }
 }
 
-function exibirConfirmacao({ icon = 'âš ï¸', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
+function exibirConfirmacao({ icon = 'Aviso', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
     document.getElementById('confirmIcon').textContent = icon;
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMsg').textContent = msg;
@@ -166,11 +164,11 @@ function fecharConfirmacao() {
 }
 
 function exibirAlerta(mensagem, tipo = 'success') {
-    const icones = { success: 'âœ“', danger: 'âœ•', warning: 'âš ' };
+    const icones = { success: 'OK', danger: 'ERRO', warning: 'AVISO' };
     const el = document.createElement('div');
     el.className = `toast toast-${tipo}`;
 
-    const icone = icones[tipo] || 'â€¢';
+    const icone = icones[tipo] || 'INFO';
     el.innerHTML = `<span class="toast-icon">${icone}</span><span class="toast-msg">${mensagem}</span>`;
 
     document.getElementById('alertContainer').appendChild(el);
@@ -208,7 +206,7 @@ function esc(texto) {
 }
 
 function formatarData(iso) {
-    if (!iso) return 'â€”';
+    if (!iso) return '-';
     try {
         return new Date(iso).toLocaleDateString('pt-BR');
     } catch {
@@ -219,7 +217,7 @@ function formatarData(iso) {
 function definirCarregando(idTbody, colunas) {
     const tbody = document.getElementById(idTbody);
     if (tbody) {
-        tbody.innerHTML = `<tr class="loading-row"><td colspan="${colunas}"><span class="spinner"></span>Carregandoâ€¦</td></tr>`;
+        tbody.innerHTML = `<tr class="loading-row"><td colspan="${colunas}"><span class="spinner"></span>Carregando...</td></tr>`;
     }
 }
 
@@ -240,8 +238,8 @@ function debounce(funcao, atraso = 350) {
 
 function badgeStatus(status) {
     const mapas = {
-        disponivel: `<span class="badge badge-success">DisponÃ­vel</span>`,
-        alugado: `<span class="badge badge-danger">IndisponÃ­vel</span>`,
+        disponivel: `<span class="badge badge-success">Disponivel</span>`,
+        alugado: `<span class="badge badge-danger">Indisponivel</span>`,
         ativo: `<span class="badge badge-warning">Ativo</span>`,
         atrasado: `<span class="badge badge-danger">Atrasado</span>`,
         devolvido: `<span class="badge badge-success">Devolvido</span>`
@@ -251,16 +249,16 @@ function badgeStatus(status) {
 
 function badgeTipo(tipo) {
     const mapas = {
-        bibliotecario: `<span class="badge badge-gold">BibliotecÃ¡rio</span>`,
-        usuario: `<span class="badge badge-usuario">UsuÃ¡rio</span>`
+        bibliotecario: `<span class="badge badge-gold">Bibliotecario</span>`,
+        usuario: `<span class="badge badge-usuario">Usuario</span>`
     };
     return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
 }
 
 function badgeExemplar(status) {
     const mapas = {
-        disponivel: `<span class="badge badge-success">DisponÃ­vel</span>`,
-        indisponivel: `<span class="badge badge-danger">IndisponÃ­vel</span>`,
+        disponivel: `<span class="badge badge-success">Disponivel</span>`,
+        indisponivel: `<span class="badge badge-danger">Indisponivel</span>`,
         emprestado: `<span class="badge badge-info">Emprestado</span>`,
         perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white">Perdido</span>`
     };
@@ -269,7 +267,7 @@ function badgeExemplar(status) {
 
 function badgeCondicao(condicao = {}) {
     if (!condicao || !Object.keys(condicao).length) {
-        return '<span style="color:var(--text)">â€”</span>';
+        return '<span style="color:var(--text)">-</span>';
     }
 
     const partes = [];
@@ -310,7 +308,7 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
         return;
     }
 
-    let html = `<button class="pg-btn" ${paginaAtual <= 1 ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual - 1})">â€¹</button>`;
+    let html = `<button class="pg-btn" ${paginaAtual <= 1 ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual - 1})"><</button>`;
 
     const inicio = Math.max(1, paginaAtual - 2);
     const fim = Math.min(totalPaginas, paginaAtual + 2);
@@ -318,7 +316,7 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
     if (inicio > 1) {
         html += `<button class="pg-btn" onclick="(${aoMudarPagina})(1)">1</button>`;
         if (inicio > 2) {
-            html += `<span class="pg-info">â€¦</span>`;
+            html += `<span class="pg-info">...</span>`;
         }
     }
 
@@ -329,13 +327,13 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
 
     if (fim < totalPaginas) {
         if (fim < totalPaginas - 1) {
-            html += `<span class="pg-info">â€¦</span>`;
+            html += `<span class="pg-info">...</span>`;
         }
         html += `<button class="pg-btn" onclick="(${aoMudarPagina})(${totalPaginas})">${totalPaginas}</button>`;
     }
 
-    html += `<button class="pg-btn" ${paginaAtual >= totalPaginas ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual + 1})">â€º</button>`;
-    html += `<span class="pg-info">PÃ¡g. ${paginaAtual} de ${totalPaginas}</span>`;
+    html += `<button class="pg-btn" ${paginaAtual >= totalPaginas ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual + 1})">></button>`;
+    html += `<span class="pg-info">Pag. ${paginaAtual} de ${totalPaginas}</span>`;
 
     const loadingText = document.getElementById('loading-text');
     if (loadingText) {
@@ -345,9 +343,9 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
     el.innerHTML = html;
 }
 
-document.addEventListener('keydown', e => {
+document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        document.querySelectorAll('.modal.active').forEach(m => fecharModal(m.id));
+        document.querySelectorAll('.modal.active').forEach((m) => fecharModal(m.id));
         fecharConfirmacao();
     }
 });

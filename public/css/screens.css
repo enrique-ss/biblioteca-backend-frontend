@@ -8,13 +8,13 @@
     border-radius: var(--r-xl); 
     padding: 40px; 
     width: 100%; 
-    max-width: 420px; 
+    max-width: 460px; 
     box-shadow: var(--shadow); 
     position: relative; 
     overflow: hidden; 
 }
 .auth-title    { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--accent); text-align: center; letter-spacing: .06em; margin-bottom: 4px; }
-.auth-subtitle { text-align: center; color: var(--text); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; opacity: 1; }
+.auth-subtitle { text-align: center; color: var(--text); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; opacity: 1; max-width: 28ch; margin-left: auto; margin-right: auto; line-height: 1.6; }
 
 /* ── TELA MENU e ALERTAS ── */
 .menu-screen-wrap { 

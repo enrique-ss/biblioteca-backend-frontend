@@ -38,11 +38,13 @@
                             <div class="form-group"><label class="form-label">Email</label><input type="email"
                                     id="loginEmail" class="form-input" placeholder="seu@email.com" required></div>
                             <div class="form-group"><label class="form-label">Senha</label><input type="password"
-                                    id="loginPassword" class="form-input" placeholder="••••••••" required></div>
-                            <button type="submit" class="btn btn-primary btn-block"
-                                style="margin-top:6px;">Entrar</button>
-                            <div class="form-footer">Não tem conta? <button type="button" class="link-btn"
-                                    onclick="mostrarTela('registerScreen')">Cadastre-se</button></div>
+                                    id="loginPassword" class="form-input" placeholder="Digite sua senha" required></div>
+                            <div class="auth-actions">
+                                <button type="submit" class="btn btn-primary auth-primary-btn">Entrar</button>
+                                <button type="button" class="btn btn-ghost auth-secondary-btn"
+                                    onclick="mostrarTela('registerScreen')">Cadastrar-se</button>
+                            </div>
+                            <div class="form-footer">Use sua conta para acessar o sistema da biblioteca.</div>
                         </form>
                     </div>
                 </div>
@@ -51,8 +53,6 @@
             <section id="registerScreen" class="screen">
                 <div class="auth-wrap">
                     <div class="auth-card">
-                        <button type="button" class="link-btn" style="margin-bottom: 16px; color: var(--text-dim);"
-                            onclick="mostrarTela('loginScreen')">← Voltar</button>
                         <h1 class="auth-title">Biblio<span>Verso</span></h1>
                         <p class="auth-subtitle">Crie sua conta para acessar o sistema</p>
                         <form id="registerForm" novalidate>
@@ -61,9 +61,11 @@
                             <div class="form-group"><label class="form-label">Email</label><input type="email"
                                     id="regEmail" class="form-input" placeholder="seu@email.com" required></div>
                             <div class="form-group"><label class="form-label">Senha</label><input type="password"
-                                    id="regSenha" class="form-input" placeholder="Mínimo 8 caracteres" required></div>
-                            <div class="btn-group" style="margin-top: 20px;">
-                                <button type="submit" class="btn btn-primary">Criar conta</button>
+                                    id="regSenha" class="form-input" placeholder="Minimo de 8 caracteres" required></div>
+                            <div class="auth-actions">
+                                <button type="submit" class="btn btn-primary auth-primary-btn">Criar conta</button>
+                                <button type="button" class="btn btn-ghost auth-secondary-btn"
+                                    onclick="mostrarTela('loginScreen')">Voltar</button>
                             </div>
                         </form>
                     </div>
@@ -263,7 +265,7 @@
                                         branco para manter)</span></label>
                                 <input type="password" id="perfilSenha" class="form-input" placeholder="••••••••">
                             </div>
-                            <button type="submit" class="btn btn-gold btn-action" style="margin-top:4px;">Salvar
+                    <button type="submit" class="btn btn-primary btn-action" style="margin-top:4px;">Salvar
                                 alterações</button>
                         </form>
                     </div>
@@ -559,7 +561,7 @@
                 </div>
                 <div class="form-group"><label class="form-label">Exemplares totais</label><input type="number"
                         id="editLivroExemplares" class="form-input" min="1" max="999" required></div>
-                <div class="btn-group"><button type="submit" class="btn btn-gold">Salvar</button><button type="button"
+                    <div class="btn-group"><button type="submit" class="btn btn-primary">Salvar</button><button type="button"
                         class="btn btn-ghost" onclick="fecharModal('editLivroModal')">Cancelar</button></div>
             </form>
         </div>
@@ -666,7 +668,7 @@
                         <option value="bibliotecario">Bibliotecário</option>
                     </select>
                 </div>
-                <div class="btn-group"><button type="submit" class="btn btn-gold">Salvar alterações</button><button
+                    <div class="btn-group"><button type="submit" class="btn btn-primary">Salvar alterações</button><button
                         type="button" class="btn btn-ghost" onclick="fecharModal('editUsuarioModal')">Cancelar</button>
                 </div>
             </form>

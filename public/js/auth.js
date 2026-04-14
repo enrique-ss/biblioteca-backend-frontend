@@ -58,7 +58,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
 function logout() {
     exibirConfirmacao({
-        icon: 'ðŸšª',
+        icon: 'Sair',
         title: 'Encerrar sessao',
         msg: 'Deseja realmente sair do sistema?',
         okLabel: 'Sair',

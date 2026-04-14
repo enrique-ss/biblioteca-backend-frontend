@@ -195,7 +195,7 @@ function prepararAddLivro(tipo) {
         document.getElementById('addLivroTitle').innerHTML = 'Cadastrar <span>Físico</span>';
         document.getElementById('addLivroSubtitle').textContent = 'Preencha os dados do novo exemplar';
         document.getElementById('btnAddSubmit').textContent = 'Cadastrar Físico';
-        document.getElementById('btnAddSubmit').className = 'btn btn-success';
+        document.getElementById('btnAddSubmit').className = 'btn btn-primary';
 
         groupExemplares.style.display = 'block';
         document.getElementById('livroExemplares').required = true;
