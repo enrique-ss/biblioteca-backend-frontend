@@ -4,29 +4,36 @@ const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
+const { ensureDefaultAdmin } = require('./bootstrapAdmin');
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: configuredCorsOrigins.length > 0 ? configuredCorsOrigins : true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true
+};
+
 const io = new Server(server, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-  }
+  cors: corsOptions
 });
 
-app.set('io', io); // Disponibilizar para os controllers
+app.set('io', io);
 
 const PORTA = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(express.static(path.join(__dirname, '../public')));
 
 const rotasAutenticacao = require('./routes/authRoutes');
@@ -46,10 +53,10 @@ app.use('/api/acervo-digital', rotasAcervoDigital);
 app.use('/api/infantil', rotasInfantil);
 
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    message: '📚 API da Biblioteca Online (Biblio Verso)', 
-    version: '1.0.0', 
-    status: 'online' 
+  res.json({
+    message: 'API da Biblioteca Online (Biblio Verso)',
+    version: '1.0.0',
+    status: 'online'
   });
 });
 
@@ -58,15 +65,15 @@ app.get('/', (req, res) => {
 });
 
 app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Rota não encontrada', 
-    path: req.path 
+  res.status(404).json({
+    error: 'Rota nao encontrada',
+    path: req.path
   });
 });
 
 app.use((err, req, res, next) => {
-  console.error('Erro não tratado na aplicação:', err);
-  
+  console.error('Erro nao tratado na aplicacao:', err);
+
   res.status(500).json({
     error: 'Erro interno no servidor',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Ocorreu um problema inesperado.'
@@ -74,30 +81,29 @@ app.use((err, req, res, next) => {
 });
 
 const iniciarServidor = async () => {
-  // Configuração global de conexões WebSockets
+  await ensureDefaultAdmin();
+
   io.on('connection', (socket) => {
-    console.log(`🟢 Usuário conectado no Socket: ${socket.id}`);
-    
-    // Opcional: Entrar em "salas" baseadas em permissão no futuro
+    console.log(`Usuario conectado no Socket: ${socket.id}`);
+
     socket.on('joinRoom', (room) => {
       socket.join(room);
     });
 
     socket.on('disconnect', () => {
-      console.log(`🔴 Usuário desconectado: ${socket.id}`);
+      console.log(`Usuario desconectado: ${socket.id}`);
     });
   });
 
   server.listen(PORTA, '0.0.0.0', () => {
-    console.log(`\n🚀 Servidor backend Node + Socket.io iniciado com sucesso na porta ${PORTA}`);
-    console.log(`📍 Link local: http://localhost:${PORTA}`);
-    console.log(`🌍 Ambiente atual: ${process.env.NODE_ENV || 'desenvolvimento'}\n`);
+    console.log(`\nServidor backend Node + Socket.io iniciado com sucesso na porta ${PORTA}`);
+    console.log(`Ambiente atual: ${process.env.NODE_ENV || 'development'}\n`);
   });
 
   const finalizarServidor = () => {
-    console.log('\n🔴 Encerrando o servidor...');
+    console.log('\nEncerrando o servidor...');
     server.close(() => {
-      console.log('👋 Servidor finalizado.');
+      console.log('Servidor finalizado.');
       process.exit(0);
     });
   };

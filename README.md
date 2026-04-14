@@ -1,55 +1,49 @@
-# Biblio Verso — Sistema de Biblioteca Premium
+# Biblio Verso - Sistema de Biblioteca Premium
 
-Sistema completo para gestão de acervo físico e **digital**, com arquitetura moderna em Node.js, autenticação Supabase e interface web de alto desempenho.
+Sistema completo para gestao de acervo fisico e digital, com backend Node.js, autenticacao Supabase e interface web unica.
 
-## 🚀 Como rodar localmente
+## Como rodar localmente
 
-1. **Configurar variáveis de ambiente**
+1. Configure as variaveis de ambiente
    - Copie `.env.example` para `.env`
-   - Configure as variáveis do Supabase (URL, ANON_KEY, SERVICE_ROLE_KEY)
+   - Preencha `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`
+   - Em local, use `CORS_ORIGIN=http://localhost:3000`
 
-2. **Configurar banco de dados no Supabase**
-   - Execute o SQL do arquivo `setup.sql` no SQL Editor do Supabase
-   - Isso cria todas as tabelas necessárias
-   - Crie usuários padrão no Supabase Auth (admin@admin.com/admin123, user@user.com/user123)
+2. Configure o banco no Supabase
+   - Execute o SQL do arquivo `setup.sql` no SQL Editor
+   - Crie os usuarios necessarios no Supabase Auth
+   - Garanta que o usuario administrador tenha `tipo=bibliotecario`
 
-3. **Instalar dependências**
+3. Instale as dependencias
    ```bash
    npm install
    ```
 
-4. **Opções de execução**
+4. Inicie a aplicacao
    ```bash
-   npm run setup  # Drop/criar tabelas no Supabase
-   npm run dev    # Iniciar servidor (porta 3000)
-   npm run full   # Setup + dev (recomendado)
-   npm start      # Iniciar servidor
+   npm run dev
    ```
 
-5. **Acessar**
-   - Backend: http://localhost:3000
+5. Acesse
+   - App completa: `http://localhost:3000`
 
-## ✨ O que o sistema faz
+## Deploy no Render
 
-- **Acervo Híbrido**: Gestão de livros físicos (com controle de exemplares e localização) e livros digitais (streaming de PDFs com capas personalizadas).
-- **Autoatendimento**: Leitores consultam acervo, renovam empréstimos online e quitam multas via interface web.
-- **Gestão Administrativa**: Bibliotecários controlam estoque, processam devoluções com avaliação de estado físico e gerenciam bloqueios de usuários.
-- **Ecossistema Inteligente**: Cálculo automático de multas (R$ 1,00/dia), prazos de 14 dias e centro de notificações unificado para pendências críticas.
-- **Experiência Premium**: Interface Web com Glassmorphism, suporte nativo a Dark/Light mode e micro-animações.
+Configure estas variaveis no servico:
 
-## 🔑 Regras de acesso
+- `NODE_ENV=production`
+- `PORT=10000`
+- `SUPABASE_URL=<sua-url-do-supabase>`
+- `SUPABASE_ANON_KEY=<sua-anon-key>`
+- `SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>`
+- `CORS_ORIGIN=https://<seu-servico>.onrender.com`
 
-- **Usuário comum**: Criado automaticamente com tipo 'usuario' ao se registrar
-- **Administrador**: Criado manualmente no Supabase Auth com tipo 'bibliotecario'
-- **Segurança**: Autenticação via Supabase Auth nativo (sem JWT)
+O frontend usa `window.location.origin`, entao a mesma build funciona em local e no Render sem trocar URLs no codigo.
 
-## 🛠️ Arquitetura e Engenharia
+## Observacoes importantes
 
-- **Frontend Web**: SPA (Single Page Application), Vanilla JS, CSS3 (Mobile First), GSAP, Three.js
-- **Backend API**: Node.js, Express, Supabase Client, RESTful, Socket.io
-- **Banco de Dados**: Supabase (PostgreSQL) com Supabase Auth
-- **Segurança**: Supabase Auth, RBAC (Access Control)
-
----
-
-Desenvolvido por **Luiz Enrique**.
+- O backend agora exige configuracao explicita do Supabase.
+- O sistema garante um admin padrao no startup usando `DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_PASSWORD` e `DEFAULT_ADMIN_NAME`.
+- Se o admin padrao nao existir no Supabase Auth, ele sera criado automaticamente e sincronizado com a tabela `usuarios`.
+- Nao deixe chaves reais no codigo ou no `.env.example`.
+- O arquivo `.env` esta no `.gitignore`, entao ele pode ser usado apenas para o ambiente local.

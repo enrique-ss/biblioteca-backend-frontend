@@ -1,17 +1,16 @@
-// Configurações Globais (Detecta automaticamente se está rodando em produção ou localhost)
-const HOST_IP = window.location.hostname;
-const isProduction = window.location.protocol === 'https:' || HOST_IP !== 'localhost' && HOST_IP !== '127.0.0.1';
-const BASE_URL = isProduction ? `https://${HOST_IP}` : `http://${HOST_IP}:3000`;
+// Configuracao automatica para local e Render usando a origem atual.
+const BASE_URL = window.location.origin;
 const API_URL = `${BASE_URL}/api`;
 let token = null;
 let currentUser = null;
 
 // Inicializa WebSocket
-const socket = typeof io !== 'undefined' ? io(BASE_URL) : { on: () => {} };
+const socket = typeof io !== 'undefined'
+    ? io({ withCredentials: true })
+    : { on: () => {} };
 
-socket.on('connect', () => console.log('🟢 Conectado ao servidor WebSocket!', socket.id));
+socket.on('connect', () => console.log('Conectado ao servidor WebSocket!', socket.id));
 socket.on('refreshData', (tipo) => {
-    // Escuta eventos de atualização global disparados pelo backend
     if (tipo === 'livros' && typeof loadLivros === 'function') {
         const busca = document.getElementById('buscaLivros')?.value || '';
         loadLivros(busca, 1);
@@ -20,7 +19,6 @@ socket.on('refreshData', (tipo) => {
     }
 });
 
-// Sistema de Ordenação de Tabelas
 const sortState = {
     livros: { col: 'titulo', dir: 'asc' },
     usuarios: { col: 'nome', dir: 'asc' },
@@ -29,34 +27,30 @@ const sortState = {
     acervoDigital: { col: 'created_at', dir: 'desc' }
 };
 
-// Gerencia a ordenação de uma tabela
 function sortTable(table, col) {
     const state = sortState[table];
     if (!state) {
         return;
     }
-    
-    // Inverte a direção se clicar na mesma coluna
+
     if (state.col === col && state.dir === 'asc') {
         state.dir = 'desc';
     } else {
         state.dir = 'asc';
     }
     state.col = col;
-    
-    // Atualiza visualmente os indicadores de ordenação no HTML
+
     const thsSelector = `#${table}Screen .sortable`;
     document.querySelectorAll(thsSelector).forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
     });
-    
+
     const thCliqueado = document.querySelector(`[onclick="sortTable('${table}','${col}')"]`);
     if (thCliqueado) {
         const classe = state.dir === 'asc' ? 'sort-asc' : 'sort-desc';
         thCliqueado.classList.add(classe);
     }
-    
-    // Recarrega os dados da tabela específica com a nova ordenação
+
     if (table === 'livros') {
         const busca = document.getElementById('buscaLivros')?.value || '';
         loadLivros(busca, 1);
@@ -71,26 +65,24 @@ function sortTable(table, col) {
     }
 }
 
-// Gerenciamento de Tema (Claro/Escuro)
 function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.getAttribute('data-theme') === 'dark';
     const novoTema = isDark ? 'light' : 'dark';
-    
+
     html.setAttribute('data-theme', novoTema);
-    document.getElementById('btnThemeIcon').textContent = isDark ? '☀️' : '🌙';
+    document.getElementById('btnThemeIcon').textContent = isDark ? 'â˜€ï¸' : 'ðŸŒ™';
     localStorage.setItem('biblioverso_theme', novoTema);
 }
 
 function restoreTheme() {
     const saved = localStorage.getItem('biblioverso_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
-    document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? '🌙' : '☀️';
+    document.getElementById('btnThemeIcon').textContent = saved === 'dark' ? 'ðŸŒ™' : 'â˜€ï¸';
 }
 
-// Gerenciamento de Sessão do Usuário
 function salvarSessao() {
-    sessionStorage.setItem('biblioverso_token', token);
+    sessionStorage.setItem('biblioverso_token', token || '');
     sessionStorage.setItem('biblioverso_user', JSON.stringify(currentUser));
 }
 
@@ -98,54 +90,47 @@ function restaurarSessao() {
     const t = sessionStorage.getItem('biblioverso_token');
     const u = sessionStorage.getItem('biblioverso_user');
     if (t && u) {
-        token = t; 
+        token = t;
         currentUser = JSON.parse(u);
-        atualizarNavbar(); 
-        carregarMenu(); 
+        atualizarNavbar();
+        carregarMenu();
         mostrarTela('menuScreen');
     } else {
-        atualizarNavbar(); 
+        atualizarNavbar();
         mostrarTela('loginScreen');
     }
 }
 
 function limparSessao() {
-    sessionStorage.clear(); 
-    token = null; 
+    sessionStorage.clear();
+    token = null;
     currentUser = null;
 }
 
-// Navegação entre Telas do Sistema
 function mostrarTela(id) {
-    // Esconde todas as telas
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    
-    // Mostra a tela desejada
+
     const elementoTela = document.getElementById(id);
     if (elementoTela) {
         elementoTela.classList.add('active');
     }
-    
-    // Remove active de todos os botões
+
     document.querySelectorAll('.side-btn').forEach(btn => btn.classList.remove('active'));
-    
-    // Adiciona active ao botão correto
+
     const botoes = document.querySelectorAll('.side-btn');
     botoes.forEach(btn => {
         if (btn.onclick && btn.onclick.toString().includes(id)) {
             btn.classList.add('active');
         }
     });
-    
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Dispara animação de transição se disponível
+
     if (typeof animarTransicaoTela === 'function') {
         animarTransicaoTela(id);
     }
 }
 
-// Controle de Janelas Modais
 function abrirModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
@@ -162,18 +147,17 @@ function fecharModal(id) {
     }
 }
 
-// Diálogo de Confirmação Personalizado
-function exibirConfirmacao({ icon = '⚠️', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
+function exibirConfirmacao({ icon = 'âš ï¸', title = 'Confirmar', msg = '', okLabel = 'Confirmar', onOk }) {
     document.getElementById('confirmIcon').textContent = icon;
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMsg').textContent = msg;
     document.getElementById('confirmOkBtn').textContent = okLabel;
-    
-    document.getElementById('confirmOkBtn').onclick = () => { 
-        fecharConfirmacao(); 
-        onOk(); 
+
+    document.getElementById('confirmOkBtn').onclick = () => {
+        fecharConfirmacao();
+        onOk();
     };
-    
+
     document.getElementById('confirmDialog').classList.add('active');
 }
 
@@ -181,50 +165,40 @@ function fecharConfirmacao() {
     document.getElementById('confirmDialog').classList.remove('active');
 }
 
-// Sistema de Notificações (Toasts)
 function exibirAlerta(mensagem, tipo = 'success') {
-    const icones = { success: '✓', danger: '✕', warning: '⚠' };
+    const icones = { success: 'âœ“', danger: 'âœ•', warning: 'âš ' };
     const el = document.createElement('div');
     el.className = `toast toast-${tipo}`;
-    
-    const icone = icones[tipo] || '•';
+
+    const icone = icones[tipo] || 'â€¢';
     el.innerHTML = `<span class="toast-icon">${icone}</span><span class="toast-msg">${mensagem}</span>`;
-    
+
     document.getElementById('alertContainer').appendChild(el);
-    
-    // Remove o alerta após alguns segundos
+
     setTimeout(() => {
         el.style.cssText += 'opacity:0;transform:translateX(36px);transition:0.32s ease';
         setTimeout(() => el.remove(), 340);
     }, 3400);
 }
 
-// Função central para requisições na API
 async function api(endpoint, options = {}) {
-    // Configura cabeçalhos padrão
     const headers = { 'Content-Type': 'application/json' };
-    
-    // Adiciona token de autorização se o usuário estiver logado
+
     if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Realiza a chamada fetch
+
     const resposta = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-    
-    // Converte resposta para JSON
     const dados = await resposta.json();
-    
-    // Verifica se a resposta foi bem-sucedida
+
     if (!resposta.ok) {
-        const mensagemErro = dados.error || dados.message || 'Erro inesperado na requisição';
+        const mensagemErro = dados.error || dados.message || 'Erro inesperado na requisicao';
         throw new Error(mensagemErro);
     }
-    
+
     return dados;
 }
 
-// Utilitários de Formatação e Interface
 function esc(texto) {
     return String(texto ?? '')
         .replace(/&/g, '&amp;')
@@ -234,18 +208,18 @@ function esc(texto) {
 }
 
 function formatarData(iso) {
-    if (!iso) return '—';
-    try { 
-        return new Date(iso).toLocaleDateString('pt-BR'); 
-    } catch { 
-        return iso; 
+    if (!iso) return 'â€”';
+    try {
+        return new Date(iso).toLocaleDateString('pt-BR');
+    } catch {
+        return iso;
     }
 }
 
 function definirCarregando(idTbody, colunas) {
     const tbody = document.getElementById(idTbody);
     if (tbody) {
-        tbody.innerHTML = `<tr class="loading-row"><td colspan="${colunas}"><span class="spinner"></span>Carregando…</td></tr>`;
+        tbody.innerHTML = `<tr class="loading-row"><td colspan="${colunas}"><span class="spinner"></span>Carregandoâ€¦</td></tr>`;
     }
 }
 
@@ -258,47 +232,46 @@ function definirVazio(idTbody, colunas, msg = 'Nenhum registro encontrado.') {
 
 function debounce(funcao, atraso = 350) {
     let cronometro;
-    return (...argumentos) => { 
-        clearTimeout(cronometro); 
-        cronometro = setTimeout(() => funcao(...argumentos), atraso); 
+    return (...argumentos) => {
+        clearTimeout(cronometro);
+        cronometro = setTimeout(() => funcao(...argumentos), atraso);
     };
 }
 
-// Badges de Status e Tipos (Visual)
 function badgeStatus(status) {
     const mapas = {
-        disponivel: `<span class="badge badge-success">Disponível</span>`,
-        alugado: `<span class="badge badge-danger">Indisponível</span>`,
+        disponivel: `<span class="badge badge-success">DisponÃ­vel</span>`,
+        alugado: `<span class="badge badge-danger">IndisponÃ­vel</span>`,
         ativo: `<span class="badge badge-warning">Ativo</span>`,
         atrasado: `<span class="badge badge-danger">Atrasado</span>`,
-        devolvido: `<span class="badge badge-success">Devolvido</span>`,
+        devolvido: `<span class="badge badge-success">Devolvido</span>`
     };
     return mapas[status] || `<span class="badge">${esc(status)}</span>`;
 }
 
 function badgeTipo(tipo) {
     const mapas = {
-        bibliotecario: `<span class="badge badge-gold">Bibliotecário</span>`,
-        usuario: `<span class="badge badge-usuario">Usuário</span>`,
+        bibliotecario: `<span class="badge badge-gold">BibliotecÃ¡rio</span>`,
+        usuario: `<span class="badge badge-usuario">UsuÃ¡rio</span>`
     };
     return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
 }
 
 function badgeExemplar(status) {
     const mapas = {
-        disponivel: `<span class="badge badge-success">Disponível</span>`,
-        indisponivel: `<span class="badge badge-danger">Indisponível</span>`,
+        disponivel: `<span class="badge badge-success">DisponÃ­vel</span>`,
+        indisponivel: `<span class="badge badge-danger">IndisponÃ­vel</span>`,
         emprestado: `<span class="badge badge-info">Emprestado</span>`,
-        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white">Perdido</span>`,
+        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white">Perdido</span>`
     };
     return mapas[status] || `<span class="badge">${esc(status)}</span>`;
 }
 
 function badgeCondicao(condicao = {}) {
     if (!condicao || !Object.keys(condicao).length) {
-        return '<span style="color:var(--text)">—</span>';
+        return '<span style="color:var(--text)">â€”</span>';
     }
-    
+
     const partes = [];
     if (condicao.danificado > 0) {
         partes.push(`<span class="badge badge-danger" title="${condicao.danificado} danificado(s)">${condicao.danificado} danif.</span>`);
@@ -306,7 +279,7 @@ function badgeCondicao(condicao = {}) {
     if (condicao.perdido > 0) {
         partes.push(`<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white" title="${condicao.perdido} perdido(s)">${condicao.perdido} perd.</span>`);
     }
-    
+
     if (partes.length === 0) {
         return `<span class="badge badge-success">Bom estado</span>`;
     }
@@ -317,7 +290,7 @@ function badgeCondicaoExemplar(condicao) {
     const mapas = {
         bom: `<span class="badge badge-success">Bom</span>`,
         danificado: `<span class="badge badge-danger">Danificado</span>`,
-        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white">Perdido</span>`,
+        perdido: `<span class="badge badge-danger" style="background:var(--crimson);color:white;border-color:white">Perdido</span>`
     };
     return mapas[condicao] || `<span class="badge">${esc(condicao)}</span>`;
 }
@@ -325,50 +298,53 @@ function badgeCondicaoExemplar(condicao) {
 function badgeTipoMulta(tipo) {
     const mapas = {
         atraso: `<span class="badge badge-warning">Atraso</span>`,
-        perda: `<span class="badge badge-danger">Perda</span>`,
+        perda: `<span class="badge badge-danger">Perda</span>`
     };
     return mapas[tipo] || `<span class="badge">${esc(tipo)}</span>`;
 }
 
-// Renderização de Paginação Dinâmica
 function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagina) {
     const el = document.getElementById(idContainer);
-    if (!el || totalPaginas <= 1) { 
-        if (el) el.innerHTML = ''; 
-        return; 
+    if (!el || totalPaginas <= 1) {
+        if (el) el.innerHTML = '';
+        return;
     }
-    
-    let html = `<button class="pg-btn" ${paginaAtual <= 1 ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual - 1})">‹</button>`;
-    
+
+    let html = `<button class="pg-btn" ${paginaAtual <= 1 ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual - 1})">â€¹</button>`;
+
     const inicio = Math.max(1, paginaAtual - 2);
     const fim = Math.min(totalPaginas, paginaAtual + 2);
-    
+
     if (inicio > 1) {
         html += `<button class="pg-btn" onclick="(${aoMudarPagina})(1)">1</button>`;
         if (inicio > 2) {
-            html += `<span class="pg-info">…</span>`;
+            html += `<span class="pg-info">â€¦</span>`;
         }
     }
-    
+
     for (let i = inicio; i <= fim; i++) {
         const classeAtiva = i === paginaAtual ? 'active' : '';
         html += `<button class="pg-btn ${classeAtiva}" onclick="(${aoMudarPagina})(${i})">${i}</button>`;
     }
-    
+
     if (fim < totalPaginas) {
         if (fim < totalPaginas - 1) {
-            html += `<span class="pg-info">…</span>`;
+            html += `<span class="pg-info">â€¦</span>`;
         }
         html += `<button class="pg-btn" onclick="(${aoMudarPagina})(${totalPaginas})">${totalPaginas}</button>`;
     }
-    
-    html += `<button class="pg-btn" ${paginaAtual >= totalPaginas ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual + 1})">›</button>`;
-    html += `<span class="pg-info">Pág. ${paginaAtual} de ${totalPaginas}</span>`;
-    document.getElementById('loading-text').textContent = 'Iniciando Biblio Verso...';
+
+    html += `<button class="pg-btn" ${paginaAtual >= totalPaginas ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual + 1})">â€º</button>`;
+    html += `<span class="pg-info">PÃ¡g. ${paginaAtual} de ${totalPaginas}</span>`;
+
+    const loadingText = document.getElementById('loading-text');
+    if (loadingText) {
+        loadingText.textContent = 'Iniciando Biblio Verso...';
+    }
+
     el.innerHTML = html;
 }
 
-// Atatalhos de Teclado (Esc para fechar modais)
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         document.querySelectorAll('.modal.active').forEach(m => fecharModal(m.id));
@@ -376,5 +352,4 @@ document.addEventListener('keydown', e => {
     }
 });
 
-// Inicialização Inicial
 restoreTheme();

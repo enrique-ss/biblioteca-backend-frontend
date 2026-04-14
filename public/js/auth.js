@@ -1,4 +1,4 @@
-// Lógica de Autenticação (Login e Registro)
+// Logica de autenticacao (login e registro)
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -13,13 +13,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             body: JSON.stringify(payload)
         });
 
-        token = dados.token;
+        token = dados.token || dados.session?.access_token || null;
         currentUser = dados.usuario;
 
         salvarSessao();
         atualizarNavbar();
         carregarMenu();
-        
+
         mostrarTela('menuScreen');
         e.target.reset();
     } catch (erro) {
@@ -42,7 +42,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             body: JSON.stringify(payload)
         });
 
-        token = dados.token;
+        token = dados.token || dados.session?.access_token || null;
         currentUser = dados.usuario;
 
         salvarSessao();
@@ -56,11 +56,10 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     }
 });
 
-// Encerra a sessão do usuário
 function logout() {
     exibirConfirmacao({
-        icon: '🚪',
-        title: 'Encerrar sessão',
+        icon: 'ðŸšª',
+        title: 'Encerrar sessao',
         msg: 'Deseja realmente sair do sistema?',
         okLabel: 'Sair',
         onOk() {
@@ -71,7 +70,6 @@ function logout() {
     });
 }
 
-// Atualiza a visibilidade dos elementos da barra lateral conforme o login
 function atualizarNavbar() {
     const estaLogado = !!currentUser;
     const sidebar = document.getElementById('sidebar');
@@ -80,15 +78,14 @@ function atualizarNavbar() {
     if (sidebar) sidebar.style.display = estaLogado ? 'flex' : 'none';
     if (wrapper) wrapper.style.paddingLeft = estaLogado ? '80px' : '0';
 
-    // Atualiza botões básicos
     const btnSair = document.getElementById('btnLogout');
     if (btnSair) {
         btnSair.style.display = estaLogado ? 'inline-flex' : 'none';
     }
 
-    const navegaçãoLateral = document.getElementById('sidebarNav');
-    if (navegaçãoLateral) {
-        navegaçãoLateral.style.display = estaLogado ? 'flex' : 'none';
+    const navegacaoLateral = document.getElementById('sidebarNav');
+    if (navegacaoLateral) {
+        navegacaoLateral.style.display = estaLogado ? 'flex' : 'none';
     }
 
     const centralNotificacoes = document.getElementById('navNotifications');
