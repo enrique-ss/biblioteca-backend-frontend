@@ -4,7 +4,7 @@ Sistema completo para gestão de acervo físico e digital, com backend Node.js, 
 
 ## **Projeto Online**
 
-Acesse o sistema em produção: **[https://biblio-verso.onrender.com](https://biblio-verso.onrender.com)**
+Acesse o sistema em produção: **[https://biblioteca-backend-frontend.onrender.com](https://biblioteca-backend-frontend.com)**
 
 - **Email de acesso**: `admin@admin.com`
 - **Senha**: `admin123`
