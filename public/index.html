@@ -46,9 +46,9 @@
                             <div class="form-group"><label class="form-label">Senha</label><input type="password"
                                     id="loginPassword" class="form-input" placeholder="Digite sua senha" required></div>
                             <div class="auth-actions">
-                                <button type="submit" class="btn btn-primary auth-primary-btn">Entrar</button>
                                 <button type="button" class="btn btn-ghost auth-secondary-btn"
                                     onclick="mostrarTela('registerScreen')">Cadastrar-se</button>
+                                <button type="submit" class="btn btn-primary auth-primary-btn">Entrar</button>
                             </div>
                             <div class="form-footer">Use sua conta para acessar o sistema da biblioteca.</div>
                         </form>
@@ -71,9 +71,9 @@
                             <div class="form-group"><label class="form-label">Senha</label><input type="password"
                                     id="regSenha" class="form-input" placeholder="Minimo de 8 caracteres" required></div>
                             <div class="auth-actions">
-                                <button type="submit" class="btn btn-primary auth-primary-btn">Criar conta</button>
                                 <button type="button" class="btn btn-ghost auth-secondary-btn"
                                     onclick="mostrarTela('loginScreen')">Voltar</button>
+                                <button type="submit" class="btn btn-primary auth-primary-btn">Criar conta</button>
                             </div>
                             <div class="form-footer">Ao criar uma conta, você concorda com os termos de uso do sistema.</div>
                         </form>
@@ -495,8 +495,8 @@
                 </div>
 
                 <div class="btn-group">
-                    <button type="submit" id="btnAddSubmit" class="btn btn-primary">Cadastrar</button>
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('addLivroModal')">Cancelar</button>
+                    <button type="submit" id="btnAddSubmit" class="btn btn-primary">Cadastrar</button>
                 </div>
             </form>
         </div>
@@ -530,8 +530,8 @@
                 </div>
                 <div class="form-group"><label class="form-label">Exemplares totais</label><input type="number"
                         id="editLivroExemplares" class="form-input" min="1" max="999" required></div>
-                    <div class="btn-group"><button type="submit" class="btn btn-primary">Salvar</button><button type="button"
-                        class="btn btn-ghost" onclick="fecharModal('editLivroModal')">Cancelar</button></div>
+                    <div class="btn-group"><button type="button"
+                        class="btn btn-ghost" onclick="fecharModal('editLivroModal')">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
             </form>
         </div>
     </div>
@@ -588,8 +588,8 @@
                         placeholder="Descreva o problema encontrado…">
                 </div>
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">Confirmar Devolução</button>
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('devolucaoModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar Devolução</button>
                 </div>
             </form>
         </div>
@@ -613,8 +613,8 @@
                         class="form-select" required>
                         <option value="">Selecione um usuário…</option>
                     </select></div>
-                <div class="btn-group"><button type="submit" class="btn btn-primary">Registrar</button><button
-                        type="button" class="btn btn-ghost" onclick="fecharModal('addAluguelModal')">Cancelar</button>
+                <div class="btn-group"><button
+                        type="button" class="btn btn-ghost" onclick="fecharModal('addAluguelModal')">Cancelar</button><button type="submit" class="btn btn-primary">Registrar</button>
                 </div>
             </form>
         </div>
@@ -637,8 +637,8 @@
                         <option value="bibliotecario">Bibliotecário</option>
                     </select>
                 </div>
-                    <div class="btn-group"><button type="submit" class="btn btn-primary">Salvar alterações</button><button
-                        type="button" class="btn btn-ghost" onclick="fecharModal('editUsuarioModal')">Cancelar</button>
+                    <div class="btn-group"><button
+                        type="button" class="btn btn-ghost" onclick="fecharModal('editUsuarioModal')">Cancelar</button><button type="submit" class="btn btn-primary">Salvar alterações</button>
                 </div>
             </form>
         </div>
