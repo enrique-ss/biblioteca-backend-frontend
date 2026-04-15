@@ -1,6 +1,10 @@
+// Estatísticas e gráficos do sistema
+
+// Armazena instâncias dos gráficos Chart.js
 let instanciasGraficos = {};
 let dadosBrutosStats = null;
 
+// Extrai valores RGB de uma cor CSS
 function extrairRgb(cor) {
     const temp = document.createElement('div');
     temp.style.color = cor;
@@ -11,6 +15,7 @@ function extrairRgb(cor) {
     return match ? match.slice(0, 3).join(', ') : '212, 175, 55';
 }
 
+// Obtém configurações de cores do tema atual
 function obterConfigTema() {
     const estilo = getComputedStyle(document.documentElement);
     const accent = estilo.getPropertyValue('--accent').trim();
@@ -27,11 +32,13 @@ function obterConfigTema() {
     };
 }
 
+// Gera paleta de cores para gráficos baseada no tema
 function obterPaletaGrafico(qtd = 5) {
     const conf = obterConfigTema();
     return Array.from({ length: Math.max(qtd, 1) }, (_, i) => `rgba(${conf.accentRgb}, ${0.85 - (i * 0.1)})`);
 }
 
+// Configura padrão visual para todos os gráficos
 function configurarPadraoGrafico(tipo) {
     const conf = obterConfigTema();
     const horizontal = tipo === 'bar-h';
@@ -81,21 +88,25 @@ function configurarPadraoGrafico(tipo) {
     return options;
 }
 
+// Cria e renderiza um gráfico Chart.js
 function montarGrafico(id, tipo, rotulos, valores) {
     const ctx = document.getElementById(`chart-${id}`);
     if (!ctx) return;
 
+    // Destroi gráfico anterior se existir
     if (instanciasGraficos[id]) {
         instanciasGraficos[id].destroy();
         delete instanciasGraficos[id];
     }
 
+    // Prepara dados e cores
     const labels = (rotulos || []).length ? rotulos : ['Sem dados'];
     const values = (valores || []).length ? valores : [0];
     const palette = obterPaletaGrafico(labels.length);
     const conf = obterConfigTema();
     const chartType = tipo === 'bar-h' ? 'bar' : tipo;
 
+    // Cria nova instância do gráfico
     instanciasGraficos[id] = new Chart(ctx, {
         type: chartType,
         data: {
@@ -114,17 +125,22 @@ function montarGrafico(id, tipo, rotulos, valores) {
     });
 }
 
-function normalizarSerie(arr = []) {
+// Normaliza dados de séries para gráficos
+function normalizarSerie(arr) {
+    // Converte dados brutos em objetos com labels e valores
     return {
         labels: arr.map((item) => item.label),
         values: arr.map((item) => Number(item.valor || 0))
     };
 }
 
+// Renderiza todos os gráficos da página de estatísticas
 function renderizarTodosGraficos() {
+    // Verifica se há dados disponíveis
     if (!dadosBrutosStats) return;
     const d = dadosBrutosStats;
 
+    // Normaliza dados para cada gráfico
     const generos = normalizarSerie(d.generosMaisEmprestados);
     const autores = normalizarSerie(d.autoresMaisEmprestados);
     const livros = normalizarSerie(d.livrosMaisEmprestados);
@@ -137,6 +153,7 @@ function renderizarTodosGraficos() {
     })));
     const funcoes = normalizarSerie(d.distribuicaoUsuarios || []);
 
+    // Renderiza cada gráfico com seu tipo específico
     montarGrafico('generos', 'bar-h', generos.labels, generos.values);
     montarGrafico('autores', 'bar-h', autores.labels, autores.values);
     montarGrafico('livros', 'bar', livros.labels, livros.values);
@@ -147,6 +164,7 @@ function renderizarTodosGraficos() {
     montarGrafico('funcoes', 'doughnut', funcoes.labels, funcoes.values);
 }
 
+// Renderiza os KPIs (indicadores chave) na página
 function renderizarIndicadores(dados) {
     const kpis = (dados.kpis || []).slice(0, 6);
     document.getElementById('statsKpiGrid').innerHTML = kpis.map((kpi) => `
@@ -157,10 +175,13 @@ function renderizarIndicadores(dados) {
     `).join('');
 }
 
+// Carrega dados estatísticos do backend e renderiza gráficos
 async function carregarEstatisticasDetalhadas() {
+    // Mostra loading e esconde conteúdo
     document.getElementById('statsLoading').style.display = 'block';
     document.getElementById('statsContent').style.display = 'none';
 
+    // Carrega Chart.js se ainda não estiver disponível
     if (!window.Chart) {
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
@@ -172,13 +193,16 @@ async function carregarEstatisticasDetalhadas() {
     }
 
     try {
+        // Busca dados das APIs
         const detalhado = await api('/stats/detalhado');
         const resumo = await api('/stats');
 
+        // Usa resumo como fallback se não houver KPIs
         if ((!detalhado.kpis || !detalhado.kpis.length) && Array.isArray(resumo.stats)) {
             detalhado.kpis = resumo.stats.slice(0, 6);
         }
 
+        // Armazena dados e renderiza interface
         dadosBrutosStats = detalhado;
         renderizarIndicadores(detalhado);
         document.getElementById('statsLoading').style.display = 'none';
@@ -190,6 +214,7 @@ async function carregarEstatisticasDetalhadas() {
     }
 }
 
+// Exporta estatísticas para CSV (desabilitado no frontend)
 function exportarEstatisticasCSV() {
     exibirAlerta('Exportação CSV desabilitada. Use o endpoint do backend.', 'warning');
 }
