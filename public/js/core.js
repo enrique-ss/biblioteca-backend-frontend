@@ -314,10 +314,36 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
     el.innerHTML = html;
 }
 
+// Mobile Menu Functions
+function toggleMobileMenu() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobileOverlay');
+    const menuIcon = document.getElementById('menuIcon');
+    
+    if (sidebar.classList.contains('mobile-open')) {
+        closeMobileMenu();
+    } else {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('active');
+        menuIcon.textContent = '×';
+    }
+}
+
+function closeMobileMenu() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobileOverlay');
+    const menuIcon = document.getElementById('menuIcon');
+    
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('active');
+    menuIcon.textContent = '=';
+}
+
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         document.querySelectorAll('.modal.active').forEach((m) => fecharModal(m.id));
         fecharConfirmacao();
+        closeMobileMenu();
     }
 });
 
