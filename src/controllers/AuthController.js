@@ -63,6 +63,8 @@ class AuthController {
 
       if (dbError) throw dbError;
 
+      req.app.get('io').emit('refreshData', 'usuarios');
+
       res.status(201).json({
         message: 'Conta criada com sucesso! Bem-vindo(a) ao Biblio Verso.',
         token: authData.session?.access_token || null,

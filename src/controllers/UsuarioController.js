@@ -106,6 +106,8 @@ class UsuarioController {
         .eq('id', id)
         .single();
 
+      req.app.get('io').emit('refreshData', 'usuarios');
+
       res.json({ 
         message: '✅ Usuário atualizado com sucesso!', 
         usuario: usuarioAtualizado 
@@ -150,6 +152,8 @@ class UsuarioController {
 
       if (error) throw error;
 
+      req.app.get('io').emit('refreshData', 'usuarios');
+
       res.json({ message: '✅ Usuário arquivado com sucesso. Os registros históricos permanecem no banco para auditoria.' });
     } catch (erro) {
       console.error('Erro ao arquivar usuário:', erro);
@@ -190,6 +194,8 @@ class UsuarioController {
 
       if (error) throw error;
 
+      req.app.get('io').emit('refreshData', 'usuarios');
+
       res.json({ message: '✅ Usuário bloqueado com sucesso!' });
     } catch (erro) {
       console.error('Erro ao bloquear usuário:', erro);
@@ -224,6 +230,8 @@ class UsuarioController {
         .eq('id', id);
 
       if (error) throw error;
+
+      req.app.get('io').emit('refreshData', 'usuarios');
 
       res.json({ message: '✅ Usuário desbloqueado. O acesso está liberado novamente.' });
     } catch (erro) {

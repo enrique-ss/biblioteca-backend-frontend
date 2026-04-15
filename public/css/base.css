@@ -38,21 +38,21 @@
 
 /* Tokens Light */
 [data-theme="light"] {
-    --bg: #F0F9F4; /* Light pastel green */
-    --surface: rgba(255, 255, 255, 0.65);
-    --surface-solid: #F9FCFA; /* Very light green tinted white */
-    --text: #1A3026; /* Dark forest green */
-    --text-dim: #507261; /* Muted sage */
+    --bg: #E8F5E9; /* Light green with better contrast */
+    --surface: rgba(244, 251, 244, 0.8);
+    --surface-solid: #F4F9F6; /* Less white, more green tint */
+    --text: #1B3A2A; /* Darker green for better contrast */
+    --text-dim: #4A6749; /* Muted green with better visibility */
     --accent: #2D6A4F; /* Deep emerald */
-    --accent-bg: rgba(45, 106, 79, 0.1);
+    --accent-bg: rgba(45, 106, 79, 0.15);
     --danger: #D62828;
     --success: #1B4332;
     --warning: #F4A261;
-    --border: rgba(45, 106, 79, 0.1);
-    --border-m: rgba(45, 106, 79, 0.2);
-    --shadow: 0 8px 32px rgba(28, 52, 40, 0.12);
-    --shadow-sm: 0 4px 16px rgba(28, 52, 40, 0.08);
-    --glass-border: 1px solid rgba(45, 106, 79, 0.08);
+    --border: rgba(45, 106, 79, 0.15);
+    --border-m: rgba(45, 106, 79, 0.25);
+    --shadow: 0 8px 32px rgba(28, 52, 40, 0.15);
+    --shadow-sm: 0 4px 16px rgba(28, 52, 40, 0.1);
+    --glass-border: 1px solid rgba(45, 106, 79, 0.12);
 }
 
 /* Reset */
@@ -210,7 +210,7 @@ body {
 
 /* Sidebar no modo claro */
 [data-theme="light"] .sidebar {
-    background: rgba(240, 249, 244, 0.95) !important;
+    background: rgba(232, 245, 233, 0.95) !important;
     backdrop-filter: blur(32px) saturate(180%) !important; 
     -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
 }

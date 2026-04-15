@@ -351,7 +351,7 @@ function renderizarAcoesExemplar(livroId, ex) {
             </select>`;
     }
     
-    // Controles completos de status e condição
+    // Controles completos de disponibilidade e condição
     return `
         <select class="form-select exemplar-status-select" 
                 onchange="atualizarDisponibilidadeExemplar(${livroId}, ${ex.id}, this.value)">
