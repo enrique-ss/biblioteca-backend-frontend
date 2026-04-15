@@ -39,8 +39,8 @@
 /* Tokens Light */
 [data-theme="light"] {
     --bg: #E8F5E9; /* Light green with better contrast */
-    --surface: rgba(244, 251, 244, 0.8);
-    --surface-solid: #F4F9F6; /* Less white, more green tint */
+    --surface: rgba(248, 252, 249, 0.8);
+    --surface-solid: #F8FBF9; /* Slightly less green tint */
     --text: #1B3A2A; /* Darker green for better contrast */
     --text-dim: #4A6749; /* Muted green with better visibility */
     --accent: #2D6A4F; /* Deep emerald */
