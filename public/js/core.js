@@ -315,29 +315,69 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
 }
 
 // Mobile Menu Functions
+let touchStartX = 0;
+let touchEndX = 0;
+let isSwipe = false;
+
 function toggleMobileMenu() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('mobileOverlay');
-    const menuIcon = document.getElementById('menuIcon');
     
     if (sidebar.classList.contains('mobile-open')) {
         closeMobileMenu();
     } else {
         sidebar.classList.add('mobile-open');
         overlay.classList.add('active');
-        menuIcon.textContent = '×';
     }
 }
 
 function closeMobileMenu() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('mobileOverlay');
-    const menuIcon = document.getElementById('menuIcon');
     
     sidebar.classList.remove('mobile-open');
     overlay.classList.remove('active');
-    menuIcon.textContent = '=';
 }
+
+// Touch/Swipe handlers
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    isSwipe = true;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+    if (!isSwipe) return;
+    
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchEndX - touchStartX;
+    const sidebar = document.getElementById('sidebar');
+    
+    // Swipe da esquerda para direita para abrir
+    if (diff > 50 && touchStartX < 50 && !sidebar.classList.contains('mobile-open')) {
+        toggleMobileMenu();
+        isSwipe = false;
+    }
+    
+    // Swipe da direita para esquerda para fechar
+    if (diff < -50 && sidebar.classList.contains('mobile-open')) {
+        closeMobileMenu();
+        isSwipe = false;
+    }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+    isSwipe = false;
+}, { passive: true });
+
+// Clique na borda esquerda para abrir sidebar
+document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 900 && e.clientX < 20) {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar.classList.contains('mobile-open')) {
+            toggleMobileMenu();
+        }
+    }
+});
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
