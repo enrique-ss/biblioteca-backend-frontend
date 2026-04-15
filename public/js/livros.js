@@ -391,16 +391,14 @@ async function carregarExemplares(livroId) {
 
             tr.innerHTML = `
                 <td style="color:var(--text-dim)">${esc(ex.id)}</td>
-                <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(ex.codigo ?? '—')}</code></td>
+                <td><code style="font-size:var(--fs-xs);color:var(--gold)">${esc(ex.codigo ?? '---')}</code></td>
                 <td>${badgeExemplar(ex.disponibilidade)}</td>
                 <td>${badgeCondicaoExemplar(ex.condicao || 'bom')}</td>
-                <td style="color:var(--text);font-size:var(--fs-xs)">${esc(ex.observacao ?? '—')}</td>
                 <td style="font-size:var(--fs-xs)">
                     ${ultimo ? `
-                        <strong>${esc(ultimo.usuario)}</strong><br>
-                        <strong>${esc(ultimo.usuario)}</strong><br>
-                        <span style="color:var(--text)">${formatarData(ultimo.data_aluguel)}</span>
-                        ${ultimo.status_aluguel === 'ativo' ? '<span class="badge badge-warning" style="margin-left:4px;">em mãos</span>' : ''}
+                        <div style="font-weight:600;color:var(--text);">${esc(ultimo.usuario)}</div>
+                        <div style="color:var(--text-dim);font-size:10px;">${formatarData(ultimo.data_aluguel)}</div>
+                        ${ultimo.status_aluguel === 'ativo' ? '<span class="badge badge-warning" style="font-size:9px;margin-top:2px;">em mãos</span>' : ''}
                     ` : '<span style="color:var(--text-dim)">Nunca alugado</span>'}
                 </td>
                 <td>

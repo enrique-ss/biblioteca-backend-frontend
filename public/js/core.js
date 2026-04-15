@@ -10,10 +10,16 @@ const socket = typeof io !== 'undefined'
 
 socket.on('connect', () => console.log('Conectado ao servidor WebSocket!', socket.id));
 socket.on('refreshData', (tipo) => {
-    if (tipo === 'livros' && typeof loadLivros === 'function') {
-        loadLivros(1);
-    } else if (tipo === 'alugueis' && typeof loadAlugueis === 'function') {
-        loadAlugueis(1);
+    if (tipo === 'livros' && typeof carregarLivros === 'function') {
+        carregarLivros(1);
+    } else if (tipo === 'alugueis' && typeof carregarAlugueis === 'function') {
+        carregarAlugueis(1);
+    } else if (tipo === 'usuarios' && typeof carregarUsuarios === 'function') {
+        carregarUsuarios(1);
+    } else if (tipo === 'acervo-digital' && typeof carregarAcervoDigital === 'function') {
+        carregarAcervoDigital(1);
+    } else if (tipo === 'estatisticas' && typeof carregarEstatisticas === 'function') {
+        carregarEstatisticas();
     }
 });
 socket.on('statsUpdate', (data) => {

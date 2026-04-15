@@ -283,6 +283,79 @@ class LivroController {
         if (!isNaN(ano)) dadosParaMudar.ano_lancamento = ano;
       }
 
+      // Lógica para atualizar o número de exemplares
+      if (exemplares !== undefined) {
+        const novoTotalExemplares = Math.min(999, Math.max(1, parseInt(exemplares) || 1));
+        const totalAtual = livroOriginal.exemplares || 0;
+        
+        if (novoTotalExemplares !== totalAtual) {
+          // Verificar quantos exemplares estão emprestados no momento
+          const { count: exemplaresEmprestados } = await supabase
+            .from('exemplares')
+            .select('*', { count: 'exact', head: true })
+            .eq('livro_id', id)
+            .eq('disponibilidade', 'emprestado')
+            .is('deleted_at', null);
+
+          const emprestados = exemplaresEmprestados || 0;
+          
+          if (novoTotalExemplares < emprestados) {
+            return res.status(400).json({ 
+              error: `Não é possível reduzir para ${novoTotalExemplares} exemplares pois existem ${emprestados} exemplares emprestados.` 
+            });
+          }
+
+          if (novoTotalExemplares > totalAtual) {
+            // Adicionar novos exemplares
+            const novosExemplares = novoTotalExemplares - totalAtual;
+            const { data: exemplaresExistentes } = await supabase
+              .from('exemplares')
+              .select('codigo')
+              .eq('livro_id', id)
+              .is('deleted_at', null)
+              .order('id', { ascending: true });
+
+            const ultimoCodigo = exemplaresExistentes?.length || 0;
+            
+            const listaNovosExemplares = Array.from({ length: novosExemplares }, (_, i) => ({
+              livro_id: parseInt(id),
+              codigo: `EX-${id}-${String(ultimoCodigo + i + 1).padStart(3, '0')}`,
+              disponibilidade: 'disponivel',
+              condicao: 'bom'
+            }));
+            
+            const { error: insertError } = await supabase.from('exemplares').insert(listaNovosExemplares);
+            if (insertError) throw insertError;
+            
+          } else if (novoTotalExemplares < totalAtual) {
+            // Remover exemplares excedentes (apenas os disponíveis)
+            const exemplaresParaRemover = totalAtual - novoTotalExemplares;
+            
+            const { data: exemplaresDisponiveis } = await supabase
+              .from('exemplares')
+              .select('id')
+              .eq('livro_id', id)
+              .eq('disponibilidade', 'disponivel')
+              .eq('condicao', 'bom')
+              .is('deleted_at', null)
+              .limit(exemplaresParaRemover);
+
+            if (exemplaresDisponiveis && exemplaresDisponiveis.length > 0) {
+              const idsParaRemover = exemplaresDisponiveis.map(e => e.id);
+              const { error: deleteError } = await supabase
+                .from('exemplares')
+                .update({ deleted_at: new Date().toISOString() })
+                .in('id', idsParaRemover);
+              
+              if (deleteError) throw deleteError;
+            }
+          }
+
+          // Atualizar contadores
+          await this.recalcularContadores(id);
+        }
+      }
+
       if (Object.keys(dadosParaMudar).length > 0) {
         const { error } = await supabase.from('livros').update(dadosParaMudar).eq('id', id);
         if (error) throw error;
@@ -290,7 +363,7 @@ class LivroController {
 
       req.app.get('io').emit('refreshData', 'livros');
 
-      res.json({ message: '✅ Informações do livro atualizadas com sucesso!' });
+      res.json({ message: 'Informações do livro atualizadas com sucesso!' });
     } catch (erro) {
       console.error('Erro ao editar livro:', erro);
       res.status(500).json({ error: 'Erro ao processar alterações no livro.' });

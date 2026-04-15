@@ -531,30 +531,30 @@
         <div class="modal-backdrop" onclick="fecharModal('exemplareModal')"></div>
         <div class="modal-box" style="max-width:780px;">
             <h2 class="modal-title">Exemplares</h2>
-            <p class="modal-subtitle" id="exemplaresTitulo">—</p>
+            <p class="modal-subtitle" id="exemplaresTitulo">-</p>
             <input type="hidden" id="exemplaresLivroId">
-            <div class="table-wrap" style="max-height:50vh;overflow-y:auto;">
-                <table class="data-table">
+            <div class="table-wrap exemplares-table-wrap" style="max-height:50vh;overflow-y:auto;">
+                <table class="data-table exemplares-table">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Código</th>
-                            <th>Status</th>
-                            <th>Condição</th>
-                            <th>Observação</th>
-                            <th>Último Aluguel</th>
-                            <th>Ações</th>
+                            <th style="width:50px;">#</th>
+                            <th style="width:100px;">Código</th>
+                            <th style="width:90px;">Status</th>
+                            <th style="width:90px;">Condição</th>
+                            <th style="width:200px;">Último Aluguel</th>
+                            <th style="width:120px;">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="exemplaresTbody">
                         <tr class="loading-row">
-                            <td colspan="7"><span class="spinner"></span>Carregando…</td>
+                            <td colspan="6"><span class="spinner"></span>Carregando...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div class="btn-group" style="margin-top:16px;"><button type="button" class="btn btn-ghost"
-                    onclick="fecharModal('exemplareModal')">Fechar</button></div>
+            <div class="btn-group" style="margin-top:16px;">
+                <button type="button" class="btn btn-ghost" onclick="fecharModal('exemplareModal')">Fechar</button>
+            </div>
         </div>
     </div>
 
