@@ -1,9 +1,11 @@
-// Empréstimos e histórico
+// Gerenciamento de empréstimos e histórico
 
+// Debounce para evitar múltiplas requisições de busca
 const carregarAlugueisDebounced = debounce((busca) => carregarAlugueis(1, busca));
 
+// Carrega lista de empréstimos com paginação e busca
 async function carregarAlugueis(pagina = 1, busca = '') {
-    // Título e cabeçalho da tabela
+    // Configura título e cabeçalho da tabela
     document.getElementById('alugueisTitle').innerHTML = `<span>Controle</span> de Empréstimos`;
     document.getElementById('alugueisHead').innerHTML = `
         <tr>
@@ -18,14 +20,17 @@ async function carregarAlugueis(pagina = 1, busca = '') {
             <th>Ações</th>
         </tr>`;
 
+    // Mostra estado de carregamento
     definirCarregando('alugueisTbody', 9);
 
     try {
+        // Prepara parâmetros da requisição
         const parametros = new URLSearchParams({ 
             page: pagina, 
             limit: 20
         });
 
+        // Adiciona busca se houver
         if (busca.trim()) {
             parametros.set('busca', busca.trim());
         }

@@ -2,36 +2,43 @@
 
 let controladorAbortarLivros = null;
 
+// Debounce para evitar múltiplas requisições de busca
 const carregarLivrosDebounced = debounce(() => carregarLivros(1));
 
+// Carrega lista de livros com paginação e busca
 async function carregarLivros(pagina = 1) {
-    // Cancela requisição anterior
+    // Cancela requisição anterior para evitar concorrência
     if (controladorAbortarLivros) {
         controladorAbortarLivros.abort();
     }
     controladorAbortarLivros = new AbortController();
 
+    // Mostra loading
     const grid = document.getElementById('livrosGrid');
     grid.innerHTML = '<div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;"><span class="spinner"></span> Carregando acervo físico...</div>';
 
     try {
+        // Obtém termo de busca
         const busca = document.getElementById('buscaLivros')?.value || '';
 
+        // Prepara parâmetros da requisição
         const parametros = new URLSearchParams({ 
             page: pagina, 
             limit: 20
         });
 
+        // Adiciona busca se houver
         if (busca.trim()) {
             parametros.set('busca', busca.trim());
         }
 
-        // Realiza a chamada manual para suportar o sinal de cancelamento (AbortSignal)
+        // Prepara headers com autenticação
         const cabecalhos = { 'Content-Type': 'application/json' };
         if (token) {
             cabecalhos['Authorization'] = `Bearer ${token}`;
         }
 
+        // Realiza requisição com suporte a cancelamento
         const resposta = await fetch(`${API_URL}/livros?${parametros}`, { 
             headers: cabecalhos, 
             signal: controladorAbortarLivros.signal 

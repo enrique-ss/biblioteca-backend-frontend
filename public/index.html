@@ -33,11 +33,13 @@
 
         <div class="container" id="appContainer">
 
+            <!-- Tela de Login -->
             <section id="loginScreen" class="screen active">
                 <div class="auth-wrap">
                     <div class="auth-card">
                         <h1 class="auth-title">Acesso</h1>
                         <p class="auth-subtitle">Entre com suas credenciais para continuar</p>
+                        <!-- Formulário de login -->
                         <form id="loginForm" novalidate>
                             <div class="form-group"><label class="form-label">Email</label><input type="email"
                                     id="loginEmail" class="form-input" placeholder="seu@email.com" required></div>
@@ -54,11 +56,13 @@
                 </div>
             </section>
 
+            <!-- Tela de Registro -->
             <section id="registerScreen" class="screen">
                 <div class="auth-wrap">
                     <div class="auth-card">
                         <h1 class="auth-title">Biblio<span>Verso</span></h1>
                         <p class="auth-subtitle">Crie sua conta para acessar o sistema</p>
+                        <!-- Formulário de registro -->
                         <form id="registerForm" novalidate>
                             <div class="form-group"><label class="form-label">Nome completo</label><input type="text"
                                     id="regNome" class="form-input" placeholder="Seu nome" required></div>
@@ -71,6 +75,7 @@
                                 <button type="button" class="btn btn-ghost auth-secondary-btn"
                                     onclick="mostrarTela('loginScreen')">Voltar</button>
                             </div>
+                            <div class="form-footer">Ao criar uma conta, você concorda com os termos de uso do sistema.</div>
                         </form>
                     </div>
                 </div>

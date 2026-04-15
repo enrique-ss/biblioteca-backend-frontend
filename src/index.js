@@ -1,3 +1,4 @@
+// Importações principais
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -8,10 +9,14 @@ const { ensureDefaultAdmin } = require('./bootstrapAdmin');
 const { runtimeMode } = require('./database');
 const { initMonitor } = require('./monitor');
 
+// Carrega variáveis de ambiente
 dotenv.config({ quiet: true });
 
+// Inicializa Express e servidor HTTP
 const app = express();
 const server = http.createServer(app);
+
+// Configura CORS baseado nas origens permitidas
 const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -23,10 +28,12 @@ const corsOptions = {
   credentials: true
 };
 
+// Inicializa Socket.IO para WebSocket
 const io = new Server(server, {
   cors: corsOptions
 });
 
+// Disponibiliza io para as rotas
 app.set('io', io);
 
 const PORTA = process.env.PORT || 3000;

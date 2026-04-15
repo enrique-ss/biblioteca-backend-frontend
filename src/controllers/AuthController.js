@@ -3,6 +3,7 @@ const { supabaseAuth } = require('../database');
 const { isOfflineMode } = require('../database');
 
 class AuthController {
+  // Define permissões do usuário baseado no tipo
   getPermissions(tipo) {
     const ehAdmin = tipo === 'bibliotecario';
 
@@ -16,26 +17,32 @@ class AuthController {
     };
   }
 
+  // Registro de novo usuário no sistema
   registrar = async (req, res) => {
     try {
       const { nome, email, senha } = req.body;
 
+      // Validação do nome
       if (!nome || nome.trim().length < 3) {
         return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
       }
 
+      // Validação do email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email || !emailRegex.test(email)) {
         return res.status(400).json({ error: 'Formato de e-mail invalido (exemplo: usuario@dominio.com).' });
       }
 
+      // Validação da senha
       if (!senha || senha.length < 8) {
         return res.status(400).json({ error: 'A senha deve conter no minimo 8 caracteres.' });
       }
 
+      // Formata e prepara dados para cadastro
       const emailFormatado = email.toLowerCase().trim();
       const tipo = 'usuario';
 
+      // Cria usuário no Supabase Auth
       const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
         email: emailFormatado,
         password: senha,
@@ -83,21 +90,25 @@ class AuthController {
     }
   };
 
+  // Login do usuário no sistema
   login = async (req, res) => {
     try {
       const { email, senha } = req.body;
 
+      // Validação de campos obrigatórios
       if (!email || !senha) {
         return res.status(400).json({ error: 'E-mail e senha sao campos obrigatorios.' });
       }
 
       const emailFormatado = email.toLowerCase().trim();
 
+      // Autenticação do usuário no Supabase
       const { data: authData, error: authError } = await supabaseAuth.auth.signInWithPassword({
         email: emailFormatado,
         password: senha
       });
 
+      // Verifica se credenciais estão corretas
       if (authError) {
         return res.status(401).json({ error: 'Credenciais invalidas. Verifique seu e-mail e senha.' });
       }

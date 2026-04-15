@@ -2,24 +2,29 @@ const supabase = require('../database');
 
 class UsuarioController {
 
+  // Lista usuários com paginação e busca
   listar = async (req, res) => {
     try {
       const { busca, page, limit } = req.query;
 
+      // Prepara paginação
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
+      // Consulta base de usuários
       let consulta = supabase
         .from('usuarios')
         .select('id, nome, email, tipo, multa_pendente, bloqueado, motivo_bloqueio, created_at', { count: 'exact' })
         .is('deleted_at', null);
 
+      // Aplica busca por nome ou email
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         consulta = consulta.or(`nome.ilike.%${termoBusca}%,email.ilike.%${termoBusca}%`);
       }
 
+      // Ordena e pagina
       consulta = consulta.order('nome', { ascending: true }).range(deslocamento, deslocamento + limite - 1);
 
       const { data: registros, count: total, error } = await consulta;
@@ -39,11 +44,13 @@ class UsuarioController {
     }
   };
 
+  // Atualiza dados de um usuário existente
   atualizar = async (req, res) => {
     try {
       const { id } = req.params;
       const { nome, email, tipo } = req.body;
 
+      // Verifica se usuário existe
       const { data: usuarioAlvo } = await supabase
         .from('usuarios')
         .select('*')
@@ -57,6 +64,7 @@ class UsuarioController {
 
       const dadosParaAtualizar = {};
 
+      // Valida e atualiza nome
       if (nome !== undefined) {
         if (nome.trim().length < 3) {
           return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
@@ -64,12 +72,14 @@ class UsuarioController {
         dadosParaAtualizar.nome = nome.trim();
       }
 
+      // Valida e atualiza email
       if (email !== undefined) {
         const emailFormatado = email.toLowerCase().trim();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailFormatado)) {
           return res.status(400).json({ error: 'Formato de e-mail inválido.' });
         }
         
+        // Verifica se email já está em uso
         const { data: emailEmUso } = await supabase
           .from('usuarios')
           .select('*')
@@ -84,6 +94,7 @@ class UsuarioController {
         dadosParaAtualizar.email = emailFormatado;
       }
 
+      // Valida e atualiza tipo
       if (tipo !== undefined) {
         if (!['usuario', 'bibliotecario'].includes(tipo)) {
           return res.status(400).json({ error: 'Tipo de conta inválido.' });

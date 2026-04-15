@@ -2,7 +2,9 @@ const supabase = require('../database');
 
 class LivroController {
 
+  // Gera localização automática baseada no gênero e autor
   gerarLocalizacaoAutomatica(genero, autor) {
+    // Mapeamento de gêneros para corredores
     const mapaCorredores = {
       'Literatura': 'L',
       'Ficção Científica': 'F',
@@ -14,6 +16,7 @@ class LivroController {
     
     const corredor = mapaCorredores[genero] || 'O';
     
+    // Define prateleira baseada na inicial do autor
     const inicial = autor ? autor.trim().toUpperCase().charCodeAt(0) : 65;
     let prateleira = '1';
     
@@ -26,7 +29,9 @@ class LivroController {
     return { corredor, prateleira };
   }
 
+  // Recalcula contadores de exemplares de um livro
   recalcularContadores = async (livroId) => {
+    // Conta exemplares totais e disponíveis
     const [{ count: totalFisico }, { count: totalDisponivel }] = await Promise.all([
       supabase.from('exemplares').select('*', { count: 'exact', head: true }).eq('livro_id', livroId).neq('condicao', 'perdido').is('deleted_at', null),
       supabase.from('exemplares').select('*', { count: 'exact', head: true }).eq('livro_id', livroId).eq('disponibilidade', 'disponivel').is('deleted_at', null)
@@ -35,6 +40,7 @@ class LivroController {
     const numTotal = totalFisico || 0;
     const numDisponivel = totalDisponivel || 0;
 
+    // Atualiza contadores na tabela livros
     await supabase.from('livros').update({
       exemplares: numTotal,
       exemplares_disponiveis: numDisponivel,
@@ -42,19 +48,23 @@ class LivroController {
     }).eq('id', livroId);
   };
 
+  // Lista livros com paginação e filtros
   listar = async (req, res) => {
     try {
       const { busca, page, limit } = req.query;
 
+      // Valida e prepara paginação
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
+      // Consulta base de livros
       let consulta = supabase
         .from('livros')
         .select('*', { count: 'exact' })
         .is('deleted_at', null);
 
+      // Aplica busca por título, autor ou gênero
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%,genero.ilike.%${termoBusca}%`);

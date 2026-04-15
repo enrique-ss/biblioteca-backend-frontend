@@ -4,11 +4,14 @@ const API_URL = `${BASE_URL}/api`;
 let token = null;
 let currentUser = null;
 
+// Conexão WebSocket para atualizações em tempo real
 const socket = typeof io !== 'undefined'
     ? io({ withCredentials: true })
     : { on: () => {} };
 
 socket.on('connect', () => console.log('Conectado ao servidor WebSocket!', socket.id));
+
+// Atualização automática de dados em tempo real
 socket.on('refreshData', (tipo) => {
     if (tipo === 'livros' && typeof carregarLivros === 'function') {
         carregarLivros(1);
@@ -22,12 +25,15 @@ socket.on('refreshData', (tipo) => {
         carregarEstatisticas();
     }
 });
+
+// Atualização de estatísticas
 socket.on('statsUpdate', (data) => {
     if (typeof carregarEstatisticas === 'function') {
         carregarEstatisticas();
     }
 });
 
+// Atualiza ícone do tema (sol/lua)
 function atualizarIconeTema(tema) {
     const themeIcon = document.getElementById('btnThemeIcon');
     if (!themeIcon) {
@@ -48,17 +54,20 @@ function toggleTheme() {
     localStorage.setItem('biblioverso_theme', novoTema);
 }
 
+// Restura tema salvo pelo usuário
 function restoreTheme() {
     const saved = localStorage.getItem('biblioverso_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', saved);
     atualizarIconeTema(saved);
 }
 
+// Salva sessão do usuário no sessionStorage
 function salvarSessao() {
     sessionStorage.setItem('biblioverso_token', token || '');
     sessionStorage.setItem('biblioverso_user', JSON.stringify(currentUser));
 }
 
+// Restaura sessão do usuário ao carregar página
 function restaurarSessao() {
     const t = sessionStorage.getItem('biblioverso_token');
     const u = sessionStorage.getItem('biblioverso_user');

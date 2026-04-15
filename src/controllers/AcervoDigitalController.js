@@ -2,25 +2,30 @@ const supabase = require('../database');
 
 class AcervoDigitalController {
 
+  // Lista livros digitais com paginação e busca
   listar = async (req, res) => {
     try {
       const { busca, page, limit } = req.query;
 
+      // Prepara paginação
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
+      // Consulta base de livros digitais aprovados
       let consulta = supabase
         .from('acervo_digital')
         .select('*', { count: 'exact' })
         .eq('status', 'aprovado')
         .is('deleted_at', null);
 
+      // Aplica busca por título, autor ou categoria
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%,categoria.ilike.%${termoBusca}%`);
       }
 
+      // Ordena por mais recentes e pagina
       consulta = consulta.order('created_at', { ascending: false }).range(deslocamento, deslocamento + limite - 1);
 
       const { data: registros, count: total, error } = await consulta;

@@ -1,25 +1,31 @@
-// Autenticação
+// Autenticação de usuários
 
+// Listener do formulário de login
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
+        // Prepara dados de login
         const payload = {
             email: document.getElementById('loginEmail').value,
             senha: document.getElementById('loginPassword').value
         };
 
+        // Envia requisição de login
         const dados = await api('/auth/login', {
             method: 'POST',
             body: JSON.stringify(payload)
         });
 
+        // Armazena token e dados do usuário
         token = dados.token || dados.session?.access_token || null;
         currentUser = dados.usuario;
 
+        // Salva sessão e atualiza interface
         salvarSessao();
         atualizarNavbar();
         carregarMenu();
 
+        // Redireciona para o menu principal
         mostrarTela('menuScreen');
         e.target.reset();
     } catch (erro) {
@@ -27,9 +33,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
+// Listener do formulário de registro
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
+        // Prepara dados de registro
         const payload = {
             nome: document.getElementById('regNome').value,
             email: document.getElementById('regEmail').value,
@@ -37,18 +45,22 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             tipo: 'usuario'
         };
 
+        // Envia requisição de registro
         const dados = await api('/auth/registrar', {
             method: 'POST',
             body: JSON.stringify(payload)
         });
 
+        // Armazena token e dados do usuário
         token = dados.token || dados.session?.access_token || null;
         currentUser = dados.usuario;
 
+        // Salva sessão e atualiza interface
         salvarSessao();
         atualizarNavbar();
         carregarMenu();
 
+        // Redireciona para o menu principal
         mostrarTela('menuScreen');
         e.target.reset();
     } catch (erro) {

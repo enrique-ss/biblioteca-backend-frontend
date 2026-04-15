@@ -1,32 +1,40 @@
-// Usuários
+// Gerenciamento de usuários
 
+// Debounce para evitar múltiplas requisições de busca
 const carregarUsuariosDebounced = debounce((busca) => carregarUsuarios(1, busca));
 
+// Carrega lista de usuários com paginação e busca
 async function carregarUsuarios(pagina = 1, busca = '') {
+    // Mostra estado de carregamento
     definirCarregando('usuariosTbody', 5);
     try {
+        // Prepara parâmetros da requisição
         const parametros = new URLSearchParams({ 
             page: pagina, 
             limit: 20
         });
         
+        // Adiciona busca se houver
         if (busca.trim()) {
             parametros.set('busca', busca.trim());
         }
 
+        // Busca usuários na API
         const { data, pages } = await api(`/usuarios?${parametros}`);
         const tbody = document.getElementById('usuariosTbody');
         tbody.innerHTML = '';
         
+        // Verifica se há usuários
         if (!data.length) { 
             definirVazio('usuariosTbody', 5, 'Nenhum usuário cadastrado.'); 
             return; 
         }
 
+        // Renderiza cada usuário na tabela
         data.forEach(u => {
             const tr = document.createElement('tr');
             
-            // Badges de multas/bloqueios
+            // Badges de status (multas/bloqueios)
             let badgesDestaque = '';
             if (u.multa_pendente) {
                 badgesDestaque += `<span class="badge badge-danger" style="margin-left:6px;font-size:.55rem">multa</span>`;

@@ -1,26 +1,31 @@
 const supabase = require('../database');
 
+// Valores das multas
 const VALOR_MULTA_DIARIA = 1.00;
 const VALOR_MULTA_PERDA = 100.00;
 
 class AluguelController {
 
+  // Cria novo empréstimo de livro
   criar = async (req, res) => {
     try {
       const { livro_id, usuario_id, exemplar_id } = req.body;
 
+      // Verifica se usuário existe
       const { data: usuario } = await supabase.from('usuarios').select('*').eq('id', usuario_id).single();
       
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não localizado no sistema.' });
       }
 
+      // Verifica se usuário está bloqueado
       if (usuario.bloqueado) {
         return res.status(400).json({ 
           error: `O usuário está impedido de realizar novos empréstimos. Motivo: ${usuario.motivo_bloqueio || 'Bloqueio administrativo.'}` 
         });
       }
 
+      // Verifica se usuário tem multas pendentes
       if (usuario.multa_pendente) {
         const { data: multas } = await supabase.from('multas').select('valor').eq('usuario_id', usuario_id).eq('status', 'pendente');
         const totalDevido = (multas || []).reduce((total, m) => total + Number(m.valor), 0);

@@ -1,24 +1,29 @@
 const supabase = require('../database');
 
 class StatsController {
+  // Agrupa itens por chave e retorna os mais populares
   agruparTop = (items, getKey, limit = 6) => {
     const mapa = new Map();
 
+    // Conta ocorrências de cada chave
     for (const item of items) {
       const chave = getKey(item);
       if (!chave) continue;
       mapa.set(chave, (mapa.get(chave) || 0) + 1);
     }
 
+    // Ordena por mais populares e retorna limite
     return [...mapa.entries()]
       .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]), 'pt-BR'))
       .slice(0, limit)
       .map(([label, valor]) => ({ label, valor }));
   };
 
+  // Agrupa itens por mês para gráficos temporais
   agruparPorMes = (items, getDate, limit = 6) => {
     const mapa = new Map();
 
+    // Agrupa por ano-mês
     for (const item of items) {
       const data = new Date(getDate(item));
       if (Number.isNaN(data.getTime())) continue;
@@ -27,6 +32,7 @@ class StatsController {
       mapa.set(chave, (mapa.get(chave) || 0) + 1);
     }
 
+    // Ordena cronologicamente e formata labels
     return [...mapa.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
       .slice(-limit)
@@ -40,9 +46,11 @@ class StatsController {
       });
   };
 
+  // Agrupa livros por década para análise histórica
   agruparPorDecada = (livros) => {
     const mapa = new Map();
 
+    // Agrupa por década (ex: 1990s, 2000s)
     for (const livro of livros) {
       const ano = Number(livro.ano_lancamento);
       if (!Number.isFinite(ano)) continue;
@@ -50,20 +58,24 @@ class StatsController {
       mapa.set(chave, (mapa.get(chave) || 0) + 1);
     }
 
+    // Ordena cronologicamente
     return [...mapa.entries()]
       .sort((a, b) => Number(a[0]) - Number(b[0]))
       .map(([label, valor]) => ({ label, valor }));
   };
 
+  // Gera resumo estatístico baseado no tipo de usuário
   resumo = async (req, res) => {
     try {
       const ehBibliotecario = req.usuario.tipo === 'bibliotecario';
       const usuarioId = req.usuario.id;
 
+      // Normaliza data para início do dia
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
       if (ehBibliotecario) {
+        // Estatísticas para bibliotecários (visão geral)
         const [{ data: livrosFisicos = [], count: totalLivros }, { count: ativos }, { count: totalUsuarios }, { count: totalDigitais }] = await Promise.all([
           supabase.from('livros').select('*', { count: 'exact', head: true }).is('deleted_at', null),
           supabase.from('alugueis').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
@@ -92,11 +104,13 @@ class StatsController {
         });
       }
 
+      // Estatísticas para usuário comum (visão pessoal)
       const [{ count: ativos }, { count: totalHistorico }] = await Promise.all([
         supabase.from('alugueis').select('*', { count: 'exact', head: true }).eq('usuario_id', usuarioId).eq('status', 'ativo'),
         supabase.from('alugueis').select('*', { count: 'exact', head: true }).eq('usuario_id', usuarioId)
       ]);
 
+      // Conta empréstimos em atraso
       const { count: atrasados } = await supabase
         .from('alugueis')
         .select('*', { count: 'exact', head: true })
@@ -118,11 +132,13 @@ class StatsController {
     }
   };
 
+  // Gera estatísticas detalhadas para gráficos e análises
   detalhado = async (req, res) => {
     try {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
+      // Busca todos os dados necessários para análise
       const [
         { data: livros = [] },
         { data: alugueis = [] },

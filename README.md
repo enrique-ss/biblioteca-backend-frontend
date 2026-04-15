@@ -2,6 +2,13 @@
 
 Sistema completo para gestão de acervo físico e digital, com backend Node.js, banco de dados Supabase, autenticação JWT e interface web moderna.
 
+## **Projeto Online**
+
+Acesse o sistema em produção: **[https://biblio-verso.onrender.com](https://biblio-verso.onrender.com)**
+
+- **Email de acesso**: `admin@admin.com`
+- **Senha**: `admin123`
+
 ## Autores
 
 - **Enrique** - Desenvolvimento backend e frontend

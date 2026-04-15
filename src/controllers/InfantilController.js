@@ -2,11 +2,13 @@ const supabase = require('../database');
 
 class InfantilController {
 
+  // Retorna dados completos do espaço infantil
   getFullData = () => {
     return {
       infantil: {
         greeting: "Olá, Pequeno Leitor! 📚",
         avatar: "🌱",
+        // Categorias de conteúdo por faixa etária
         categories: [
           { id: 'contos', name: 'Contos e Fábulas', icon: '🐺', color: 'var(--accent)' },
           { id: 'poesia', name: 'Poesia', icon: '🎵', color: '#6a5ae0' },
