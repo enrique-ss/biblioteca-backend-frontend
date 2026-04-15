@@ -156,8 +156,8 @@
 ## **GLOSSÁRIO**
 
 ### **Infraestrutura**
-- **SQLite**: Banco de dados local, funciona 100% offline
-- **Supabase**: Banco de dados em nuvem com autenticação e realtime
+- **SQLite**: Banco de dados local, funciona 100% offline. Escolhido por não requerer instalação ou configuração, funcionando nativamente em qualquer ambiente.
+- **Supabase**: Banco de dados em nuvem com autenticação e realtime. Escolhido em vez de MySQL por incluir autenticação completa, JWT, WebSocket nativo e hospedagem gerenciada, eliminando a necessidade de configurar servidor de banco.
 - **Render**: Plataforma de hospedagem para aplicações Node.js
 - **WebSocket**: Conexão permanente para atualizações em tempo real
 - **Deploy**: Processo de publicar a aplicação na internet
