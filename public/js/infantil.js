@@ -1,8 +1,6 @@
-/* ============================================================
-   ESPAÇO LITERÁRIO INFANTIL - Lógica Gamificada (Smart Backend)
-   ============================================================ */
+// Espaço Literário Infantil
 
-// Estado global do jogo infantil
+// Estado global
 let infantilState = {
     currentAge: null,
     currentCategory: null,
@@ -16,12 +14,10 @@ let infantilState = {
     quizCorrect: 0
 };
 
-// Dados carregados do backend
+// Dados do backend
 let INFANTIL_BACKEND_DATA = null;
 
-/**
- * Busca os dados do espaço literário no servidor
- */
+// Busca dados do espaço literário
 async function fetchInfantilData() {
     if (!token) return false;
     
@@ -29,11 +25,12 @@ async function fetchInfantilData() {
         const response = await api('/infantil/data');
         INFANTIL_BACKEND_DATA = response.infantil;
         
-        // Sincroniza o estado inicial
+        // Sincroniza estado inicial
         if (response.userProfile) {
             infantilState.userXP = response.userProfile.xp;
             infantilState.userLevel = response.userProfile.level;
             infantilState.userHearts = response.userProfile.hearts;
+            infantilState.xpPercentage = response.userProfile.xpPercentage;
             infantilState.completedLessons = new Set(response.userProfile.completedLessons || []);
             updateUI();
         }
@@ -49,18 +46,13 @@ async function fetchInfantilData() {
     }
 }
 
-/**
- * Utilitário para formatar texto com "Accent Words"
- * Transforma *palavra* em <span class="accent-word">palavra</span>
- */
+// Formata texto com "Accent Words"
 function formatAccentText(text) {
     if (!text) return '';
     return text.replace(/\*([^*]+)\*/g, '<span class="accent-word">$1</span>');
 }
 
-/**
- * Seleciona a faixa etária e inicializa a jornada
- */
+// Seleciona faixa etária
 async function selectAge(age) {
     if (!INFANTIL_BACKEND_DATA) {
         const success = await fetchInfantilData();
@@ -70,7 +62,7 @@ async function selectAge(age) {
     infantilState.currentAge = age;
     const data = INFANTIL_BACKEND_DATA[age];
     
-    // Atualizar navbar
+    // Atualiza navbar
     const avatarEl = document.getElementById('infantil-avatar');
     if (avatarEl) avatarEl.textContent = data.avatar;
     
@@ -85,11 +77,9 @@ async function selectAge(age) {
     loadCategories();
 }
 
-/**
- * Inicializa ou Reinicia o Espaço Infantil
- */
+// Inicializa ou reinicia espaço infantil
 async function initializeInfantilSpace() {
-    // Resetar navegação
+    // Reseta navegação
     infantilState.currentAge = null;
     infantilState.currentCategory = null;
     infantilState.currentLesson = null;
@@ -169,20 +159,18 @@ function loadLessons() {
     });
 }
 
-/**
- * Renderiza o conteúdo da lição no estilo MODERNO (Substitui listas por cards e accents)
- */
+// Renderiza conteúdo da lição
 function selectLesson(lesson) {
     infantilState.currentLesson = lesson;
     const body = document.getElementById('infantil-content-body');
     if (!body) return;
 
-    // Garante que animações anteriores sejam canceladas antes de injetar novo HTML
+    // Cancela animações anteriores
     if (window.gsap) {
         gsap.killTweensOf("#infantil-content-body *");
     }
 
-    // Construção do HTML Moderno (V2 - Premium)
+    // Constrói HTML
     let html = `
         <div class="lesson-content-modern">
             <header class="lesson-header-modern">
@@ -225,7 +213,7 @@ function selectLesson(lesson) {
     body.innerHTML = html;
     showInfantilScreen('content');
     
-    // Animações removidas para testes de visibilidade
+    // Animações removidas
 }
 
 function startQuiz() {
@@ -271,18 +259,16 @@ function loadQuizQuestion() {
     });
 }
 
-/**
- * Valida a opção selecionada com o servidor (Smart Backend)
- */
+// Valida opção com servidor
 async function selectQuizOption(selectedIndex, cardElement) {
     const lesson = infantilState.currentLesson;
     
     try {
-        // Bloquear novas seleções
+        // Bloqueia novas seleções
         const allCards = document.querySelectorAll('#infantil-quiz-options .glass-card');
         allCards.forEach(card => card.style.pointerEvents = 'none');
 
-        // Perguntar ao servidor se está correto
+        // Pergunta ao servidor
         const result = await api('/infantil/validate-answer', {
             method: 'POST',
             body: JSON.stringify({
@@ -295,7 +281,7 @@ async function selectQuizOption(selectedIndex, cardElement) {
         const isCorrect = result.isCorrect;
         cardElement.classList.add(isCorrect ? 'correct' : 'incorrect');
         
-        // Atualiza vidas com base no que o servidor disse
+        // Atualiza vidas
         infantilState.userHearts = result.hearts;
         updateUI();
 
@@ -319,9 +305,7 @@ async function selectQuizOption(selectedIndex, cardElement) {
     }
 }
 
-/**
- * Finaliza o quiz pedindo ao servidor para calcular recompensas
- */
+// Finaliza quiz e calcula recompensas
 async function showQuizResult(gameOverByHearts = false) {
     const lesson = infantilState.currentLesson;
 
@@ -338,14 +322,14 @@ async function showQuizResult(gameOverByHearts = false) {
 
         const { result, userProfile } = response;
 
-        // Renderiza o resultado usando EXATAMENTE o que o servidor mandou
+        // Renderiza resultado do servidor
         document.getElementById('infantil-result-icon').textContent = result.icon;
         document.getElementById('infantil-result-title').textContent = result.title;
         document.getElementById('infantil-result-desc').textContent = result.desc;
         document.getElementById('infantil-xp-gain').textContent = result.xpGain;
         document.getElementById('infantil-hp-gain').textContent = result.hpGain;
 
-        // Atualiza estado local com os dados oficiais do servidor
+        // Atualiza estado local
         infantilState.userXP = userProfile.xp;
         infantilState.userLevel = userProfile.level;
         infantilState.userHearts = userProfile.hearts;
@@ -363,9 +347,7 @@ async function showQuizResult(gameOverByHearts = false) {
     }
 }
 
-/**
- * Envia o progresso atual para o banco de dados
- */
+// Envia progresso ao banco
 async function syncProgress(completedLessonId = null) {
     try {
         await api('/infantil/save-progress', {
@@ -388,15 +370,14 @@ function updateUI() {
     const xpTextEl = document.getElementById('infantil-xp-text');
     const xpBarEl = document.getElementById('infantil-xp-bar');
     const livesEl = document.getElementById('infantil-lives');
-    
+
     if (levelEl) levelEl.textContent = String(infantilState.userLevel);
     if (xpTextEl) xpTextEl.textContent = `${infantilState.userXP}/${infantilState.userLevel * 100}`;
-    
-    if (xpBarEl) {
-        const xpPercentage = (infantilState.userXP / (infantilState.userLevel * 100)) * 100;
-        xpBarEl.style.width = `${xpPercentage}%`;
+
+    if (xpBarEl && infantilState.xpPercentage !== undefined) {
+        xpBarEl.style.width = `${infantilState.xpPercentage}%`;
     }
-    
+
     if (livesEl) livesEl.textContent = String(infantilState.userHearts);
 }
 
@@ -418,18 +399,16 @@ function showInfantilScreen(screen) {
     }
 }
 
-// Inicialização e Persistência
+// Inicialização
 document.addEventListener('DOMContentLoaded', () => {
     initializeInfantilSpace();
     
-    // Regeneração de Vidas (1 a cada 6 horas)
+    // Regeneração de vidas
     setInterval(() => {
         if (infantilState.userHearts < 5) {
             infantilState.userHearts++;
             updateUI();
-            // A regeneração de vidas idealmente também deveria ser no backend,
-            // mas por simplificação mantemos no front com sync posterior se necessário.
-            // Para ser 100% fiel, o backend deveria calcular vidas baseado no tempo.
+            // Regeneração simplificada no front
         api('/infantil/save-progress', {
             method: 'POST',
             body: JSON.stringify({

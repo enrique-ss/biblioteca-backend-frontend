@@ -6,6 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { ensureDefaultAdmin } = require('./bootstrapAdmin');
 const { runtimeMode } = require('./database');
+const { initMonitor } = require('./monitor');
 
 dotenv.config({ quiet: true });
 
@@ -90,6 +91,8 @@ const iniciarServidor = async () => {
       socket.join(room);
     });
   });
+
+  initMonitor(io);
 
   server.listen(PORTA, '0.0.0.0', () => {
     console.log(`Biblio Verso ativo em http://localhost:${PORTA} (${runtimeMode})`);

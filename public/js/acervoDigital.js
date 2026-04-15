@@ -1,15 +1,14 @@
-// Gerenciamento do Acervo Digital (PDFs)
+// Acervo digital (PDFs)
 
 let controladorAbortarDigital = null;
 
-// Debounce para evitar múltiplas requisições enquanto o usuário digita na busca
 const carregarAcervoDigitalDebounced = debounce((valor) => carregarAcervoDigital(1));
 
 async function carregarAcervoDigital(pagina = 1) {
     const grid = document.getElementById('digitalGrid');
     const busca = document.getElementById('buscaDigital').value;
 
-    // Cancela a requisição anterior se houver uma em andamento
+    // Cancela requisição anterior
     if (controladorAbortarDigital) {
         controladorAbortarDigital.abort();
     }
@@ -45,7 +44,7 @@ async function carregarAcervoDigital(pagina = 1) {
 
         grid.innerHTML = '';
         
-        // Seção Hero (Destaque) - Só na primeira página e se houver dados
+        // Seção Hero
         if (pagina === 1 && data.length > 0 && !busca) {
             const destaque = data[0];
             const hero = document.createElement('div');
@@ -134,9 +133,9 @@ function downloadPDF(url, titulo) {
     exibirAlerta('Download iniciado...');
 }
 
-// Lógica de formulário removida e consolidada em livros.js (Unified Add Book Form)
+// Formulário consolidado em livros.js
 
-// Lógica de Gestão de Pendências (Bibliotecários)
+// Gestão de pendências
 async function carregarPendencias() {
     abrirModal('aprovacoesModal');
     const tbody = document.getElementById('aprovacoesTbody');

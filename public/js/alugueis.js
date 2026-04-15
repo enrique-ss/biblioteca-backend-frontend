@@ -1,9 +1,9 @@
-// Gerenciamento de Empréstimos e Histórico
+// Empréstimos e histórico
 
 const carregarAlugueisDebounced = debounce((busca) => carregarAlugueis(1, busca));
 
 async function carregarAlugueis(pagina = 1, busca = '') {
-    // Define o título e cabeçalho da tabela de controle geral
+    // Título e cabeçalho da tabela
     document.getElementById('alugueisTitle').innerHTML = `<span>Controle</span> de Empréstimos`;
     document.getElementById('alugueisHead').innerHTML = `
         <tr>
@@ -30,7 +30,7 @@ async function carregarAlugueis(pagina = 1, busca = '') {
             parametros.set('busca', busca.trim());
         }
 
-        // Busca dados de empréstimos (O total de atrasados já vem nos metadados da resposta)
+        // Busca dados de empréstimos
         const resposta = await api(`/alugueis/todos?${parametros}`);
 
         const linhas = Array.isArray(resposta) ? resposta : (resposta.data ?? []);
@@ -40,7 +40,7 @@ async function carregarAlugueis(pagina = 1, busca = '') {
         renderizarTabelaAlugueisCompleta(linhas);
         renderizarPaginacao('alugueisPagination', pagina, totalPaginas, (p) => carregarAlugueis(p, busca));
 
-        // Gerencia o banner de aviso de atrasos no topo da tela (Usando metadado do Back)
+        // Banner de aviso de atrasos
         const banner = document.getElementById('atrasadosBanner');
         if (totalAtrasados > 0) {
             banner.style.display = 'flex';
@@ -153,7 +153,7 @@ function renderizarTabelaAlugueisUsuario(lista) {
     });
 }
 
-// Prepara o modal para registrar um novo empréstimo manualmente (Bibliotecário)
+// Prepara modal de novo empréstimo
 async function prepararModalNovoAluguel() {
     try {
         const [livros, usuarios] = await Promise.all([
@@ -179,7 +179,7 @@ async function prepararModalNovoAluguel() {
             selUsuario.innerHTML += `<option value="${u.id}">${esc(u.nome)} (${esc(u.email)})</option>`;
         });
         
-        // Evento dinâmico para carregar exemplares específicos do livro escolhido
+        // Evento para carregar exemplares
         selLivro.onchange = async () => {
             const livroId = selLivro.value;
             if (!livroId) {
@@ -211,7 +211,7 @@ async function prepararModalNovoAluguel() {
     }
 }
 
-// Processa o envio do formulário de novo empréstimo
+// Processa formulário de novo empréstimo
 document.getElementById('addAluguelForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -250,7 +250,7 @@ document.getElementById('addAluguelForm').addEventListener('submit', async (e) =
     }
 });
 
-// --- Processo de Devolução ---
+// Processo de devolução
 
 function abrirModalDevolucao(aluguelId) {
     document.getElementById('devolucaoAluguelId').value = aluguelId;
@@ -260,7 +260,7 @@ function abrirModalDevolucao(aluguelId) {
     abrirModal('devolucaoModal');
 }
 
-// Listener para exibir campo de observação apenas se o estado for ruim
+// Exibe campo de observação se estado for ruim
 document.addEventListener('DOMContentLoaded', () => {
     const seletorEstado = document.getElementById('devolucaoEstado');
     if (seletorEstado) {
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resultado.aviso) {
                 exibirAlerta(resultado.aviso, 'warning');
                 
-                // Exibe detalhes das multas geradas se houver atraso ou perda
+                // Exibe detalhes das multas
                 if (resultado.multas && resultado.multas.length > 0) {
                     const textoMultas = resultado.multas.map(m => {
                         const motivo = m.tipo === 'atraso' ? `Atraso (${m.dias} dias)` : 'Perda do exemplar';
@@ -330,7 +330,7 @@ function renovarEmprestimo(id) {
     });
 }
 
-// --- Histórico Detalhado ---
+// Histórico detalhado
 
 async function carregarHistorico(pagina = 1, usuarioId = '') {
     definirCarregando('historicoTbody', 9);
@@ -377,36 +377,9 @@ async function carregarHistorico(pagina = 1, usuarioId = '') {
 }
 
 async function exportarHistoricoCSV() {
-    try {
-        // Busca um volume maior para o CSV (limitado a 10.000 registros para segurança)
-        const { data } = await api('/alugueis/historico?page=1&limit=10000');
-        
-        const colunas = ['id', 'usuario', 'titulo', 'exemplar_codigo', 'estado_devolucao', 'data_aluguel', 'prazo', 'data_devolucao', 'renovacoes'];
-        
-        // Constrói o conteúdo CSV
-        const header = colunas.join(',');
-        const linhas = data.map(registro => {
-            return colunas.map(col => {
-                const valor = (registro[col] ?? '').toString().replace(/"/g, '""');
-                return `"${valor}"`;
-            }).join(',');
-        });
-
-        const csvString = [header, ...linhas].join('\n');
-        
-        // Cria e dispara o download do arquivo
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' }));
-        link.download = `historico_biblioteca_${new Date().toISOString().slice(0, 10)}.csv`;
-        link.click();
-        
-        exibirAlerta('Histórico exportado com sucesso!');
-    } catch (erro) { 
-        exibirAlerta(erro.message, 'danger'); 
-    }
+    exibirAlerta('Exportação CSV desabilitada. Use o endpoint do backend.', 'warning');
 }
 
-// --- Gestão de Multas para o Usuário (Área do Aluno) ---
+// Gestão de multas do usuário
 
-// As funções de multas do usuário foram movidas para a Central de Notificações em notifications.js
-// para uma experiência mais integrada.
+// Funções movidas para notifications.js

@@ -17,7 +17,7 @@
 - **Navegação Fluida**: Sem travamentos, como usar um app
 - **Visual Moderno**: Design bonito e agradável
 - **Modo Escuro e Claro**: Alternância entre temas claro e escuro
-- **Acesso Rápido**: Cadastro simples em 3 passos
+- **Acesso Rápido**: Cadastro simples com nome, email e senha
 
 ### **Slide 3: Demonstração ao Vivo: Acervo Físico**
 - **[AO VIVO]** Acesso ao menu "Acervo Físico"
@@ -54,8 +54,8 @@
 ### **Slide 9: Demonstração ao Vivo: Meu Perfil**
 - **Acesso**: "[PERFIL] Acessando 'Meu Perfil'."
 - **Informações**: "[INFO] Visualização e edição de informações pessoais."
-- **Estante**: "[ESTANTE] Estante pessoal com histórico completo de livros lidos."
-- **XP**: "[XP] XP acumulado e patente atual do usuário."
+- **Estante**: "[ESTANTE] Histórico completo de empréstimos realizados."
+- **XP**: "[XP] XP acumulado e nível atual do usuário."
 - **Configurações**: "[CONFIG] Configurações de conta e preferências."
 
 ### **Slide 10: Encerramento**
@@ -73,7 +73,7 @@
 - **Interface**: "A interface foi projetada para ser intuitiva, similar a aplicativos mobile, facilitando o uso por leitores e bibliotecários."
 
 ### **Slide 2: Experiência Diferenciada**
-- **Performance**: "O sistema utiliza pré-carregamento de telas para evitar travamentos."
+- **Performance**: "O sistema carrega as telas ao clicar no menu, garantindo navegação fluida."
 - **Temas**: "O sistema oferece modo escuro e modo claro, com alternância instantânea entre temas."
 - **Cadastro**: "O processo de cadastro requer apenas 3 informações básicas."
 - **Gestão de Perfil**: "Todos os usuários são criados inicialmente como leitores. O bibliotecário gerencia os cargos e permissões dos demais usuários através do menu de usuários."
@@ -121,8 +121,8 @@
 ### **Slide 9: Demonstração ao Vivo: Meu Perfil**
 - **Acesso**: "[PERFIL] Acessando 'Meu Perfil'."
 - **Informações**: "[INFO] Visualização e edição de informações pessoais."
-- **Estante**: "[ESTANTE] Estante pessoal com histórico completo de livros lidos."
-- **XP**: "[XP] XP acumulado e patente atual do usuário."
+- **Estante**: "[ESTANTE] Histórico completo de empréstimos realizados."
+- **XP**: "[XP] XP acumulado e nível atual do usuário."
 - **Configurações**: "[CONFIG] Configurações de conta e preferências."
 
 ### **Slide 10: Encerramento**

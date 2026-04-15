@@ -70,9 +70,13 @@ class AcervoDigitalController {
           const { titulo, autor, categoria, ano, paginas, tamanho_arquivo, url_arquivo, capa_url } = req.body;
           const usuarioId = req.usuario?.id;
           const ehBibliotecario = req.usuario?.tipo === 'bibliotecario';
-          
+
           if (!titulo || !url_arquivo) {
               return res.status(400).json({ error: 'Título e URL do arquivo (PDF) são obrigatórios.' });
+          }
+
+          if (tamanho_arquivo && tamanho_arquivo > 10 * 1024 * 1024) {
+              return res.status(400).json({ error: 'O arquivo não pode exceder 10MB.' });
           }
 
           const status = ehBibliotecario ? 'aprovado' : 'pendente';

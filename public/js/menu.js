@@ -1,7 +1,7 @@
-// Gerenciamento dos Menus de Navegação e Sidebar
+// Menus de navegação
 
 function carregarMenu() {
-    // Define o nome do usuário na tela de boas-vindas do menu
+    // Nome do usuário
     const elementoNome = document.getElementById('menuUserName');
     if (elementoNome) {
         elementoNome.textContent = currentUser.nome;
@@ -11,7 +11,7 @@ function carregarMenu() {
     
     const navLateral = document.getElementById('sidebarNav');
     if (navLateral) {
-        navLateral.innerHTML = ''; // Limpa os itens anteriores para reconstrução
+        navLateral.innerHTML = '';
     }
 
     const itensMenu = [
@@ -34,7 +34,6 @@ function carregarMenu() {
     ];
 
     if (ehBibliotecario) {
-        // Opções exclusivas para bibliotecários - Empréstimos primeiro
         itensMenu.push({ 
             icon: '📋', 
             title: 'Empréstimos',  
@@ -44,7 +43,6 @@ function carregarMenu() {
             } 
         });
     } else {
-        // Opções para usuários comuns - Meus Livros primeiro
         itensMenu.push({ 
             icon: '📖', 
             title: 'Meus Livros', 
@@ -55,7 +53,6 @@ function carregarMenu() {
         });
     }
 
-    // Espaço Literário agora fica abaixo de Empréstimos/Meus Livros
     itensMenu.push({ 
         icon: '🎓', 
         title: 'Espaço Literário', 
@@ -68,7 +65,6 @@ function carregarMenu() {
     });
 
     if (ehBibliotecario) {
-        // Outras opções administrativas
         itensMenu.push(
             { 
                 icon: '👥', 
@@ -89,7 +85,7 @@ function carregarMenu() {
         );
     }
 
-    // Itens de suporte comum (Alertas e Tema)
+    // Suporte
     itensMenu.push(
         { 
             icon: `<span style="position:relative;">🔔<span class="nav-notifications-badge" id="notificationsBadge">0</span></span>`, 
@@ -106,7 +102,7 @@ function carregarMenu() {
         }
     );
 
-    // Itens de Conta
+    // Conta
     itensMenu.push(
         { 
             icon: '👤', 
@@ -120,9 +116,9 @@ function carregarMenu() {
         }
     );
 
-    // Cria visualmente cada botão no menu lateral (sidebar)
+    // Cria botões do menu
     if (navLateral) {
-        navLateral.style.display = 'flex'; // Garante que apareça
+        navLateral.style.display = 'flex';
         itensMenu.forEach(item => {
             const botao = document.createElement('button');
             botao.className = 'side-btn';
@@ -133,7 +129,7 @@ function carregarMenu() {
         });
     }
 
-    // Gerencia a visibilidade de botões de ação rápida fora da sidebar
+    // Visibilidade de botões
     const displayBib = ehBibliotecario ? 'inline-flex' : 'none';
     
     const btnAddLivro = document.getElementById('btnAddLivro');
@@ -145,7 +141,7 @@ function carregarMenu() {
     const btnHistorico = document.getElementById('btnHistorico');
     if (btnHistorico) btnHistorico.style.display = displayBib;
 
-    // Atualiza o badge das notificações se houver valor acumulado
+    // Atualiza badge de notificações
     if (typeof carregarNotificacoes === 'function') {
         carregarNotificacoes(); 
     }

@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
 
-/* ── TOKENS DARK (Modern Vintage) ── */
-/* ── TOKENS DARK (Modern Premium) ── */
+/* Tokens Dark */
 :root {
     --bg: #0A0C0B;
     --surface: rgba(28, 34, 30, 0.45); /* More translucent */
@@ -37,7 +36,7 @@
     --lh: 1.6;
 }
 
-/* ── TOKENS LIGHT (Premium Forest) ── */
+/* Tokens Light */
 [data-theme="light"] {
     --bg: #F0F9F4; /* Light pastel green */
     --surface: rgba(255, 255, 255, 0.65);
@@ -56,7 +55,7 @@
     --glass-border: 1px solid rgba(45, 106, 79, 0.08);
 }
 
-/* ── RESET ── */
+/* Reset */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
@@ -76,7 +75,7 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border-m); border-radius: var(--r-pill); border: 2px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* ── LAYOUT ── */
+/* Layout */
 .three-bg {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -104,7 +103,7 @@ body {
     flex-direction: column;
 }
 
-/* ── SIDEBAR (Modern Premium) ── */
+/* Sidebar */
 .sidebar {
     position: fixed;
     top: 20px; left: 20px; bottom: 20px;
@@ -120,7 +119,7 @@ body {
     overflow-y: overlay; 
     box-shadow: var(--shadow);
 }
-/* Estilo para barra de rolagem da sidebar (quase invisível mas funcional) */
+/* Barra de rolagem da sidebar */
 .sidebar::-webkit-scrollbar { width: 4px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--accent-bg); border-radius: 10px; }
@@ -161,7 +160,7 @@ body {
     overflow: hidden;
     padding-left: 24px;
 }
-/* Typewriter cursor blink */
+/* Cursor piscante */
 .brand-logo-full::after {
     content: '|';
     animation: blink-cursor 0.8s step-end infinite;
@@ -209,7 +208,7 @@ body {
 
 .sidebar-bottom { padding-bottom: 24px; padding-top: 16px; flex-shrink: 0; }
 
-/* Sidebar background for light mode - subtle mint tint */
+/* Sidebar no modo claro */
 [data-theme="light"] .sidebar {
     background: rgba(240, 249, 244, 0.95) !important;
     backdrop-filter: blur(32px) saturate(180%) !important; 
@@ -220,9 +219,8 @@ body {
     -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
 }
 
-/* Sidebar user styles removed for standardized button */
 
-/* ── NOTIFICATIONS ── */
+/* Notificações */
 .nav-notifications-badge {
   position: absolute;
   top: 4px;
@@ -324,9 +322,8 @@ body {
 .notification-type.info    { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--border); }
 .notification-type.success { background: rgba(60, 90, 62, 0.15); color: var(--success); border: 1px solid rgba(60, 90, 62, 0.2); }
 
-/* Theme Button is now in sidebars */
 
-/* ── SCREENS ── */
+/* Telas */
 .screen { display: none; }
 .screen.active { display: block; animation: screenIn .32s cubic-bezier(.22,1,.36,1); }
 .hidden { display: none !important; }
@@ -337,7 +334,7 @@ body {
 
 
 
-/* ── PAGE HEADER ── */
+/* Cabeçalho da página */
 .page-header {
     display: flex;
     align-items: center;
@@ -353,11 +350,11 @@ body {
 .page-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: nowrap; }
 .page-actions .btn { white-space: nowrap; }
 
-/* ── SEARCH ── */
+/* Busca */
 .search-bar { margin-bottom: 16px; }
 .search-bar .form-input { background: var(--surface); border-color: var(--border); padding: 10px 16px; }
 
-/* ── SPINNER ── */
+/* Spinner */
 .spinner {
     display: inline-block;
     width: 16px; height: 16px;
@@ -370,7 +367,7 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg) } }
 
-/* ── RESPONSIVE BASE ── */
+/* Responsivo */
 @media (max-width: 900px) {
     .app-wrapper { padding-left: 0; }
     .sidebar { display: none; }

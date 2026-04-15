@@ -24,9 +24,22 @@ class AluguelController {
       if (usuario.multa_pendente) {
         const { data: multas } = await supabase.from('multas').select('valor').eq('usuario_id', usuario_id).eq('status', 'pendente');
         const totalDevido = (multas || []).reduce((total, m) => total + Number(m.valor), 0);
-        
-        return res.status(400).json({ 
-          error: `Usuário possui débitos pendentes de R$ ${totalDevido.toFixed(2)}. Regularize a situação para continuar.` 
+
+        return res.status(400).json({
+          error: `Usuário possui débitos pendentes de R$ ${totalDevido.toFixed(2)}. Regularize a situação para continuar.`
+        });
+      }
+
+      // Validar limite de empréstimos (máximo 3 empréstimos ativos)
+      const { count: emprestimosAtivos } = await supabase
+        .from('alugueis')
+        .select('*', { count: 'exact', head: true })
+        .eq('usuario_id', usuario_id)
+        .eq('status', 'ativo');
+
+      if (emprestimosAtivos >= 3) {
+        return res.status(400).json({
+          error: 'Usuário atingiu o limite máximo de 3 empréstimos ativos. Devolva algum livro antes de fazer novo empréstimo.'
         });
       }
 
@@ -55,27 +68,61 @@ class AluguelController {
       const { data: livroPai } = await supabase.from('livros').select('*').eq('id', livro_id).single();
       const novaQtdDisponivel = Math.max(0, (livroPai.exemplares_disponiveis || 0) - 1);
 
-      const { error: insertError } = await supabase.from('alugueis').insert({
-        livro_id: livro_id, 
-        exemplar_id: exemplarSelecionado.id, 
-        usuario_id: usuario_id,
-        data_prevista_devolucao: dataPrevista.toISOString(), 
-        status: 'ativo'
-      });
+      let aluguelCriado = null;
 
-      if (insertError) throw insertError;
+      try {
+        // Transação atômica: se qualquer operação falhar, desfaz todas
+        const { error: insertError, data } = await supabase.from('alugueis').insert({
+          livro_id: livro_id,
+          exemplar_id: exemplarSelecionado.id,
+          usuario_id: usuario_id,
+          data_aluguel: dataAluguel.toISOString(),
+          data_prevista_devolucao: dataPrevista.toISOString(),
+          status: 'ativo'
+        }).select().single();
 
-      await supabase.from('exemplares').update({ disponibilidade: 'emprestado' }).eq('id', exemplarSelecionado.id);
+        if (insertError) throw insertError;
+        aluguelCriado = data;
 
-      await supabase.from('livros').update({
-        exemplares_disponiveis: novaQtdDisponivel,
-        status: novaQtdDisponivel === 0 ? 'alugado' : 'disponivel'
-      }).eq('id', livro_id);
+        const { error: updateExemplarError } = await supabase.from('exemplares').update({ disponibilidade: 'emprestado' }).eq('id', exemplarSelecionado.id);
+        if (updateExemplarError) throw updateExemplarError;
 
-      res.status(201).json({ 
-        message: '✅ Empréstimo registrado com sucesso!', 
-        prazo_devolucao: dataPrevista.toLocaleDateString('pt-BR') 
-      });
+        const { error: updateLivroError } = await supabase.from('livros').update({
+          exemplares_disponiveis: novaQtdDisponivel,
+          status: novaQtdDisponivel === 0 ? 'alugado' : 'disponivel'
+        }).eq('id', livro_id);
+        if (updateLivroError) throw updateLivroError;
+
+        res.status(201).json({
+          message: '✅ Empréstimo registrado com sucesso!',
+          prazo_devolucao: dataPrevista.toLocaleDateString('pt-BR')
+        });
+
+      } catch (transactionError) {
+        // Rollback manual: desfaz operações se falhar no meio
+        console.error('Erro na transação de empréstimo, fazendo rollback:', transactionError);
+
+        if (aluguelCriado) {
+          await supabase.from('alugueis').delete().eq('id', aluguelCriado.id);
+        }
+
+        // Verifica e restaura estado do exemplar se necessário
+        const { data: exemplarCheck } = await supabase.from('exemplares').select('disponibilidade').eq('id', exemplarSelecionado.id).single();
+        if (exemplarCheck?.disponibilidade === 'emprestado') {
+          await supabase.from('exemplares').update({ disponibilidade: 'disponivel' }).eq('id', exemplarSelecionado.id);
+        }
+
+        // Verifica e restaura estado do livro se necessário
+        const { data: livroCheck } = await supabase.from('livros').select('exemplares_disponiveis').eq('id', livro_id).single();
+        if (livroCheck?.exemplares_disponiveis !== livroPai.exemplares_disponiveis) {
+          await supabase.from('livros').update({
+            exemplares_disponiveis: livroPai.exemplares_disponiveis,
+            status: livroPai.status
+          }).eq('id', livro_id);
+        }
+
+        throw transactionError;
+      }
 
     } catch (erro) { 
       res.status(400).json({ error: erro.message }); 

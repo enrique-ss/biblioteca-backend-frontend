@@ -1,13 +1,11 @@
-// Gerenciamento do Acervo de Livros e Exemplares
+// Acervo de livros
 
 let controladorAbortarLivros = null;
 
-// Debounce para evitar múltiplas requisições enquanto o usuário digita na busca
 const carregarLivrosDebounced = debounce(() => carregarLivros(1));
 
-// Função principal de carga do acervo com busca textual e destaque de novidade
 async function carregarLivros(pagina = 1) {
-    // Cancela a requisição anterior se houver uma em andamento
+    // Cancela requisição anterior
     if (controladorAbortarLivros) {
         controladorAbortarLivros.abort();
     }
@@ -48,7 +46,7 @@ async function carregarLivros(pagina = 1) {
         const grid = document.getElementById('livrosGrid');
         grid.innerHTML = '';
 
-        // Mostrar seção Hero (Destaque) - Só na primeira página e se houver dados
+        // Seção Hero
         if (pagina === 1 && data.length > 0 && !busca && latest_book) {
             const hero = document.createElement('div');
             hero.className = 'digital-hero';
@@ -197,7 +195,7 @@ function prepararAddLivro(tipo) {
     abrirModal('addLivroModal');
 }
 
-// Cadastro Unificado de Livro Físico ou Digital
+// Cadastro de livro
 document.getElementById('addLivroForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const tipo = document.getElementById('livroTipo').value;
@@ -287,7 +285,7 @@ function editarLivro(livro) {
     abrirModal('editLivroModal');
 }
 
-// Atualização de livro existente
+// Atualização de livro
 document.getElementById('editLivroForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('editLivroId').value;
@@ -333,19 +331,16 @@ function removerLivro(id, titulo) {
     });
 }
 
-// --- Gerenciamento de Exemplares (Cópias Físicas) ---
+// Exemplares
 
-/**
- * Função Didática: Avalia o estado atual de um exemplar e devolve as ações permitidas.
- * Centralizar essa lógica evita complexidade excessiva dentro da renderização da tabela.
- */
+// Avalia estado do exemplar e retorna ações permitidas
 function renderizarAcoesExemplar(livroId, ex) {
-    // Se está emprestado, não permitimos alteração manual de status/condição para evitar conflitos
+    // Se emprestado, não permite alteração
     if (ex.disponibilidade === 'emprestado') {
         return '<span style="color:var(--text-faint);font-size:var(--fs-xs)">Emprestado (Em uso)</span>';
     }
     
-    // Se o exemplar está marcado como perdido, permitimos apenas marcar como "Achei" (Bom/Danificado)
+    // Se perdido, permite marcar como encontrado
     if (ex.disponibilidade === 'perdido') {
         return `
             <select class="form-select exemplar-status-select" 
@@ -356,7 +351,7 @@ function renderizarAcoesExemplar(livroId, ex) {
             </select>`;
     }
     
-    // Para exemplares na biblioteca, mostramos controles completos de status e condição
+    // Controles completos de status e condição
     return `
         <select class="form-select exemplar-status-select" 
                 onchange="atualizarDisponibilidadeExemplar(${livroId}, ${ex.id}, this.value)">
@@ -445,7 +440,7 @@ async function atualizarCondicaoExemplar(livroId, exemplarId, novaCondicao) {
     if (!novaCondicao) return;
     
     let observacao = '';
-    // Solicita uma observação se o exemplar sofreu dano ou foi perdido
+    // Solicita observação se danificado ou perdido
     if (novaCondicao === 'danificado' || novaCondicao === 'perdido') {
         observacao = prompt('Por favor, descreva o ocorrido (observação):') ?? '';
     }

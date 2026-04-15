@@ -191,29 +191,7 @@ async function carregarEstatisticasDetalhadas() {
 }
 
 function exportarEstatisticasCSV() {
-    if (!dadosBrutosStats) {
-        exibirAlerta('Carregue as estatísticas primeiro.', 'warning');
-        return;
-    }
-
-    const d = dadosBrutosStats;
-    const fA = (valor) => `"${String(valor ?? '').replace(/"/g, '""')}"`;
-    const fL = (colunas) => colunas.map(fA).join(',');
-    const fS = (titulo, cabecalho, linhas) => `${titulo}\n${cabecalho}\n${linhas.join('\n')}\n`;
-
-    const csv = [
-        fS('KPIS', fL(['Metrica', 'Valor']), (d.kpis || []).map((item) => fL([item.label, item.valor]))),
-        fS('Generos', fL(['Genero', 'Valor']), (d.generosMaisEmprestados || []).map((item) => fL([item.label, item.valor]))),
-        fS('Autores', fL(['Autor', 'Valor']), (d.autoresMaisEmprestados || []).map((item) => fL([item.label, item.valor]))),
-        fS('Livros', fL(['Livro', 'Valor']), (d.livrosMaisEmprestados || []).map((item) => fL([item.label, item.valor]))),
-        fS('Usuarios', fL(['Usuario', 'Valor']), (d.usuariosMaisAtivos || []).map((item) => fL([item.label, item.valor])))
-    ].join('\n');
-
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `stats_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
+    exibirAlerta('Exportação CSV desabilitada. Use o endpoint do backend.', 'warning');
 }
 
 window.addEventListener('storage', (e) => {

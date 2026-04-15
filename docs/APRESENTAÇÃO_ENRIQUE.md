@@ -1,174 +1,181 @@
 # **Biblio Verso** (Apresentação Enrique)
 
 **Contexto**: Trabalho Final de Curso - Continuação Técnica
-**Dinâmica**: Complementar apresentação da Julia, aprofundando nos porquês e como técnicos
+**Dinâmica**: Explicar os "como" - começa falando das tecnologias usadas e depois vai falando os como
 
 ---
 
-## **SLIDES** (Conteúdo Visual Técnico)
+## **SLIDES E FALA**
 
-### **Slide 1: Como a Arquitetura Funciona?**
-- **Backend (Cérebro)**: Armazena TODOS os dados e funcionalidades
-- **Frontend (Visual)**: Apenas visualiza o que o backend envia
-- **Zero Lógica no Frontend**: Nada é criado no lado do cliente
+### **Slide 1: Stack Tecnológica**
+- **Backend**: Node.js + Express.js + Socket.io
+- **Bibliotecas Backend**: Supabase, bcryptjs, JWT, better-sqlite3, cors, dotenv
+- **Frontend**: HTML + CSS + JavaScript
+- **Bibliotecas Frontend**: GSAP, Three.js, Chart.js
+- **Bancos de Dados**: SQLite e Supabase
+- **Hospedagem**: Github e Render
 
-### **Slide 2: Por Que o Sistema é Tão Confiável?**
-- **Comunicação Via JSON**: Frontend pede, backend responde
-- **Segurança Bancária**: Criptografia + tokens + controle de acesso
-- **Cresce Fácil**: Um único backend controla tudo
+**Fala:**
+"Para o backend, escolhi Node.js com Express.js porque são tecnologias que aprendemos bastante no curso. Adicionei Socket.io para permitir atualizações em tempo real sem precisar recarregar a página. Como bibliotecas do backend, uso Supabase para conectar ao banco de dados em nuvem, bcryptjs para criptografar senhas, JWT para autenticação, better-sqlite3 para o banco de dados local, cors para permitir requisições de origens diferentes e dotenv para gerenciar variáveis de ambiente. O frontend é HTML, CSS e JavaScript puro, sem frameworks, porque é mais simples e pesa menos. Para as animações e gráficos, uso GSAP, Three.js e Chart.js. Para os bancos de dados, uso SQLite no servidor local porque funciona 100% offline, o que facilita o desenvolvimento e permite que qualquer um clone o projeto e rode localmente. Para o servidor online, uso Supabase porque é gratuito e fácil de configurar. Já o GitHub serve para fazer o versionamento, e o Render para fazer o deploy automaticamente."
 
-### **Slide 3: Como a Experiência é Tão Rápida?**
-- **Pré-carregamento**: Todas as telas já carregadas, zero esperas
-- **Animações Suaves**: Transições matemáticas profissionais
-- **Cache Inteligente**: Informações guardadas para acesso rápido
+---
 
-### **Slide 4: Como o Acervo é Organizado e Seguro?**
-- **Busca Instantânea**: Encontra livros em milissegundos
-- **Localização Automática**: Autor > estante (como índice automático)
-- **Proteção de Dados**: Operações com rollback (desfazer se der erro)
+### **Slide 2: Por Que Cada Tecnologia Foi Escolhida**
+- **better-sqlite3**: SQLite local para desenvolvimento 100% offline
+- **Supabase**: Banco em nuvem gratuito com autenticação e realtime
+- **bcryptjs**: Criptografia de senhas
+- **JWT**: Autenticação sem guardar sessão no servidor
+- **cors**: Permite requisições de origens diferentes
+- **dotenv**: Gerencia variáveis de ambiente para segurança
+- **Socket.io**: Atualizações em tempo real sem recarregar página
+- **GSAP**: Animações suaves
+- **Three.js**: Efeitos 3D
+- **Chart.js**: Gráficos interativos para estatísticas
 
-### **Slide 5: Como o Acervo Digital Funciona?**
-- **Upload Seguro**: Arquivos são enviados com validação de tipo e tamanho
-- **Processo de Aprovação**: Upload > Pendente > Aprovado/Rejeitado
-- **Armazenamento**: PDFs são armazenados no servidor com controle de acesso
-- **Indexação**: Conteúdo é indexado automaticamente para busca instantânea
-- **Download**: Apenas materiais aprovados ficam disponíveis para download
+**Fala:**
+-- "Escolhi better-sqlite3 porque permite desenvolver 100% offline. Posso trabalhar de qualquer lugar sem internet, e qualquer um pode clonar o projeto e rodar localmente. Para produção, uso Supabase porque é gratuito, fácil de configurar e já vem com autenticação e realtime."
+-- "bcryptjs é essencial para segurança. Criptografa as senhas de forma irreversível, então nem eu consigo ver a senha original. JWT permite autenticação stateless, o que significa que o servidor não guarda sessão. Isso torna o sistema mais escalável e permite adicionar mais servidores se precisar."
+-- "cors permite que o frontend e backend estejam em origens diferentes, o que é útil em produção. dotenv gerencia variáveis de ambiente como chaves do Supabase, garantindo que credenciais sensíveis não fiquem hardcoded no código."
+-- "Socket.io permite atualizações em tempo real sem recarregar a página, essencial para notificações e estatísticas. GSAP cria animações suaves e profissionais. Three.js adiciona efeitos 3D no espaço infantil. Chart.js cria gráficos interativos para visualizar estatísticas de forma clara e profissional."
 
-### **Slide 6: Como os Empréstimos São 100% Seguros?**
-- **Operações Atômicas**: Ou tudo funciona ou nada acontece
+---
+
+### **Slide 3: Organização de Pastas e Arquivos**
+- **src/**: Todo o código do servidor (index.js, rotas, middleware)
+- **public/**: Frontend completo (html, css, js)
+- **public/js/**: Arquivos JavaScript que fazem requests ao backend
+- **Zero Lógica de Negócio no Front**: Nenhum cálculo de regras no navegador
+- **Separação Clara**: Backend é o cérebro, frontend é apenas visual
+
+**Fala:**
+-- "Separei as pastas src e public porque backend e frontend têm responsabilidades diferentes. A pasta src contém todo o código do servidor: index.js, rotas, controllers e middleware. Toda a lógica de negócio fica aqui, no server-side."
+-- "A pasta public tem apenas HTML, CSS e JavaScript. É só visual, nenhum cálculo de regras de negócio acontece aqui. Os arquivos JavaScript em public/js fazem requests ao backend, e o servidor processa e retorna a resposta. É o client-side"
+
+---
+
+### **Slide 4: Como o Acervo Físico é Organizado?**
+- **Estrutura 1:N**: Um livro pode ter múltiplas cópias e essas múltiplas cópias são vinculadas a um único livro
+- **Barra de Pesquisa**: Filtro por título, autor, categoria, ano e gênero
+- **Relacionamentos**: Autor, gênero, exemplares vinculados
+- **Concorrência**: Vários usuários alugam o mesmo livro sem conflitos
+
+**Fala:**
+-- "O banco usa relacionamento 1:N em tudo. Um livro na tabela livros pode ter múltiplos exemplares na tabela exemplares, e cada exemplar está vinculado ao seu livro, autor e gênero."
+-- "A barra de pesquisa funciona como um filtro que permite buscar por título, autor, categoria, ano e gênero. O usuário pode combinar vários filtros para encontrar exatamente o que precisa. Além disso, vários usuários podem alugar ao mesmo tempo o mesmo livro sem conflitos, pois o banco faz o empréstimo a partir dos exemplares disponíveis, e não do livro em si."
+
+---
+
+### **Slide 5: Como os Empréstimos Funcionam?**
+- **Transações Seguras**: Ou tudo funciona ou nada acontece
 - **Regras Inteligentes**: Bloqueia multas e limites automaticamente
 - **Validação Imediata**: Verifica regras antes de aprovar
+- **Cálculo de Multas**: Data e hora exatas com timestamps
 
-### **Slide 7: Como as Estatísticas e Usuários Funcionam?**
-- **Processamento Paralelo**: Várias tarefas juntas (como múltiplos núcleos)
-- **Gráficos Instantâneos**: Dados sempre atualizados
+**Fala:**
+"Antes de aprovar um empréstimo, o servidor valida se o usuário tem multa, se o livro tem algum exemplar disponível e se esse usuário respeita o limite de empréstimos. O cálculo de multas usa timestamps, que são registros de data e hora exatas do momento do empréstimo e da devolução. Assim, o sistema calcula precisamente quantos dias passaram e aplica a multa correta se precisar. Se alguma regra falhar, o empréstimo é bloqueado automaticamente."
+
+---
+
+### **Slide 6: Como o Acervo Digital Funciona?**
+- **Upload Seguro**: Validação de tipo e tamanho
+- **Processo de Aprovação**: Bibliotecário aprova na hora, Leitor espera aprovação
+- **Download**: Apenas materiais aprovados disponíveis
+
+**Fala:**
+"O upload valida tipo e tamanho antes de aceitar. Só aceito PDFs até 10MB para evitar problemas de armazenamento. Se o upload for feito pelo bibliotecário, o material é aprovado na hora e fica disponível imediatamente. Se for feito pelo leitor, fica pendente até um bibliotecário aprovar ou rejeitar. Esse processo evita conteúdo inadequado no acervo. Usuários comuns não veem os pendentes, garantindo que só conteúdo aprovado circule no sistema."
+
+---
+
+### **Slide 7: Sistema de Notificações em Tempo Real**
+- **WebSocket**: Conexão permanente para atualizações
+- **Tipos de Notificações**: Livros atrasados, materiais para aprovar
+- **Priorização**: Classificados por urgência
+- **Monitoramento**: Verificações constantes a cada 30 segundos
+
+**Fala:**
+"O sistema de notificações usa WebSocket, que mantém uma conexão permanente com o servidor. Quando há uma notificação, ela aparece instantaneamente sem ter que recarregar a página. O sistema verifica constantemente a cada 30 segundos se há livros atrasados, comparando a data prevista de devolução com a data atual usando timestamps. Também verifica materiais pendentes de aprovação e usuários bloqueados. Se houver mudança, envia notificação automaticamente para os bibliotecários. As notificações são classificadas por urgência, então o bibliotecário vê primeiro o que precisa de atenção imediata."
+
+---
+
+### **Slide 8: Segurança do Sistema**
+- **Modo Local**: Senhas criptografadas com bcrypt, JWT local
+- **Modo Online**: Supabase Auth gerencia senhas e tokens
 - **Controle de Acesso**: Leitor vs Bibliotecário
+- **Validação no Servidor**: Tudo verificado antes de processar
 
-### **Slide 8: Como o Sistema de Alertas Funciona?**
-- **Monitoramento em Tempo Real**: Sistema verifica constantemente eventos importantes
-- **Tipos de Alertas**: Livros atrasados, materiais para aprovar, usuários bloqueados
-- **Priorização**: Alertas são classificados por urgência
-- **Notificação**: Alertas aparecem no painel do bibliotecário automaticamente
-- **Processamento**: Múltiplas verificações acontecem em paralelo para não travar o sistema
-
-### **Slide 9: Como a Gamificação é à Prova de Trapaças?**
-- **Lógica no Servidor**: Cálculos no "cérebro" do sistema
-- **Proteção Contra Trapaças**: Respostas só no servidor
-- **Cálculo de Pontos**: Fórmulas matemáticas justas
-
-### **Slide 10: Encerramento Técnico**
-- **Arquitetura Robusta**: Backend stateless + frontend headless
-- **Segurança Bancária**: Criptografia + tokens + controle de acesso
-- **Performance Otimizada**: Processamento paralelo + cache inteligente
-- **Escalabilidade**: Sistema cresce com a instituição
+**Fala:**
+"A segurança funciona diferente em cada versão. No modo local, as senhas são criptografadas com bcrypt, que é um algoritmo que transforma a senha em um código irreversível. Para autenticação, usamos JWT, que é um token que funciona como um crachá digital. O usuário faz login, recebe o token e o usa em cada requisição, assim o sistema sabe exatamente quem ta fazendo o que, e o que tu pode ou não fazer. No modo online, o Supabase Auth gerencia as senhas e fornece os tokens JWT. O controle de acesso diferencia Leitor de Bibliotecário. Leitores só podem ver, enquanto bibliotecários podem gerenciar tudo. O servidor valida cada ação antes de processar em ambos os modos."
 
 ---
 
-## **ROTEIRO DE FALA** (Explicações Técnicas Detalhadas)
+### **Slide 9: Gamificação à Prova de Trapaças**
+- **Lógica no Servidor**: Cálculos no backend, não no navegador
+- **Respostas Protegidas**: Gabarito nunca visível ao usuário
+- **Progressão Automática**: Atualiza em tempo real
+- **Impossível Hackear**: Validação acontece no servidor
 
-### **Slide 1: Como a Arquitetura Funciona?**
-- **Backend**: "O Backend é como o cérebro do sistema - ele armazena TODOS os dados e processa todas as funcionalidades. É onde a lógica realmente acontece."
-- **Frontend**: "O Frontend é apenas a interface visual - ele mostra o que o backend envia, como uma TV que exibe o conteúdo que vem da antena."
-- **Separação**: "O princípio fundamental: ZERO lógica é criada no frontend! Nada é calculado ou armazenado no navegador do usuário. Isso é uma arquitetura chamada 'headless'."
-- **Comunicação**: "O frontend apenas faz pedidos via JSON - um formato de texto padrão - e o backend responde com tudo pronto. Isso garante segurança e consistência dos dados."
-- **Vantagem**: "Imagine um restaurante: o cliente (frontend) pede o prato, o cozinho (backend) prepara e serve. O cliente não precisa saber como foi feito, só recebe o prato pronto."
-
-### **Slide 2: Por Que o Sistema é Tão Confiável?**
-- **Comunicação Via JSON**: "A comunicação entre frontend e backend acontece via JSON - um formato de texto leve e padronizado. Isso garante que qualquer plataforma possa se comunicar com nosso backend."
-- **Segurança Bancária**: "Usamos os mesmos padrões de segurança que bancos: criptografia de senhas com bcrypt, tokens JWT para autenticação, e controle de acesso granular. Cada requisição é verificada antes de ser processada."
-- **Cresce Fácil**: "Um único backend controla tudo - isso significa que podemos adicionar novas interfaces (mobile, web, desktop) sem duplicar lógica. A arquitetura headless permite isso."
-- **Consistência**: "Como toda a lógica fica no servidor, não há inconsistências entre diferentes clientes. Todos veem os mesmos dados, processados da mesma forma."
-
-### **Slide 3: Como a Experiência é Tão Rápida?**
-- **Pré-carregamento**: "Pré-carregamos todas as telas como se fossem páginas abertas. Quando você muda de página, a página atual apenas fica marcada como oculta e habilita a exibição da página escolhida. Mas para o sistema é como se todas estivessem simultaneamente abertas. Isso elimina o tempo de carregamento entre navegações."
-- **Animações**: "As animações usam transições matemáticas profissionais - chamadas 'stagger' - que criam movimentos suaves e naturais, como se fossem coordenadas por um diretor de cinema."
-- **Cache**: "Guardamos informações importantes na memória do navegador para acesso rápido. É como ter uma gaveta de objetos frequentemente usados sempre à mão, sem precisar buscar no armário toda vez."
-- **GPU**: "Usamos a placa de vídeo para renderização acelerada. Em vez de usar apenas o processador principal, delegamos o trabalho gráfico para a GPU, que é especializada em imagens."
-- **Temas**: "Quando você muda o tema, a mudança é instantânea, sem travar, porque usamos variáveis CSS que são atualizadas dinamicamente sem recarregar a página."
-
-### **Slide 4: Como o Acervo é Organizado e Seguro?**
-- **Estrutura**: "Organizamos os dados usando relacionamento 1:N - um livro pode ter múltiplas cópias. É como ter um registro principal do livro 'O Guarani' e vários exemplares físicos vinculados a ele."
-- **Indexação**: "O sistema cria um índice automático que mapeia autor para estante. É como o índice de um livro: em vez de procurar página por página, você vai direto para a seção correta."
-- **Busca**: "A busca é super rápida - milissegundos - porque usamos algoritmos de busca otimizados que varrem o banco de dados de forma eficiente."
-- **Concorrência**: "Várias pessoas podem usar junto sem conflitos graças ao isolamento de transações - cada operação é tratada independentemente, como se tivessem salas separadas no banco de dados."
-
-### **Slide 5: Como o Acervo Digital Funciona?**
-- **Upload**: "O upload de arquivos é seguro: validamos o tipo e tamanho antes de aceitar. Só aceitamos PDFs e há um limite de tamanho para não sobrecarregar o servidor."
-- **Processo de Aprovação**: "O processo de aprovação funciona em três etapas: upload > pendente > aprovado ou rejeitado. Isso garante que apenas conteúdo verificado seja disponibilizado."
-- **Armazenamento**: "Os PDFs são armazenados no servidor com controle de acesso. Cada arquivo tem um caminho único e só pode ser acessado por usuários autorizados."
-- **Indexação**: "O conteúdo é indexado automaticamente para busca instantânea. Extraiamos metadados como título, autor e palavras-chave para facilitar a busca."
-- **Download**: "Apenas materiais aprovados ficam disponíveis para download. O sistema verifica a permissão do usuário antes de permitir o acesso ao arquivo."
-- **Segurança**: "Usamos sanitização de nomes de arquivos para evitar ataques de path traversal - onde alguém tentaria acessar arquivos que não deveria."
-
-### **Slide 6: Como os Empréstimos São 100% Seguros?**
-- **Atomicidade**: "Usamos operações atômicas - ou tudo funciona ou nada acontece. Se houver qualquer erro no meio do processo, o sistema 'desfaz' tudo automaticamente. É como uma transação bancária: ou o dinheiro sai e entra, ou nada acontece."
-- **Regras**: "O sistema tem regras inteligentes que bloqueiam multas e limites automaticamente. Essas regras ficam no servidor, não podem ser alteradas pelo usuário, garantindo integridade."
-- **Validação**: "Verifica tudo antes de aprovar: se o usuário tem multa, se o livro está disponível, se respeita os limites. Só depois de todas as validações passarem é que o empréstimo é confirmado."
-- **Cálculo**: "Calcula multas com data e hora exatas usando timestamps precisos. Não há ambiguidade - o sistema sabe exatamente quando cada ação ocorreu."
-- **Concorrência**: "Vários empréstimos podem acontecer ao mesmo tempo sem sobrescrever informações graças ao bloqueio de registros - enquanto um empréstimo está sendo processado, aquele registro fica 'trancado' para outros."
-- **ACID**: "Tudo isso segue o princípio ACID: Atomicidade, Consistência, Isolamento e Durabilidade - garantias de banco de dados que protegem contra perda de dados."
-
-### **Slide 7: Como as Estatísticas e Usuários Funcionam?**
-- **Processamento Paralelo**: "Performance vem de processamento paralelo usando Promise.all() - é como ter múltiplos núcleos trabalhando juntos. Em vez de fazer uma tarefa depois da outra, fazemos várias simultaneamente."
-- **Controle de Acesso**: "Para controle de usuários, usamos RBAC - Role-Based Access Control. Temos tipos de acesso: Leitor vs Bibliotecário. Cada papel tem permissões específicas definidas no servidor."
-- **Permissões**: "As permissões mudam dinamicamente - imediatamente. Quando um bibliotecário muda o papel de um usuário, as permissões são atualizadas no próximo login, sem precisar recarregar o sistema."
-- **Privacidade**: "Os dados dos usuários são protegidos por sanitização - informações sensíveis são removidas antes de serem exibidas, como senhas e dados pessoais não essenciais."
-
-### **Slide 8: Como o Sistema de Alertas Funciona?**
-- **Monitoramento**: "O sistema de alertas faz monitoramento em tempo real - verifica constantemente eventos importantes como empréstimos, devoluções e uploads."
-- **Tipos de Alertas**: "Temos vários tipos de alertas: livros atrasados, materiais para aprovar, usuários bloqueados, multas pendentes. Cada tipo tem sua prioridade."
-- **Priorização**: "Alertas são classificados por urgência - livros atrasados têm prioridade alta, materiais para aprovar têm prioridade média. Isso ajuda o bibliotecário a focar no mais importante primeiro."
-- **Notificação**: "Alertas aparecem no painel do bibliotecário automaticamente. Não precisa recarregar a página - o sistema usa WebSocket para atualizações em tempo real."
-- **Processamento**: "Múltiplas verificações acontecem em paralelo para não travar o sistema. Usamos processamento assíncrono para manter a performance."
-- **Histórico**: "O sistema mantém um histórico de alertas para auditoria - é possível ver quais alertas foram gerados, quando e por quem foram resolvidos."
-
-### **Slide 9: Como a Gamificação é à Prova de Trapaças?**
-- **Lógica no Servidor**: "Toda a lógica fica no 'cérebro' do sistema, no servidor. O cálculo de pontos, verificação de respostas e progressão não acontece no navegador do usuário, onde poderia ser manipulado."
-- **Proteção**: "As respostas dos quizzes ficam protegidas - só no servidor. Quando o usuário responde, o servidor verifica se está correto, calcula os pontos e retorna o resultado. O usuário nunca vê a 'gabarito'."
-- **Cálculo**: "Calculamos pontos com fórmulas matemáticas justas que consideram dificuldade, tempo de resposta e histórico. Essas fórmulas ficam no servidor e não podem ser alteradas."
-- **Progressão**: "A progressão é automática. O ranking atualiza em tempo real usando WebSocket - uma conexão permanente que permite atualizações instantâneas sem recarregar a página."
-- **Segurança**: "Impossível hackear porque a validação acontece no servidor. Mesmo que alguém tente modificar o XP no navegador, o servidor rejeitaria a alteração na próxima sincronização."
-
-### **Slide 10: Encerramento Técnico**
-- **Engenharia**: "O Biblio Verso é sustentado por engenharia robusta: regras de negócio no servidor, consistência ACID garantida, segurança bancária com criptografia, performance otimizada com cache e processamento paralelo."
-- **Arquitetura**: "Uma arquitetura pensada para escalar - backend stateless significa que podemos adicionar mais servidores conforme cresce a demanda, frontend headless permite que o mesmo backend alimente diferentes interfaces."
-- **Segurança**: "Segura por design desde o início: autenticação com tokens, criptografia de senhas com salt, sanitização de dados, controle de acesso granular. Cada camada tem sua proteção."
-- **Perguntas**: "Estamos abertos para perguntas técnicas sobre implementação - como funcionam os middlewares, como configuramos o banco de dados, como otimizamos as consultas, como implementamos a gamificação segura."
+**Fala:**
+"Toda a lógica do quiz fica no servidor, não no navegador onde poderia ser manipulada. O navegador só mostra as perguntas, não sabe a resposta pois o gabarito nunca é enviado ao frontend. Só o servidor valida se a resposta está correta. A progressão é automática e atualiza em tempo real via WebSocket."
 
 ---
 
-## **GLOSSÁRIO TÉCNICO** (Referência Rápida)
+### **Slide 10: Menu de Estatísticas**
+- **KPIs Principais**: Total de livros, empréstimos ativos, usuários cadastrados
+- **Gráficos Visuais**: Gêneros mais emprestados, autores populares, tendências
+- **Filtragem por Período**: Visualização diária, mensal ou anual
+- **Dados em Tempo Real**: Atualizados automaticamente via WebSocket
 
-### **Conceitos Básicos de Desenvolvimento**
-- **.env**: Arquivo de configuração que armazena variáveis de ambiente. É como um arquivo de configuração secreto onde guardamos senhas, chaves de API e configurações que não devem ficar expostas no código. Nunca deve ser compartilhado em repositórios públicos.
-- **Variáveis de Ambiente**: São valores configuráveis que afetam o comportamento do software sem precisar alterar o código. Exemplo: porta do servidor, URL do banco de dados, chaves de API.
-- **Git**: Sistema de controle de versão que permite rastrear mudanças no código ao longo do tempo, colaborar em equipe e reverter para versões anteriores se necessário.
-- **Node.js**: Ambiente de execução JavaScript que permite rodar JavaScript fora do navegador. É o motor que faz nosso backend funcionar.
-- **npm**: Gerenciador de pacotes do Node.js. É como uma loja de aplicativos para código - permite baixar e instalar bibliotecas e ferramentas que nosso projeto precisa.
-- **package.json**: Arquivo que descreve o projeto e suas dependências. É como a lista de ingredientes de uma receita - diz quais bibliotecas o projeto precisa para funcionar.
-- **TypeScript**: Superset do JavaScript que adiciona tipos estáticos. Ajuda a detectar erros antes mesmo de rodar o código, como um revisor automático.
-- **Compilação**: Processo de transformar código TypeScript em JavaScript que o navegador entende. O TypeScript não roda diretamente no navegador, precisa ser convertido.
+**Fala:**
+"O menu de estatísticas mostra KPIs principais como total de livros, empréstimos ativos e usuários cadastrados. Os gráficos visuais mostram gêneros mais emprestados, autores populares e tendências de leitura. É possível filtrar por período - diário, mensal ou anual. Os dados são atualizados em tempo real via WebSocket, então o bibliotecário sempre vê as informações mais recentes sem precisar recarregar a página."
+
+---
+
+### **Slide 11: Menu de Usuários**
+- **Gerenciamento Completo**: Cadastro, edição e exclusão de usuários
+- **Controle de Acesso**: Bloqueio e desbloqueio de contas
+- **Gestão de Multas**: Visualização e quitação de débitos
+- **Perfil Detalhado**: Histórico de empréstimos e atividades
+
+**Fala:**
+"O menu de usuários permite gerenciar cadastro, edição e exclusão de usuários. O bibliotecário pode bloquear ou desbloquear contas quando necessário. Também é possível visualizar e quitar multas diretamente neste menu. Cada usuário tem um perfil detalhado com histórico de empréstimos e atividades, facilitando o acompanhamento individual."
+
+---
+
+### **Slide 12: Estilizações e Bibliotecas do Frontend**
+- **GSAP**: Animações suaves e transições profissionais
+- **Three.js**: Efeitos 3D e visualizações avançadas
+- **Chart.js**: Gráficos interativos para estatísticas
+- **Modo Claro/Escuro**: Tema dinâmico com persistência
+- **Design System**: Cores, tipografia e componentes consistentes
+
+**Fala:**
+"Para as animações, uso GSAP, uma biblioteca que permite criar transições suaves e profissionais. O Three.js é usado para efeitos 3D e visualizações avançadas no espaço infantil. Para os gráficos de estatísticas, uso Chart.js, que cria visualizações interativas de dados. O sistema tem modo claro e escuro, e o usuário pode alternar entre eles. A preferência é salva localmente, então quando o usuário volta, o tema escolhido permanece ativo. Todo o design system é consistente, com cores, tipografia e componentes padronizados para garantir uma experiência visual coesa."
+
+---
+
+## **GLOSSÁRIO**
+
+### **Infraestrutura**
+- **SQLite**: Banco de dados local, funciona 100% offline
+- **Supabase**: Banco de dados em nuvem com autenticação e realtime
+- **Render**: Plataforma de hospedagem para aplicações Node.js
+- **WebSocket**: Conexão permanente para atualizações em tempo real
+- **Deploy**: Processo de publicar a aplicação na internet
 
 ### **Arquitetura**
-- **Headless**: API sem frontend acoplado
+- **Backend Node.js**: Servidor com Express.js
+- **Frontend Vanilla**: HTML, CSS, JavaScript puro
+- **JSON**: Formato de texto para comunicação entre frontend e backend
 - **Stateless**: Servidor sem estado de sessão
-- **ACID**: Atomicidade, Consistência, Isolamento, Durabilidade 
-- **RBAC**: Role-Based Access Control
-
-### **Performance**
-- **Stagger**: Animação sequencial matemática
-- **Cache Rendering**: Pré-renderização em memória
-- **GPU Buffer**: Processamento na placa gráfica
-- **Promise.all()**: Execução paralela assíncrona
 
 ### **Segurança**
-- **Salt**: Array aleatório para hash
-- **Payload**: Dados codificados no token
-- **Middleware**: Função intermediária de controle
-- **Sanitization**: Remoção de dados sensíveis
+- **JWT**: Token usado para autenticação e controle de acesso
+- **Bcrypt**: Algoritmo de criptografia de senhas
+- **Validação**: Verificação de dados antes de processar
+- **Controle de Acesso**: Leitor vs Bibliotecário
 
-### **Database**
-- **1:N**: Relacionamento um-para-muitos
-- **Foreign Key**: Chave estrangeira referencial
-- **Constraint**: Regra de integridade
-- **Hard Delete**: Exclusão permanente de dados
+### **Conceitos**
+- **Operações Atômicas**: Ou tudo funciona ou nada acontece
+- **Relacionamento 1:N**: Um livro pode ter múltiplas cópias
+- **Isolamento de Transações**: Operações independentes sem conflitos
+- **Processamento Paralelo**: Várias tarefas simultâneas

@@ -227,12 +227,17 @@ class InfantilController {
 
       removeAnswers(fullData);
 
+      const xp = user?.infantil_xp || 0;
+      const level = user?.infantil_level || 1;
+      const xpPercentage = (xp / (level * 100)) * 100;
+
       res.json({
         userProfile: {
-          xp: user?.infantil_xp || 0,
-          level: user?.infantil_level || 1,
+          xp: xp,
+          level: level,
           hearts: user?.infantil_hearts || 5,
-          completedLessons: completedLessons
+          completedLessons: completedLessons,
+          xpPercentage: xpPercentage
         },
         infantil: fullData
       });

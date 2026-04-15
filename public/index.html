@@ -81,7 +81,6 @@
                 </div>
             </section>
 
-            <!-- TELA NOTIFICAÇÕES -->
             <section id="notificacoesScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Alertas</span> e Pendências</h2>
@@ -129,7 +128,6 @@
                 </div>
                 
                 <div id="digitalGrid" class="digital-grid">
-                    <!-- Cards de PDF (Populados dinamicamente) -->
                 </div>
                 <div class="pagination" id="digitalPagination"></div>
             </section>
@@ -243,9 +241,7 @@
                 </div>
             </section>
 
-            <!-- ===== ESPAÇO LITERÁRIO INFANTIL ===== -->
             <section id="espacoInfantilScreen" class="screen">
-                <!-- TELA SELEÇÃO DE FAIXA ETÁRIA -->
                 <div id="screen-age" class="age-select-screen hidden">
                     <div class="page-header">
                         <h2 class="page-title"><span>🎓 Espaço</span> Literário</h2>
@@ -275,9 +271,7 @@
                     </div>
                 </div>
 
-                <!-- CONTEÚDO APÓS SELEÇÃO DE FAIXA ETÁRIA -->
                 <div id="content-after-age" class="hidden">
-                    <!-- NAVBAR INFANTIL -->
                     <div class="infantil-navbar" id="infantil-navbar">
                         <div class="profile-info">
                             <div class="avatar" id="infantil-avatar">🌱</div>
@@ -300,7 +294,6 @@
                         </div>
                     </div>
 
-                    <!-- TELA INICIAL INFANTIL -->
                     <div id="screen-home-infantil" class="infantil-screen hidden">
                         <div class="page-header">
                             <h2 class="page-title" id="infantil-hero-greeting">Olá, Pequeno Leitor! 📚</h2>
@@ -308,7 +301,6 @@
                         <div class="grid-categories" id="infantil-cat-grid"></div>
                     </div>
 
-                    <!-- TELA LIÇÕES INFANTIL -->
                     <div id="screen-lessons-infantil" class="infantil-screen hidden">
                         <div class="btn-back" onclick="showInfantilScreen('home')">
                             <span>←</span> Voltar
@@ -319,7 +311,6 @@
                         <div class="lesson-list" id="infantil-lesson-list-container"></div>
                     </div>
 
-                    <!-- TELA CONTEÚDO INFANTIL -->
                     <div id="screen-content-infantil" class="infantil-screen hidden">
                         <div class="btn-back" onclick="showInfantilScreen('lessons')">
                             <span>←</span> Voltar
@@ -327,7 +318,6 @@
                         <div id="infantil-content-body"></div>
                     </div>
 
-                    <!-- TELA QUIZ INFANTIL -->
                     <div id="screen-quiz-infantil" class="infantil-screen hidden">
                         <div class="quiz-header">
                             <button class="btn btn-ghost" onclick="showInfantilScreen('content')">←</button>
@@ -342,7 +332,6 @@
                         </div>
                     </div>
 
-                    <!-- TELA RESULTADO INFANTIL -->
                     <div id="screen-result-infantil" class="infantil-screen hidden">
                         <div class="glass-card result-card">
                             <div id="infantil-result-icon" class="result-emoji"></div>
@@ -449,7 +438,6 @@
         </div><!-- /container -->
     </div><!-- /app-wrapper -->
 
-    <!-- MODAIS -->
     <div id="addLivroModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('addLivroModal')"></div>
         <div class="modal-box">

@@ -1,4 +1,4 @@
-// Central de notificacoes e alertas do sistema
+// Central de notificações
 
 let dadosNotificacoes = [];
 
@@ -135,12 +135,11 @@ async function carregarNotificacoesUsuario() {
         }
 
         if (atrasados.length > 0) {
-            const multaTotalAtraso = atrasados.reduce((acc, a) => acc + Number(a.multa_acumulada || 0), 0);
             lista.push({
                 type: 'warning',
                 icon: '⚠️',
-                title: 'Entrega Atrasada',
-                message: `Voce esta com <strong>${atrasados.length}</strong> livro(s) fora do prazo. Multa acumulada prevista: <strong>R$ ${multaTotalAtraso.toFixed(2)}</strong>.`,
+                title: 'Livros Atrasados',
+                message: `Voce esta com <strong>${atrasados.length}</strong> livro(s) fora do prazo.`,
                 count: atrasados.length,
                 action: { label: 'Ver Meus Emprestimos', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
             });

@@ -1,4 +1,4 @@
-/* ── TELA DE LOGIN / INICIAL ── */
+/* Tela de login */
 .auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
 .auth-card { 
     background: var(--surface); 
@@ -16,7 +16,7 @@
 .auth-title    { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--accent); text-align: center; letter-spacing: .06em; margin-bottom: 4px; }
 .auth-subtitle { text-align: center; color: var(--text); font-style: italic; font-size: var(--fs-sm); margin-bottom: 28px; opacity: 1; max-width: 28ch; margin-left: auto; margin-right: auto; line-height: 1.6; }
 
-/* ── TELA MENU e ALERTAS ── */
+/* Tela de menu e alertas */
 .menu-screen-wrap { 
     max-width: 1000px; 
     margin: 0 auto; 
@@ -146,12 +146,12 @@
 .menu-logout { text-align: center; padding-top: 8px; }
 .menu-logout .btn { min-width: 160px; max-width: 260px; }
 
-/* ── PERFIL ── */
+/* Perfil */
 .perfil-info { display: flex; flex-direction: column; gap: 14px; }
 .perfil-field-label { font-family: 'Cinzel', serif; font-size: var(--fs-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; font-weight: 700; }
 .perfil-field-value { font-size: var(--fs-base); color: var(--text); }
 
-/* ── ACERVO DIGITAL (Streaming Style) ── */
+/* Acervo digital */
 .digital-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -239,7 +239,7 @@
     opacity: 1;
 }
 
-/* Force all text inside hovered card to white for readability over dark overlay */
+/* Texto branco no card hover */
 .digital-card:hover .digital-card-content p,
 .digital-card:hover .digital-card-content span:not(.badge),
 .digital-card:hover .digital-card-content h3,
@@ -247,7 +247,7 @@
     color: #ffffff !important;
 }
 
-/* Alinhamento consistente de badges e botões nos cards */
+/* Alinhamento de badges e botões */
 .digital-card-content > div[style*="border-top"] {
     display: flex !important;
     align-items: center !important;
@@ -264,7 +264,7 @@
     margin-top: 0 !important;
 }
 
-/* Remover borda do bottom dos cards */
+/* Remove borda dos cards */
 .digital-card-poster {
     border-bottom: none !important;
 }
@@ -321,7 +321,7 @@
     letter-spacing: 0.05em;
 }
 
-/* ── RESPONSIVE ── */
+/* Responsivo */
 @media (max-width: 680px) {
     .auth-card { padding: 28px 20px; }
     .menu-grid { grid-template-columns: 1fr 1fr; gap: 12px; }

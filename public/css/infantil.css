@@ -1,8 +1,6 @@
-/* ============================================================
-   ESPAÇO LITERÁRIO INFANTIL - Estilo Glassmorphism
-   ============================================================ */
+/* Espaço Literário Infantil */
 
-/* Variáveis específicas do tema infantil - Tons mais sofisticados */
+/* Variáveis do tema infantil */
 :root {
     --infantil-primary: #6a5ae0;
     --infantil-secondary: #00d68f;
@@ -12,14 +10,14 @@
     --infantil-danger: var(--danger);
 }
 
-/* Container principal do espaço infantil */
+/* Container principal */
 #espacoInfantilScreen.active {
     min-height: calc(100vh - 100px);
     display: flex;
     flex-direction: column;
 }
 
-/* Tela de Seleção de Faixa Etária */
+/* Seleção de faixa etária */
 .age-select-card {
     text-align: center;
     padding: 60px 40px !important;
@@ -46,7 +44,7 @@
     width: 100%;
 }
 
-/* Individual Age Cards */
+/* Cards de idade */
 .age-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -142,7 +140,7 @@
     background: linear-gradient(135deg, rgba(0, 214, 143, 0.2), rgba(0, 214, 143, 0.1));
 }
 
-/* Navbar infantil com Glassmorphism */
+/* Navbar infantil */
 .infantil-navbar {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -237,7 +235,7 @@
     color: var(--text);
 }
 
-/* Banner especial com Glassmorphism */
+/* Banner especial */
 .march-banner {
     background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
     backdrop-filter: var(--glass);
@@ -307,7 +305,7 @@
     margin-top: 40px;
 }
 
-/* Subtitles for sections */
+/* Subtítulos */
 .section-subtitle {
     opacity: 0.8;
     font-size: var(--fs-base);
@@ -352,7 +350,7 @@
     margin-top: 32px;
 }
 
-/* Quiz cards */
+/* Cards de quiz */
 .quiz-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -435,7 +433,7 @@
     75% { transform: translateX(10px); }
 }
 
-/* Result card */
+/* Card de resultado */
 .result-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -488,7 +486,7 @@
     margin: 25px 0;
 }
 
-/* Content card */
+/* Card de conteúdo */
 .content-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -515,7 +513,7 @@
     }
 }
 
-/* Responsividade */
+/* Responsivo */
 @media (max-width: 900px) {
     .age-cards, .grid-categories {
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -565,7 +563,7 @@
     }
 }
 
-/* Animações especiais para elementos infantis */
+/* Animações especiais */
 .age-card > div:first-child {
     animation: bounce 2s ease-in-out infinite;
 }
@@ -576,11 +574,9 @@
     60% { transform: translateY(-5px); }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   REFINAMENTOS FINAIS: BOTÕES E ESPAÇAMENTO 
-   ───────────────────────────────────────────────────────────────────────────── */
+/* Refinamentos finais */
 
-/* Botão Voltar Premium */
+/* Botão voltar */
 .btn-back {
     display: flex;
     align-items: center;
@@ -612,7 +608,7 @@
     font-size: 1.1em;
 }
 
-/* Ajustes de Cabeçalho dentro do Espaço Infantil */
+/* Cabeçalho no espaço infantil */
 #espacoInfantilScreen .page-header {
     margin-bottom: 40px;
     border-bottom: 1px solid var(--border);
@@ -624,13 +620,8 @@
     margin-bottom: 8px;
 }
 
-/* ============================================================
-   ESTILOS MODERNOS PARA CONTEÚDO DE LIÇÕES
-   ============================================================ */
 
-/* ============================================================
-   ESTILOS MODERNOS PARA CONTEÚDO DE LIÇÕES (V2 - PREMIUM)
-   ============================================================ */
+/* Estilos modernos para lições */
 
 .lesson-content-modern {
     display: flex;
@@ -753,7 +744,7 @@
     opacity: 0.9;
 }
 
-/* Seção de Curiosidade (Fun Fact) */
+/* Seção de curiosidade */
 .lesson-fun-fact {
     background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(106, 90, 224, 0.05));
     border: 1px dashed var(--accent);

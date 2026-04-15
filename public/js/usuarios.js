@@ -1,4 +1,4 @@
-// Gerenciamento de Usuários
+// Usuários
 
 const carregarUsuariosDebounced = debounce((busca) => carregarUsuarios(1, busca));
 
@@ -26,7 +26,7 @@ async function carregarUsuarios(pagina = 1, busca = '') {
         data.forEach(u => {
             const tr = document.createElement('tr');
             
-            // Badges indicativos de multas ou bloqueios
+            // Badges de multas/bloqueios
             let badgesDestaque = '';
             if (u.multa_pendente) {
                 badgesDestaque += `<span class="badge badge-danger" style="margin-left:6px;font-size:.55rem">multa</span>`;
@@ -35,7 +35,7 @@ async function carregarUsuarios(pagina = 1, busca = '') {
                 badgesDestaque += `<span class="badge badge-warning" style="margin-left:6px;font-size:.55rem">bloqueado</span>`;
             }
 
-            // Define botões de ação (bloquear/desbloquear)
+            // Botões de ação
             let botaoBloqueio = '';
             const userId = JSON.stringify(String(u.id));
             const userName = JSON.stringify(u.nome);
@@ -45,7 +45,7 @@ async function carregarUsuarios(pagina = 1, busca = '') {
                 botaoBloqueio = `<button class="btn btn-danger" onclick='bloquearUsuario(${userId}, ${userName})'>Bloquear</button>`;
             }
 
-            // Adiciona botão de multas se houver
+            // Botão de multas
             let botaoMultas = '';
             if (u.multa_pendente) {
                 botaoMultas = `<button class="btn btn-warning" onclick='verMultasUsuario(${userId}, ${userName})'>Multas</button>`;

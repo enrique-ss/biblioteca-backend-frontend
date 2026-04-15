@@ -1,46 +1,50 @@
 # Biblio Verso - Sistema de Biblioteca Premium
 
-Sistema completo para gestao de acervo fisico e digital, com backend Node.js, autenticacao Supabase e interface web unica.
+Sistema completo para gestão de acervo físico e digital, com backend Node.js, banco de dados Supabase, autenticação JWT e interface web moderna.
+
+## Autores
+
+- **Enrique** - Desenvolvimento backend e frontend
+- **Julia** - Design de interface e experiência do usuário
+
+## Versão Local vs Online
+
+O sistema possui duas versões de operação:
+
+- **Versão Local**: Roda na sua máquina com banco SQLite local. Funciona 100% offline, ideal para desenvolvimento e testes.
+- **Versão Online**: Hospedada no Render, conectada ao Supabase. Versão de produção acessível aos usuários.
 
 ## Como rodar localmente
 
-1. Configure as variaveis de ambiente
-   - Copie `.env.example` para `.env`
-   - Preencha `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`
-   - Em local, use `CORS_ORIGIN=http://localhost:3000`
-
-2. Configure o banco no Supabase
-   - Execute o SQL do arquivo `setup.sql` no SQL Editor
-   - Crie os usuarios necessarios no Supabase Auth
-   - Garanta que o usuario administrador tenha `tipo=bibliotecario`
-
-3. Instale as dependencias
+1. Instale as dependências
    ```bash
    npm install
    ```
 
-4. Inicie a aplicacao
+2. Configure o banco de dados local
+   ```bash
+   npm run setup
+   ```
+
+3. Inicie a aplicação
    ```bash
    npm run dev
    ```
 
-   Ou, se preferir manter o comando antigo:
-   ```bash
-   npm run full
-   ```
+4. Acesse
+   - `http://localhost:3000`
 
-5. Acesse
-   - App completa: `http://localhost:3000`
+A versão local usa SQLite e funciona 100% offline, não precisa de Supabase nem internet.
 
 ## Scripts
 
-- `npm run dev`: inicia o servidor local
-- `npm run full`: mesmo comportamento do `dev`, mantido por compatibilidade
-- `npm run setup`: checa se o ambiente local esta pronto
+- `npm run setup`: configura o banco de dados SQLite local
+- `npm run dev`: inicia o servidor local com SQLite
+- `npm start`: inicia o servidor com Supabase (usado pelo Render em produção)
 
 ## Deploy no Render
 
-Configure estas variaveis no servico:
+Configure estas variáveis no serviço:
 
 - `NODE_ENV=production`
 - `PORT=10000`
@@ -49,12 +53,12 @@ Configure estas variaveis no servico:
 - `SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>`
 - `CORS_ORIGIN=https://<seu-servico>.onrender.com`
 
-O frontend usa `window.location.origin`, entao a mesma build funciona em local e no Render sem trocar URLs no codigo.
+O frontend usa `window.location.origin`, então a mesma build funciona em local e no Render sem trocar URLs no código.
 
-## Observacoes importantes
+## Observações importantes
 
-- O backend agora exige configuracao explicita do Supabase.
-- O sistema garante um admin padrao no startup usando `DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_PASSWORD` e `DEFAULT_ADMIN_NAME`.
-- Se o admin padrao nao existir no Supabase Auth, ele sera criado automaticamente e sincronizado com a tabela `usuarios`.
-- Nao deixe chaves reais no codigo ou no `.env.example`.
-- O arquivo `.env` esta no `.gitignore`, entao ele pode ser usado apenas para o ambiente local.
+- A versão local usa SQLite para o banco de dados e funciona 100% offline.
+- A versão online usa Supabase como banco de dados em nuvem.
+- O sistema garante um admin padrão no startup usando variáveis de ambiente.
+- Não deixe chaves reais no código ou no `.env.example`.
+- O arquivo `.env` está no `.gitignore`, então ele pode ser usado apenas para o ambiente local.

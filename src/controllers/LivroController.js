@@ -57,7 +57,19 @@ class LivroController {
 
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
-        consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%`);
+        consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%,genero.ilike.%${termoBusca}%`);
+      }
+
+      // Filtros adicionais por categoria, ano e gênero
+      const { categoria, ano, genero } = req.query;
+      if (categoria) {
+        consulta = consulta.ilike('genero', `%${categoria}%`);
+      }
+      if (ano) {
+        consulta = consulta.eq('ano_lancamento', parseInt(ano));
+      }
+      if (genero) {
+        consulta = consulta.ilike('genero', `%${genero}%`);
       }
 
       consulta = consulta.order('created_at', { ascending: false }).range(deslocamento, deslocamento + limite - 1);

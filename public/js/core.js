@@ -1,10 +1,9 @@
-// Configuracao automatica para local e Render usando a origem atual.
+// Configuração automática
 const BASE_URL = window.location.origin;
 const API_URL = `${BASE_URL}/api`;
 let token = null;
 let currentUser = null;
 
-// Inicializa WebSocket
 const socket = typeof io !== 'undefined'
     ? io({ withCredentials: true })
     : { on: () => {} };
@@ -15,6 +14,11 @@ socket.on('refreshData', (tipo) => {
         loadLivros(1);
     } else if (tipo === 'alugueis' && typeof loadAlugueis === 'function') {
         loadAlugueis(1);
+    }
+});
+socket.on('statsUpdate', (data) => {
+    if (typeof carregarEstatisticas === 'function') {
+        carregarEstatisticas();
     }
 });
 
@@ -300,10 +304,6 @@ function renderizarPaginacao(idContainer, paginaAtual, totalPaginas, aoMudarPagi
     html += `<button class="pg-btn" ${paginaAtual >= totalPaginas ? 'disabled' : ''} onclick="(${aoMudarPagina})(${paginaAtual + 1})">></button>`;
     html += `<span class="pg-info">Pag. ${paginaAtual} de ${totalPaginas}</span>`;
 
-    const loadingText = document.getElementById('loading-text');
-    if (loadingText) {
-        loadingText.textContent = 'Iniciando Biblio Verso...';
-    }
 
     el.innerHTML = html;
 }

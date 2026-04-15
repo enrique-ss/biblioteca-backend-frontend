@@ -1,12 +1,12 @@
-// Gerenciamento do Perfil do Usuário
+// Perfil do usuário
 
 function carregarPerfil() {
-    // Preenche os campos do formulário de edição com os dados atuais
+    // Preenche campos do formulário
     document.getElementById('perfilNome').value = currentUser.nome;
     document.getElementById('perfilEmail').value = currentUser.email;
     document.getElementById('perfilSenha').value = '';
 
-    // Renderiza as informações do perfil na tela de visualização
+    // Renderiza informações do perfil
     document.getElementById('perfilInfo').innerHTML = `
         <div class="perfil-field">
             <div class="perfil-field-label">Nome</div>
@@ -22,7 +22,7 @@ function carregarPerfil() {
         </div>`;
 }
 
-// Processa a atualização dos dados do perfil
+// Processa atualização do perfil
 document.getElementById('editPerfilForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -32,7 +32,7 @@ document.getElementById('editPerfilForm').addEventListener('submit', async (e) =
 
     const dadosParaAtualizar = { nome, email };
     
-    // Só envia a senha se o usuário tiver preenchido o campo
+    // Envia senha apenas se preenchida
     if (senha) {
         dadosParaAtualizar.senha = senha;
     }
@@ -43,11 +43,11 @@ document.getElementById('editPerfilForm').addEventListener('submit', async (e) =
             body: JSON.stringify(dadosParaAtualizar) 
         });
 
-        // Atualiza o estado global com os novos dados vindos do servidor
+        // Atualiza estado global
         currentUser.nome = resposta.usuario.nome;
         currentUser.email = resposta.usuario.email;
 
-        // Persiste a nova sessão e atualiza a interface
+        // Persiste sessão e atualiza interface
         salvarSessao();
         atualizarNavbar();
         carregarPerfil();

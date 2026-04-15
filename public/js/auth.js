@@ -1,4 +1,4 @@
-// Logica de autenticacao (login e registro)
+// Autenticação
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
