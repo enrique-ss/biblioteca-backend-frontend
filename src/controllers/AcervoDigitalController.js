@@ -101,6 +101,20 @@ class AcervoDigitalController {
 
           if (error) throw error;
 
+          // Cria notificação para o usuário sobre o envio do PDF
+          if (!ehBibliotecario) {
+            await supabase.from('notificacoes').insert({
+              usuario_id: usuarioId,
+              titulo: 'PDF Enviado para Análise',
+              mensagem: `Seu PDF "${titulo}" foi enviado com sucesso e está em análise pela equipe da biblioteca. Você receberá uma notificação quando for aprovado ou rejeitado.`,
+              tipo: 'info',
+              lida: false
+            });
+
+            // Emite evento de notificação em tempo real
+            req.app.get('io').emit('refreshData', 'notificacoes');
+          }
+
           const mensagem = ehBibliotecario 
             ? 'Documento digital cadastrado com sucesso!' 
             : 'Documento enviado com sucesso! Aguarde a aprovação de um bibliotecário.';
@@ -119,8 +133,31 @@ class AcervoDigitalController {
           }
 
           const { id } = req.params;
+          
+          // Busca dados do documento para notificar o usuário
+          const { data: documento } = await supabase
+            .from('acervo_digital')
+            .select('titulo, usuario_id')
+            .eq('id', id)
+            .single();
+          
           const { error } = await supabase.from('acervo_digital').update({ status: 'aprovado' }).eq('id', id);
           if (error) throw error;
+          
+          // Cria notificação para o usuário sobre a aprovação
+          if (documento?.usuario_id) {
+            await supabase.from('notificacoes').insert({
+              usuario_id: documento.usuario_id,
+              titulo: 'PDF Aprovado! 📚',
+              mensagem: `Ótimas notícias! Seu PDF "${documento.titulo}" foi aprovado e já está disponível no acervo digital da biblioteca para todos os leitores.`,
+              tipo: 'success',
+              lida: false
+            });
+            
+            // Emite evento de notificação em tempo real
+            req.app.get('io').emit('refreshData', 'notificacoes');
+          }
+          
           res.json({ message: 'Documento aprovado e adicionado ao acervo!' });
       } catch (erro) {
           console.error('Erro ao processar aprovação:', erro);
@@ -135,8 +172,32 @@ class AcervoDigitalController {
         }
 
         const { id } = req.params;
+        
+        // Busca dados do documento para notificar o usuário
+        const { data: documento } = await supabase
+          .from('acervo_digital')
+          .select('titulo, usuario_id')
+          .eq('id', id)
+          .eq('status', 'pendente')
+          .single();
+        
         const { error } = await supabase.from('acervo_digital').delete().eq('id', id).eq('status', 'pendente');
         if (error) throw error;
+        
+        // Cria notificação para o usuário sobre a rejeição
+        if (documento?.usuario_id) {
+          await supabase.from('notificacoes').insert({
+            usuario_id: documento.usuario_id,
+            titulo: 'PDF Rejeitado',
+            mensagem: `Seu PDF "${documento.titulo}" foi analisado e, infelizmente, não atendeu aos critérios para inclusão no acervo digital. Entre em contato com a biblioteca para mais informações.`,
+            tipo: 'warning',
+            lida: false
+          });
+          
+          // Emite evento de notificação em tempo real
+          req.app.get('io').emit('refreshData', 'notificacoes');
+        }
+        
         res.json({ message: 'Documento rejeitado e excluído permanentemente do sistema.' });
     } catch (erro) {
         console.error('Erro ao processar rejeição:', erro);
