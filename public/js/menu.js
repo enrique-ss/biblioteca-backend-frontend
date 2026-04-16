@@ -160,14 +160,14 @@ function handleSidebarClick(item, button) {
     const sidebar = document.querySelector('.sidebar');
     const isMobile = window.innerWidth <= 900;
     
-    // Se não estiver expandido, apenas expande
+    // Se não estiver expandido E for mobile, apenas expande
     if (!sidebarExpanded && isMobile) {
         expandSidebar();
         currentExpandedItem = item;
         return;
     }
     
-    // Se já estiver expandido ou não for mobile, executa a ação
+    // Se estiver expandido OU não for mobile, executa a ação
     if (item.action) {
         item.action();
         

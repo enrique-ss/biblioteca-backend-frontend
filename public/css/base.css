@@ -454,9 +454,15 @@ body {
         touch-action: pan-y;
     }
     
-    .sidebar:hover,
     .sidebar.expanded {
         width: 240px;
+    }
+    
+    /* Desktop mantém hover */
+    @media (min-width: 901px) {
+        .sidebar:hover {
+            width: 240px;
+        }
     }
     
     .sidebar-brand {
@@ -551,9 +557,15 @@ body {
         border-radius: var(--r-sm);
     }
     
-    .sidebar:hover,
     .sidebar.expanded {
         width: 200px;
+    }
+    
+    /* Desktop mantém hover */
+    @media (min-width: 901px) {
+        .sidebar:hover {
+            width: 200px;
+        }
     }
     
     .sidebar-brand {
