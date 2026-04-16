@@ -131,7 +131,7 @@ function carregarMenu() {
             // Adiciona comportamento de clique
             botao.addEventListener('click', (e) => {
                 e.preventDefault();
-                handleSidebarClick(item, botao);
+                handleSidebarClick(item, botao, e);
             });
             
             navLateral.appendChild(botao);
@@ -156,9 +156,12 @@ function carregarMenu() {
     }
 }
 
-function handleSidebarClick(item, button) {
+function handleSidebarClick(item, button, event) {
     const sidebar = document.querySelector('.sidebar');
     const isMobile = window.innerWidth <= 900;
+    
+    // Previne comportamento duplo
+    event.stopPropagation();
     
     // Se não estiver expandido E for mobile, apenas expande
     if (!sidebarExpanded && isMobile) {
