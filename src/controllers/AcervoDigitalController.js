@@ -142,6 +142,39 @@ class AcervoDigitalController {
         console.error('Erro ao processar rejeição:', erro);
         res.status(500).json({ error: 'Falha ao processar solicitação.' });
     }
+  };
+
+  remover = async (req, res) => {
+    try {
+        if (req.usuario?.tipo !== 'bibliotecario') {
+           return res.status(403).json({ error: 'Acesso negado. Apenas bibliotecários podem remover documentos.' });
+        }
+
+        const { id } = req.params;
+
+        const { data: documento } = await supabase
+            .from('acervo_digital')
+            .select('*')
+            .eq('id', id)
+            .is('deleted_at', null)
+            .single();
+
+        if (!documento) {
+            return res.status(404).json({ error: 'Documento não encontrado.' });
+        }
+
+        const { error } = await supabase
+            .from('acervo_digital')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ message: 'Documento removido do acervo digital.' });
+    } catch (erro) {
+        console.error('Erro ao remover documento digital:', erro);
+        res.status(500).json({ error: 'Falha ao remover documento do acervo.' });
+    }
 };
 }
 

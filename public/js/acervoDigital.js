@@ -94,6 +94,8 @@ async function carregarAcervoDigital(pagina = 1) {
                 ? `url('${esc(item.capa_url)}') center/cover no-repeat` 
                 : gradientes[index % gradientes.length];
             
+            const ehBibliotecario = currentUser?.permissions?.is_admin || false;
+            
             card.innerHTML = `
                 <div class="digital-card-poster" style="background: ${fundo}">
                     ${!item.capa_url ? `<div class="digital-card-cover-text">${esc(item.titulo)}</div>` : ''}
@@ -102,12 +104,13 @@ async function carregarAcervoDigital(pagina = 1) {
                     <h3 class="digital-card-title" style="margin-bottom: 4px;">${esc(item.titulo)}</h3>
                     <p style="font-size: 0.9em; color: #e2e8f0; margin-bottom: 12px; font-style: italic;">por ${esc(item.autor)}</p>
                     <div class="digital-card-meta">
-                        <span style="color: #e2e8f0;">📂 ${esc(item.categoria)}</span>
-                        <span style="color: #e2e8f0;">📅 ${esc(item.ano)}</span>
-                        <span style="color: #e2e8f0;">📄 ${esc(item.paginas)} págs | 💾 ${esc(item.tamanho_arquivo)}</span>
+                        <span style="color: #e2e8f0;">${esc(item.categoria)}</span>
+                        <span style="color: #e2e8f0;">${esc(item.ano)}</span>
+                        <span style="color: #e2e8f0;">${esc(item.paginas)} págs | ${esc(item.tamanho_arquivo)}</span>
                     </div>
                     <div class="digital-card-actions">
                         <button class="btn btn-ghost" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')">Baixar</button>
+                        ${ehBibliotecario ? `<button class="btn btn-danger" onclick="removerDocumentoDigital(${item.id}, '${esc(item.titulo)}')">Excluir</button>` : ''}
                     </div>
                 </div>
             `;
@@ -188,4 +191,22 @@ async function resolverPendencia(id, acao) {
     } catch (erro) {
         exibirAlerta(erro.message, 'error');
     }
+}
+
+function removerDocumentoDigital(id, titulo) {
+    exibirConfirmacao({
+        icon: ' ',
+        title: 'Remover documento digital',
+        msg: `Deseja remover "${titulo}" do acervo digital? Esta ação é irreversível.`,
+        okLabel: 'Remover',
+        async onOk() {
+            try {
+                await api(`/acervo-digital/${id}`, { method: 'DELETE' });
+                exibirAlerta('Documento removido do acervo digital.');
+                carregarAcervoDigital(1);
+            } catch (erro) {
+                exibirAlerta(erro.message, 'danger');
+            }
+        }
+    });
 }

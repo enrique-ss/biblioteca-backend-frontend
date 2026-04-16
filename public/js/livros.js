@@ -137,6 +137,7 @@ async function carregarLivros(pagina = 1) {
                     <div class="digital-card-actions">
                         <button class="btn" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
                         <button class="btn" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
+                        <button class="btn btn-danger" onclick="removerLivro(${livro.id}, '${esc(livro.titulo)}')">Excluir</button>
                     </div>` : ''}
                 </div>
             `;

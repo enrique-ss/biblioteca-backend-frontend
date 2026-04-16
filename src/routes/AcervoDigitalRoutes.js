@@ -11,5 +11,6 @@ router.post('/', controller.cadastrar);
 router.get('/pendentes', verificarBibliotecario, controller.listarPendentes);
 router.patch('/:id/aprovar', verificarBibliotecario, controller.aprovar);
 router.patch('/:id/rejeitar', verificarBibliotecario, controller.rejeitar);
+router.delete('/:id', verificarBibliotecario, controller.remover);
 
 module.exports = router;
