@@ -23,8 +23,6 @@ socket.on('refreshData', (tipo) => {
         carregarAcervoDigital(1);
     } else if (tipo === 'estatisticas' && typeof carregarEstatisticas === 'function') {
         carregarEstatisticas();
-    } else if (tipo === 'notificacoes' && typeof atualizarBadgeNotificacoes === 'function') {
-        atualizarBadgeNotificacoes();
     }
 });
 
