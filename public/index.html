@@ -72,10 +72,7 @@
                                     id="regSenha" class="form-input" placeholder="Minimo de 8 caracteres" required></div>
                             <div class="auth-actions">
                                 <button type="button" class="btn btn-ghost auth-secondary-btn"
-                                    onclick="mostrarTela('loginScreen')">
-                                    <span class="btn-text-desktop">Voltar</span>
-                                    <span class="btn-text-mobile">←</span>
-                                </button>
+                                    onclick="mostrarTela('loginScreen')">Voltar</button>
                                 <button type="submit" class="btn btn-primary auth-primary-btn">Criar conta</button>
                             </div>
                             <div class="form-footer">Ao criar uma conta, você concorda com os termos de uso do sistema.</div>
@@ -106,14 +103,11 @@
 
             <section id="livrosScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title">
-                        <span>Acervo</span> Físico
-                        <button class="btn btn-primary btn-inline" id="btnAddLivro" style="display:none;"
-                            onclick="prepararAddLivro('fisico')">
-                            <span class="btn-text-desktop">Adicionar Livro</span>
-                            <span class="btn-text-mobile">+</span>
-                        </button>
-                    </h2>
+                    <h2 class="page-title"><span>Acervo</span> Físico</h2>
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btnAddLivro" style="display:none;"
+                            onclick="prepararAddLivro('fisico')">Adicionar Livro</button>
+                    </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
@@ -132,10 +126,7 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Acervo</span> Digital</h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary" onclick="prepararAddLivro('digital')">
-                            <span class="btn-text-desktop">Adicionar Livro</span>
-                            <span class="btn-text-mobile">+</span>
-                        </button>
+                        <button class="btn btn-primary" onclick="prepararAddLivro('digital')">Adicionar Livro</button>
                     </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px;">
@@ -154,10 +145,7 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Histórico</span> de Empréstimos</h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary" onclick="exportarHistoricoCSV()">
-                            <span class="btn-text-desktop">Exportar CSV</span>
-                            <span class="btn-text-mobile">📊</span>
-                        </button>
+                        <button class="btn btn-primary" onclick="exportarHistoricoCSV()">Exportar CSV</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaHistorico" class="form-input"
@@ -188,15 +176,9 @@
                     <h2 class="page-title" id="alugueisTitle"><span>Empréstimos</span></h2>
                     <div class="page-actions">
                         <button class="btn btn-ghost" id="btnHistorico" style="display:none;"
-                            onclick="mostrarTela('historicoScreen'); carregarHistorico();">
-                            <span class="btn-text-desktop">Histórico</span>
-                            <span class="btn-text-mobile">🕐</span>
-                        </button>
+                            onclick="mostrarTela('historicoScreen'); carregarHistorico();">Histórico</button>
                         <button class="btn btn-primary" id="btnNovoAluguel" style="display:none;"
-                            onclick="prepararModalNovoAluguel()">
-                            <span class="btn-text-desktop">Novo Aluguel</span>
-                            <span class="btn-text-mobile">+</span>
-                        </button>
+                            onclick="prepararModalNovoAluguel()">Novo Aluguel</button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaAlugueis" class="form-input"
@@ -330,8 +312,7 @@
 
                     <div id="screen-lessons-infantil" class="infantil-screen hidden">
                         <div class="btn-back" onclick="showInfantilScreen('home')">
-                            <span class="btn-text-desktop"><span>←</span> Voltar</span>
-                            <span class="btn-text-mobile">←</span>
+                            <span>←</span> Voltar
                         </div>
                         <div class="page-header">
                             <h2 class="page-title" id="infantil-lesson-cat-title">Mundo Literário</h2>
@@ -341,8 +322,7 @@
 
                     <div id="screen-content-infantil" class="infantil-screen hidden">
                         <div class="btn-back" onclick="showInfantilScreen('lessons')">
-                            <span class="btn-text-desktop"><span>←</span> Voltar</span>
-                            <span class="btn-text-mobile">←</span>
+                            <span>←</span> Voltar
                         </div>
                         <div id="infantil-content-body"></div>
                     </div>
@@ -375,10 +355,7 @@
                                 <div class="reward-badge glass-card">⭐ +<span id="infantil-xp-gain">0</span> XP</div>
                                 <div class="reward-badge glass-card">❤️ +<span id="infantil-hp-gain">0</span> Vidas</div>
                             </div>
-                            <button class="btn btn-primary" onclick="showInfantilScreen('home')">
-                                <span class="btn-text-desktop">Voltar ao Início 🏠</span>
-                                <span class="btn-text-mobile">🏠</span>
-                            </button>
+                            <button class="btn btn-primary" onclick="showInfantilScreen('home')">Voltar ao Início 🏠</button>
                         </div>
                     </div>
                 </div>
@@ -388,10 +365,7 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Estatísticas</span></h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary" onclick="exportarEstatisticasCSV()">
-                            <span class="btn-text-desktop">Exportar CSV</span>
-                            <span class="btn-text-mobile">📊</span>
-                        </button>
+                        <button class="btn btn-primary" onclick="exportarEstatisticasCSV()">Exportar CSV</button>
                     </div>
                 </div>
                 <div id="statsLoading" class="stats-loading"><span class="spinner"></span> Carregando estatísticas...

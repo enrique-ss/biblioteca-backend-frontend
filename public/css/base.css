@@ -107,9 +107,8 @@ body {
 /* Sidebar */
 .sidebar {
     position: fixed;
-    top: 20px; left: 20px;
+    top: 20px; left: 20px; bottom: 20px;
     width: 80px;
-    max-height: calc(100vh - 40px);
     background: rgba(28, 34, 30, 0.95) !important;
     backdrop-filter: blur(32px) saturate(180%) !important; -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
     border: var(--glass-border);
@@ -118,10 +117,9 @@ body {
     display: flex; flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-x: hidden;
-    overflow-y: auto; 
+    overflow-y: overlay; 
     box-shadow: var(--shadow);
     transform: none;
-    height: auto;
 }
 /* Barra de rolagem da sidebar */
 .sidebar::-webkit-scrollbar { width: 4px; }
@@ -448,14 +446,12 @@ body {
         width: 60px;
         top: 10px;
         left: 10px;
-        max-height: calc(100vh - 20px);
+        bottom: 10px;
         border-radius: var(--r-md);
         transform: none;
         transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 99999;
         touch-action: pan-y;
-        height: auto;
-        overflow-y: auto;
     }
     
     /* Desktop mantém hover */
@@ -553,10 +549,8 @@ body {
         width: 50px;
         top: 8px;
         left: 8px;
-        max-height: calc(100vh - 16px);
+        bottom: 8px;
         border-radius: var(--r-sm);
-        height: auto;
-        overflow-y: auto;
     }
     
     /* Desktop mantém hover */
