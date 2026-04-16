@@ -72,7 +72,10 @@
                                     id="regSenha" class="form-input" placeholder="Minimo de 8 caracteres" required></div>
                             <div class="auth-actions">
                                 <button type="button" class="btn btn-ghost auth-secondary-btn"
-                                    onclick="mostrarTela('loginScreen')">Voltar</button>
+                                    onclick="mostrarTela('loginScreen')">
+                                    <span class="btn-text-desktop">Voltar</span>
+                                    <span class="btn-text-mobile">←</span>
+                                </button>
                                 <button type="submit" class="btn btn-primary auth-primary-btn">Criar conta</button>
                             </div>
                             <div class="form-footer">Ao criar uma conta, você concorda com os termos de uso do sistema.</div>
@@ -106,7 +109,10 @@
                     <h2 class="page-title"><span>Acervo</span> Físico</h2>
                     <div class="page-actions">
                         <button class="btn btn-primary" id="btnAddLivro" style="display:none;"
-                            onclick="prepararAddLivro('fisico')">Adicionar Livro</button>
+                            onclick="prepararAddLivro('fisico')">
+                            <span class="btn-text-desktop">Adicionar Livro</span>
+                            <span class="btn-text-mobile">+</span>
+                        </button>
                     </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
@@ -126,7 +132,10 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Acervo</span> Digital</h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary" onclick="prepararAddLivro('digital')">Adicionar Livro</button>
+                        <button class="btn btn-primary" onclick="prepararAddLivro('digital')">
+                            <span class="btn-text-desktop">Adicionar Livro</span>
+                            <span class="btn-text-mobile">+</span>
+                        </button>
                     </div>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px;">
@@ -312,7 +321,8 @@
 
                     <div id="screen-lessons-infantil" class="infantil-screen hidden">
                         <div class="btn-back" onclick="showInfantilScreen('home')">
-                            <span>←</span> Voltar
+                            <span class="btn-text-desktop"><span>←</span> Voltar</span>
+                            <span class="btn-text-mobile">←</span>
                         </div>
                         <div class="page-header">
                             <h2 class="page-title" id="infantil-lesson-cat-title">Mundo Literário</h2>
@@ -322,7 +332,8 @@
 
                     <div id="screen-content-infantil" class="infantil-screen hidden">
                         <div class="btn-back" onclick="showInfantilScreen('lessons')">
-                            <span>←</span> Voltar
+                            <span class="btn-text-desktop"><span>←</span> Voltar</span>
+                            <span class="btn-text-mobile">←</span>
                         </div>
                         <div id="infantil-content-body"></div>
                     </div>
@@ -355,7 +366,10 @@
                                 <div class="reward-badge glass-card">⭐ +<span id="infantil-xp-gain">0</span> XP</div>
                                 <div class="reward-badge glass-card">❤️ +<span id="infantil-hp-gain">0</span> Vidas</div>
                             </div>
-                            <button class="btn btn-primary" onclick="showInfantilScreen('home')">Voltar ao Início 🏠</button>
+                            <button class="btn btn-primary" onclick="showInfantilScreen('home')">
+                                <span class="btn-text-desktop">Voltar ao Início 🏠</span>
+                                <span class="btn-text-mobile">🏠</span>
+                            </button>
                         </div>
                     </div>
                 </div>
