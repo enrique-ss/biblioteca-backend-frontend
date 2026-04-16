@@ -106,14 +106,14 @@
 
             <section id="livrosScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title"><span>Acervo</span> Físico</h2>
-                    <div class="page-actions">
-                        <button class="btn btn-primary" id="btnAddLivro" style="display:none;"
+                    <h2 class="page-title">
+                        <span>Acervo</span> Físico
+                        <button class="btn btn-primary btn-inline" id="btnAddLivro" style="display:none;"
                             onclick="prepararAddLivro('fisico')">
                             <span class="btn-text-desktop">Adicionar Livro</span>
                             <span class="btn-text-mobile">+</span>
                         </button>
-                    </div>
+                    </h2>
                 </div>
                 <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
                     <div class="search-bar" style="flex:1; margin-bottom:0;">
@@ -154,7 +154,10 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Histórico</span> de Empréstimos</h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary" onclick="exportarHistoricoCSV()">Exportar CSV</button>
+                        <button class="btn btn-primary" onclick="exportarHistoricoCSV()">
+                            <span class="btn-text-desktop">Exportar CSV</span>
+                            <span class="btn-text-mobile">📊</span>
+                        </button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaHistorico" class="form-input"
@@ -185,9 +188,15 @@
                     <h2 class="page-title" id="alugueisTitle"><span>Empréstimos</span></h2>
                     <div class="page-actions">
                         <button class="btn btn-ghost" id="btnHistorico" style="display:none;"
-                            onclick="mostrarTela('historicoScreen'); carregarHistorico();">Histórico</button>
+                            onclick="mostrarTela('historicoScreen'); carregarHistorico();">
+                            <span class="btn-text-desktop">Histórico</span>
+                            <span class="btn-text-mobile">🕐</span>
+                        </button>
                         <button class="btn btn-primary" id="btnNovoAluguel" style="display:none;"
-                            onclick="prepararModalNovoAluguel()">Novo Aluguel</button>
+                            onclick="prepararModalNovoAluguel()">
+                            <span class="btn-text-desktop">Novo Aluguel</span>
+                            <span class="btn-text-mobile">+</span>
+                        </button>
                     </div>
                 </div>
                 <div class="search-bar"><input type="text" id="buscaAlugueis" class="form-input"
@@ -379,7 +388,10 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Estatísticas</span></h2>
                     <div class="page-actions">
-                        <button class="btn btn-primary" onclick="exportarEstatisticasCSV()">Exportar CSV</button>
+                        <button class="btn btn-primary" onclick="exportarEstatisticasCSV()">
+                            <span class="btn-text-desktop">Exportar CSV</span>
+                            <span class="btn-text-mobile">📊</span>
+                        </button>
                     </div>
                 </div>
                 <div id="statsLoading" class="stats-loading"><span class="spinner"></span> Carregando estatísticas...
