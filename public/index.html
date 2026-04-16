@@ -459,7 +459,7 @@
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                     <div class="form-group"><label class="form-label">Ano</label><input type="number" id="livroAno" class="form-input" min="1000" max="2099" required></div>
-                    <div class="form-group" id="groupPaginas" style="display:none;"><label class="form-label">Nº Páginas</label><input type="number" id="livroPaginas" class="form-input" min="1"></div>
+                    <div class="form-group" id="groupPaginas" style="display:none;"><label class="form-label">Nº Páginas</label><input type="number" id="livroPaginas" class="form-input" min="1" required></div>
                     <div class="form-group" id="groupExemplares">
                         <label class="form-label">Exemplares</label>
                         <input type="number" id="livroExemplares" class="form-input" min="1" max="999" value="1" required>
@@ -490,7 +490,7 @@
                 
                 <div class="form-group" id="groupArquivo" style="display:none;">
                     <label class="form-label">Arquivo PDF</label>
-                    <input type="file" id="livroArquivo" class="form-input" accept="application/pdf" style="padding:8px">
+                    <input type="file" id="livroArquivo" class="form-input" accept="application/pdf" style="padding:8px" required>
                     <p style="font-size:10px; color:var(--accent); margin-top:4px;">* Obrigatório para acervo digital.</p>
                 </div>
 

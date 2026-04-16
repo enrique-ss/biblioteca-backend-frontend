@@ -98,51 +98,31 @@ function carregarMenu() {
         {
             icon: `<span id="btnThemeIcon" aria-hidden="true">${document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙'}</span>`,
             title: 'Tema',
-            action() { toggleTheme(); }
-        }
-    );
-
-    // Conta
-    itensMenu.push(
-        { 
-            icon: '👤', 
-            title: 'Meu Perfil', 
-            action() { mostrarTela('perfilScreen'); } 
+            action() {
+                toggleTheme();
+            }
         },
-        { 
-            icon: '<span style="color:var(--danger);">🚪</span>', 
-            title: `<span style="color:var(--danger);">Sair</span>`, 
-            action() { logout(); } 
+        {
+            icon: '🚪',
+            title: 'Sair',
+            action() {
+                logout();
+            }
         }
     );
 
-    // Cria botões do menu
-    if (navLateral) {
-        navLateral.style.display = 'flex';
-        itensMenu.forEach(item => {
-            const botao = document.createElement('button');
-            botao.className = 'side-btn';
-            botao.title = item.title.replace(/<[^>]*>/g, ''); // Limpa HTML para o title
-            botao.onclick = item.action;
-            botao.innerHTML = `<span class="side-icon">${item.icon}</span><span class="side-text">${item.title}</span>`;
-            navLateral.appendChild(botao);
-        });
-    }
+    // Renderiza menu
+    const menuHTML = itensMenu.map(item => `
+        <div class="nav-item" onclick="(${item.action})()">
+            <span class="nav-icon">${item.icon}</span>
+            <span class="nav-title">${item.title}</span>
+        </div>
+    `).join('');
 
-    // Visibilidade de botões
-    const displayBib = ehBibliotecario ? 'inline-flex' : 'none';
-    
-    const btnAddLivro = document.getElementById('btnAddLivro');
-    if (btnAddLivro) btnAddLivro.style.display = displayBib;
+    navLateral.innerHTML = menuHTML;
 
-    const btnNovoAluguel = document.getElementById('btnNovoAluguel');
-    if (btnNovoAluguel) btnNovoAluguel.style.display = displayBib;
-
-    const btnHistorico = document.getElementById('btnHistorico');
-    if (btnHistorico) btnHistorico.style.display = displayBib;
-
-    // Atualiza badge de notificações
-    if (typeof carregarNotificacoes === 'function') {
-        carregarNotificacoes(); 
+    // Inicializa badge de notificações se existir
+    if (typeof atualizarBadgeNotificacoes === 'function') {
+        atualizarBadgeNotificacoes();
     }
 }
