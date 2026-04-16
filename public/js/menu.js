@@ -163,14 +163,7 @@ function handleSidebarClick(item, button, event) {
     // Previne comportamento duplo
     event.stopPropagation();
     
-    // Se não estiver expandido E for mobile, apenas expande
-    if (!sidebarExpanded && isMobile) {
-        expandSidebar();
-        currentExpandedItem = item;
-        return;
-    }
-    
-    // Se estiver expandido OU não for mobile, executa a ação
+    // Em mobile, navega diretamente sem expandir
     if (item.action) {
         item.action();
         
@@ -181,13 +174,6 @@ function handleSidebarClick(item, button, event) {
         
         // Adiciona classe active ao botão clicado
         button.classList.add('active');
-        
-        // Se for mobile, colapsa após a navegação
-        if (isMobile) {
-            setTimeout(() => {
-                collapseSidebar();
-            }, 300);
-        }
     }
 }
 

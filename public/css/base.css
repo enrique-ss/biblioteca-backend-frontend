@@ -454,10 +454,6 @@ body {
         touch-action: pan-y;
     }
     
-    .sidebar.expanded {
-        width: 240px;
-    }
-    
     /* Desktop mantém hover */
     @media (min-width: 901px) {
         .sidebar:hover {
@@ -555,10 +551,6 @@ body {
         left: 8px;
         bottom: 8px;
         border-radius: var(--r-sm);
-    }
-    
-    .sidebar.expanded {
-        width: 200px;
     }
     
     /* Desktop mantém hover */
