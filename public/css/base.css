@@ -454,7 +454,8 @@ body {
         touch-action: pan-y;
     }
     
-    .sidebar:hover {
+    .sidebar:hover,
+    .sidebar.expanded {
         width: 240px;
     }
     
@@ -550,7 +551,8 @@ body {
         border-radius: var(--r-sm);
     }
     
-    .sidebar:hover {
+    .sidebar:hover,
+    .sidebar.expanded {
         width: 200px;
     }
     

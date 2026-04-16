@@ -1,5 +1,8 @@
 // Menus de navegação
 
+let sidebarExpanded = false;
+let currentExpandedItem = null;
+
 function carregarMenu() {
     // Nome do usuário
     const elementoNome = document.getElementById('menuUserName');
@@ -123,8 +126,14 @@ function carregarMenu() {
             const botao = document.createElement('button');
             botao.className = 'side-btn';
             botao.title = item.title.replace(/<[^>]*>/g, ''); // Limpa HTML para o title
-            botao.onclick = item.action;
             botao.innerHTML = `<span class="side-icon">${item.icon}</span><span class="side-text">${item.title}</span>`;
+            
+            // Adiciona comportamento de clique
+            botao.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleSidebarClick(item, botao);
+            });
+            
             navLateral.appendChild(botao);
         });
     }
@@ -146,3 +155,58 @@ function carregarMenu() {
         carregarNotificacoes(); 
     }
 }
+
+function handleSidebarClick(item, button) {
+    const sidebar = document.querySelector('.sidebar');
+    const isMobile = window.innerWidth <= 900;
+    
+    // Se não estiver expandido, apenas expande
+    if (!sidebarExpanded && isMobile) {
+        expandSidebar();
+        currentExpandedItem = item;
+        return;
+    }
+    
+    // Se já estiver expandido ou não for mobile, executa a ação
+    if (item.action) {
+        item.action();
+        
+        // Remove classe active de todos os botões
+        document.querySelectorAll('.side-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Adiciona classe active ao botão clicado
+        button.classList.add('active');
+        
+        // Se for mobile, colapsa após a navegação
+        if (isMobile) {
+            setTimeout(() => {
+                collapseSidebar();
+            }, 300);
+        }
+    }
+}
+
+function expandSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebarExpanded = true;
+    sidebar.classList.add('expanded');
+}
+
+function collapseSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebarExpanded = false;
+    sidebar.classList.remove('expanded');
+    currentExpandedItem = null;
+}
+
+// Detecta clique fora da sidebar para colapsar
+document.addEventListener('click', (e) => {
+    const sidebar = document.querySelector('.sidebar');
+    const isClickInsideSidebar = sidebar.contains(e.target);
+    
+    if (!isClickInsideSidebar && sidebarExpanded && window.innerWidth <= 900) {
+        collapseSidebar();
+    }
+});
