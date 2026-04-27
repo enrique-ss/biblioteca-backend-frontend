@@ -148,19 +148,7 @@ function fecharConfirmacao() {
 }
 
 function exibirAlerta(mensagem, tipo = 'success') {
-    const icones = { success: 'OK', danger: 'ERRO', warning: 'AVISO' };
-    const el = document.createElement('div');
-    el.className = `toast toast-${tipo}`;
-
-    const icone = icones[tipo] || 'INFO';
-    el.innerHTML = `<span class="toast-icon">${icone}</span><span class="toast-msg">${mensagem}</span>`;
-
-    document.getElementById('alertContainer').appendChild(el);
-
-    setTimeout(() => {
-        el.style.cssText += 'opacity:0;transform:translateX(36px);transition:0.32s ease';
-        setTimeout(() => el.remove(), 340);
-    }, 3400);
+    console.log(`[${tipo.toUpperCase()}] ${mensagem}`);
 }
 
 async function api(endpoint, options = {}) {
