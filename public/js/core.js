@@ -111,6 +111,10 @@ function mostrarTela(id) {
     if (typeof animarTransicaoTela === 'function') {
         animarTransicaoTela(id);
     }
+
+    if (typeof closeMobileMenu === 'function' && window.innerWidth <= 900) {
+        closeMobileMenu();
+    }
 }
 
 function abrirModal(id) {
