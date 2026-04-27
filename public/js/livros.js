@@ -57,30 +57,17 @@ async function carregarLivros(pagina = 1) {
         if (pagina === 1 && data.length > 0 && !busca && latest_book) {
             const hero = document.createElement('div');
             hero.className = 'digital-hero';
-            hero.style.cssText = `
-                grid-column: 1 / -1;
-                height: 350px;
-                background: linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%), var(--surface);
-                border-radius: var(--r-xl);
-                display: flex;
-                align-items: center;
-                padding: 40px;
-                margin-bottom: 20px;
-                position: relative;
-                overflow: hidden;
-                border: none;
-            `;
             hero.innerHTML = `
-                <div style="max-width: 500px; z-index: 2;">
-                    <span class="badge badge-gold" style="margin-bottom: 16px;">Novidade na Biblioteca</span>
-                    <h2 style="font-family: 'Cinzel', serif; font-size: 2.5rem; color: #fff; margin-bottom: 8px; line-height: 1.1;">${esc(latest_book.titulo)}</h2>
-                    <p style="color: #fff; font-size: 1.1rem; margin-bottom: 12px; font-weight: 500;">por ${esc(latest_book.autor)}</p>
-                    <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 24px;">Explore este livro exclusivo de ${esc(latest_book.ano_lancamento)}. Uma adição recente ao nosso acervo de ${esc(latest_book.genero)}.</p>
-                    <div style="display: flex; gap: 12px;">
-                        <span class="badge" style="background: var(--success);">${esc(latest_book.exemplares_disponiveis)}/${esc(latest_book.exemplares)} disponíveis</span>
+                <div class="hero-content">
+                    <span class="badge badge-gold hero-badge">Novidade na Biblioteca</span>
+                    <h2 class="hero-title">${esc(latest_book.titulo)}</h2>
+                    <p class="hero-author">por ${esc(latest_book.autor)}</p>
+                    <p class="hero-desc">Explore este livro exclusivo de ${esc(latest_book.ano_lancamento)}. Uma adição recente ao nosso acervo de ${esc(latest_book.genero)}.</p>
+                    <div class="hero-actions">
+                        <span class="badge badge-success">${esc(latest_book.exemplares_disponiveis)}/${esc(latest_book.exemplares)} disponíveis</span>
                     </div>
                 </div>
-                <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 50%; background: ${latest_book.capa_url ? `url('${esc(latest_book.capa_url)}') center/cover no-repeat` : 'linear-gradient(135deg, var(--accent-bg), var(--surface))'}; opacity: 0.3; clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%); mix-blend-mode: luminosity;"></div>
+                <div class="hero-bg" style="background: ${latest_book.capa_url ? `url('${esc(latest_book.capa_url)}') center/cover no-repeat` : 'linear-gradient(135deg, var(--accent-bg), var(--surface))'};"></div>
             `;
             grid.appendChild(hero);
         }
