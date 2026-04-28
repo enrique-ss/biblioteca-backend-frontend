@@ -181,10 +181,13 @@ async function carregarNovidades() {
         
         // Pega apenas os 10 primeiros
         const novidades = todos.slice(0, 10);
+        const section = document.querySelector('.novidades-section');
 
         if (novidades.length === 0) {
-            track.innerHTML = '<div style="padding:20px; color:var(--text-dim);">Nenhuma novidade no momento.</div>';
+            if (section) section.style.display = 'none';
             return;
+        } else {
+            if (section) section.style.display = 'block';
         }
 
         const gradientes = [

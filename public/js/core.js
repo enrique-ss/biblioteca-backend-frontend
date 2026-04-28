@@ -15,12 +15,14 @@ socket.on('connect', () => console.log('Conectado ao servidor WebSocket!', socke
 socket.on('refreshData', (tipo) => {
     if (tipo === 'livros' && typeof carregarLivros === 'function') {
         carregarLivros(1);
+        if (typeof carregarNovidades === 'function') carregarNovidades();
     } else if (tipo === 'alugueis' && typeof carregarAlugueis === 'function') {
         carregarAlugueis(1);
     } else if (tipo === 'usuarios' && typeof carregarUsuarios === 'function') {
         carregarUsuarios(1);
     } else if (tipo === 'acervo-digital' && typeof carregarAcervoDigital === 'function') {
         carregarAcervoDigital(1);
+        if (typeof carregarNovidades === 'function') carregarNovidades();
     } else if (tipo === 'estatisticas' && typeof carregarEstatisticas === 'function') {
         carregarEstatisticas();
     }
@@ -95,6 +97,9 @@ function mostrarTela(id) {
     const elementoTela = document.getElementById(id);
     if (elementoTela) {
         elementoTela.classList.add('active');
+        if (id === 'menuScreen' && typeof carregarNovidades === 'function') {
+            carregarNovidades();
+        }
     }
 
     document.querySelectorAll('.side-btn').forEach((btn) => btn.classList.remove('active'));

@@ -141,16 +141,23 @@ body {
     flex-shrink: 0;
 }
 .sidebar-brand:hover { background: var(--accent-bg); }
-.brand-logo-short {
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    color: var(--accent);
-    font-size: 1.4rem;
-    width: 80px;
-    text-align: center;
-    flex-shrink: 0;
-    transition: opacity 0.2s ease;
+.brand-logo-img {
+    height: 40px;
+    width: 40px;
+    background-color: var(--accent);
+    -webkit-mask-image: url('../resources/logo.png');
+    mask-image: url('../resources/logo.png');
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    margin: 0 auto;
+    display: block;
+    transition: all 0.3s ease;
 }
+.sidebar:hover .brand-logo-img { display: none; }
 .brand-logo-full {
     font-family: 'Cinzel', serif;
     font-weight: 700;
@@ -177,7 +184,7 @@ body {
     from { width: 0; }
     to { width: 100%; }
 }
-.sidebar:hover .brand-logo-short { display: none; }
+.sidebar:hover .brand-logo-img { display: none; }
 .sidebar:hover .brand-logo-full {
     display: block;
     animation: typewriter 0.45s steps(12, end) forwards;
