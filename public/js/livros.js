@@ -53,25 +53,6 @@ async function carregarLivros(pagina = 1) {
         const grid = document.getElementById('livrosGrid');
         grid.innerHTML = '';
 
-        // Seção Hero
-        if (pagina === 1 && data.length > 0 && !busca && latest_book) {
-            const hero = document.createElement('div');
-            hero.className = 'digital-hero';
-            hero.innerHTML = `
-                <div class="hero-content">
-                    <span class="badge badge-gold hero-badge">Novidade na Biblioteca</span>
-                    <h2 class="hero-title">${esc(latest_book.titulo)}</h2>
-                    <p class="hero-author">por ${esc(latest_book.autor)}</p>
-                    <p class="hero-desc">Explore este livro exclusivo de ${esc(latest_book.ano_lancamento)}. Uma adição recente ao nosso acervo de ${esc(latest_book.genero)}.</p>
-                    <div class="hero-actions">
-                        <span class="badge badge-success">${esc(latest_book.exemplares_disponiveis)}/${esc(latest_book.exemplares)} disponíveis</span>
-                    </div>
-                </div>
-                <div class="hero-bg" style="background: ${latest_book.capa_url ? `url('${esc(latest_book.capa_url)}') center/cover no-repeat` : 'linear-gradient(135deg, var(--accent-bg), var(--surface))'};"></div>
-            `;
-            grid.appendChild(hero);
-        }
-
         if (!data.length) {
             grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-dim); font-style: italic;">Nenhum livro físico encontrado.</div>';
             document.getElementById('livrosPagination').innerHTML = '';
@@ -94,9 +75,6 @@ async function carregarLivros(pagina = 1) {
             
             const fundo = gradientes[index % gradientes.length];
             const estaDisponivel = livro.status === 'disponivel';
-            const badgeCor = estaDisponivel ? 'var(--success)' : 'var(--danger)';
-            const badgeLabel = estaDisponivel ? 'Disponível' : 'Alugado';
-            const textCor = '#fff';
 
             const bgStyle = livro.capa_url 
                 ? `background: url('${esc(livro.capa_url)}') center/cover no-repeat; border-bottom: 2px solid var(--accent-bg);`
@@ -107,17 +85,23 @@ async function carregarLivros(pagina = 1) {
                     ${!livro.capa_url ? `<div class="digital-card-cover-text" style="font-size:1.5rem;text-transform:uppercase;color:#fff;">${esc(livro.titulo)}</div>` : ''}
                 </div>
                 <div class="digital-card-content">
-                    <h3 class="digital-card-title" style="margin-bottom: 4px;">${esc(livro.titulo)}</h3>
-                    <p style="font-size: 0.9em; color: #e2e8f0; margin-bottom: 12px; font-style: italic;">por ${esc(livro.autor)}</p>
+                    <h3 class="digital-card-title">${esc(livro.titulo)}</h3>
+                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;">por ${esc(livro.autor)}</p>
                     
+                    ${livro.sinopse ? `
+                        <p class="card-sinopse" style="font-size: 0.8rem; color: var(--text); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.4em; line-height: 1.2em; opacity: 0.9;">
+                            ${esc(livro.sinopse)}
+                        </p>
+                    ` : ''}
+
                     <div class="digital-card-meta">
-                        <span style="color: #e2e8f0;">📂 ${esc(livro.genero)}</span>
-                        <span style="color: #e2e8f0;">Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
+                        <span style="color: var(--text); opacity: 0.8;">${esc(livro.genero)}</span>
+                        <span style="color: var(--text); opacity: 0.8;">Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
                     </div>
 
-                    <div style="margin-bottom:16px; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;">
-                        <span class="badge" style="background:${badgeCor}; color:${textCor}">${badgeLabel}</span>
-                        <span style="font-size:12px;color:#e2e8f0;float:right;margin-top:2px;">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)} unid.</span>
+                    <div style="margin-bottom:16px; border-top:1px solid var(--border); padding-top:12px;">
+                        <span class="badge ${livro.exemplares_disponiveis > 0 ? 'badge-success' : 'badge-danger'}">${livro.exemplares_disponiveis > 0 ? 'Disponível' : 'Indisponível'}</span>
+                        <span style="font-size:12px; color: var(--text); opacity: 0.7; float:right; margin-top:2px;">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)} unid.</span>
                     </div>
 
                     ${ehBibliotecario ? `
@@ -220,7 +204,8 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
                     ano_lancamento: parseInt(document.getElementById('livroAno').value),
                     genero: document.getElementById('livroGenero').value,
                     exemplares: parseInt(document.getElementById('livroExemplares').value) || 1,
-                    capa_url: capaBase64
+                    capa_url: capaBase64,
+                    sinopse: document.getElementById('livroSinopse').value
                 })
             });
             exibirAlerta('Exemplar físico cadastrado com sucesso!');
@@ -248,7 +233,8 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
                 paginas: document.getElementById('livroPaginas').value,
                 capa_url: capaBase64,
                 tamanho_arquivo: tamanho,
-                url_arquivo: pdfBase64
+                url_arquivo: pdfBase64,
+                sinopse: document.getElementById('livroSinopse').value
             };
 
             const req = await api('/acervo-digital', {
@@ -277,6 +263,7 @@ function editarLivro(livro) {
     document.getElementById('editLivroAno').value = livro.ano_lancamento;
     document.getElementById('editLivroGenero').value = livro.genero;
     document.getElementById('editLivroExemplares').value = livro.exemplares;
+    document.getElementById('editLivroSinopse').value = livro.sinopse || '';
     abrirModal('editLivroModal');
 }
 
@@ -292,7 +279,8 @@ document.getElementById('editLivroForm').addEventListener('submit', async (e) =>
                 autor: document.getElementById('editLivroAutor').value,
                 ano_lancamento: parseInt(document.getElementById('editLivroAno').value),
                 genero: document.getElementById('editLivroGenero').value,
-                exemplares: parseInt(document.getElementById('editLivroExemplares').value) || 1
+                exemplares: parseInt(document.getElementById('editLivroExemplares').value) || 1,
+                sinopse: document.getElementById('editLivroSinopse').value
             })
         });
 

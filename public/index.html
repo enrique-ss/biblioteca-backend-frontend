@@ -86,6 +86,16 @@
                         <h2>Bem-vindo, <span id="menuUserName"></span></h2>
                         <p>A excelência em acervo literário e digital.</p>
                     </div>
+
+                    <div class="novidades-section">
+                        <div class="hero-carousel" id="heroCarousel">
+                            <div class="carousel-track" id="novidadesTrack">
+                                <!-- Banner heroes injetados aqui -->
+                                <div class="loading-row"><span class="spinner"></span>Buscando novidades...</div>
+                            </div>
+                            <div class="carousel-dots" id="carouselDots"></div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -466,7 +476,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Gênero / Categoria</label>
+                    <label class="form-label">Gênero</label>
                     <select id="livroGenero" class="form-select" required>
                         <option value="" disabled selected>Escolha um gênero</option>
                         <option value="Literatura">Literatura</option>
@@ -481,16 +491,19 @@
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Sinopse <span style="opacity:0.6; font-size: 0.8em;">(opcional)</span></label>
+                    <textarea id="livroSinopse" class="form-input" rows="3" style="resize: vertical;"></textarea>
+                </div>
+
                 <div class="form-group" id="groupCapa" style="display:none;">
-                    <label class="form-label">Capa (Imagem)</label>
+                    <label class="form-label">Capa <span style="opacity:0.6; font-size: 0.8em;">(opcional)</span></label>
                     <input type="file" id="livroCapa" class="form-input" accept="image/*" style="padding:8px">
-                    <p style="font-size:10px; color:var(--accent); margin-top:4px;">* Recomendado.</p>
                 </div>
                 
                 <div class="form-group" id="groupArquivo" style="display:none;">
                     <label class="form-label">Arquivo PDF</label>
                     <input type="file" id="livroArquivo" class="form-input" accept="application/pdf" style="padding:8px">
-                    <p style="font-size:10px; color:var(--accent); margin-top:4px;">* Obrigatório para acervo digital.</p>
                 </div>
 
                 <div class="btn-group">
@@ -526,6 +539,10 @@
                         <option value="Biografia">Biografia</option>
                         <option value="Outros">Outros</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sinopse <span style="opacity:0.6; font-size: 0.8em;">(opcional)</span></label>
+                    <textarea id="editLivroSinopse" class="form-input" rows="3" style="resize: vertical;"></textarea>
                 </div>
                 <div class="form-group"><label class="form-label">Exemplares totais</label><input type="number"
                         id="editLivroExemplares" class="form-input" min="1" max="999" required></div>
@@ -582,7 +599,7 @@
                     </select>
                 </div>
                 <div id="devolucaoObsWrap" class="form-group" style="display:none;">
-                    <label class="form-label">Observação <span style="opacity:1;color:var(--accent)">(opcional)</span></label>
+                    <label class="form-label">Observação <span style="opacity:0.6; font-size: 0.8em;">(opcional)</span></label>
                     <input type="text" id="devolucaoObs" class="form-input"
                         placeholder="Descreva o problema encontrado…">
                 </div>

@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS livros (
   capa_url TEXT,
   exemplares INTEGER DEFAULT 1,
   exemplares_disponiveis INTEGER DEFAULT 1,
+  sinopse TEXT,
   status VARCHAR(20) CHECK (status IN ('disponivel', 'alugado')) DEFAULT 'disponivel',
   deleted_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
@@ -99,6 +100,7 @@ CREATE TABLE IF NOT EXISTS acervo_digital (
   tamanho_arquivo VARCHAR(20) NOT NULL,
   url_arquivo TEXT NOT NULL,
   capa_url TEXT,
+  sinopse TEXT,
   status VARCHAR(20) CHECK (status IN ('pendente', 'aprovado')) DEFAULT 'aprovado',
   usuario_id UUID REFERENCES usuarios(id) ON DELETE SET NULL,
   deleted_at TIMESTAMP,

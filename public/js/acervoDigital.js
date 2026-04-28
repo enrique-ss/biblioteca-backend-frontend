@@ -44,26 +44,6 @@ async function carregarAcervoDigital(pagina = 1) {
 
         grid.innerHTML = '';
         
-        // Seção Hero
-        if (pagina === 1 && data.length > 0 && !busca) {
-            const destaque = data[0];
-            const hero = document.createElement('div');
-            hero.className = 'digital-hero';
-            hero.innerHTML = `
-                <div class="hero-content">
-                    <span class="badge badge-gold hero-badge">Novidade</span>
-                    <h2 class="hero-title">${esc(destaque.titulo)}</h2>
-                    <p class="hero-author">por ${esc(destaque.autor)}</p>
-                    <p class="hero-desc">Explore este documento digital exclusivo de ${esc(destaque.ano)}. Uma adição recente ao nosso acervo de ${esc(destaque.categoria)}.</p>
-                    <div class="hero-actions">
-                        <button class="btn btn-ghost" onclick="downloadPDF('${esc(destaque.url_arquivo)}', '${esc(destaque.titulo)}')">Baixar</button>
-                    </div>
-                </div>
-                <div class="hero-bg" style="background: ${destaque.capa_url ? `url('${esc(destaque.capa_url)}') center/cover no-repeat` : 'linear-gradient(135deg, var(--accent-bg), var(--surface))'};"></div>
-            `;
-            grid.appendChild(hero);
-        }
-
         const gradientes = [
             'linear-gradient(135deg, #1e3a8a, #1e40af)', // Blue
             'linear-gradient(135deg, #312e81, #3730a3)', // Indigo
@@ -88,12 +68,17 @@ async function carregarAcervoDigital(pagina = 1) {
                     ${!item.capa_url ? `<div class="digital-card-cover-text">${esc(item.titulo)}</div>` : ''}
                 </div>
                 <div class="digital-card-content">
-                    <h3 class="digital-card-title" style="margin-bottom: 4px;">${esc(item.titulo)}</h3>
-                    <p style="font-size: 0.9em; color: #e2e8f0; margin-bottom: 12px; font-style: italic;">por ${esc(item.autor)}</p>
+                    <h3 class="digital-card-title">${esc(item.titulo)}</h3>
+                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;">por ${esc(item.autor)}</p>
+                    ${item.sinopse ? `
+                        <p class="card-sinopse" style="font-size: 0.8rem; color: var(--text); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.4em; line-height: 1.2em; opacity: 0.9;">
+                            ${esc(item.sinopse)}
+                        </p>
+                    ` : ''}
                     <div class="digital-card-meta">
-                        <span style="color: #e2e8f0;">${esc(item.categoria)}</span>
-                        <span style="color: #e2e8f0;">${esc(item.ano)}</span>
-                        <span style="color: #e2e8f0;">${esc(item.paginas)} págs | ${esc(item.tamanho_arquivo)}</span>
+                        <span style="color: var(--text); opacity: 0.8;">${esc(item.categoria)}</span>
+                        <span style="color: var(--text); opacity: 0.8;">${esc(item.ano)}</span>
+                        <span style="color: var(--text); opacity: 0.8;">${esc(item.paginas)} págs | ${esc(item.tamanho_arquivo)}</span>
                     </div>
                     <div class="digital-card-actions">
                         <button class="btn btn-ghost" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')">Baixar</button>

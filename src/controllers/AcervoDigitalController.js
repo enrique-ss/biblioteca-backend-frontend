@@ -72,7 +72,7 @@ class AcervoDigitalController {
 
   cadastrar = async (req, res) => {
       try {
-          const { titulo, autor, categoria, ano, paginas, tamanho_arquivo, url_arquivo, capa_url } = req.body;
+          const { titulo, autor, categoria, ano, paginas, tamanho_arquivo, url_arquivo, capa_url, sinopse } = req.body;
           const usuarioId = req.usuario?.id;
           const ehBibliotecario = req.usuario?.tipo === 'bibliotecario';
 
@@ -95,6 +95,7 @@ class AcervoDigitalController {
               tamanho_arquivo,
               url_arquivo,
               capa_url: capa_url || null,
+              sinopse: sinopse?.trim() || null,
               status,
               usuario_id: usuarioId
           });

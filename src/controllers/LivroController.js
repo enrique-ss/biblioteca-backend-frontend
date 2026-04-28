@@ -204,7 +204,7 @@ class LivroController {
 
   cadastrar = async (req, res) => {
     try {
-      const { titulo, autor, ano_lancamento, genero, exemplares, capa_url } = req.body;
+      const { titulo, autor, ano_lancamento, genero, exemplares, capa_url, sinopse } = req.body;
 
       if (!titulo?.trim() || !autor?.trim()) {
         return res.status(400).json({ error: 'Título e Autor são campos obrigatórios.' });
@@ -232,6 +232,7 @@ class LivroController {
           exemplares: qtdExemplares,
           exemplares_disponiveis: qtdExemplares,
           capa_url: capa_url || null,
+          sinopse: sinopse?.trim() || null,
           status: 'disponivel'
         })
         .select()
@@ -264,7 +265,7 @@ class LivroController {
   editar = async (req, res) => {
     try {
       const { id } = req.params;
-      const { titulo, autor, ano_lancamento, genero, exemplares, capa_url } = req.body;
+      const { titulo, autor, ano_lancamento, genero, exemplares, capa_url, sinopse } = req.body;
 
       const { data: livroOriginal } = await supabase
         .from('livros')
@@ -281,6 +282,7 @@ class LivroController {
       if (autor !== undefined) dadosParaMudar.autor = autor.trim();
       if (genero !== undefined) dadosParaMudar.genero = genero.trim() || 'Não Informado';
       if (capa_url !== undefined) dadosParaMudar.capa_url = capa_url;
+      if (sinopse !== undefined) dadosParaMudar.sinopse = sinopse?.trim() || null;
       
       const novoGenero = dadosParaMudar.genero ?? livroOriginal.genero;
       const novoAutor = dadosParaMudar.autor ?? livroOriginal.autor;

@@ -364,10 +364,10 @@ body {
   margin-right: 8px;
   letter-spacing: 0.05em;
 }
-.notification-type.warning { background: rgba(199, 125, 34, 0.15); color: var(--warning); border: 1px solid rgba(199, 125, 34, 0.2); }
-.notification-type.danger  { background: rgba(140, 28, 19, 0.15); color: var(--danger); border: 1px solid rgba(140, 28, 19, 0.2); }
-.notification-type.info    { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--border); }
-.notification-type.success { background: rgba(60, 90, 62, 0.15); color: var(--success); border: 1px solid rgba(60, 90, 62, 0.2); }
+.notification-type.warning { background: rgba(233, 196, 106, 0.15); color: #E9C46A; border: 1px solid rgba(233, 196, 106, 0.2); }
+.notification-type.danger  { background: rgba(230, 57, 70, 0.15); color: #E63946; border: 1px solid rgba(230, 57, 70, 0.2); }
+.notification-type.info    { background: rgba(212, 175, 55, 0.15); color: #D4AF37; border: 1px solid rgba(212, 175, 55, 0.2); }
+.notification-type.success { background: rgba(42, 157, 143, 0.15); color: #2A9D8F; border: 1px solid rgba(42, 157, 143, 0.2); }
 
 
 /* Telas */

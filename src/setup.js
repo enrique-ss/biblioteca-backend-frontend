@@ -49,6 +49,7 @@ function applySchema(db) {
       capa_url TEXT,
       exemplares INTEGER DEFAULT 1,
       exemplares_disponiveis INTEGER DEFAULT 1,
+      sinopse TEXT,
       status TEXT DEFAULT 'disponivel' CHECK (status IN ('disponivel', 'alugado')),
       deleted_at TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -107,6 +108,7 @@ function applySchema(db) {
       tamanho_arquivo TEXT NOT NULL,
       url_arquivo TEXT NOT NULL,
       capa_url TEXT,
+      sinopse TEXT,
       status TEXT DEFAULT 'aprovado' CHECK (status IN ('pendente', 'aprovado')),
       usuario_id TEXT,
       deleted_at TEXT,

@@ -18,14 +18,12 @@
 
 /* Tela de menu e alertas */
 .menu-screen-wrap { 
-    max-width: 1000px; 
+    max-width: 1100px; 
     margin: 0 auto; 
-    text-align: center; 
+    padding: 20px 0;
     display: flex; 
     flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    min-height: 50vh;
+    min-height: auto;
 }
 
 .notifications-center-wrap { 
@@ -188,20 +186,25 @@
     align-items: center;
     justify-content: center;
     position: relative;
+    transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .digital-card-poster::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 40%, transparent 100%);
-    opacity: 0.8;
-    transition: opacity 0.3s;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.digital-card:hover .digital-card-poster {
+    filter: brightness(0.5);
 }
 
 .digital-card:hover .digital-card-poster::after {
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
-    opacity: 1;
+    background: linear-gradient(to top, var(--accent) 0%, transparent 100%);
+    opacity: 0.45;
 }
 
 .digital-card-cover-text {
@@ -384,10 +387,7 @@
     display: flex;
     gap: 12px;
 }
-.badge-success {
-    background: var(--success);
-    color: #fff;
-}
+
 
 /* Responsivo */
 @media (max-width: 680px) {

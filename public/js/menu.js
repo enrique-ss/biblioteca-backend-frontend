@@ -154,6 +154,127 @@ function carregarMenu() {
     if (typeof carregarNotificacoes === 'function') {
         carregarNotificacoes(); 
     }
+
+    // Carrega o carrossel de novidades
+    carregarNovidades();
+}
+
+let carouselIndex = 0;
+async function carregarNovidades() {
+    const track = document.getElementById('novidadesTrack');
+    if (!track) return;
+
+    try {
+        // Busca 10 últimos de cada acervo
+        const [resFisico, resDigital] = await Promise.all([
+            api('/livros?limit=10'),
+            api('/acervo-digital?limit=10')
+        ]);
+
+        // Combina e ordena por data de criação
+        let todos = [
+            ...(resFisico.data || []).map(i => ({ ...i, type: 'fisico' })),
+            ...(resDigital.data || []).map(i => ({ ...i, type: 'digital' }))
+        ];
+
+        todos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        // Pega apenas os 10 primeiros
+        const novidades = todos.slice(0, 10);
+
+        if (novidades.length === 0) {
+            track.innerHTML = '<div style="padding:20px; color:var(--text-dim);">Nenhuma novidade no momento.</div>';
+            return;
+        }
+
+        const gradientes = [
+            'linear-gradient(135deg, #1e3a8a, #1e40af)',
+            'linear-gradient(135deg, #312e81, #3730a3)',
+            'linear-gradient(135deg, #4c1d95, #5b21b6)',
+            'linear-gradient(135deg, #701a75, #86198f)',
+            'linear-gradient(135deg, #831843, #9d174d)'
+        ];
+
+        track.innerHTML = novidades.map((item, index) => {
+            const isDigital = item.type === 'digital';
+            const bg = item.capa_url 
+                ? `url('${esc(item.capa_url)}') center/cover no-repeat` 
+                : 'linear-gradient(135deg, var(--accent-bg), var(--surface))';
+            
+            return `
+                <div class="digital-hero carousel-slide" style="flex: 0 0 100%; margin-bottom: 0;">
+                    <div class="hero-content">
+                        <h2 class="hero-title">${esc(item.titulo)}</h2>
+                        <p class="hero-author">por ${esc(item.autor)}</p>
+                        ${item.sinopse ? `
+                            <p class="hero-desc" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; max-height: 4.5em;">
+                                ${esc(item.sinopse)}
+                            </p>
+                        ` : ''}
+                        <div class="hero-actions">
+                            <button class="btn btn-primary" onclick="${isDigital ? `mostrarTela('acervoDigitalScreen'); carregarAcervoDigital(1);` : `mostrarTela('livrosScreen'); carregarLivros(1);`}">
+                                ${isDigital ? 'Acessar Digital' : 'Ver no Acervo'}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-bg" style="background: ${bg};"></div>
+                </div>
+            `;
+        }).join('');
+
+        renderDots(novidades.length);
+        
+        // Auto-play opcional
+        if (window.carouselInterval) clearInterval(window.carouselInterval);
+        window.carouselInterval = setInterval(() => {
+            moveCarousel(1);
+        }, 5000);
+
+    } catch (error) {
+        console.error('Erro ao carregar novidades:', error);
+        track.innerHTML = `<div style="padding:40px; text-align:center; color:var(--danger);">
+            <p>Não foi possível carregar as novidades.</p>
+            <p style="font-size:0.8rem; opacity:0.7; margin-top:10px;">${esc(error.message)}</p>
+        </div>`;
+    }
+}
+
+function renderDots(count) {
+    const dotsContainer = document.getElementById('carouselDots');
+    if (!dotsContainer) return;
+    
+    dotsContainer.innerHTML = Array.from({ length: count }, (_, i) => 
+        `<button class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></button>`
+    ).join('');
+}
+
+function goToSlide(index) {
+    carouselIndex = index;
+    updateCarousel();
+}
+
+function moveCarousel(direction) {
+    const track = document.getElementById('novidadesTrack');
+    const slides = track.querySelectorAll('.carousel-slide');
+    if (!slides.length) return;
+
+    carouselIndex += direction;
+
+    if (carouselIndex < 0) carouselIndex = slides.length - 1;
+    if (carouselIndex >= slides.length) carouselIndex = 0;
+
+    updateCarousel();
+}
+
+function updateCarousel() {
+    const track = document.getElementById('novidadesTrack');
+    const dots = document.querySelectorAll('.carousel-dot');
+    
+    track.style.transform = `translateX(-${carouselIndex * 100}%)`;
+    
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === carouselIndex);
+    });
 }
 
 function handleSidebarClick(item, button, event) {
@@ -199,3 +320,10 @@ document.addEventListener('click', (e) => {
         collapseSidebar();
     }
 });
+
+// Atualiza carrossel ao redimensionar
+window.addEventListener('resize', debounce(() => {
+    if (document.getElementById('menuScreen').classList.contains('active')) {
+        updateCarousel();
+    }
+}, 200));
