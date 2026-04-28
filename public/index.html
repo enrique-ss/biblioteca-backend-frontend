@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblio Verso — Sistema de Biblioteca</title>
+    <title>Biblio Verso</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/screens.css">
@@ -86,21 +86,19 @@
             </section>
 
             <section id="menuScreen" class="screen">
-                <div class="menu-screen-wrap">
-                    <div class="menu-welcome">
-                        <h2>Bem-vindo, <span id="menuUserName"></span></h2>
-                        <p>A excelência em acervo literário e digital.</p>
-                    </div>
+                <div class="page-header">
+                    <h2 class="page-title"><span>Bem-vindo</span>, <b id="menuUserName"></b></h2>
+                </div>
 
-                    <div class="novidades-section">
-                        <div class="hero-carousel" id="heroCarousel">
-                            <div class="carousel-track" id="novidadesTrack">
-                                <!-- Banner heroes injetados aqui -->
-                                <div class="loading-row"><span class="spinner"></span>Buscando novidades...</div>
-                            </div>
+                <div class="novidades-section">
+                    <p class="section-label"><span>Novidades</span> do Acervo</p>
+                    <div class="hero-carousel" id="heroCarousel">
+                        <div class="carousel-track" id="novidadesTrack">
+                            <!-- Banner heroes injetados aqui -->
+                            <div class="loading-row"><span class="spinner"></span>Buscando novidades...</div>
                         </div>
-                        <div class="carousel-dots" id="carouselDots"></div>
                     </div>
+                    <div class="carousel-dots" id="carouselDots"></div>
                 </div>
             </section>
 
@@ -108,10 +106,8 @@
                 <div class="page-header">
                     <h2 class="page-title"><span>Alertas</span> e Pendências</h2>
                 </div>
-                <div class="notifications-center-wrap">
-                    <div id="notificationsFullScreenBody">
-                        <div class="notifications-loading" style="text-align: center; color: var(--accent); font-size: var(--fs-md); padding: 40px;">Buscando alertas...</div>
-                    </div>
+                <div id="notificationsFullScreenBody">
+                    <div class="notifications-loading" style="text-align: center; color: var(--accent); font-size: var(--fs-md); padding: 40px;">Buscando alertas...</div>
                 </div>
             </section>
 
@@ -267,7 +263,7 @@
             <section id="espacoInfantilScreen" class="screen">
                 <div id="screen-age" class="age-select-screen hidden">
                     <div class="page-header">
-                        <h2 class="page-title"><span>🎓 Espaço</span> Literário</h2>
+                        <h2 class="page-title"><span>Espaço</span> Literário</h2>
                     </div>
                     <div class="glass-card age-select-card">
                         <h3 class="age-select-title">Olá! Antes de começar, selecione sua faixa etária:</h3>
@@ -319,7 +315,7 @@
 
                     <div id="screen-home-infantil" class="infantil-screen hidden">
                         <div class="page-header">
-                            <h2 class="page-title" id="infantil-hero-greeting">Olá, Pequeno Leitor! 📚</h2>
+                            <h2 class="page-title" id="infantil-hero-greeting">Olá, Pequeno Leitor!</h2>
                         </div>
                         <div class="grid-categories" id="infantil-cat-grid"></div>
                     </div>

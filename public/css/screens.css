@@ -114,7 +114,8 @@
 .menu-welcome { margin-bottom: 40px; }
 .menu-welcome h2 { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--text); letter-spacing: 0.05em; }
 .menu-welcome p { color: var(--text); margin-top: 8px; font-size: var(--fs-md); opacity: 0.8; }
-#menuUserName { color: var(--accent); }
+
+
 
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
 

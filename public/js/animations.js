@@ -18,7 +18,39 @@ function criarTexturaEstrela() {
     ctx.fill();
     
     const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true; // Forçar atualização
+    texture.needsUpdate = true;
+    return texture;
+}
+
+// Gerador de textura de patinha de gato
+function criarTexturaPatinha() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.fillStyle = '#ffffff';
+    // Desenho simplificado de patinha (almofada central + 4 dedos)
+    // Almofada central
+    ctx.beginPath();
+    ctx.ellipse(64, 80, 25, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Dedos
+    ctx.beginPath();
+    ctx.ellipse(35, 45, 10, 15, -0.4, 0, Math.PI * 2); // Esquerdo
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(55, 30, 10, 15, -0.1, 0, Math.PI * 2); // Meio-esq
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(75, 30, 10, 15, 0.1, 0, Math.PI * 2);  // Meio-dir
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(95, 45, 10, 15, 0.4, 0, Math.PI * 2);  // Direito
+    ctx.fill();
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
     return texture;
 }
 
@@ -55,14 +87,14 @@ function inicializarFundo3D() {
 
     const materiais = [];
 
+    // Adiciona as estrelas normais
     camadas.forEach(camada => {
         const geometria = new THREE.BufferGeometry();
         const posArray = new Float32Array(camada.total * 3);
         
         for(let i = 0; i < camada.total * 3; i += 3) {
-            // Dispersão moderada para dar vida ao site sem poluir
-            posArray[i]   = (Math.random() - 0.5) * 35;      
-            posArray[i+1] = (Math.random() - 0.5) * 25;      
+            posArray[i]   = (Math.random() - 0.5) * 45;      
+            posArray[i+1] = (Math.random() - 0.5) * 35;      
             posArray[i+2] = (Math.random() - 0.5) * 30 - 10;   
         }
         
@@ -83,6 +115,29 @@ function inicializarFundo3D() {
         const mesh = new THREE.Points(geometria, material);
         grupoParticulas.add(mesh);
     });
+
+    // Adiciona as patinhas espaciais (poucas e sutis)
+    const texturaPatinha = criarTexturaPatinha();
+    const geoPatinhas = new THREE.BufferGeometry();
+    const posPatinhas = new Float32Array(40 * 3);
+    for(let i = 0; i < 40 * 3; i += 3) {
+        posPatinhas[i]   = (Math.random() - 0.5) * 40;
+        posPatinhas[i+1] = (Math.random() - 0.5) * 30;
+        posPatinhas[i+2] = (Math.random() - 0.5) * 20 - 5;
+    }
+    geoPatinhas.setAttribute('position', new THREE.BufferAttribute(posPatinhas, 3));
+    const matPatinhas = new THREE.PointsMaterial({
+        size: 0.8,
+        color: temaEhClaro ? 0x2D6A4F : 0xD4AF37,
+        transparent: true,
+        opacity: 0.4,
+        map: texturaPatinha,
+        depthWrite: false,
+        blending: temaEhClaro ? THREE.NormalBlending : THREE.AdditiveBlending
+    });
+    materiais.push({ mat: matPatinhas, camada: { size: 0.8 } });
+    const meshPatinhas = new THREE.Points(geoPatinhas, matPatinhas);
+    grupoParticulas.add(meshPatinhas);
 
     cena.add(grupoParticulas);
     

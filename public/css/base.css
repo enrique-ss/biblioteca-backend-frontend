@@ -391,18 +391,33 @@ body {
 /* Cabeçalho da página */
 .page-header {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
-    padding: 28px 0 20px;
+    padding: 0 0 8px;
+    margin-bottom: 32px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 24px;
+    min-height: 70px;
     gap: 12px;
     flex-wrap: nowrap;
 }
-.page-title { font-family: 'Cinzel', serif; font-size: var(--fs-lg); font-weight: 700; color: var(--text); letter-spacing: .04em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-title { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--text); letter-spacing: .04em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .page-title span { color: var(--accent); }
 .page-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: nowrap; }
 .page-actions .btn { white-space: nowrap; }
+
+/* Títulos de seção */
+.section-label {
+    font-family: 'Cinzel', serif;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: .05em;
+    margin-bottom: 20px;
+    opacity: 0.9;
+}
+.section-label span {
+    color: var(--accent);
+}
 
 /* Busca */
 .search-bar { margin-bottom: 16px; }
