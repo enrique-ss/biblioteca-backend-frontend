@@ -1,8 +1,13 @@
+// --- MONITORAMENTO EM TEMPO REAL ---
+// Este arquivo é responsável por verificar se há livros atrasados ou novos materiais
+// e avisar o sistema (via WebSocket) para que os usuários vejam as notificações na hora.
+
 const { createClient } = require('@supabase/supabase-js');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Verifica se estamos no modo Online ou Offline
 const requestedMode = (process.env.APP_MODE || 'offline').trim().toLowerCase();
 const hasSupabaseConfig = Boolean(
   process.env.SUPABASE_URL &&
@@ -12,13 +17,14 @@ const hasSupabaseConfig = Boolean(
 const runtimeMode = requestedMode === 'online' && hasSupabaseConfig ? 'online' : 'offline';
 const isOfflineMode = runtimeMode !== 'online';
 
-let io = null;
+let io = null; // Guardará a ferramenta de comunicação em tempo real
 let lastNotificationData = {
   atrasados: 0,
   pendentes: 0,
   bloqueados: 0
 };
 
+// Inicializa o monitor
 const initMonitor = (socketIO) => {
   io = socketIO;
   
@@ -29,13 +35,14 @@ const initMonitor = (socketIO) => {
 
   console.log('Monitoramento iniciado no modo online');
   
-  // Verifica a cada 30 segundos
+  // Verifica a cada 30 segundos se algo mudou
   setInterval(checkNotifications, 30000);
   
-  // Verificação inicial
+  // Faz uma verificação inicial logo que o servidor liga
   setTimeout(checkNotifications, 5000);
 };
 
+// Função que faz a busca por novidades no banco de dados
 const checkNotifications = async () => {
   try {
     const supabase = createClient(
@@ -46,26 +53,26 @@ const checkNotifications = async () => {
 
     const hoje = new Date();
 
-    // Verificar livros atrasados
+    // 1. Verificar livros que passaram da data de devolução
     const { count: atrasados } = await supabase
       .from('alugueis')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'ativo')
       .lt('data_prevista_devolucao', hoje.toISOString());
 
-    // Verificar materiais pendentes de aprovação
+    // 2. Verificar materiais digitais que ainda precisam ser aprovados
     const { count: pendentes } = await supabase
       .from('acervo_digital')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pendente');
 
-    // Verificar usuários bloqueados
+    // 3. Verificar quantos usuários estão bloqueados no momento
     const { count: bloqueados } = await supabase
       .from('usuarios')
       .select('*', { count: 'exact', head: true })
       .eq('bloqueado', true);
 
-    // Verificar estatísticas para atualização em tempo real
+    // 4. Pega números gerais para o painel de estatísticas
     const { count: totalLivros } = await supabase
       .from('livros')
       .select('*', { count: 'exact', head: true })
@@ -93,11 +100,12 @@ const checkNotifications = async () => {
       usuariosCadastrados: usuariosCadastrados || 0
     };
 
-    // Enviar notificação se houver mudança
+    // Só envia a mensagem de notificação se os números mudarem
     if (JSON.stringify(currentData) !== JSON.stringify(lastNotificationData)) {
       lastNotificationData = currentData;
       
       if (io) {
+        // Avisa apenas os bibliotecários sobre os novos alertas
         io.to('bibliotecarios').emit('notifications', {
           atrasados: currentData.atrasados,
           pendentes: currentData.pendentes,
@@ -107,7 +115,7 @@ const checkNotifications = async () => {
       }
     }
 
-    // Enviar estatísticas atualizadas via WebSocket
+    // Atualiza os números do painel administrativo em tempo real
     if (io) {
       io.to('bibliotecarios').emit('statsUpdate', {
         totalLivros: currentStats.totalLivros,

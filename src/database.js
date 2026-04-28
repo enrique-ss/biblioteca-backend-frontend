@@ -1,15 +1,19 @@
+// --- IMPORTAÇÕES ---
+// Ferramentas para arquivos, criptografia e banco de dados
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const Database = require('better-sqlite3');
-const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto'); // Para gerar IDs únicos
+const bcrypt = require('bcryptjs'); // Para esconder senhas
+const jwt = require('jsonwebtoken'); // Para criar tokens de acesso (crachás digitais)
+const Database = require('better-sqlite3'); // Banco de dados local (SQLite)
+const { createClient } = require('@supabase/supabase-js'); // Banco de dados na nuvem (Supabase)
 const dotenv = require('dotenv');
-const { applySchema, dbPath } = require('./setup');
+const { applySchema, dbPath } = require('./setup'); // Configurações iniciais do banco
 
 dotenv.config({ quiet: true });
 
+// --- CONFIGURAÇÃO DO MODO DE OPERAÇÃO ---
+// O sistema decide se vai rodar "Online" (na nuvem) ou "Offline" (no computador local)
 const requestedMode = (process.env.APP_MODE || 'offline').trim().toLowerCase();
 const hasSupabaseConfig = Boolean(
   process.env.SUPABASE_URL &&
@@ -20,12 +24,16 @@ const runtimeMode = requestedMode === 'online' && hasSupabaseConfig ? 'online' :
 const isOfflineMode = runtimeMode !== 'online';
 const jwtSecret = process.env.JWT_SECRET || 'offline-biblioteca-dev-secret';
 
+// --- FUNÇÕES DE AJUDA (UTILITÁRIOS) ---
+
+// Transforma valores de banco (0 ou 1) em Sim ou Não (true/false)
 function normalizeBoolean(value) {
   if (value === true || value === false) return value;
   if (value === 1 || value === 0) return Boolean(value);
   return value;
 }
 
+// Organiza os dados que saem da tabela de usuários
 function mapRow(table, row) {
   if (!row) return row;
 
@@ -40,6 +48,7 @@ function mapRow(table, row) {
   return row;
 }
 
+// Prepara o usuário para ser enviado ao frontend (esconde a senha)
 function mapOutgoingUser(row) {
   if (!row) return null;
   return {
@@ -53,6 +62,7 @@ function mapOutgoingUser(row) {
   };
 }
 
+// Ajuda a entender quais colunas o sistema quer buscar
 function parseTopLevelColumns(selection) {
   if (!selection || selection === '*') {
     return ['*'];
@@ -79,6 +89,8 @@ function parseTopLevelColumns(selection) {
   return parts;
 }
 
+// --- RELACIONAMENTOS ---
+// Define como as tabelas se conectam (ex: um aluguel pertence a um livro)
 const RELATIONS = {
   acervo_digital: {
     usuarios: { table: 'usuarios', localKey: 'usuario_id', foreignKey: 'id' }
@@ -93,14 +105,16 @@ const RELATIONS = {
   }
 };
 
+// --- CONSTRUTOR DE CONSULTAS OFFLINE ---
+// Esta classe simula o comportamento do Supabase, mas usando o banco local (SQLite)
 class OfflineQueryBuilder {
   constructor(client, table) {
     this.client = client;
     this.table = table;
-    this.action = 'select';
+    this.action = 'select'; // O que vamos fazer (buscar, inserir, deletar...)
     this.selection = '*';
     this.selectOptions = {};
-    this.filters = [];
+    this.filters = []; // Filtros (ex: buscar apenas livros de "Ação")
     this.ordering = null;
     this.rangeArgs = null;
     this.limitValue = null;
@@ -110,6 +124,7 @@ class OfflineQueryBuilder {
     this.upsertOptions = {};
   }
 
+  // Funções para montar a busca (fluente)
   select(columns = '*', options = {}) {
     this.selection = columns;
     this.selectOptions = options || {};
@@ -140,6 +155,7 @@ class OfflineQueryBuilder {
     return this;
   }
 
+  // Métodos de filtragem (igual ao Supabase)
   eq(column, value) { this.filters.push({ op: 'eq', column, value }); return this; }
   neq(column, value) { this.filters.push({ op: 'neq', column, value }); return this; }
   is(column, value) { this.filters.push({ op: 'is', column, value }); return this; }
@@ -156,10 +172,12 @@ class OfflineQueryBuilder {
   single() { this.expectSingle = true; return this; }
   maybeSingle() { this.expectMaybeSingle = true; return this; }
 
+  // Executa a consulta quando tudo estiver montado
   then(resolve, reject) {
     return Promise.resolve(this.execute()).then(resolve, reject);
   }
 
+  // Busca valores dentro de objetos relacionados
   getNestedValue(row, pathExpression) {
     const parts = String(pathExpression).split('.');
     let current = row;
@@ -190,6 +208,7 @@ class OfflineQueryBuilder {
     return current;
   }
 
+  // Compara dois valores para saber qual é maior ou se são iguais
   compareValues(left, right) {
     if (left === null || left === undefined) return left === right ? 0 : -1;
     if (typeof left === 'number' || typeof right === 'number') {
@@ -213,6 +232,7 @@ class OfflineQueryBuilder {
     return this.compareValues(left, right) === 0;
   }
 
+  // Verifica se uma linha do banco atende ao filtro
   matchCondition(row, condition) {
     const value = this.getNestedValue(row, condition.column);
 
@@ -250,6 +270,7 @@ class OfflineQueryBuilder {
     }
   }
 
+  // Traz dados de outras tabelas se necessário (ex: pegar os dados do livro junto com o aluguel)
   enrichRow(table, row, selection) {
     const relationConfig = RELATIONS[table] || {};
     const parts = parseTopLevelColumns(selection);
@@ -286,11 +307,13 @@ class OfflineQueryBuilder {
     return rows.map((row) => this.enrichRow(this.table, row, this.selection));
   }
 
+  // Aplica todos os filtros na lista de resultados
   applyFilters(rows) {
     if (!this.filters.length) return rows;
     return rows.filter((row) => this.filters.every((condition) => this.matchCondition(row, condition)));
   }
 
+  // Ordena os resultados
   applyOrdering(rows) {
     if (!this.ordering) return rows;
     const { column, ascending } = this.ordering;
@@ -301,6 +324,7 @@ class OfflineQueryBuilder {
     });
   }
 
+  // Pega apenas uma parte dos resultados (paginação)
   applyRange(rows) {
     if (this.rangeArgs) {
       const [from, to] = this.rangeArgs;
@@ -314,6 +338,7 @@ class OfflineQueryBuilder {
     return rows;
   }
 
+  // Monta o objeto final que a API vai responder
   buildResult(rows, totalCount) {
     const count = this.selectOptions?.count === 'exact' ? totalCount : null;
     const data = this.selectOptions?.head ? null : rows;
@@ -337,12 +362,14 @@ class OfflineQueryBuilder {
     return { data, count, error: null };
   }
 
+  // Realiza a inserção no banco local
   performInsert() {
     const inserted = this.payload.map((item) => this.client.insertRow(this.table, item));
     const projected = this.projectRows(inserted);
     return this.buildResult(projected, projected.length);
   }
 
+  // Realiza a atualização no banco local
   performUpdate() {
     const rows = this.applyFilters(this.client.fetchAll(this.table));
     const updated = rows.map((row) => this.client.updateRow(this.table, row.id, this.payload));
@@ -350,12 +377,14 @@ class OfflineQueryBuilder {
     return this.buildResult(projected, projected.length);
   }
 
+  // Apaga dados do banco local
   performDelete() {
     const rows = this.applyFilters(this.client.fetchAll(this.table));
     rows.forEach((row) => this.client.deleteRow(this.table, row.id));
     return { data: null, count: null, error: null };
   }
 
+  // Insere ou atualiza se já existir
   performUpsert() {
     const conflictColumn = this.upsertOptions?.onConflict || 'id';
     const resultRows = this.payload.map((item) => this.client.upsertRow(this.table, item, conflictColumn));
@@ -363,6 +392,7 @@ class OfflineQueryBuilder {
     return this.buildResult(projected, projected.length);
   }
 
+  // Executa a busca (SELECT)
   executeSelect() {
     let rows = this.client.fetchAll(this.table);
     rows = this.applyFilters(rows);
@@ -373,6 +403,7 @@ class OfflineQueryBuilder {
     return this.buildResult(rows, totalCount);
   }
 
+  // Decide qual ação tomar
   execute() {
     switch (this.action) {
       case 'insert': return this.performInsert();
@@ -384,15 +415,19 @@ class OfflineQueryBuilder {
   }
 }
 
+// --- CLIENTE OFFLINE ---
+// Gerencia a conexão com o banco SQLite e simula as funções administrativas do Supabase
 class OfflineClient {
   constructor(db) {
     this.db = db;
     this.auth = {
       admin: {
+        // Lista todos os usuários do sistema
         listUsers: async () => ({
           data: { users: this.fetchAll('usuarios').filter((row) => !row.deleted_at).map(mapOutgoingUser) },
           error: null
         }),
+        // Cria um novo usuário manualmente (admin)
         createUser: async ({ email, password, user_metadata = {}, email_confirm = true }) => {
           const existing = this.db.prepare('SELECT * FROM usuarios WHERE email = ?').get(String(email).toLowerCase());
           if (existing) {
@@ -418,6 +453,7 @@ class OfflineClient {
 
           return { data: { user: mapOutgoingUser(user) }, error: null };
         },
+        // Atualiza dados de um usuário
         updateUserById: async (id, updates = {}) => {
           const current = this.db.prepare('SELECT * FROM usuarios WHERE id = ?').get(id);
           if (!current) {
@@ -439,10 +475,12 @@ class OfflineClient {
     };
   }
 
+  // Inicia uma nova consulta em uma tabela
   from(table) {
     return new OfflineQueryBuilder(this, table);
   }
 
+  // Busca todas as linhas de uma tabela
   fetchAll(table) {
     const rows = this.db.prepare(`SELECT * FROM ${table}`).all();
     return rows.map((row) => mapRow(table, row));
@@ -452,6 +490,7 @@ class OfflineClient {
     return 'id';
   }
 
+  // Prepara os dados para serem salvos (garante campos obrigatórios)
   getInsertableRow(table, payload) {
     const row = { ...payload };
     const now = new Date().toISOString();
@@ -476,6 +515,7 @@ class OfflineClient {
     return row;
   }
 
+  // Insere fisicamente na tabela SQLite
   insertRow(table, payload) {
     const row = this.getInsertableRow(table, payload);
     const keys = Object.keys(row);
@@ -490,6 +530,7 @@ class OfflineClient {
     return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(row.id));
   }
 
+  // Atualiza fisicamente na tabela SQLite
   updateRow(table, id, updates) {
     const patch = { ...updates };
     if (table === 'usuarios') {
@@ -508,10 +549,12 @@ class OfflineClient {
     return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id));
   }
 
+  // Deleta fisicamente da tabela SQLite
   deleteRow(table, id) {
     this.db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(id);
   }
 
+  // Insere ou atualiza (UPSERT)
   upsertRow(table, payload, conflictColumn) {
     const row = this.getInsertableRow(table, payload);
     const existing = this.db.prepare(`SELECT * FROM ${table} WHERE ${conflictColumn} = ?`).get(row[conflictColumn]);
@@ -522,10 +565,13 @@ class OfflineClient {
   }
 }
 
+// --- CLIENTE DE AUTENTICAÇÃO OFFLINE ---
+// Gerencia logins, cadastros e tokens sem precisar de internet
 class OfflineAuthClient {
   constructor(client) {
     this.client = client;
     this.auth = {
+      // Cadastro de novo usuário
       signUp: async ({ email, password, options = {} }) => {
         const normalizedEmail = String(email).trim().toLowerCase();
         const existing = this.client.db.prepare('SELECT * FROM usuarios WHERE email = ?').get(normalizedEmail);
@@ -552,6 +598,7 @@ class OfflineAuthClient {
         const session = this.createSession(user);
         return { data: { user: mapOutgoingUser(user), session }, error: null };
       },
+      // Login com email e senha
       signInWithPassword: async ({ email, password }) => {
         const normalizedEmail = String(email).trim().toLowerCase();
         const user = this.client.db.prepare('SELECT * FROM usuarios WHERE email = ?').get(normalizedEmail);
@@ -568,6 +615,7 @@ class OfflineAuthClient {
         const session = this.createSession(user);
         return { data: { user: mapOutgoingUser(mapRow('usuarios', user)), session }, error: null };
       },
+      // Verifica quem é o dono do token enviado
       getUser: async (token) => {
         try {
           const payload = jwt.verify(token, jwtSecret);
@@ -584,6 +632,7 @@ class OfflineAuthClient {
     };
   }
 
+  // Gera um token (crachá) que vale por 30 dias
   createSession(user) {
     const access_token = jwt.sign(
       { sub: user.id, email: user.email, tipo: user.tipo, mode: 'offline' },
@@ -595,7 +644,10 @@ class OfflineAuthClient {
   }
 }
 
+// --- EXPORTAÇÃO FINAL ---
+// Aqui o sistema decide qual cliente entregar para o resto do código
 if (!isOfflineMode) {
+  // Modo Online: Conecta com o Supabase na nuvem
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false }
   });
@@ -609,9 +661,10 @@ if (!isOfflineMode) {
   module.exports.runtimeMode = runtimeMode;
   module.exports.isOfflineMode = false;
 } else {
+  // Modo Offline: Cria a pasta e o arquivo de banco local
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
-  applySchema(db);
+  applySchema(db); // Cria as tabelas se não existirem
 
   const offlineClient = new OfflineClient(db);
   const offlineAuth = new OfflineAuthClient(offlineClient);

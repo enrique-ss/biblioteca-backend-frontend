@@ -1,22 +1,24 @@
-// Importações principais
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
-const http = require('http');
-const { Server } = require('socket.io');
-const { ensureDefaultAdmin } = require('./bootstrapAdmin');
-const { runtimeMode } = require('./database');
-const { initMonitor } = require('./monitor');
+// --- CONFIGURAÇÕES E IMPORTAÇÕES ---
+// Importamos as ferramentas necessárias para o servidor funcionar
+const express = require('express'); // Framework para criar rotas e gerenciar requisições
+const cors = require('cors'); // Permite que o frontend acesse a API de diferentes origens
+const dotenv = require('dotenv'); // Carrega configurações de um arquivo secreto (.env)
+const path = require('path'); // Ajuda a lidar com caminhos de pastas no computador
+const http = require('http'); // Servidor básico de internet
+const { Server } = require('socket.io'); // Tecnologia para atualizações em tempo real (como um chat)
+const { ensureDefaultAdmin } = require('./bootstrapAdmin'); // Garante que exista um administrador padrão
+const { runtimeMode } = require('./database'); // Verifica se estamos rodando online ou offline
+const { initMonitor } = require('./monitor'); // Inicializa o monitoramento do servidor
 
-// Carrega variáveis de ambiente
+// Carrega as configurações do arquivo .env de forma silenciosa
 dotenv.config({ quiet: true });
 
-// Inicializa Express e servidor HTTP
+// Cria a aplicação principal e o servidor de internet
 const app = express();
 const server = http.createServer(app);
 
-// Configura CORS baseado nas origens permitidas
+// --- CONFIGURAÇÃO DE ACESSO (CORS) ---
+// Define quem pode acessar nossa API (geralmente o endereço do site)
 const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -28,23 +30,27 @@ const corsOptions = {
   credentials: true
 };
 
-// Inicializa Socket.IO para WebSocket
+// --- CONFIGURAÇÃO DO WEBSOCKET (SOCKET.IO) ---
+// Ativa a comunicação em tempo real para o servidor
 const io = new Server(server, {
   cors: corsOptions
 });
 
-// Disponibiliza io para as rotas
+// Deixa o "io" disponível para ser usado em outras partes do código
 app.set('io', io);
 
+// Define em qual porta o site vai rodar (padrão 3000)
 const PORTA = process.env.PORT || 3000;
 
+// Configurações básicas de segurança e processamento de dados
 app.set('trust proxy', 1);
+app.use(cors(corsOptions)); // Aplica as regras de acesso
+app.use(express.json()); // Permite que o servidor entenda dados em formato JSON
+app.use(express.urlencoded({ extended: true })); // Permite entender dados de formulários
+app.use(express.static(path.join(__dirname, '../public'))); // Serve os arquivos do site (HTML, CSS, JS)
 
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '../public')));
-
+// --- IMPORTAÇÃO DAS ROTAS ---
+// Aqui conectamos as diferentes partes do sistema (livros, usuários, aluguéis, etc)
 const rotasAutenticacao = require('./routes/authRoutes');
 const rotasLivros = require('./routes/LivroRoutes');
 const rotasAlugueis = require('./routes/aluguelRoutes');
@@ -53,14 +59,17 @@ const rotasEstatisticas = require('./routes/StatsRoutes');
 const rotasAcervoDigital = require('./routes/AcervoDigitalRoutes');
 const rotasInfantil = require('./routes/infantilRoutes');
 
-app.use('/api/auth', rotasAutenticacao);
-app.use('/api/livros', rotasLivros);
-app.use('/api/alugueis', rotasAlugueis);
-app.use('/api/usuarios', rotasUsuarios);
-app.use('/api/stats', rotasEstatisticas);
-app.use('/api/acervo-digital', rotasAcervoDigital);
-app.use('/api/infantil', rotasInfantil);
+// --- DEFINIÇÃO DOS CAMINHOS DA API ---
+app.use('/api/auth', rotasAutenticacao); // Login e cadastro
+app.use('/api/livros', rotasLivros); // Gerenciamento de livros físicos
+app.use('/api/alugueis', rotasAlugueis); // Controle de empréstimos
+app.use('/api/usuarios', rotasUsuarios); // Cadastro de pessoas
+app.use('/api/stats', rotasEstatisticas); // Painel de números e dados
+app.use('/api/acervo-digital', rotasAcervoDigital); // PDFs e arquivos digitais
+app.use('/api/infantil', rotasInfantil); // Área para as crianças
 
+// --- ROTAS GERAIS ---
+// Verifica se o servidor está funcionando corretamente
 app.get('/api/health', (req, res) => {
   res.json({
     message: 'API da Biblioteca Online (Biblio Verso)',
@@ -70,10 +79,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Envia a página principal (index.html) quando acessamos o endereço base
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
+// Caso alguém tente acessar um caminho que não existe
 app.use((req, res) => {
   res.status(404).json({
     error: 'Rota nao encontrada',
@@ -81,6 +92,7 @@ app.use((req, res) => {
   });
 });
 
+// Gerenciador de erros: se algo der errado no servidor, ele avisa aqui
 app.use((err, req, res, next) => {
   console.error('Erro nao tratado na aplicacao:', err);
 
@@ -90,31 +102,40 @@ app.use((err, req, res, next) => {
   });
 });
 
+// --- INICIALIZAÇÃO DO SERVIDOR ---
 const iniciarServidor = async () => {
+  // Cria o administrador se ele ainda não existir
   await ensureDefaultAdmin();
 
+  // Configura a entrada de novos usuários no sistema de tempo real
   io.on('connection', (socket) => {
     socket.on('joinRoom', (room) => {
       socket.join(room);
     });
   });
 
+  // Ativa o monitor de atividades
   initMonitor(io);
 
+  // Faz o servidor começar a ouvir as chamadas na internet
   server.listen(PORTA, '0.0.0.0', () => {
     console.log(`Biblio Verso ativo em http://localhost:${PORTA} (${runtimeMode})`);
   });
 
+  // Função para desligar o servidor de forma segura
   const finalizarServidor = () => {
     server.close(() => {
       process.exit(0);
     });
   };
 
+  // Escuta sinais do sistema para desligar
   process.on('SIGTERM', finalizarServidor);
   process.on('SIGINT', finalizarServidor);
 };
 
+// Começa tudo!
 iniciarServidor();
 
+// Exporta o aplicativo para possíveis testes
 module.exports = app;

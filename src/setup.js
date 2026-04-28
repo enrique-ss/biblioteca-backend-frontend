@@ -1,3 +1,7 @@
+// --- CONFIGURAÇÃO INICIAL DO BANCO DE DADOS ---
+// Este arquivo cria as tabelas e a estrutura do banco de dados no seu computador.
+// Ele define como as informações de livros, usuários e aluguéis serão guardadas.
+
 const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
@@ -5,15 +9,18 @@ const dotenv = require('dotenv');
 
 dotenv.config({ quiet: true });
 
+// Define onde o arquivo do banco de dados será salvo (na pasta /data)
 const projectRoot = path.resolve(__dirname, '..');
 const dataDir = path.join(projectRoot, 'data');
 const dbPath = path.join(dataDir, 'biblioteca.sqlite');
 
+// Esta função cria a "planta" do banco de dados (as tabelas)
 function applySchema(db) {
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+  db.pragma('journal_mode = WAL'); // Melhora a velocidade do banco
+  db.pragma('foreign_keys = ON'); // Garante que as conexões entre tabelas funcionem corretamente
 
   db.exec(`
+    -- Tabela que guarda as pessoas cadastradas (usuários e bibliotecários)
     CREATE TABLE IF NOT EXISTS usuarios (
       id TEXT PRIMARY KEY,
       nome TEXT NOT NULL,
@@ -30,6 +37,7 @@ function applySchema(db) {
       infantil_hearts INTEGER DEFAULT 5
     );
 
+    -- Tabela para o progresso das crianças nas lições
     CREATE TABLE IF NOT EXISTS usuarios_leicoes_infantis (
       usuario_id TEXT NOT NULL,
       leicao_id TEXT NOT NULL,
@@ -37,6 +45,7 @@ function applySchema(db) {
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
 
+    -- Tabela que guarda a lista de livros físicos
     CREATE TABLE IF NOT EXISTS livros (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       titulo TEXT NOT NULL,
@@ -44,7 +53,7 @@ function applySchema(db) {
       ano_lancamento INTEGER NOT NULL,
       genero TEXT,
       isbn TEXT,
-      corredor TEXT NOT NULL,
+      corredor TEXT NOT NULL, -- Localização física na biblioteca
       prateleira TEXT NOT NULL,
       capa_url TEXT,
       exemplares INTEGER DEFAULT 1,
@@ -55,6 +64,7 @@ function applySchema(db) {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Tabela que controla cada unidade física de um livro (exemplares)
     CREATE TABLE IF NOT EXISTS exemplares (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       livro_id INTEGER NOT NULL,
@@ -67,6 +77,7 @@ function applySchema(db) {
       FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE CASCADE
     );
 
+    -- Tabela que registra quem pegou qual livro e quando deve devolver
     CREATE TABLE IF NOT EXISTS alugueis (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       livro_id INTEGER NOT NULL,
@@ -84,6 +95,7 @@ function applySchema(db) {
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
 
+    -- Tabela que guarda as multas de quem atrasou ou perdeu livros
     CREATE TABLE IF NOT EXISTS multas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       aluguel_id INTEGER NOT NULL,
@@ -98,6 +110,7 @@ function applySchema(db) {
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
 
+    -- Tabela para os livros digitais (PDFs e arquivos)
     CREATE TABLE IF NOT EXISTS acervo_digital (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       titulo TEXT NOT NULL,
@@ -118,6 +131,7 @@ function applySchema(db) {
   `);
 }
 
+// Apaga tudo e cria do zero (usado para limpar o sistema)
 function recreateDatabase() {
   fs.mkdirSync(dataDir, { recursive: true });
   const db = new Database(dbPath);
@@ -137,12 +151,14 @@ function recreateDatabase() {
   db.close();
 }
 
+// Inicia o processo de configuração
 function configurarBanco() {
   recreateDatabase();
   console.log(`Banco offline recriado em ${dbPath}`);
   return true;
 }
 
+// Se rodar este arquivo sozinho no terminal, ele limpa o banco
 if (require.main === module) {
   const ok = configurarBanco();
   process.exitCode = ok ? 0 : 1;
