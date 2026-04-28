@@ -88,7 +88,7 @@ function atualizarNavbar() {
     const wrapper = document.querySelector('.app-wrapper');
 
     if (sidebar) sidebar.style.display = estaLogado ? 'flex' : 'none';
-    if (wrapper) wrapper.style.paddingLeft = estaLogado ? '80px' : '0';
+    if (wrapper) wrapper.style.paddingLeft = estaLogado ? '' : '0';
 
     const btnSair = document.getElementById('btnLogout');
     if (btnSair) {
