@@ -82,21 +82,21 @@ async function carregarLivros(pagina = 1) {
 
             card.innerHTML = `
                 <div class="digital-card-poster" style="${bgStyle}">
-                    ${!livro.capa_url ? `<div class="digital-card-cover-text" style="font-size:1.5rem;text-transform:uppercase;color:#fff;">${esc(livro.titulo)}</div>` : ''}
+                    ${!livro.capa_url ? `<div class="digital-card-cover-text">${esc(livro.titulo)}</div>` : ''}
                 </div>
                 <div class="digital-card-content">
                     <h3 class="digital-card-title">${esc(livro.titulo)}</h3>
-                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;">por ${esc(livro.autor)}</p>
+                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;"><strong>Autor:</strong> ${esc(livro.autor)}</p>
                     
                     ${livro.sinopse ? `
                         <p class="card-sinopse" style="font-size: 0.8rem; color: var(--text); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.4em; line-height: 1.2em; opacity: 0.9;">
-                            ${esc(livro.sinopse)}
+                            <strong>Sinopse:</strong> ${esc(livro.sinopse)}
                         </p>
                     ` : ''}
 
                     <div class="digital-card-meta">
-                        <span style="color: var(--text); opacity: 0.8;">${esc(livro.genero)}</span>
-                        <span style="color: var(--text); opacity: 0.8;">Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
+                        <span style="color: var(--text); opacity: 0.8;"><strong>Gênero:</strong> ${esc(livro.genero)}</span>
+                        <span style="color: var(--text); opacity: 0.8;"><strong>Corredor</strong> ${esc(livro.corredor ?? '—')} • <strong>Prat.</strong> ${esc(livro.prateleira ?? '—')}</span>
                     </div>
 
                     <div style="margin-bottom:16px; border-top:1px solid var(--border); padding-top:12px;">
@@ -106,9 +106,9 @@ async function carregarLivros(pagina = 1) {
 
                     ${ehBibliotecario ? `
                     <div class="digital-card-actions">
-                        <button class="btn" onclick='editarLivro(${JSON.stringify(livro)})'>Editar</button>
-                        <button class="btn" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')">Exemplares</button>
-                        <button class="btn btn-danger" onclick="removerLivro(${livro.id}, '${esc(livro.titulo)}')">Excluir</button>
+                        <button class="btn btn-icon-text" title="Editar" onclick='editarLivro(${JSON.stringify(livro)})'><span>✏️</span></button>
+                        <button class="btn btn-icon-text" title="Exemplares" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')"><span>📚</span></button>
+                        <button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerLivro(${livro.id}, '${esc(livro.titulo)}')"><span>🗑️</span></button>
                     </div>` : ''}
                 </div>
             `;

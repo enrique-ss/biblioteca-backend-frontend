@@ -69,20 +69,21 @@ async function carregarAcervoDigital(pagina = 1) {
                 </div>
                 <div class="digital-card-content">
                     <h3 class="digital-card-title">${esc(item.titulo)}</h3>
-                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;">por ${esc(item.autor)}</p>
+                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;"><strong>Autor:</strong> ${esc(item.autor)}</p>
                     ${item.sinopse ? `
                         <p class="card-sinopse" style="font-size: 0.8rem; color: var(--text); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.4em; line-height: 1.2em; opacity: 0.9;">
-                            ${esc(item.sinopse)}
+                            <strong>Sinopse:</strong> ${esc(item.sinopse)}
                         </p>
                     ` : ''}
                     <div class="digital-card-meta">
-                        <span style="color: var(--text); opacity: 0.8;">${esc(item.categoria)}</span>
-                        <span style="color: var(--text); opacity: 0.8;">${esc(item.ano)}</span>
-                        <span style="color: var(--text); opacity: 0.8;">${esc(item.paginas)} págs | ${esc(item.tamanho_arquivo)}</span>
+                        <span style="color: var(--text); opacity: 0.8;"><strong>Gênero:</strong> ${esc(item.categoria)}</span>
+                        <span style="color: var(--text); opacity: 0.8;"><strong>Ano:</strong> ${esc(item.ano)}</span>
+                        <span style="color: var(--text); opacity: 0.8;"><strong>Páginas:</strong> ${esc(item.paginas)}</span>
+                        <span style="color: var(--text); opacity: 0.8;"><strong>Tamanho:</strong> ${esc(item.tamanho_arquivo)}</span>
                     </div>
                     <div class="digital-card-actions">
-                        <button class="btn btn-ghost" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')">Baixar</button>
-                        ${ehBibliotecario ? `<button class="btn btn-danger" onclick="removerDocumentoDigital(${item.id}, '${esc(item.titulo)}')">Excluir</button>` : ''}
+                        <button class="btn btn-ghost btn-icon-text" title="Baixar" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')"><span>📥</span></button>
+                        ${ehBibliotecario ? `<button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerDocumentoDigital(${item.id}, '${esc(item.titulo)}')"><span>🗑️</span></button>` : ''}
                     </div>
                 </div>
             `;

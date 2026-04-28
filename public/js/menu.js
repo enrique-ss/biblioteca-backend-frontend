@@ -101,7 +101,8 @@ function carregarMenu() {
         {
             icon: `<span id="btnThemeIcon" aria-hidden="true">${document.documentElement.getAttribute('data-theme') === 'light' ? '☀️' : '🌙'}</span>`,
             title: 'Tema',
-            action() { toggleTheme(); }
+            action() { toggleTheme(); },
+            skipActive: true
         }
     );
 
@@ -115,7 +116,8 @@ function carregarMenu() {
         { 
             icon: '<span style="color:var(--danger);">🚪</span>', 
             title: `<span style="color:var(--danger);">Sair</span>`, 
-            action() { logout(); } 
+            action() { logout(); },
+            skipActive: true
         }
     );
 
@@ -291,13 +293,15 @@ function handleSidebarClick(item, button, event) {
     if (item.action) {
         item.action();
         
-        // Remove classe active de todos os botões
-        document.querySelectorAll('.side-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        // Adiciona classe active ao botão clicado
-        button.classList.add('active');
+        if (!item.skipActive) {
+            // Remove classe active de todos os botões
+            document.querySelectorAll('.side-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Adiciona classe active ao botão clicado
+            button.classList.add('active');
+        }
     }
 }
 
