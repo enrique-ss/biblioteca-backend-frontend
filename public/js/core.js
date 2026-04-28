@@ -38,12 +38,17 @@ socket.on('statsUpdate', (data) => {
 // Atualiza ícone do tema (sol/lua)
 function atualizarIconeTema(tema) {
     const themeIcon = document.getElementById('btnThemeIcon');
-    if (!themeIcon) {
-        return;
+    const themeAuth = document.getElementById('themeToggleAuth');
+    const icon = tema === 'light' ? '☀️' : '🌙';
+    
+    if (themeIcon) {
+        themeIcon.textContent = icon;
+        themeIcon.setAttribute('aria-label', tema === 'light' ? 'Tema claro' : 'Tema escuro');
     }
 
-    themeIcon.textContent = tema === 'light' ? '☀️' : '🌙';
-    themeIcon.setAttribute('aria-label', tema === 'light' ? 'Tema claro' : 'Tema escuro');
+    if (themeAuth) {
+        themeAuth.textContent = icon;
+    }
 }
 
 function toggleTheme() {
@@ -119,6 +124,22 @@ function mostrarTela(id) {
 
     if (typeof closeMobileMenu === 'function' && window.innerWidth <= 900) {
         closeMobileMenu();
+    }
+
+    // Controle de visibilidade de botões globais (Hamburger vs Tema Auth)
+    const isAuth = (id === 'loginScreen' || id === 'registerScreen');
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    const authThemeBtn = document.getElementById('themeToggleAuth');
+
+    if (menuBtn) {
+        menuBtn.style.display = isAuth ? 'none' : '';
+    }
+
+    if (authThemeBtn) {
+        authThemeBtn.style.display = isAuth ? 'flex' : 'none';
+        // Sincroniza ícone atual
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        authThemeBtn.textContent = currentTheme === 'light' ? '☀️' : '🌙';
     }
 }
 

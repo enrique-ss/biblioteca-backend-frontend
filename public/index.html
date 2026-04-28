@@ -20,8 +20,12 @@
         <!-- Mobile Overlay -->
         <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
         
-        <div class="mobile-header-btn" onclick="toggleMobileMenu()">
+        <div class="mobile-header-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
             ☰
+        </div>
+
+        <div class="theme-toggle-fixed" id="themeToggleAuth" onclick="toggleTheme()" style="display: none;" title="Alternar Tema">
+            🌙
         </div>
 
         <aside class="sidebar" id="sidebar">
@@ -94,8 +98,8 @@
                                 <!-- Banner heroes injetados aqui -->
                                 <div class="loading-row"><span class="spinner"></span>Buscando novidades...</div>
                             </div>
-                            <div class="carousel-dots" id="carouselDots"></div>
                         </div>
+                        <div class="carousel-dots" id="carouselDots"></div>
                     </div>
                 </div>
             </section>
