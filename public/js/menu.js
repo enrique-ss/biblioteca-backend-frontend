@@ -146,7 +146,10 @@ function carregarMenu() {
         { 
             icon: '👤', 
             title: 'Meu Perfil', 
-            action() { mostrarTela('perfilScreen'); } 
+            action() { 
+                mostrarTela('perfilScreen'); 
+                if (typeof carregarPerfil === 'function') carregarPerfil();
+            } 
         },
         { 
             icon: '<span style="color:var(--danger);">🚪</span>', 

@@ -113,7 +113,7 @@ async function carregarAcervoDigital(pagina = 1) {
                         <span style="color: var(--text); opacity: 0.8;"><strong>Tamanho:</strong> ${esc(item.tamanho_arquivo)}</span>
                     </div>
                     <div class="digital-card-actions">
-                        <button class="btn btn-ghost btn-icon-text" title="Baixar" onclick="downloadPDF('${esc(item.url_arquivo)}', '${esc(item.titulo)}')"><span>📥</span></button>
+                        <button class="btn btn-ghost btn-icon-text" title="Ler / Baixar" onclick="registrarLeituraPDF(${item.id}, '${esc(item.url_arquivo)}', '${esc(item.titulo)}')"><span>📖 Ler</span></button>
                         ${ehBibliotecario ? `<button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerDocumentoDigital(${item.id}, '${esc(item.titulo)}')"><span>🗑️</span></button>` : ''}
                     </div>
                 </div>
@@ -131,20 +131,32 @@ async function carregarAcervoDigital(pagina = 1) {
     }
 }
 
+/**
+ * Registra que o usuário abriu o PDF e inicia o download/visualização.
+ */
+async function registrarLeituraPDF(id, url, titulo) {
+    try {
+        // Avisa o backend que o livro foi "lido" para contabilizar nas estatísticas
+        await api(`/acervo-digital/${id}/ler`, { method: 'POST' });
+    } catch (e) {
+        // Silencioso se der erro (ex: já registrado)
+    }
+    
+    downloadPDF(url, titulo);
+}
+
 /*
     Inicia o download de um arquivo PDF.
-    Cria um link invisível (<a>) apontando para a URL do arquivo,
-    simula um clique e remove o link logo em seguida.
-    Este método funciona mesmo para arquivos hospedados em outros domínios.
 */
 function downloadPDF(url, titulo) {
     const link = document.createElement('a');
     link.href = url;
+    link.target = '_blank'; // Tenta abrir em nova aba antes de baixar
     link.download = `${titulo}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    exibirAlerta('Download iniciado...');
+    exibirAlerta('Abrindo documento...');
 }
 
 // O formulário de envio de documento digital está consolidado em livros.js

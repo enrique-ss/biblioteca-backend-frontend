@@ -491,7 +491,15 @@ class OfflineClient {
   }
 
   getPrimaryKey(table) {
-    return 'id';
+    try {
+      const info = this.db.prepare(`PRAGMA table_info(${table})`).all();
+      const pks = info.filter(c => c.pk > 0).sort((a, b) => a.pk - b.pk).map(c => c.name);
+      if (pks.length === 1) return pks[0];
+      if (pks.length > 1) return pks;
+      return 'id';
+    } catch (e) {
+      return 'id';
+    }
   }
 
   // Prepara os dados para serem salvos (garante campos obrigatórios)
@@ -525,18 +533,31 @@ class OfflineClient {
     const keys = Object.keys(row);
     const placeholders = keys.map((key) => `@${key}`).join(', ');
     const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-    const info = this.db.prepare(sql).run(row);
+    
+    try {
+      const info = this.db.prepare(sql).run(row);
+      const pk = this.getPrimaryKey(table);
 
-    if (row.id === undefined && info.lastInsertRowid !== undefined) {
-      row.id = Number(info.lastInsertRowid);
+      if (Array.isArray(pk)) {
+        const conditions = pk.map(k => `${k} = @${k}`).join(' AND ');
+        return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${conditions}`).get(row)) || row;
+      } else {
+        if (row[pk] === undefined && info.lastInsertRowid !== undefined && info.lastInsertRowid !== 0n) {
+          row[pk] = Number(info.lastInsertRowid);
+        }
+        return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).get(row[pk] || null)) || row;
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao inserir na tabela ${table}:`, error);
+      throw error;
     }
-
-    return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(row.id));
   }
 
   // Atualiza fisicamente na tabela SQLite
   updateRow(table, id, updates) {
     const patch = { ...updates };
+    const pk = this.getPrimaryKey(table);
+
     if (table === 'usuarios') {
       if (patch.email !== undefined) patch.email = String(patch.email).toLowerCase();
       if (patch.multa_pendente !== undefined) patch.multa_pendente = patch.multa_pendente ? 1 : 0;
@@ -545,17 +566,34 @@ class OfflineClient {
 
     const keys = Object.keys(patch);
     if (!keys.length) {
-      return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id));
+      if (Array.isArray(pk)) return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk.map(k => `${k} = ?`).join(' AND ')}`).get(...(Array.isArray(id) ? id : [id])));
+      return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).get(id));
     }
 
-    const assignments = keys.map((key) => `${key} = @${key}`).join(', ');
-    this.db.prepare(`UPDATE ${table} SET ${assignments} WHERE id = @id`).run({ ...patch, id });
-    return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id));
+    if (Array.isArray(pk)) {
+        // Para chaves compostas, 'id' deve ser um objeto contendo os valores das chaves
+        const assignments = keys.map((key) => `${key} = @${key}`).join(', ');
+        const conditions = pk.map(k => `${k} = @__pk_${k}`).join(' AND ');
+        const queryData = { ...patch };
+        pk.forEach(k => queryData[`__pk_${k}`] = id[k]);
+        this.db.prepare(`UPDATE ${table} SET ${assignments} WHERE ${conditions}`).run(queryData);
+        return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${conditions}`).get(queryData));
+    } else {
+        const assignments = keys.map((key) => `${key} = @${key}`).join(', ');
+        this.db.prepare(`UPDATE ${table} SET ${assignments} WHERE ${pk} = @pk_val`).run({ ...patch, pk_val: id });
+        return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).get(id));
+    }
   }
 
   // Deleta fisicamente da tabela SQLite
   deleteRow(table, id) {
-    this.db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(id);
+    const pk = this.getPrimaryKey(table);
+    if (Array.isArray(pk)) {
+      const conditions = pk.map(k => `${k} = @${k}`).join(' AND ');
+      this.db.prepare(`DELETE FROM ${table} WHERE ${conditions}`).run(id);
+    } else {
+      this.db.prepare(`DELETE FROM ${table} WHERE ${pk} = ?`).run(id);
+    }
   }
 
   // Insere ou atualiza (UPSERT)

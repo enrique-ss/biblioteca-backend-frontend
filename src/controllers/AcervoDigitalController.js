@@ -206,7 +206,72 @@ class AcervoDigitalController {
         res.status(500).json({ error: 'Falha ao remover documento do acervo.' });
     }
 };
+
+  /**
+   * Registra que o usuário leu um documento digital específico.
+   * Usado para contabilizar estatísticas de leitura no perfil social.
+   */
+  registrarLeitura = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const usuarioId = req.usuario?.id;
+
+      if (!usuarioId) return res.status(401).json({ error: 'Usuário não autenticado.' });
+
+      // Insere ou ignora se já existir (devido à regra UNIQUE no banco)
+      await supabase.from('leituras_digitais').insert({
+        usuario_id: usuarioId,
+        livro_digital_id: id
+      });
+
+      res.json({ message: 'Leitura registrada com sucesso.' });
+    } catch (erro) {
+      // Ignora erro de duplicata silenciosamente
+      res.json({ message: 'Leitura já registrada anteriormente.' });
+    }
+  };
+
+  /**
+   * Retorna a contagem total de livros digitais lidos por um usuário.
+   */
+  obterContagemLeituras = async (req, res) => {
+    try {
+      const usuarioId = req.usuario?.id;
+      if (!usuarioId) return res.status(401).json({ error: 'Não autenticado.' });
+
+      const { count, error } = await supabase
+        .from('leituras_digitais')
+        .select('*', { count: 'exact', head: true })
+        .eq('usuario_id', usuarioId);
+
+      if (error) throw error;
+      res.json({ total: count || 0 });
+    } catch (erro) {
+      res.status(500).json({ error: 'Erro ao obter estatísticas de leitura.' });
+    }
+  };
+
+  /**
+   * Retorna a contagem de PDFs enviados pelo usuário que já foram aprovados.
+   */
+  obterContagemSubidos = async (req, res) => {
+    try {
+      const usuarioId = req.usuario?.id;
+      if (!usuarioId) return res.status(401).json({ error: 'Não autenticado.' });
+
+      const { count, error } = await supabase
+        .from('acervo_digital')
+        .select('*', { count: 'exact', head: true })
+        .eq('usuario_id', usuarioId)
+        .eq('status', 'aprovado')
+        .is('deleted_at', null);
+
+      if (error) throw error;
+      res.json({ total: count || 0 });
+    } catch (erro) {
+      res.status(500).json({ error: 'Erro ao obter estatísticas de uploads.' });
+    }
+  };
 }
 
 module.exports = new AcervoDigitalController();
-

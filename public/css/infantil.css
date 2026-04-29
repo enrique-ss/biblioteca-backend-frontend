@@ -274,6 +274,16 @@
     font-family: 'Cinzel', serif;
     font-size: var(--fs-xs);
     color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.infantil-stats-wrap {
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
 /*
@@ -540,6 +550,11 @@
     font-family: 'Cinzel', serif;
     font-size: var(--fs-xs);
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
 }
 
 .reward-badge:hover {
@@ -632,12 +647,20 @@
     }
     
     .reward-row {
-        flex-direction: column;
+        display: flex;
+        justify-content: center;
         gap: 12px;
     }
 
-    .stat-pill {
-        width: 100%;
+    .infantil-stats-wrap {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .stat-pill, .reward-badge {
+        width: auto;
+        flex: 1;
         justify-content: center;
     }
 }

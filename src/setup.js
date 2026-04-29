@@ -34,14 +34,19 @@ function applySchema(db) {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       infantil_xp INTEGER DEFAULT 0,
       infantil_level INTEGER DEFAULT 1,
-      infantil_hearts INTEGER DEFAULT 5
+      infantil_hearts INTEGER DEFAULT 5,
+      bio TEXT,
+      generos_favoritos TEXT,
+      avatar_url TEXT,
+      banner_url TEXT
     );
 
     -- Tabela para o progresso das crianças nas lições
     CREATE TABLE IF NOT EXISTS usuarios_leicoes_infantis (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       usuario_id TEXT NOT NULL,
       leicao_id TEXT NOT NULL,
-      PRIMARY KEY (usuario_id, leicao_id),
+      UNIQUE(usuario_id, leicao_id),
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
 
@@ -127,6 +132,17 @@ function applySchema(db) {
       deleted_at TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+    );
+
+    -- Tabela que registra quando um usuário lê um livro digital
+    CREATE TABLE IF NOT EXISTS leituras_digitais (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id TEXT NOT NULL,
+      livro_digital_id INTEGER NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+      FOREIGN KEY (livro_digital_id) REFERENCES acervo_digital(id) ON DELETE CASCADE,
+      UNIQUE(usuario_id, livro_digital_id) -- Garante que conte apenas uma vez por livro
     );
   `);
 }

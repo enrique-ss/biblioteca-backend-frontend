@@ -146,10 +146,7 @@ class AuthController {
         token: authData.session?.access_token || null,
         session: authData.session,
         usuario: {
-          id: authData.user.id,
-          nome: usuarioData?.nome || authData.user.user_metadata?.nome,
-          email: authData.user.email,
-          tipo,
+          ...usuarioData,
           permissions: this.getPermissions(tipo)
         }
       });
@@ -223,6 +220,13 @@ class AuthController {
         if (updatePasswordError) throw updatePasswordError;
       }
 
+      // Novos campos sociais
+      const { bio, generos_favoritos, avatar_url, banner_url } = req.body;
+      if (bio !== undefined) mudancas.bio = bio;
+      if (generos_favoritos !== undefined) mudancas.generos_favoritos = generos_favoritos;
+      if (avatar_url !== undefined) mudancas.avatar_url = avatar_url;
+      if (banner_url !== undefined) mudancas.banner_url = banner_url;
+
       // Salva todas as alterações de nome/email na nossa tabela de usuários
       if (Object.keys(mudancas).length > 0) {
         const { error } = await supabaseAdmin
@@ -236,7 +240,7 @@ class AuthController {
       // Retorna o perfil atualizado para o frontend atualizar a interface
       const { data: usuarioAtualizado } = await supabaseAdmin
         .from('usuarios')
-        .select('id, nome, email, tipo')
+        .select('*')
         .eq('id', user.id)
         .single();
 

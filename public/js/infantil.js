@@ -457,11 +457,16 @@ function updateUI() {
     const xpBarEl = document.getElementById('infantil-xp-bar');
     const livesEl = document.getElementById('infantil-lives');
 
-    if (levelEl) levelEl.textContent = String(infantilState.userLevel);
-    if (xpTextEl) xpTextEl.textContent = `${infantilState.userXP}/${infantilState.userLevel * 100}`;
+    const level = infantilState.userLevel || 1;
+    const xp = infantilState.userXP || 0;
+    const nextLevelXP = level * 100;
+    const percentage = Math.min(100, (xp / nextLevelXP) * 100);
 
-    if (xpBarEl && infantilState.xpPercentage !== undefined) {
-        xpBarEl.style.width = `${infantilState.xpPercentage}%`;
+    if (levelEl) levelEl.textContent = String(level);
+    if (xpTextEl) xpTextEl.textContent = `${xp}/${nextLevelXP}`;
+
+    if (xpBarEl) {
+        xpBarEl.style.width = `${percentage}%`;
     }
 
     if (livesEl) livesEl.textContent = String(infantilState.userHearts);
@@ -485,8 +490,8 @@ function showInfantilScreen(screen) {
         target.classList.remove('hidden');
         
         if (screen === 'home' && INFANTIL_BACKEND_DATA) {
-            const data = INFANTIL_BACKEND_DATA[infantilState.currentAge];
-            document.getElementById('infantil-hero-greeting').textContent = data.greeting;
+            const firstName = currentUser.nome ? currentUser.nome.split(' ')[0] : 'Leitor';
+            document.getElementById('infantil-hero-greeting').innerHTML = `Olá, <span>${firstName}</span>!`;
         }
     }
 }

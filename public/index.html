@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="css/screens.css">
     <link rel="stylesheet" href="css/stats.css">
     <link rel="stylesheet" href="css/infantil.css">
+    <link rel="stylesheet" href="css/profile.css">
     <link rel="icon" type="image/png" href="resources/logo.png">
 </head>
 
@@ -308,30 +309,81 @@
                 Os dados são preenchidos automaticamente pelo perfil.js ao carregar.
             -->
             <section id="perfilScreen" class="screen">
-                <div class="page-header">
-                    <h2 class="page-title"><span>Meu</span> Perfil</h2>
-                    <div class="page-actions"></div>
-                </div>
-                <div class="auth-wrap" style="min-height:auto;padding-top:0;align-items:flex-start;">
-                    <div class="auth-card" style="margin-top:0;">
-                        <div class="perfil-info" id="perfilInfo"></div>
-                        <hr style="margin:20px 0;border:none;border-top:1px solid var(--border-s);">
-                        <h3
-                            style="font-family:'Cinzel',serif;font-size:var(--fs-sm);color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px;">
-                            Editar Perfil</h3>
-                        <form id="editPerfilForm" novalidate>
-                            <div class="form-group"><label class="form-label">Nome</label><input type="text"
-                                    id="perfilNome" class="form-input" required></div>
-                            <div class="form-group"><label class="form-label">Email</label><input type="email"
-                                    id="perfilEmail" class="form-input" required></div>
-                            <div class="form-group">
-                                <label class="form-label">Nova senha <span style="opacity:1;color:var(--accent);font-size:.9em">(deixe em
-                                        branco para manter)</span></label>
-                                <input type="password" id="perfilSenha" class="form-input" placeholder="••••••••">
+                <div class="profile-container">
+                    
+                    <!-- Header do Perfil -->
+                    <div class="profile-header">
+                        <div class="profile-banner"></div>
+                        <div class="profile-header-content">
+                            <div class="profile-avatar-wrap">
+                                <div class="profile-avatar" id="userProfileAvatar">
+                                    <span id="userProfileInitials">?</span>
+                                </div>
                             </div>
-                    <button type="submit" class="btn btn-primary btn-action" style="margin-top:4px;">Salvar
-                                alterações</button>
-                        </form>
+                            <div class="profile-main-info">
+                                <h1 class="profile-name" id="userProfileName">Carregando...</h1>
+                                <div class="profile-meta">
+                                    <span id="userProfileJoinDate"></span>
+                                    <span>👥 <strong id="statFollowers">0</strong> Amigos</span>
+                                    <span id="userProfileType"></span>
+                                </div>
+                            </div>
+                            <div class="profile-header-actions">
+                                <button class="btn btn-ghost" onclick="abrirModal('editPerfilModal')" style="border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text);">
+                                    ⚙️ Editar Perfil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layout Principal -->
+                    <div class="profile-content-grid">
+                        
+                        <!-- Sidebar -->
+                        <aside class="profile-sidebar">
+                            <div class="profile-card">
+                                <h3 class="profile-card-title">Bio</h3>
+                                <div class="profile-bio" id="userProfileBio"></div>
+                                <div class="favorite-genres" id="userProfileGenres"></div>
+                            </div>
+
+                            <div class="profile-card">
+                                <h3 class="profile-card-title">Estatísticas</h3>
+                                <div class="profile-stats-grid">
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="statPDFsUploaded">-</span>
+                                        <span class="stat-label">PDF's Subidos</span>
+                                    </div>
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="statDaysActive">-</span>
+                                        <span class="stat-label">Dias Ativo</span>
+                                    </div>
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="statBooksRented">-</span>
+                                        <span class="stat-label">Livros Alugados</span>
+                                    </div>
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="statLevel">-</span>
+                                        <span class="stat-label">Nível Literário</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <!-- Área de Conteúdo -->
+                        <main class="profile-main-area">
+                            <div class="profile-tabs">
+                                <div class="profile-tab active">Atividade</div>
+                            </div>
+
+                            <div class="tab-content active">
+                                <div class="activity-list" id="profileActivityList">
+                                    <div style="text-align:center; padding:40px; opacity:0.6;">
+                                        Nenhuma atividade registrada recentemente.
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
                     </div>
                 </div>
             </section>
@@ -401,7 +453,7 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 15px;">
+                        <div class="infantil-stats-wrap">
                             <div class="stat-pill">❤️ <span id="infantil-lives">3</span></div>
                             <div class="stat-pill">✨ <span id="infantil-xp-text">0</span> XP</div>
                         </div>
@@ -437,7 +489,7 @@
                          e a próxima questão aparece automaticamente após 1,8 segundos. -->
                     <div id="screen-quiz-infantil" class="infantil-screen hidden">
                         <div class="quiz-header">
-                            <button class="btn btn-ghost" onclick="showInfantilScreen('content')">←</button>
+                            <div class="btn-back" onclick="showInfantilScreen('content')" style="margin-bottom: 0;"><span>←</span> Voltar</div>
                             <div class="progress-quiz-bg">
                                 <div id="infantil-quiz-progress-bar" class="progress-quiz-fill"></div>
                             </div>
@@ -893,7 +945,54 @@
         </div>
     </div>
 
-    <!-- BIBLIOTECAS EXTERNAS (carregadas antes dos scripts da aplicação):
+    <!-- Modal de Edição de Perfil -->
+    <div id="editPerfilModal" class="modal">
+        <div class="modal-backdrop" onclick="fecharModal('editPerfilModal')"></div>
+        <div class="modal-box" style="max-width: 700px;">
+            <h2 class="modal-title">Editar <span>Perfil</span></h2>
+            <p class="modal-subtitle">Atualize suas informações pessoais e aparência</p>
+            
+            <form id="editPerfilForm" novalidate style="margin-top:20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group"><label class="form-label">Nome</label><input type="text" id="perfilNome" class="form-input" required></div>
+                    <div class="form-group"><label class="form-label">Email</label><input type="email" id="perfilEmail" class="form-input" required></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Biografia</label>
+                    <textarea id="perfilBio" class="form-input" style="min-height: 80px; resize: vertical;" placeholder="Conte um pouco sobre você..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Gêneros Favoritos (separados por vírgula)</label>
+                    <input type="text" id="perfilGeneros" class="form-input" placeholder="Ex: Fantasia, Mistério, Clássicos">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Foto de Perfil (Avatar)</label>
+                        <input type="file" id="perfilAvatarFile" class="form-input" accept="image/*" style="padding: 8px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Capa do Perfil (Banner)</label>
+                        <input type="file" id="perfilBannerFile" class="form-input" accept="image/*" style="padding: 8px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nova senha <span style="opacity:0.6; color:var(--accent); font-size:.8em">(deixe em branco para manter)</span></label>
+                    <input type="password" id="perfilSenha" class="form-input" placeholder="••••••••">
+                </div>
+
+                <div class="btn-group" style="margin-top:20px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-ghost" onclick="fecharModal('editPerfilModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BIBLIOTECAS EXTERNAS:
          - GSAP: responsável pelas animações de entrada das telas e dos cards
          - Three.js: gera o fundo 3D animado com partículas (estrelas + patinhas)
          - Socket.io: mantém a conexão em tempo real com o servidor para que
@@ -903,16 +1002,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
-    <!-- SCRIPTS DA APLICAÇÃO: a ordem de carregamento é obrigatória.
-         core.js deve vir primeiro pois define funções usadas por todos os outros
-         (api, esc, mostrarTela, exibirAlerta, etc.).
-         animations.js vem antes de core.js pois inicializa o Three.js no DOMContentLoaded.
-         auth.js vem logo após para registrar os eventos de login/registro.
-         Os módulos de tela (livros, alugueis, etc.) podem vir em qualquer ordem entre si.
-         infantil.js é o último pois depende de funções definidas nos anteriores.
-         O Chart.js (estatísticas) é carregado sob demanda, não aqui. -->
+    </div> <!-- /app-wrapper -->
+
+    <!-- SCRIPTS DA APLICAÇÃO -->
     <script src="js/animations.js"></script>
     <script src="js/core.js"></script>
+    <script src="js/perfil.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/menu.js"></script>
@@ -920,7 +1015,6 @@
     <script src="js/acervoDigital.js"></script>
     <script src="js/alugueis.js"></script>
     <script src="js/usuarios.js"></script>
-    <script src="js/perfil.js"></script>
     <script src="js/stats.js"></script>
     <script src="js/infantil.js"></script>
     <!-- Restaura a sessão salva no sessionStorage ao carregar a página.
