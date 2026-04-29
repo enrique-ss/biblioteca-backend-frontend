@@ -666,4 +666,15 @@ body {
         max-height: 100%;
         overflow-y: auto;
     }
+
+    /* Empréstimos: botões em coluna para caber no mobile */
+    .page-actions-alugueis {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+    }
+    .page-actions-alugueis .btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
