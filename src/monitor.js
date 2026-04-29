@@ -1,6 +1,12 @@
-// --- MONITORAMENTO EM TEMPO REAL ---
-// Este arquivo é responsável por verificar se há livros atrasados ou novos materiais
-// e avisar o sistema (via WebSocket) para que os usuários vejam as notificações na hora.
+/**
+ * MONITORAMENTO EM TEMPO REAL
+ * Este módulo atua como o "vigilante" da biblioteca. Ele verifica periodicamente:
+ * 1. Livros com devolução em atraso.
+ * 2. Novos materiais digitais aguardando aprovação.
+ * 3. Usuários que foram bloqueados.
+ * 
+ * Quando detecta mudanças, ele notifica instantaneamente os bibliotecários via Socket.io.
+ */
 
 const { createClient } = require('@supabase/supabase-js');
 const dotenv = require('dotenv');

@@ -1,10 +1,20 @@
+<!-- 
+    BIBLIO VERSO — Arquivo principal do sistema de biblioteca.
+    Este é o único arquivo HTML da aplicação (SPA: Single Page Application).
+    Todas as "páginas" são seções (<section class="screen">) que se alternam
+    entre visíveis (.active) e ocultas conforme a navegação do usuário.
+    O JavaScript é quem controla qual tela está ativa (ver core.js → mostrarTela).
+-->
 <!DOCTYPE html>
+<!-- data-theme controla o tema visual: 'dark' (padrão) ou 'light' -->
 <html lang="pt-BR" data-theme="dark">
 
+<!-- Configurações do documento: codificação, escala mobile e ícone da aba -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Biblio Verso</title>
+    <!-- Arquivos de estilo (CSS): base → componentes → telas → estatísticas → espaço infantil -->
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/screens.css">
@@ -14,28 +24,33 @@
 </head>
 
 <body>
+    <!-- Fundo animado 3D gerado pelo Three.js -->
     <canvas id="threeCanvas" class="three-bg"></canvas>
     
     <div class="app-wrapper">
-        <!-- Mobile Overlay -->
+        <!-- Overlay escuro que aparece ao abrir o menu no mobile -->
         <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
         
+        <!-- Botão hamburguer visível apenas em dispositivos móveis -->
         <div class="mobile-header-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
             ☰
         </div>
 
+        <!-- Botão de alternância de tema visível apenas nas telas de autenticação -->
         <div class="theme-toggle-fixed" id="themeToggleAuth" onclick="toggleTheme()" style="display: none;" title="Alternar Tema">
             🌙
         </div>
 
+        <!-- Barra lateral de navegação (sidebar) -->
         <aside class="sidebar" id="sidebar">
+            <!-- Logo que expande para o nome completo ao passar o mouse -->
             <div class="sidebar-brand" onclick="mostrarTela('menuScreen')">
                 <div class="brand-logo-img"></div>
                 <span class="brand-logo-full">Biblio Verso</span>
             </div>
             
+            <!-- Itens de navegação injetados dinamicamente pelo menu.js -->
             <div class="sidebar-nav" id="sidebarNav" style="display:none;">
-                <!-- All items including nav, theme, profile and logout will be here -->
             </div>
         </aside>
 
@@ -85,6 +100,12 @@
                 </div>
             </section>
 
+            <!-- 
+                TELA INICIAL (menuScreen): exibida logo após o login.
+                Mostra a saudação com o nome do usuário e o carrossel de novidades.
+                O carrossel exibe os 10 itens mais recentes do acervo (físico + digital)
+                e avança automaticamente a cada 5 segundos.
+            -->
             <section id="menuScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Bem-vindo</span>, <b id="menuUserName"></b></h2>
@@ -93,15 +114,25 @@
                 <div class="novidades-section">
                     <p class="section-label"><span>Novidades</span> do Acervo</p>
                     <div class="hero-carousel" id="heroCarousel">
+                        <!-- novidadesTrack: trilho horizontal do carrossel.
+                             Os slides são injetados pelo menu.js → carregarNovidades().
+                             A translação é feita via CSS transform: translateX(-N%) -->
                         <div class="carousel-track" id="novidadesTrack">
-                            <!-- Banner heroes injetados aqui -->
                             <div class="loading-row"><span class="spinner"></span>Buscando novidades...</div>
                         </div>
                     </div>
+                    <!-- Pontinhos de navegação: gerados dinamicamente, um por slide -->
                     <div class="carousel-dots" id="carouselDots"></div>
                 </div>
             </section>
 
+            <!-- 
+                TELA DE NOTIFICAÇÕES (notificacoesScreen): central de alertas do sistema.
+                Para bibliotecários: exibe empréstimos atrasados, multas, contas bloqueadas e
+                documentos digitais aguardando curadoria.
+                Para leitores: exibe débitos pendentes, livros atrasados e prazos próximos.
+                O conteúdo é gerado dinamicamente por notifications.js → buscarNotificacoes().
+            -->
             <section id="notificacoesScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Alertas</span> e Pendências</h2>
@@ -111,6 +142,14 @@
                 </div>
             </section>
 
+            <!-- 
+                TELA DO ACERVO FÍSICO (livrosScreen): exibe os livros em cards com capa,
+                título, autor, gênero e contador de exemplares disponíveis.
+                O campo de busca usa debounce (aguarda pausa na digitação) para não
+                sobrecarregar o servidor com uma requisição por letra digitada.
+                O botão "Adicionar Livro" só aparece para bibliotecários (display controlado
+                pelo JS após o login).
+            -->
             <section id="livrosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Acervo</span> Físico</h2>
@@ -132,6 +171,13 @@
                 <div class="pagination" id="livrosPagination"></div>
             </section>
 
+            <!-- 
+                TELA DO ACERVO DIGITAL (acervoDigitalScreen): exibe documentos PDF
+                disponíveis para leitura online ou download.
+                Leitores podem enviar seus próprios documentos (ficam pendentes até
+                aprovação do bibliotecário). Bibliotecários veem um botão extra
+                "Pendências" para revisar submissões.
+            -->
             <section id="acervoDigitalScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Acervo</span> Digital</h2>
@@ -151,6 +197,13 @@
                 <div class="pagination" id="digitalPagination"></div>
             </section>
 
+            <!-- 
+                TELA DE HISTÓRICO (historicoScreen): exibe todos os empréstimos já
+                devolvidos com data de devolução, estado do exemplar e renovações.
+                Acessível apenas por bibliotecários. Permite filtrar por ID de usuário.
+                O botão "Exportar CSV" está desabilitado no frontend — use o endpoint
+                /alugueis/historico diretamente no backend para exportações.
+            -->
             <section id="historicoScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Histórico</span> de Empréstimos</h2>
@@ -181,6 +234,16 @@
                 <div class="pagination" id="historicoPagination"></div>
             </section>
 
+            <!-- 
+                TELA DE EMPRÉSTIMOS (alugueisScreen): usada por dois perfis diferentes.
+                - Bibliotecário: vê todos os empréstimos ativos do sistema, com botão
+                  "Devolver" e um banner de aviso se houver atrasos.
+                - Leitor: vê apenas seus próprios empréstimos, com botão "Renovar" se
+                  o prazo ainda não venceu.
+                O cabeçalho da tabela e o título mudam dinamicamente conforme o perfil
+                (via alugueis.js → carregarAlugueis ou carregarMeusAlugueis).
+                atrasadosBanner: faixa vermelha exibida quando há empréstimos em atraso.
+            -->
             <section id="alugueisScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title" id="alugueisTitle"><span>Empréstimos</span></h2>
@@ -203,6 +266,13 @@
                 <div class="pagination" id="alugueisPagination"></div>
             </section>
 
+            <!-- 
+                TELA DE USUÁRIOS (usuariosScreen): lista todos os cadastros do sistema.
+                Exclusiva para bibliotecários. Permite editar nome/email/tipo, bloquear
+                acesso (impedindo novos empréstimos) e quitar multas pendentes.
+                Badges coloridos ao lado do nome indicam rapidamente usuários
+                com multa (vermelho) ou bloqueados (amarelo).
+            -->
             <section id="usuariosScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Gerenciar</span> Usuários</h2>
@@ -231,6 +301,12 @@
                 <div class="pagination" id="usuariosPagination"></div>
             </section>
 
+            <!-- 
+                TELA DE PERFIL (perfilScreen): exibe os dados pessoais do usuário logado
+                e permite alterar nome, email e senha.
+                A senha pode ser deixada em branco para mantê-la sem alteração.
+                Os dados são preenchidos automaticamente pelo perfil.js ao carregar.
+            -->
             <section id="perfilScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Meu</span> Perfil</h2>
@@ -260,6 +336,18 @@
                 </div>
             </section>
 
+            <!-- 
+                TELA DO ESPAÇO LITERÁRIO (espacoInfantilScreen): sistema educacional gamificado.
+                Fluxo de navegação interno:
+                  1. screen-age → seleção de faixa etária (Infantil / Infanto-Juvenil / Pré-Adolescente)
+                  2. screen-home-infantil → grade de categorias (ex: Animais, Natureza)
+                  3. screen-lessons-infantil → lista de lições da categoria escolhida
+                  4. screen-content-infantil → conteúdo da lição com destaques e curiosidades
+                  5. screen-quiz-infantil → quiz de múltipla escolha com barra de progresso
+                  6. screen-result-infantil → resultado: XP ganho, vidas recuperadas, nível
+                O conteúdo pedagógico vem do servidor; as respostas são validadas no servidor
+                para garantir que não haja trapaça via inspeção do código.
+            -->
             <section id="espacoInfantilScreen" class="screen">
                 <div id="screen-age" class="age-select-screen hidden">
                     <div class="page-header">
@@ -290,7 +378,13 @@
                     </div>
                 </div>
 
+                <!-- content-after-age: oculto até o usuário escolher a faixa etária.
+                     Contém a navbar interna do espaço (avatar, nível, XP, corações)
+                     e todas as sub-telas de navegação. -->
                 <div id="content-after-age" class="hidden">
+                    <!-- Navbar interna do espaço literário: exibe avatar (emoji da faixa etária),
+                         nome, nível, barra de XP e corações restantes. Atualizada pelo
+                         infantil.js → updateUI() após cada resposta do quiz. -->
                     <div class="infantil-navbar" id="infantil-navbar">
                         <div class="profile-info">
                             <div class="avatar" id="infantil-avatar">🌱</div>
@@ -337,6 +431,10 @@
                         <div id="infantil-content-body"></div>
                     </div>
 
+                    <!-- Tela do quiz: mostra uma questão por vez com barra de progresso.
+                         Ao clicar numa opção, ela é enviada ao servidor para validação.
+                         O card da resposta fica verde (correta) ou vermelho (errada),
+                         e a próxima questão aparece automaticamente após 1,8 segundos. -->
                     <div id="screen-quiz-infantil" class="infantil-screen hidden">
                         <div class="quiz-header">
                             <button class="btn btn-ghost" onclick="showInfantilScreen('content')">←</button>
@@ -351,6 +449,8 @@
                         </div>
                     </div>
 
+                    <!-- Tela de resultado: exibe ícone de performance, XP ganho e vidas recuperadas.
+                         Se o usuário subiu de nível, a caixa level-up-box aparece com confetes. -->
                     <div id="screen-result-infantil" class="infantil-screen hidden">
                         <div class="glass-card result-card">
                             <div id="infantil-result-icon" class="result-emoji"></div>
@@ -371,6 +471,17 @@
                 </div>
             </section>
 
+            <!-- 
+                TELA DE ESTATÍSTICAS (statsScreen): painel analítico exclusivo para bibliotecários.
+                Exibe KPIs (indicadores-chave) no topo e 8 gráficos gerados pelo Chart.js:
+                - Gêneros e autores mais emprestados (barras horizontais)
+                - Livros mais populares e usuários mais ativos (barras verticais)
+                - Empréstimos e cadastros por mês (linha)
+                - Distribuição do acervo e tipos de usuário (rosca)
+                O Chart.js é carregado sob demanda (apenas quando esta tela é acessada)
+                para não atrasar o carregamento inicial do sistema.
+                Os gráficos se adaptam automaticamente ao tema escuro/claro.
+            -->
             <section id="statsScreen" class="screen">
                 <div class="page-header">
                     <h2 class="page-title"><span>Estatísticas</span></h2>
@@ -457,6 +568,17 @@
         </div><!-- /container -->
     </div><!-- /app-wrapper -->
 
+    <!-- 
+        MODAIS: janelas flutuantes que aparecem sobre o conteúdo principal.
+        Cada modal tem: backdrop (fundo escuro clicável para fechar), modal-box (conteúdo)
+        e um formulário com os campos necessários.
+        Todos os modais são controlados por core.js → abrirModal(id) e fecharModal(id).
+    -->
+
+    <!-- Modal: cadastro de livro físico ou digital.
+         O campo 'livroTipo' (oculto) determina qual fluxo usar.
+         Os campos de páginas, exemplares, capa e arquivo PDF são exibidos ou ocultados
+         dinamicamente por livros.js → prepararAddLivro(tipo). -->
     <div id="addLivroModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('addLivroModal')"></div>
         <div class="modal-box">
@@ -515,6 +637,9 @@
         </div>
     </div>
 
+    <!-- Modal: edição de livro físico existente.
+         Pré-preenchido com os dados atuais do livro via livros.js → editarLivro(livro).
+         Não altera os exemplares físicos já cadastrados, apenas os metadados. -->
     <div id="editLivroModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('editLivroModal')"></div>
         <div class="modal-box">
@@ -553,6 +678,10 @@
         </div>
     </div>
 
+    <!-- Modal: lista de exemplares físicos de um livro.
+         Exibe cada exemplar com seu código de inventário, disponibilidade e condição.
+         Permite ao bibliotecário alterar o estado de cada exemplar individualmente
+         (disponível, em manutenção, danificado, perdido). -->
     <div id="exemplareModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('exemplareModal')"></div>
         <div class="modal-box" style="max-width:780px;">
@@ -584,6 +713,12 @@
         </div>
     </div>
 
+    <!-- Modal: registro da devolução de um exemplar.
+         O bibliotecário informa o estado do exemplar devolvido:
+         - Bom: volta ao acervo disponível normalmente
+         - Danificado: volta ao acervo com ressalva (sem multa adicional)
+         - Perdido: é removido do acervo + multa de R$ 100,00 ao leitor
+         O campo de observação aparece apenas para os estados danificado/perdido. -->
     <div id="devolucaoModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('devolucaoModal')"></div>
         <div class="modal-box">
@@ -612,6 +747,10 @@
         </div>
     </div>
 
+    <!-- Modal: registro de novo empréstimo.
+         O bibliotecário seleciona: livro → exemplar específico (opcional) → usuário.
+         Se nenhum exemplar for selecionado, o servidor escolhe o primeiro disponível.
+         A lista de exemplares é carregada dinamicamente ao escolher o livro. -->
     <div id="addAluguelModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('addAluguelModal')"></div>
         <div class="modal-box">
@@ -637,6 +776,9 @@
         </div>
     </div>
 
+    <!-- Modal: edição de dados de um usuário.
+         Permite ao bibliotecário alterar nome, email e tipo de conta (leitor/bibliotecário).
+         O campo 'editUsuarioId' (oculto) guarda o ID do usuário sendo editado. -->
     <div id="editUsuarioModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('editUsuarioModal')"></div>
         <div class="modal-box">
@@ -662,6 +804,10 @@
     </div>
 
 
+    <!-- Modal: visualização e quitação de multas de um usuário.
+         Exibe o histórico completo de multas (tipo, livro, valor, dias de atraso, status).
+         O total pendente é exibido no rodapé; o botão "Quitar todas" só aparece
+         se houver multas com status 'pendente'. -->
     <div id="multasModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('multasModal')"></div>
         <div class="modal-box" style="max-width:680px;">
@@ -700,6 +846,10 @@
         </div>
     </div>
 
+    <!-- Diálogo de confirmação global: aparece antes de ações destrutivas
+         (excluir livro, bloquear usuário, quitar multas, etc.).
+         Ícone, título, mensagem e texto do botão são configurados dinamicamente
+         por core.js → exibirConfirmacao({ icon, title, msg, okLabel, onOk }). -->
     <div id="confirmDialog">
         <div class="confirm-backdrop"></div>
         <div class="confirm-box">
@@ -713,6 +863,10 @@
         </div>
     </div>
 
+    <!-- Modal: fila de submissões pendentes do acervo digital.
+         Leitores podem enviar documentos PDF; eles ficam com status 'pendente'
+         até que o bibliotecário aprove (torna público) ou rejeite (descarta).
+         O tbody é preenchido por acervoDigital.js → carregarPendencias(). -->
     <div id="aprovacoesModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('aprovacoesModal')"></div>
         <div class="modal-box" style="max-width: 680px;">
@@ -739,11 +893,24 @@
         </div>
     </div>
 
-    <!-- Bibliotecas Externas (GSAP + Three.js) -->
+    <!-- BIBLIOTECAS EXTERNAS (carregadas antes dos scripts da aplicação):
+         - GSAP: responsável pelas animações de entrada das telas e dos cards
+         - Three.js: gera o fundo 3D animado com partículas (estrelas + patinhas)
+         - Socket.io: mantém a conexão em tempo real com o servidor para que
+           alterações feitas por um usuário apareçam automaticamente para todos
+           os outros sem precisar recarregar a página -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
+    <!-- SCRIPTS DA APLICAÇÃO: a ordem de carregamento é obrigatória.
+         core.js deve vir primeiro pois define funções usadas por todos os outros
+         (api, esc, mostrarTela, exibirAlerta, etc.).
+         animations.js vem antes de core.js pois inicializa o Three.js no DOMContentLoaded.
+         auth.js vem logo após para registrar os eventos de login/registro.
+         Os módulos de tela (livros, alugueis, etc.) podem vir em qualquer ordem entre si.
+         infantil.js é o último pois depende de funções definidas nos anteriores.
+         O Chart.js (estatísticas) é carregado sob demanda, não aqui. -->
     <script src="js/animations.js"></script>
     <script src="js/core.js"></script>
     <script src="js/auth.js"></script>
@@ -756,6 +923,10 @@
     <script src="js/perfil.js"></script>
     <script src="js/stats.js"></script>
     <script src="js/infantil.js"></script>
+    <!-- Restaura a sessão salva no sessionStorage ao carregar a página.
+         Se o usuário já estava logado, ele é redirecionado direto ao menu
+         sem precisar fazer login novamente. Caso contrário, vai para loginScreen.
+         Executado por último para garantir que todos os módulos já estão carregados. -->
     <script>restaurarSessao();</script>
 </body>
 

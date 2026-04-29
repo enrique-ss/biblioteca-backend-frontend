@@ -1,71 +1,92 @@
-# Biblio Verso - Sistema de Biblioteca Premium
+# 📚 Biblio Verso - Sistema de Biblioteca Premium
 
-Sistema completo para gestão de acervo físico e digital, com backend Node.js, banco de dados Supabase, autenticação JWT e interface web moderna.
+O **Biblio Verso** é uma solução completa e moderna para a gestão de acervos físicos e digitais. Desenvolvido com foco em alta performance, estética refinada e experiência de usuário fluida, o sistema atende tanto a bibliotecas institucionais quanto a leitores apaixonados.
 
-## **Projeto Online**
+---
 
-Acesse o sistema em produção: **https://biblioteca-backend-frontend.onrender.com/**
+## 🚀 Projeto Online
+Acesse a versão de produção hospedada no Render:  
+**[https://biblioteca-backend-frontend.onrender.com/](https://biblioteca-backend-frontend.onrender.com/)**
 
-- **Email de acesso**: `admin@admin.com`
-- **Senha**: `admin123`
+> **Acesso Administrativo Padrão:**
+> - **E-mail:** `admin@admin.com`
+> - **Senha:** `admin123`
 
-## Autores
+---
 
-- **Enrique** - Desenvolvimento backend e frontend
-- **Julia** - Design de interface e experiência do usuário
+## 🛠️ Tecnologias Utilizadas
 
-## Versão Local vs Online
+### Backend (O Cérebro)
+- **Node.js + Express.js**: Estrutura robusta e escalável.
+- **Socket.io**: Comunicação em tempo real para notificações e estatísticas.
+- **Autenticação**: JSON Web Tokens (JWT) para sessões seguras e stateless.
+- **Segurança**: Criptografia de senhas com `bcryptjs`.
 
-O sistema possui duas versões de operação:
+### Frontend (A Face)
+- **Vanilla Tech**: HTML5, CSS3 e JavaScript (ES6+) puros.
+- **Animações**: `GSAP` para transições suaves e profissionais.
+- **Gráficos**: `Chart.js` para visualização de dados e KPIs.
+- **Efeitos 3D**: `Three.js` para uma experiência imersiva no Espaço Infantil.
 
-- **Versão Local**: Roda na sua máquina com banco SQLite local. Funciona 100% offline, ideal para desenvolvimento e testes.
-- **Versão Online**: Hospedada no Render, conectada ao Supabase. Versão de produção acessível aos usuários.
+### Banco de Dados (O Coração)
+- **Modo Offline**: `better-sqlite3` para desenvolvimento local 100% independente de internet.
+- **Modo Online**: `Supabase` (PostgreSQL) para alta disponibilidade e persistência na nuvem.
 
-## Como rodar localmente
+---
 
-1. Instale as dependências
+## ⚙️ Configuração de Ambientes
+
+O Biblio Verso foi projetado para ser híbrido, funcionando perfeitamente em sua máquina local ou em servidores de produção.
+
+### 🏠 Como Rodar Localmente (Modo Offline)
+Ideal para desenvolvimento, testes ou uso em redes sem internet.
+
+1. **Instalar Dependências:**
    ```bash
    npm install
    ```
-
-2. Configure o banco de dados local
+2. **Configurar Ambiente:**
+   - Copie o arquivo `.env.example` para `.env`.
+   - Certifique-se de que `APP_MODE=offline`.
+3. **Inicializar o Banco de Dados:**
    ```bash
    npm run setup
    ```
-
-3. Inicie a aplicação
+4. **Iniciar o Servidor:**
    ```bash
    npm run dev
    ```
+5. **Acessar:** [http://localhost:3000](http://localhost:3000)
 
-4. Acesse
-   - `http://localhost:3000`
+### ☁️ Como Rodar Online (Modo Produção/Render)
+Para hospedar o sistema para múltiplos usuários na internet.
 
-A versão local usa SQLite e funciona 100% offline, não precisa de Supabase nem internet.
+1. **Deploy:** Faça o push do código para seu repositório GitHub vinculado ao Render.
+2. **Configurar Variáveis de Ambiente no Painel do Render:**
+   - `NODE_ENV=production`
+   - `PORT=10000`
+   - `APP_MODE=online`
+   - `SUPABASE_URL`: URL do seu projeto no Supabase.
+   - `SUPABASE_ANON_KEY`: Sua chave anônima.
+   - `SUPABASE_SERVICE_ROLE_KEY`: Sua chave de serviço (necessária para gestão de usuários).
+   - `CORS_ORIGIN`: URL final do seu site (ex: `https://seu-app.onrender.com`).
+   - `JWT_SECRET`: Uma chave secreta longa e segura.
 
-## Scripts
+---
 
-- `npm run setup`: configura o banco de dados SQLite local
-- `npm run dev`: inicia o servidor local com SQLite
-- `npm start`: inicia o servidor com Supabase (usado pelo Render em produção)
+## 📖 Documentação e Scripts
 
-## Deploy no Render
+- `npm run setup`: Cria e limpa a estrutura do banco SQLite local.
+- `npm run dev`: Inicia o servidor local com monitoramento automático de mudanças.
+- `npm start`: Comando oficial de inicialização (usado pelo Render).
 
-Configure estas variáveis no serviço:
+Para mais detalhes técnicos sobre a arquitetura, regras de negócio e design system, consulte a [Documentação Técnica Completa](docs/DOCUMENTACAO_TECNICA.md).
 
-- `NODE_ENV=production`
-- `PORT=10000`
-- `SUPABASE_URL=<sua-url-do-supabase>`
-- `SUPABASE_ANON_KEY=<sua-anon-key>`
-- `SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>`
-- `CORS_ORIGIN=https://<seu-servico>.onrender.com`
+---
 
-O frontend usa `window.location.origin`, então a mesma build funciona em local e no Render sem trocar URLs no código.
+## ✨ Autores
+- **Enrique** - Arquiteto de Software & Engenheiro Backend/Frontend
+- **Julia** - UI/UX Designer & Estrategista de Produto
 
-## Observações importantes
-
-- A versão local usa SQLite para o banco de dados e funciona 100% offline.
-- A versão online usa Supabase como banco de dados em nuvem.
-- O sistema garante um admin padrão no startup usando variáveis de ambiente.
-- Não deixe chaves reais no código ou no `.env.example`.
-- O arquivo `.env` está no `.gitignore`, então ele pode ser usado apenas para o ambiente local.
+---
+*Este projeto foi desenvolvido como Trabalho Final de Curso, unindo tecnologia de ponta com um design centrado no usuário.*

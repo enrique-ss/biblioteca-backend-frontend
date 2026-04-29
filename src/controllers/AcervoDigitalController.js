@@ -1,31 +1,38 @@
 const supabase = require('../database');
 
+/**
+ * AcervoDigitalController: Gerencia os materiais em formato PDF e digital.
+ * Permite que leitores enviem arquivos para aprovação e que bibliotecários gerenciem o catálogo digital.
+ */
 class AcervoDigitalController {
 
-  // Lista livros digitais com paginação e busca
+  /**
+   * Lista os livros digitais que já foram aprovados e estão disponíveis para leitura.
+   * Suporta busca por texto e paginação dos resultados.
+   */
   listar = async (req, res) => {
     try {
       const { busca, page, limit } = req.query;
 
-      // Prepara paginação
+      // Define as regras de paginação
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      // Consulta base de livros digitais aprovados
+      // Busca apenas itens aprovados e que não foram deletados
       let consulta = supabase
         .from('acervo_digital')
         .select('*', { count: 'exact' })
         .eq('status', 'aprovado')
         .is('deleted_at', null);
 
-      // Aplica busca por título, autor ou categoria
+      // Filtra por título, autor ou categoria
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         consulta = consulta.or(`titulo.ilike.%${termoBusca}%,autor.ilike.%${termoBusca}%,categoria.ilike.%${termoBusca}%`);
       }
 
-      // Ordena por mais recentes e pagina
+      // Ordena pelos mais recentes
       consulta = consulta.order('created_at', { ascending: false }).range(deslocamento, deslocamento + limite - 1);
 
       const { data: registros, count: total, error } = await consulta;
@@ -45,8 +52,12 @@ class AcervoDigitalController {
     }
   };
 
+  /**
+   * Lista todos os materiais enviados por usuários que ainda aguardam análise do bibliotecário.
+   */
   listarPendentes = async (req, res) => {
     try {
+      // Segurança: apenas bibliotecários podem acessar esta lista
       if (req.usuario?.tipo !== 'bibliotecario') {
          return res.status(403).json({ error: 'Acesso negado. Apenas bibliotecários podem listar pendências.' });
       }
@@ -70,6 +81,11 @@ class AcervoDigitalController {
     }
   };
 
+  /**
+   * Adiciona um novo material digital ao sistema.
+   * Se for um bibliotecário, o arquivo entra direto.
+   * Se for um leitor, o arquivo entra como 'pendente' de aprovação.
+   */
   cadastrar = async (req, res) => {
       try {
           const { titulo, autor, categoria, ano, paginas, tamanho_arquivo, url_arquivo, capa_url, sinopse } = req.body;
@@ -80,6 +96,7 @@ class AcervoDigitalController {
               return res.status(400).json({ error: 'Título e URL do arquivo (PDF) são obrigatórios.' });
           }
 
+          // Segurança: evita sobrecarga do servidor com arquivos gigantescos (Limite: 10MB)
           if (tamanho_arquivo && tamanho_arquivo > 10 * 1024 * 1024) {
               return res.status(400).json({ error: 'O arquivo não pode exceder 10MB.' });
           }
@@ -113,6 +130,10 @@ class AcervoDigitalController {
       }
   };
 
+  /**
+   * Altera o status de um documento pendente para 'aprovado'.
+   * A partir deste momento, o documento fica visível para todos os leitores.
+   */
   aprovar = async (req, res) => {
       try {
           if (req.usuario?.tipo !== 'bibliotecario') {
@@ -129,6 +150,9 @@ class AcervoDigitalController {
       }
   };
 
+  /**
+   * Remove permanentemente do sistema um documento que foi enviado mas não foi aceito.
+   */
   rejeitar = async (req, res) => {
     try {
         if (req.usuario?.tipo !== 'bibliotecario') {
@@ -145,6 +169,9 @@ class AcervoDigitalController {
     }
   };
 
+  /**
+   * Remove um documento aprovado do catálogo (Desativação).
+   */
   remover = async (req, res) => {
     try {
         if (req.usuario?.tipo !== 'bibliotecario') {
@@ -153,6 +180,7 @@ class AcervoDigitalController {
 
         const { id } = req.params;
 
+        // Verifica se o documento existe antes de tentar deletar
         const { data: documento } = await supabase
             .from('acervo_digital')
             .select('*')
@@ -164,6 +192,7 @@ class AcervoDigitalController {
             return res.status(404).json({ error: 'Documento não encontrado.' });
         }
 
+        // Aplica o "Soft Delete" (arquivamento)
         const { error } = await supabase
             .from('acervo_digital')
             .update({ deleted_at: new Date().toISOString() })
@@ -180,3 +209,4 @@ class AcervoDigitalController {
 }
 
 module.exports = new AcervoDigitalController();
+

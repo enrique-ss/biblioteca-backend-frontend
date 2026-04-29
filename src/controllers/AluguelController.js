@@ -1,31 +1,39 @@
 const supabase = require('../database');
 
-// Valores das multas
-const VALOR_MULTA_DIARIA = 1.00;
-const VALOR_MULTA_PERDA = 100.00;
+// Configurações financeiras do sistema de multas
+const VALOR_MULTA_DIARIA = 1.00; // Valor cobrado por cada dia de atraso
+const VALOR_MULTA_PERDA = 100.00; // Valor fixo cobrado se o livro for extraviado
 
+/**
+ * AluguelController: Gerencia todo o ciclo de vida de um empréstimo.
+ * Desde a saída do livro da estante até a devolução, cálculo de multas e renovações.
+ */
 class AluguelController {
 
-  // Cria novo empréstimo de livro
+  /**
+   * Registra a saída de um livro para um leitor.
+   * Verifica se o usuário pode alugar (limite de 3 livros, sem bloqueios ou multas).
+   * Atualiza o estado do exemplar físico e o contador de disponibilidade do livro.
+   */
   criar = async (req, res) => {
     try {
       const { livro_id, usuario_id, exemplar_id } = req.body;
 
-      // Verifica se usuário existe
+      // Validação: o usuário existe?
       const { data: usuario } = await supabase.from('usuarios').select('*').eq('id', usuario_id).single();
       
       if (!usuario) {
         return res.status(404).json({ error: 'Usuário não localizado no sistema.' });
       }
 
-      // Verifica se usuário está bloqueado
+      // Validação: o usuário está impedido de alugar?
       if (usuario.bloqueado) {
         return res.status(400).json({ 
           error: `O usuário está impedido de realizar novos empréstimos. Motivo: ${usuario.motivo_bloqueio || 'Bloqueio administrativo.'}` 
         });
       }
 
-      // Verifica se usuário tem multas pendentes
+      // Validação: o usuário tem dívidas pendentes?
       if (usuario.multa_pendente) {
         const { data: multas } = await supabase.from('multas').select('valor').eq('usuario_id', usuario_id).eq('status', 'pendente');
         const totalDevido = (multas || []).reduce((total, m) => total + Number(m.valor), 0);
@@ -35,7 +43,7 @@ class AluguelController {
         });
       }
 
-      // Validar limite de empréstimos (máximo 3 empréstimos ativos)
+      // Validação: o usuário já atingiu o limite de livros na rua?
       const { count: emprestimosAtivos } = await supabase
         .from('alugueis')
         .select('*', { count: 'exact', head: true })
@@ -48,12 +56,18 @@ class AluguelController {
         });
       }
 
+      // Define as datas: hoje é a saída, e o prazo padrão é de 14 dias (2 semanas)
       const dataAluguel = new Date();
       const dataPrevista = new Date();
       dataPrevista.setDate(dataAluguel.getDate() + 14);
 
       let exemplarSelecionado;
       
+      /**
+       * Seleção do exemplar físico:
+       * Se o bibliotecário escolheu um código específico, usamos ele.
+       * Se não, pegamos automaticamente o primeiro que estiver livre na prateleira.
+       */
       if (exemplar_id) {
         const { data } = await supabase.from('exemplares').select('*').eq('id', exemplar_id).eq('livro_id', livro_id).eq('disponibilidade', 'disponivel').single();
         exemplarSelecionado = data;
@@ -76,7 +90,13 @@ class AluguelController {
       let aluguelCriado = null;
 
       try {
-        // Transação atômica: se qualquer operação falhar, desfaz todas
+        /**
+         * Operação Atômica (Transação manual):
+         * 1. Cria o registro do empréstimo.
+         * 2. Marca o exemplar como 'emprestado'.
+         * 3. Diminui a quantidade disponível no catálogo.
+         * Se qualquer passo falhar, o sistema tenta desfazer os anteriores (Rollback).
+         */
         const { error: insertError, data } = await supabase.from('alugueis').insert({
           livro_id: livro_id,
           exemplar_id: exemplarSelecionado.id,
@@ -104,20 +124,18 @@ class AluguelController {
         });
 
       } catch (transactionError) {
-        // Rollback manual: desfaz operações se falhar no meio
+        // Rollback: desfaz o que foi feito para não deixar o banco de dados bagunçado
         console.error('Erro na transação de empréstimo, fazendo rollback:', transactionError);
 
         if (aluguelCriado) {
           await supabase.from('alugueis').delete().eq('id', aluguelCriado.id);
         }
 
-        // Verifica e restaura estado do exemplar se necessário
         const { data: exemplarCheck } = await supabase.from('exemplares').select('disponibilidade').eq('id', exemplarSelecionado.id).single();
         if (exemplarCheck?.disponibilidade === 'emprestado') {
           await supabase.from('exemplares').update({ disponibilidade: 'disponivel' }).eq('id', exemplarSelecionado.id);
         }
 
-        // Verifica e restaura estado do livro se necessário
         const { data: livroCheck } = await supabase.from('livros').select('exemplares_disponiveis').eq('id', livro_id).single();
         if (livroCheck?.exemplares_disponiveis !== livroPai.exemplares_disponiveis) {
           await supabase.from('livros').update({
@@ -134,6 +152,11 @@ class AluguelController {
     }
   };
 
+  /**
+   * Finaliza um empréstimo e processa a entrada do livro de volta à biblioteca.
+   * Calcula multas por atraso, verifica se o livro foi perdido ou danificado
+   * e libera o exemplar para novos leitores.
+   */
   devolver = async (req, res) => {
     try {
       const { id } = req.params;
@@ -157,6 +180,7 @@ class AluguelController {
         throw new Error('Não foi encontrado um empréstimo ativo para este registro.');
       }
 
+      // Cálculo de Multa por Atraso: compara hoje com o prazo prometido
       const hoje = new Date(); 
       hoje.setHours(0, 0, 0, 0);
       
@@ -169,7 +193,7 @@ class AluguelController {
       if (diasDeAtraso > 0) {
         const valorAtraso = diasDeAtraso * VALOR_MULTA_DIARIA;
         
-        const { error: multaError } = await supabase.from('multas').insert({ 
+        await supabase.from('multas').insert({ 
           aluguel_id: emprestimo.id, 
           usuario_id: emprestimo.usuario_id, 
           tipo: 'atraso', 
@@ -178,13 +202,12 @@ class AluguelController {
           status: 'pendente' 
         });
         
-        if (multaError) throw multaError;
-        
         listaMultas.push({ tipo: 'atraso', valor: valorAtraso, dias: diasDeAtraso });
       }
 
+      // Multa por Perda: aplicada se o exemplar não voltar fisicamente
       if (estado_exemplar === 'perdido') {
-        const { error: perdaError } = await supabase.from('multas').insert({ 
+        await supabase.from('multas').insert({ 
           aluguel_id: emprestimo.id, 
           usuario_id: emprestimo.usuario_id, 
           tipo: 'perda', 
@@ -193,11 +216,10 @@ class AluguelController {
           status: 'pendente' 
         });
         
-        if (perdaError) throw perdaError;
-        
         listaMultas.push({ tipo: 'perda', valor: VALOR_MULTA_PERDA });
       }
 
+      // Se gerou qualquer multa, marca o usuário como devedor
       if (listaMultas.length > 0) {
         await supabase.from('usuarios').update({ multa_pendente: true }).eq('id', emprestimo.usuario_id);
       }
@@ -205,11 +227,13 @@ class AluguelController {
       const exemplarSumiu = estado_exemplar === 'perdido';
       const novaDisponibilidade = exemplarSumiu ? 'perdido' : 'disponivel';
       
+      // Ajusta o estoque: se o livro foi perdido, ele não volta para a contagem de disponíveis
       let novaQtdEstoque = (emprestimo.livros?.exemplares_disponiveis || 0);
       if (!exemplarSumiu) {
         novaQtdEstoque = novaQtdEstoque + 1;
       }
 
+      // Salva a devolução e atualiza os estados do exemplar e do livro pai
       await supabase.from('alugueis').update({
         status: 'devolvido', 
         data_devolucao: new Date().toISOString(), 
@@ -249,6 +273,10 @@ class AluguelController {
     }
   };
 
+  /**
+   * Processa o pagamento de todas as multas pendentes de um usuário.
+   * Libera o cadastro do usuário para novos empréstimos após a quitação.
+   */
   pagarMulta = async (req, res) => {
     try {
       const { usuario_id } = req.params;
@@ -260,8 +288,9 @@ class AluguelController {
       }
 
       const totalPago = multasEmAberto.reduce((sum, m) => sum + Number(m.valor), 0);
-
       const ids = multasEmAberto.map(m => m.id);
+
+      // Atualiza o status de todas as multas e desbloqueia o usuário
       await supabase.from('multas').update({ status: 'paga', pago_em: new Date().toISOString() }).in('id', ids);
       await supabase.from('usuarios').update({ multa_pendente: false }).eq('id', usuario_id);
 
@@ -275,6 +304,9 @@ class AluguelController {
     }
   };
 
+  /**
+   * Retorna o histórico de multas de um usuário específico para o bibliotecário.
+   */
   listarMultas = async (req, res) => {
     try {
       const { usuario_id } = req.params;
@@ -301,6 +333,9 @@ class AluguelController {
     }
   };
 
+  /**
+   * Retorna o histórico de multas do próprio usuário logado.
+   */
   minhasMultas = async (req, res) => {
     try {
       const usuarioId = req.usuario.id;
@@ -326,6 +361,9 @@ class AluguelController {
     }
   };
 
+  /**
+   * Permite que o próprio leitor quite suas dívidas via sistema (auto-atendimento).
+   */
   pagarMinhasMultas = async (req, res) => {
     try {
       const usuarioId = req.usuario.id;
@@ -337,8 +375,8 @@ class AluguelController {
       }
 
       const totalPago = multasEmAberto.reduce((sum, m) => sum + Number(m.valor), 0);
-
       const ids = multasEmAberto.map(m => m.id);
+
       await supabase.from('multas').update({ status: 'paga', pago_em: new Date().toISOString() }).in('id', ids);
       await supabase.from('usuarios').update({ multa_pendente: false }).eq('id', usuarioId);
 
@@ -351,6 +389,10 @@ class AluguelController {
     }
   };
 
+  /**
+   * Lista todos os empréstimos ativos da biblioteca com paginação.
+   * Usado exclusivamente pelo bibliotecário para monitorar quem está com quais livros.
+   */
   listarTodos = async (req, res) => {
     try {
       const hoje = new Date(); 
@@ -377,6 +419,7 @@ class AluguelController {
 
       if (error) throw error;
 
+      // Conta quantos dos ativos já passaram do prazo (atrasados)
       const { count: totalAtrasados } = await supabase
         .from('alugueis')
         .select('*', { count: 'exact', head: true })
@@ -409,6 +452,9 @@ class AluguelController {
     }
   };
 
+  /**
+   * Retorna os empréstimos atuais do usuário que está logado.
+   */
   meus = async (req, res) => {
     try {
       const usuarioId = req.usuario.id;
@@ -440,6 +486,9 @@ class AluguelController {
     }
   };
 
+  /**
+   * Mostra o histórico de tudo o que já foi devolvido na biblioteca.
+   */
   historico = async (req, res) => {
     try {
       const { page, limit, usuario_id } = req.query;
@@ -487,6 +536,10 @@ class AluguelController {
     }
   };
 
+  /**
+   * Permite adiar a data de devolução de um livro por mais 14 dias.
+   * Existe um limite de no máximo 2 renovações por empréstimo.
+   */
   renovar = async (req, res) => {
     try {
       const { id } = req.params;
@@ -497,10 +550,12 @@ class AluguelController {
         throw new Error('Este empréstimo não está mais ativo ou não existe.');
       }
       
+      // Validação: o leitor já renovou muitas vezes?
       if ((aluguelActual.renovacoes ?? 0) >= 2) {
         throw new Error('Limite de renovações atingido (máximo permitido: 2 vezes).');
       }
 
+      // Calcula a nova data: adiciona 14 dias ao prazo que já existia
       const novoPrazo = new Date(aluguelActual.data_prevista_devolucao);
       novoPrazo.setDate(novoPrazo.getDate() + 14);
 
@@ -523,3 +578,4 @@ class AluguelController {
 }
 
 module.exports = new AluguelController();
+

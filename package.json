@@ -1,6 +1,7 @@
 {
   "name": "sistema-biblioteca",
   "version": "1.0.0",
+  "license": "UNLICENSED",
   "main": "src/index.js",
   "scripts": {
     "setup": "node src/setup.js",

@@ -1,12 +1,41 @@
-// Central de notificações
+/*
+    CENTRAL DE NOTIFICAÇÕES: alertas para bibliotecários e leitores.
+    Este arquivo gera e exibe os alertas do sistema de forma personalizada por tipo de usuário.
 
+    Para BIBLIOTECÁRIOS, os alertas cobrem:
+    - Empréstimos atrasados que precisam de ação
+    - Usuários com multas pendentes
+    - Contas suspensas (usuários bloqueados)
+    - Documentos digitais enviados por leitores aguardando curadoria
+
+    Para LEITORES, os alertas cobrem:
+    - Débitos de multa pendentes (com valor total)
+    - Livros com entrega atrasada
+    - Livros com prazo de devolução nos próximos 3 dias
+
+    O badge (bolinha numérica) no ícone de sino da sidebar mostra o total de pendências.
+*/
+
+// Armazena a lista atual de notificações para uso nas funções de renderização
 let dadosNotificacoes = [];
 
+/*
+    Carrega as notificações e exibe a tela completa de alertas.
+    Chamada quando o usuário clica no ícone de sino da sidebar.
+    Aguarda a busca terminar antes de renderizar para evitar tela vazia.
+*/
 async function carregarNotificacoesCompleto() {
     await buscarNotificacoes();
     renderizarNotificacoesTelaCheia();
 }
 
+/*
+    Busca as notificações do servidor e atualiza o badge do sino.
+    Decide automaticamente qual conjunto de alertas buscar:
+    - Bibliotecário: alertas administrativos do sistema
+    - Leitor: alertas pessoais relacionados aos seus livros e multas
+    Se o usuário não estiver logado, sai sem fazer nada.
+*/
 async function buscarNotificacoes() {
     if (!currentUser) return;
 
@@ -16,6 +45,7 @@ async function buscarNotificacoes() {
             corpoNotificacoes.innerHTML = '<div style="text-align:center; padding:40px; color:var(--accent); font-family:\'Cinzel\', serif;">Buscando alertas do sistema...</div>';
         }
 
+        // Redireciona para a função correta conforme o tipo de usuário
         const resultados = await (currentUser.tipo === 'bibliotecario'
             ? carregarNotificacoesAdmin()
             : carregarNotificacoesUsuario());
@@ -33,6 +63,14 @@ async function buscarNotificacoes() {
     }
 }
 
+/*
+    Gera a lista de alertas para o bibliotecário.
+    Faz duas requisições em paralelo (empréstimos e usuários) para ser mais rápido.
+    Cada alerta tem: tipo (warning/danger/info), ícone, título, mensagem, contagem e ação.
+    Alertas só são adicionados se há itens relevantes (ex: só mostra "atrasados" se houver).
+    Submissões de documentos digitais pendentes são verificadas separadamente
+    (em try/catch próprio pois podem falhar sem comprometer os outros alertas).
+*/
 async function carregarNotificacoesAdmin() {
     const lista = [];
 
@@ -45,6 +83,7 @@ async function carregarNotificacoesAdmin() {
         const atrasadosTotal = emprestimosRes.total_atrasados || 0;
         const usuarios = usuariosRes.data || [];
 
+        // Alerta de empréstimos atrasados: adverte que há devoluções pendentes
         if (atrasadosTotal > 0) {
             lista.push({
                 type: 'warning',
@@ -56,6 +95,7 @@ async function carregarNotificacoesAdmin() {
             });
         }
 
+        // Alerta de multas: lista usuários com débitos não quitados
         const usuariosComMulta = usuarios.filter((u) => u.multa_pendente);
         if (usuariosComMulta.length > 0) {
             lista.push({
@@ -68,6 +108,7 @@ async function carregarNotificacoesAdmin() {
             });
         }
 
+        // Alerta informativo: mostra quantas contas estão bloqueadas no sistema
         const usuariosBloqueados = usuarios.filter((u) => u.bloqueado);
         if (usuariosBloqueados.length > 0) {
             lista.push({
@@ -79,6 +120,8 @@ async function carregarNotificacoesAdmin() {
             });
         }
 
+        // Submissões de documentos: verificado separadamente pois pode falhar
+        // sem impedir os outros alertas (ex: se o endpoint estiver indisponível)
         try {
             const pendentesDigital = await api('/acervo-digital/pendentes');
             if (pendentesDigital?.length > 0) {
@@ -101,6 +144,14 @@ async function carregarNotificacoesAdmin() {
     return lista;
 }
 
+/*
+    Gera a lista de alertas personalizados para o leitor.
+    Faz duas requisições em paralelo: multas pessoais e lista de empréstimos ativos.
+    Verifica três situações:
+    1. Débitos pendentes: mostra o valor total e oferece botão para pagar
+    2. Livros atrasados: lista os empréstimos com status "atrasado"
+    3. Prazos próximos: empréstimos ativos com devolução nos próximos 3 dias
+*/
 async function carregarNotificacoesUsuario() {
     const lista = [];
 
@@ -115,6 +166,7 @@ async function carregarNotificacoesUsuario() {
         const listaAlugueis = Array.isArray(meusAlugueis) ? meusAlugueis : [];
         const atrasados = listaAlugueis.filter((a) => a.status === 'atrasado');
 
+        // Se há débito pendente: alerta vermelho com o valor total
         if (totalPendente > 0) {
             lista.push({
                 type: 'danger',
@@ -125,6 +177,7 @@ async function carregarNotificacoesUsuario() {
                 action: { label: 'Quitar Debito', onClick: 'pagarMinhasMultas()' }
             });
         } else if (multas.length > 0) {
+            // Se teve multas mas todas foram pagas: alerta verde de parabenização
             lista.push({
                 type: 'success',
                 icon: '✅',
@@ -134,6 +187,7 @@ async function carregarNotificacoesUsuario() {
             });
         }
 
+        // Livros atrasados: empréstimos que passaram do prazo de devolução
         if (atrasados.length > 0) {
             lista.push({
                 type: 'warning',
@@ -145,6 +199,7 @@ async function carregarNotificacoesUsuario() {
             });
         }
 
+        // Prazos próximos: empréstimos ativos com devolução nos próximos 3 dias
         const hoje = new Date();
         const em3dias = new Date();
         em3dias.setDate(hoje.getDate() + 3);
@@ -171,6 +226,12 @@ async function carregarNotificacoesUsuario() {
     return lista;
 }
 
+/*
+    Renderiza os cartões de notificação na tela de alertas completa.
+    Se não houver alertas, exibe uma mensagem tranquilizadora.
+    Cada card tem: ícone colorido, título, mensagem e, opcionalmente, um botão de ação.
+    O badge de contagem (número vermelho) só aparece se count > 0.
+*/
 function renderizarNotificacoesTelaCheia() {
     const corpo = document.getElementById('notificationsFullScreenBody');
     if (!corpo) return;
@@ -205,6 +266,12 @@ function renderizarNotificacoesTelaCheia() {
         </div>`).join('');
 }
 
+/*
+    Atualiza o número exibido no badge do ícone de sino na sidebar.
+    Soma todas as contagens individuais de cada alerta.
+    Se o total ultrapassar 99, exibe "99+" para não quebrar o layout.
+    Se não houver pendências, remove o badge (fica invisível).
+*/
 function atualizarBadgeNotificacoes() {
     const badge = document.getElementById('notificationsBadge');
     if (!badge) return;
@@ -219,6 +286,10 @@ function atualizarBadgeNotificacoes() {
     }
 }
 
+/*
+    Controla a visibilidade do botão de notificações na sidebar.
+    Quando o usuário está logado, o sino aparece; quando não está, fica oculto.
+*/
 function gerenciarVisibilidadeNotificacoes() {
     const elementoNav = document.getElementById('navNotifications');
     if (elementoNav) {
@@ -226,6 +297,12 @@ function gerenciarVisibilidadeNotificacoes() {
     }
 }
 
+/*
+    Processa o pagamento de todas as multas pendentes do leitor logado.
+    Exibe diálogo de confirmação antes de executar.
+    Após o pagamento, atualiza o estado do usuário em memória,
+    salva a sessão e recarrega as notificações para remover o alerta de débito.
+*/
 async function pagarMinhasMultas() {
     exibirConfirmacao({
         icon: '💳',
@@ -249,6 +326,11 @@ async function pagarMinhasMultas() {
     });
 }
 
+/*
+    Estende a função global updateNavbar (se existir) para incluir
+    a atualização do badge de notificações sempre que o estado de autenticação mudar.
+    Usa o padrão de "decorador": guarda a função original e a chama dentro da nova.
+*/
 const atualizarNavbarOriginal = window.updateNavbar;
 window.updateNavbar = function() {
     if (atualizarNavbarOriginal) {

@@ -1,3 +1,4 @@
+/* Indicador de carregamento das estatísticas */
 .stats-loading {
     text-align: center;
     padding: 60px 20px;
@@ -5,6 +6,7 @@
     font-style: italic;
 }
 
+/* Grade de cartões KPI (indicadores-chave) no topo da tela */
 .stats-kpi-grid {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -12,6 +14,7 @@
     margin-bottom: 20px;
 }
 
+/* Cartão individual de KPI */
 .stats-kpi-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -22,6 +25,7 @@
     gap: 6px;
 }
 
+/* Rótulo descritivo do indicador */
 .stats-kpi-label {
     font-family: 'Cinzel', serif;
     font-size: var(--fs-xs);
@@ -32,6 +36,7 @@
     font-weight: 700;
 }
 
+/* Valor numérico principal do indicador */
 .stats-kpi-val {
     font-family: 'Cinzel', serif;
     font-size: var(--fs-lg);
@@ -40,12 +45,14 @@
     line-height: 1;
 }
 
+/* Grade que organiza os gráficos em duas colunas */
 .stats-charts-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
 
+/* Cartão individual de gráfico */
 .stats-chart-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -57,6 +64,7 @@
     min-width: 0;
 }
 
+/* Título do gráfico */
 .stats-chart-header h3 {
     font-family: 'Cinzel', serif;
     font-size: var(--fs-sm);
@@ -66,6 +74,7 @@
     color: var(--accent);
 }
 
+/* Ajustes de cor para o tema claro */
 [data-theme="light"] .stats-kpi-label,
 [data-theme="light"] .stats-chart-header h3 {
     color: var(--accent);
@@ -75,32 +84,38 @@
     color: var(--text);
 }
 
+/* Área de exibição do gráfico */
 .stats-chart-body {
     min-height: 240px;
 }
 
+/* Contêiner do canvas do gráfico */
 .stats-canvas-wrap {
     position: relative;
     width: 100%;
     height: 240px;
 }
 
+/* Variação menor do canvas para gráficos de pizza */
 .stats-canvas-sm {
     height: 220px;
 }
 
+/* Responsivo: KPIs em 3 colunas em telas médias */
 @media (max-width: 1100px) {
     .stats-kpi-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
+/* Responsivo: gráficos em coluna única em telas menores */
 @media (max-width: 860px) {
     .stats-charts-grid {
         grid-template-columns: 1fr;
     }
 }
 
+/* Responsivo: KPIs em 2 colunas e canvas menor em celulares */
 @media (max-width: 680px) {
     .stats-kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

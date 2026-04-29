@@ -1,23 +1,44 @@
-/* Espaço Literário Infantil */
+/*
+    ESPAÇO LITERÁRIO INFANTIL
+    Este arquivo controla o visual de toda a seção educativa gamificada.
+    O sistema funciona como um jogo: o leitor escolhe sua faixa etária,
+    lê lições e responde quizzes para ganhar XP e subir de nível.
+*/
 
-/* Variáveis do tema infantil */
+/*
+    Variáveis de cor exclusivas do espaço infantil.
+    São adicionadas ao :root para funcionar em todo o arquivo.
+    --infantil-primary: roxo (cor principal do modo infantil)
+    --infantil-secondary: verde vibrante (cor de destaque secundário)
+    As demais reutilizam as cores de alerta do sistema principal.
+*/
 :root {
     --infantil-primary: #6a5ae0;
     --infantil-secondary: #00d68f;
-    --infantil-accent: var(--accent); /* Usa o dourado/azul do sistema */
+    --infantil-accent: var(--accent);
     --infantil-warning: var(--warning);
     --infantil-success: var(--success);
     --infantil-danger: var(--danger);
 }
 
-/* Container principal */
+/*
+    Container da tela do espaço infantil: ocupa toda a altura disponível
+    e organiza os filhos em coluna (navbar em cima, conteúdo embaixo).
+*/
 #espacoInfantilScreen.active {
     min-height: calc(100vh - 100px);
     display: flex;
     flex-direction: column;
 }
 
-/* Seleção de faixa etária */
+/*
+    TELA DE SELEÇÃO DE FAIXA ETÁRIA
+    Primeira tela que o leitor vê ao entrar no espaço infantil.
+    Pergunta a idade para adaptar o conteúdo ao nível certo.
+    .age-select-card: o cartão central com a pergunta e as opções.
+    .age-select-title: o texto da pergunta em destaque.
+    .age-cards: grade com os três cartões de faixa etária.
+*/
 .age-select-card {
     text-align: center;
     padding: 60px 40px !important;
@@ -44,7 +65,11 @@
     width: 100%;
 }
 
-/* Cards de idade */
+/*
+    CARTÕES DE FAIXA ETÁRIA: cada cartão representa um grupo de idade.
+    Infantil (6-8 anos), Infanto-Juvenil (9-11 anos) e Pré-Adolescente (11-14 anos).
+    Ao passar o mouse, o card sobe e ganha brilho com efeito de gradiente colorido.
+*/
 .age-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -81,6 +106,7 @@
     border-color: var(--accent);
 }
 
+/* Ícone emoji grande do cartão: anima com rotação ao passar o mouse */
 .age-icon {
     font-size: 3.5rem;
     margin-bottom: 20px;
@@ -91,16 +117,19 @@
     transform: scale(1.15) rotate(5deg);
 }
 
+/* Título do cartão: cada faixa etária tem uma cor diferente */
 .age-title {
     font-family: 'Cinzel', serif;
     font-size: var(--fs-md);
     margin-bottom: 12px;
 }
 
+/* Cores dos títulos conforme a faixa etária: dourado, roxo e verde */
 .age-title.infantil { color: var(--accent); }
 .age-title.infantojuvenil { color: var(--infantil-primary); }
 .age-title.preadolescente { color: var(--infantil-secondary); }
 
+/* Etiqueta de faixa etária (ex: "6 a 8 anos"): círculo colorido em maiúsculas */
 .age-badge {
     padding: 6px 18px;
     border-radius: var(--r-pill);
@@ -113,6 +142,7 @@
     color: white;
 }
 
+/* Cor de fundo da etiqueta: dourado para infantil, roxo para infanto-juvenil, verde para pré-adolescente */
 .age-badge-inf { background: var(--accent); }
 .age-badge-ij { background: var(--infantil-primary); }
 .age-badge-pa { background: var(--infantil-secondary); }
@@ -128,6 +158,7 @@
     opacity: 1;
 }
 
+/* Cada faixa etária tem uma cor de gradiente diferente ao ser clicada */
 .age-card.infantil:hover {
     background: linear-gradient(135deg, rgba(255, 82, 99, 0.2), rgba(255, 82, 99, 0.1));
 }
@@ -140,7 +171,12 @@
     background: linear-gradient(135deg, rgba(0, 214, 143, 0.2), rgba(0, 214, 143, 0.1));
 }
 
-/* Navbar infantil */
+/*
+    BARRA DE STATUS DO LEITOR (navbar infantil)
+    Aparece no topo após o leitor escolher a faixa etária.
+    Mostra: avatar + nome + nível | barra de XP | vidas ❤️ e pontos ✨.
+    Substitui a sidebar normal dentro do espaço infantil.
+*/
 .infantil-navbar {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -161,6 +197,7 @@
     gap: 15px;
 }
 
+/* Avatar circular do leitor: gradiente dourado-roxo com emoji grande */
 .infantil-navbar .avatar {
     background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
     width: 52px;
@@ -191,6 +228,7 @@
     font-weight: 600;
 }
 
+/* Container da barra de XP: fica no meio da navbar, entre o perfil e as estatísticas */
 .infantil-navbar .xp-container {
     flex: 1;
     max-width: 300px;
@@ -208,6 +246,7 @@
     opacity: 0.8;
 }
 
+/* Trilho da barra de XP: fundo escuro que serve de base para o preenchimento */
 .infantil-navbar .xp-bg {
     background: var(--bg);
     height: 10px;
@@ -216,6 +255,7 @@
     border: 1px solid var(--border);
 }
 
+/* Preenchimento da barra de XP: avança da esquerda para direita conforme o leitor ganha pontos */
 .infantil-navbar .xp-bar {
     background: linear-gradient(90deg, var(--accent), var(--infantil-secondary));
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
@@ -223,6 +263,7 @@
     transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Cápsula de estatística: exibe vidas (❤️) ou XP (✨) de forma compacta */
 .infantil-navbar .stat-pill {
     background: var(--accent-bg);
     backdrop-filter: var(--glass);
@@ -235,7 +276,11 @@
     color: var(--text);
 }
 
-/* Banner especial */
+/*
+    BANNER ESPECIAL: faixa colorida que pode aparecer em datas ou eventos
+    especiais (ex: semana do livro, evento escolar).
+    Pulsa suavemente para chamar a atenção do leitor.
+*/
 .march-banner {
     background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
     backdrop-filter: var(--glass);
@@ -254,7 +299,11 @@
     100% { box-shadow: 0 8px 40px rgba(255, 82, 99, 0.4); }
 }
 
-/* Cards de categorias */
+/*
+    GRADE DE CATEGORIAS: exibe os temas de lição disponíveis (Literatura, Autores, etc.)
+    em cards com efeito de brilho (shimmer) ao passar o mouse.
+    O brilho simula uma luz varrendo a superfície do cartão.
+*/
 .grid-categories .glass-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -297,7 +346,7 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* Grid de categorias */
+/* Container da grade de categorias: responsivo, mínimo de 280px por coluna */
 .grid-categories {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -305,14 +354,19 @@
     margin-top: 40px;
 }
 
-/* Subtítulos */
+/* Subtítulo de seção: texto menor e levemente transparente, abaixo do título principal */
 .section-subtitle {
     opacity: 0.8;
     font-size: var(--fs-base);
     margin-top: 4px;
 }
 
-/* Cards de lições */
+/*
+    LISTA DE LIÇÕES: lista vertical de lições disponíveis dentro de uma categoria.
+    Ao passar o mouse, o card desliza levemente para a direita.
+    Lições bloqueadas ficam acinzentadas e mostram o cadeado 🔒 no canto.
+    Uma lição fica bloqueada quando o leitor ainda não tem nível suficiente.
+*/
 .lesson-list .glass-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -350,7 +404,11 @@
     margin-top: 32px;
 }
 
-/* Cards de quiz */
+/*
+    QUIZ: card da pergunta com borda dourada, bem destacado.
+    .quiz-header: barra de progresso + contador de questões (ex: 1/3).
+    .progress-quiz-bg/.fill: barra visual que vai enchendo conforme o quiz avança.
+*/
 .quiz-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -405,35 +463,43 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* Estados das opções do quiz: neutra, selecionada, correta e incorreta */
 .options-grid .glass-card.selected {
     background: rgba(106, 90, 224, 0.2);
     border-color: var(--infantil-primary);
 }
 
+/* Resposta certa: fundo verde com animação de pulso celebratório */
 .options-grid .glass-card.correct {
     background: rgba(39, 174, 96, 0.2);
     border-color: var(--infantil-success);
     animation: correct-pulse 0.6s ease;
 }
 
+/* Resposta errada: fundo vermelho com animação de tremida (shake) */
 .options-grid .glass-card.incorrect {
     background: rgba(231, 76, 60, 0.2);
     border-color: var(--infantil-danger);
     animation: shake 0.5s ease;
 }
 
+/* Animação de pulso: o card cresce levemente quando a resposta está certa */
 @keyframes correct-pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
 }
 
+/* Animação de tremida: o card sacode quando a resposta está errada */
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-10px); }
     75% { transform: translateX(10px); }
 }
 
-/* Card de resultado */
+/*
+    TELA DE RESULTADO: exibe o desempenho do leitor após terminar o quiz.
+    Mostra o XP ganho, as vidas recuperadas e, se subiu de nível, um banner especial.
+*/
 .result-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -446,6 +512,7 @@
     margin: 0 auto;
 }
 
+/* Banner de subi de nível: fundo dourado-roxo com animação de brilho pulsante */
 .level-up-card {
     background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
     backdrop-filter: var(--glass);
@@ -462,6 +529,7 @@
     100% { box-shadow: 0 10px 40px rgba(255, 82, 99, 0.6); }
 }
 
+/* Emblema de recompensa: exibe o XP ganho e as vidas recuperadas em cápsulas douradas */
 .reward-badge {
     background: var(--accent-bg);
     backdrop-filter: var(--glass);
@@ -486,7 +554,7 @@
     margin: 25px 0;
 }
 
-/* Card de conteúdo */
+/* Card de conteúdo da lição: fundo semitransparente que envolve o texto literário */
 .content-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
@@ -497,11 +565,15 @@
     margin-top: 24px;
 }
 
-/* Animações de entrada */
+/*
+    Animação de entrada de cada sub-tela (categorias, lições, quiz, resultado).
+    Cada tela sobe suavemente ao aparecer, dando sensação de fluidez.
+*/
 .infantil-screen {
     animation: fadeInUp 0.6s ease;
 }
 
+/* Keyframe da animação de entrada: começa transparente e abaixo, termina visível e no lugar */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -513,7 +585,7 @@
     }
 }
 
-/* Responsivo */
+/* RESPONSIVO: telas entre 900px e 768px — cartões de faixa etária e categorias ficam menores */
 @media (max-width: 900px) {
     .age-cards, .grid-categories {
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -521,6 +593,13 @@
     }
 }
 
+/*
+    RESPONSIVO: celulares (até 768px).
+    - A navbar de status empilha verticalmente.
+    - Os cartões de categoria e faixa etária ficam em coluna única.
+    - O quiz empilha a barra de progresso abaixo do botão voltar.
+    - As recompensas ficam em coluna.
+*/
 @media (max-width: 768px) {
     .age-select-card { padding: 40px 20px !important; }
     .age-select-title { font-size: var(--fs-md); }
@@ -563,7 +642,10 @@
     }
 }
 
-/* Animações especiais */
+/*
+    Animação de quicar (bounce): o ícone emoji dos cartões de faixa etária
+    sobe e desce continuamente para convidar o leitor a clicar.
+*/
 .age-card > div:first-child {
     animation: bounce 2s ease-in-out infinite;
 }
@@ -576,7 +658,11 @@
 
 /* Refinamentos finais */
 
-/* Botão voltar */
+/*
+    BOTÃO VOLTAR: aparece no topo das sub-telas (lições, quiz, resultado).
+    Ao passar o mouse, desliza para a esquerda e fica dourado,
+    sugerindo visualmente que irá retroceder na navegação.
+*/
 .btn-back {
     display: flex;
     align-items: center;
@@ -608,7 +694,7 @@
     font-size: 1.1em;
 }
 
-/* Cabeçalho no espaço infantil */
+/* Cabeçalho da tela dentro do espaço infantil: mesma estrutura do sistema, mas com ajuste de margem */
 #espacoInfantilScreen .page-header {
     margin-bottom: 40px;
     border-bottom: 1px solid var(--border);
@@ -621,8 +707,11 @@
 }
 
 
-/* Estilos modernos para lições */
-
+/*
+    TELA DE CONTEÚDO MODERNO: layout da lição com visual premium.
+    Organiza o conteúdo em blocos verticais: cabeçalho, descrição, destaques e curiosidade.
+    Largura máxima de 1000px para manter a leitura confortável em monitores grandes.
+*/
 .lesson-content-modern {
     display: flex;
     flex-direction: column;
@@ -638,6 +727,7 @@
     padding: 20px 0;
 }
 
+/* Ícone grande da lição: emoji flutuante que sobe e desce suavemente */
 .lesson-icon-large {
     font-size: 5rem;
     margin-bottom: 24px;
@@ -694,6 +784,7 @@
     font-weight: 800;
 }
 
+/* Grade de destaques: informações chave da lição em cartões compactos lado a lado */
 .lesson-highlights-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -744,7 +835,11 @@
     opacity: 0.9;
 }
 
-/* Seção de curiosidade */
+/*
+    BLOCO DE CURIOSIDADE (Fun Fact): caixa com borda pontilhada dourada
+    que exibe um fato curioso ou extra relacionado ao tema da lição.
+    Usa borda tracejada para se diferenciar visualmente dos outros cartões.
+*/
 .lesson-fun-fact {
     background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(106, 90, 224, 0.05));
     border: 1px dashed var(--accent);
@@ -782,6 +877,10 @@
     opacity: 0.9;
 }
 
+/*
+    Na tela de conteúdo, o wrapper do botão de avanço
+    é removido visualmente pois o conteúdo é o próprio texto da lição.
+*/
 #screen-content-infantil .content-card {
     background: transparent;
     border: none;
@@ -796,6 +895,7 @@
     width: 100%;
 }
 
+/* RESPONSIVO: telas pequenas (até 768px) — reduz fontes e padding das lições */
 @media (max-width: 768px) {
     .lesson-title-modern { font-size: 1.8rem; }
     .lesson-description-modern { font-size: 1.1rem; }

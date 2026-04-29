@@ -1,6 +1,22 @@
-// Espaço Literário Infantil
+/*
+    ESPÁÇO LITERÁRIO INFANTIL: sistema gamificado de aprendizado.
+    Funciona como um mini-RPG educacional inspirado no Duolingo:
+    - O usuário escolhe uma faixa etária (3-5, 6-8 ou 9-12 anos)
+    - Navega por categorias de conteúdo (ex: animais, natureza, história)
+    - Lê lições com destaques e curiosidades
+    - Responde a um quiz de múltipla escolha validado pelo servidor
+    - Ganha XP e sobe de nível; perde corações por erros
 
-// Estado global
+    Todo o conteúdo pedagógico vem do servidor (/infantil/data).
+    A validação das respostas também é feita no servidor,
+    impedindo que o usuário trapaceie inspecionando o código do navegador.
+*/
+
+/*
+    Estado global do espaço infantil.
+    Mantém em memória tudo que o usuário está fazendo neste momento:
+    faixa etária, categoria, lição atual, progresso do quiz e pontuação.
+*/
 let infantilState = {
     currentAge: null,
     currentCategory: null,
@@ -14,10 +30,15 @@ let infantilState = {
     quizCorrect: 0
 };
 
-// Dados do backend
+// Cache dos dados pedagógicos retornados pelo servidor
 let INFANTIL_BACKEND_DATA = null;
 
-// Busca dados do espaço literário
+/*
+    Busca do servidor todos os dados pedagógicos e o perfil do usuário.
+    Só executa se o usuário estiver autenticado (token presente).
+    Após carregar, sincroniza o estado local (XP, nível, vidas, lições concluídas)
+    para continuar de onde o usuário parou na última visita.
+*/
 async function fetchInfantilData() {
     if (!token) return false;
     
@@ -46,13 +67,21 @@ async function fetchInfantilData() {
     }
 }
 
-// Formata texto com "Accent Words"
+/*
+    Formata o texto de descrição de lições substituindo palavras entre *asteriscos*
+    por <span class="accent-word"> para destacá-las visualmente.
+    Exemplo: "*Monteiro Lobato* criou o Sítio" → destaca o nome do autor.
+*/
 function formatAccentText(text) {
     if (!text) return '';
     return text.replace(/\*([^*]+)\*/g, '<span class="accent-word">$1</span>');
 }
 
-// Seleciona faixa etária
+/*
+    Salva a faixa etária escolhida e navega para a tela de categorias.
+    Se os dados do servidor ainda não foram carregados, busca-os primeiro.
+    Atualiza o avatar e o primeiro nome do usuário na navbar do espaço infantil.
+*/
 async function selectAge(age) {
     if (!INFANTIL_BACKEND_DATA) {
         const success = await fetchInfantilData();
@@ -77,7 +106,11 @@ async function selectAge(age) {
     loadCategories();
 }
 
-// Inicializa ou reinicia espaço infantil
+/*
+    Reinicia o espaço infantil voltando à tela de seleção de faixa etária.
+    Limpa a navegação atual para que o usuário possa recomeduçar do zero.
+    Chamada ao entrar no espaço ou ao clicar em "Mudar Faixa Etária".
+*/
 async function initializeInfantilSpace() {
     // Reseta navegação
     infantilState.currentAge = null;
@@ -92,6 +125,11 @@ async function initializeInfantilSpace() {
     });
 }
 
+/*
+    Renderiza os cards de categorias disponíveis para a faixa etária selecionada.
+    Cada card exibe ícone, nome e uma descrição motivacional.
+    Ao clicar, navega para a lista de lições da categoria.
+*/
 function loadCategories() {
     const data = INFANTIL_BACKEND_DATA[infantilState.currentAge];
     const grid = document.getElementById('infantil-cat-grid');
@@ -112,6 +150,10 @@ function loadCategories() {
     });
 }
 
+/*
+    Salva a categoria escolhida no estado e navega para a tela de lições.
+    O título da tela é atualizado com ícone e nome da categoria.
+*/
 function selectCategory(category) {
     infantilState.currentCategory = category;
     const titleEl = document.getElementById('infantil-lesson-cat-title');
@@ -122,6 +164,11 @@ function selectCategory(category) {
     loadLessons();
 }
 
+/*
+    Renderiza a lista de lições da categoria atual.
+    Lições que exigem um nível maior que o do usuário aparecem bloqueadas (locked).
+    Lições concluídas exibem um ✅ e o texto "Lição Concluída".
+*/
 function loadLessons() {
     const data = INFANTIL_BACKEND_DATA[infantilState.currentAge];
     const container = document.getElementById('infantil-lesson-list-container');
@@ -159,7 +206,14 @@ function loadLessons() {
     });
 }
 
-// Renderiza conteúdo da lição
+/*
+    Exibe o conteúdo completo de uma lição:
+    - Cabeçalho com ícone e título
+    - Descrição principal com palavras em destaque
+    - Grid de destaques (highlights) com ícones e textos breves
+    - Caixa "Você sabia?" (funFact) se disponível
+    - Botão para iniciar o quiz
+*/
 function selectLesson(lesson) {
     infantilState.currentLesson = lesson;
     const body = document.getElementById('infantil-content-body');
@@ -216,6 +270,10 @@ function selectLesson(lesson) {
     // Animações removidas
 }
 
+/*
+    Inicia o quiz da lição atual.
+    Reseta o passo e o contador de acertos antes de exibir a primeira questão.
+*/
 function startQuiz() {
     if (!infantilState.currentLesson) return;
     
@@ -225,6 +283,12 @@ function startQuiz() {
     loadQuizQuestion();
 }
 
+/*
+    Carrega e exibe a questão atual do quiz.
+    Atualiza a barra de progresso e o contador (ex: "2/5").
+    Cada opção é um card clicavel com letra identificadora (A, B, C...).
+    Quando não há mais questões, chama showQuizResult.
+*/
 function loadQuizQuestion() {
     const lesson = infantilState.currentLesson;
     const question = lesson.quiz[infantilState.quizStep];
@@ -259,7 +323,14 @@ function loadQuizQuestion() {
     });
 }
 
-// Valida opção com servidor
+/*
+    Envia a resposta escolhida ao servidor para validação.
+    A validação no servidor (e não no browser) garante a integridade do jogo:
+    nenhum usuário pode trapacear inspecionando o HTML.
+    Bloqueia os demais cards durante a validação para evitar cliques duplos.
+    Se errar: remove uma vida. Se perder todas (gameOver): mostra resultado imediatamente.
+    Se acertar ou ainda ter vidas: avança para a próxima questão após 1,8s.
+*/
 async function selectQuizOption(selectedIndex, cardElement) {
     const lesson = infantilState.currentLesson;
     
@@ -305,7 +376,12 @@ async function selectQuizOption(selectedIndex, cardElement) {
     }
 }
 
-// Finaliza quiz e calcula recompensas
+/*
+    Finaliza o quiz e busca do servidor o resultado calculado.
+    O servidor calcula XP ganho, corações recuperados e título de performance
+    com base na porcentagem de acertos e no contexto do usuário.
+    Após receber o resultado, atualiza o estado local e exibe a tela de recompensa.
+*/
 async function showQuizResult(gameOverByHearts = false) {
     const lesson = infantilState.currentLesson;
 
@@ -347,7 +423,11 @@ async function showQuizResult(gameOverByHearts = false) {
     }
 }
 
-// Envia progresso ao banco
+/*
+    Persiste o progresso do usuário no banco de dados do servidor.
+    Chamada após cada lição concluída e periodicamente para regeneração de vidas.
+    O parâmetro completedLessonId marca a lição específica como concluída no servidor.
+*/
 async function syncProgress(completedLessonId = null) {
     try {
         await api('/infantil/save-progress', {
@@ -365,6 +445,12 @@ async function syncProgress(completedLessonId = null) {
     }
 }
 
+/*
+    Atualiza os elementos visuais da navbar do espaço infantil:
+    - Nível atual do usuário
+    - XP atual vs. XP necessário para o próximo nível (barra de progresso)
+    - Número de corações restantes
+*/
 function updateUI() {
     const levelEl = document.getElementById('infantil-user-level');
     const xpTextEl = document.getElementById('infantil-xp-text');
@@ -381,10 +467,16 @@ function updateUI() {
     if (livesEl) livesEl.textContent = String(infantilState.userHearts);
 }
 
+// Volta para a seleção de faixa etária, reiniciando a navegação
 function changeAge() {
     initializeInfantilSpace();
 }
 
+/*
+    Oculta todas as telas do espaço infantil e exibe apenas a solicitada.
+    Quando a tela é 'home', atualiza a saudacao com o texto vindo do servidor
+    (personalizado por faixa etária, ex: "Olá, aventureiro!" para 6-8 anos).
+*/
 function showInfantilScreen(screen) {
     document.querySelectorAll('.infantil-screen').forEach(s => s.classList.add('hidden'));
     
@@ -399,7 +491,12 @@ function showInfantilScreen(screen) {
     }
 }
 
-// Inicialização
+/*
+    Inicializa o espaço infantil ao carregar a página.
+    Também configura a regeneração automática de corações:
+    a cada 6 horas, se o usuário tiver menos de 5 vidas, recupera uma.
+    O progresso atualizado é salvo no servidor automaticamente.
+*/
 document.addEventListener('DOMContentLoaded', () => {
     initializeInfantilSpace();
     

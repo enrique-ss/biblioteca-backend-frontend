@@ -1,32 +1,45 @@
+/* Importa as fontes do Google: Cinzel (títulos elegantes) e Crimson Pro (texto corrido) */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
 
-/* Tokens Dark */
+/*
+    Variáveis globais do tema ESCURO (padrão do sistema).
+    Estas variáveis CSS são como "configurações centrais" de cor e tamanho.
+    Ao mudar uma variável aqui, ela muda em todo o site de uma vez.
+    --bg: cor de fundo da página
+    --surface: cor dos cartões e painéis semitransparentes
+    --text: cor do texto principal
+    --accent: cor dourada usada em títulos e destaques
+    --danger/success/warning: cores de alerta
+    --border: cor das bordas sutis
+    --shadow: sombra aplicada em elementos flutuantes
+*/
 :root {
     --bg: #0A0C0B;
-    --surface: rgba(28, 34, 30, 0.45); /* More translucent */
+    --surface: rgba(28, 34, 30, 0.45);
     --surface-solid: #1c221e;
     --text: #FFFFFF;
-    --accent: #D4AF37;   /* Dourado */
+    --accent: #D4AF37;
     --accent-bg: rgba(212, 175, 55, 0.08);
     --danger: #E63946;
     --success: #2A9D8F;
     --warning: #E9C46A;
-    --border: rgba(212, 175, 55, 0.15); /* Subtler */
+    --border: rgba(212, 175, 55, 0.15);
     --border-m: rgba(212, 175, 55, 0.3);
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.08);
     
-    /* Modern Rounds */
+    /* Arredondamento das bordas: --r-sm (pequeno) até --r-pill (oval/pílula) */
     --r-sm: 8px;
     --r-md: 20px;
     --r-lg: 32px;
     --r-xl: 48px;
     --r-pill: 999px;
 
-    /* Glass Effects */
+    /* Efeito de vidro fosco (glassmorphism): desfoca o que está atrás do elemento */
     --glass: blur(24px) saturate(180%);
     --glass-border: 1px solid rgba(255, 255, 255, 0.08);
 
+    /* Escala de tamanhos de fonte: do menor (xs) ao maior (xl) */
     --fs-xs: .75rem;
     --fs-sm: .88rem;
     --fs-base: 1.05rem;
@@ -36,14 +49,19 @@
     --lh: 1.6;
 }
 
-/* Tokens Light */
+/*
+    Variáveis do tema CLARO.
+    Quando o usuário clica no botão de sol/lua, o atributo data-theme muda para "light"
+    e estas variáveis sobrescrevem as do tema escuro automaticamente.
+    O fundo vira verde claro e o dourado vira verde escuro.
+*/
 [data-theme="light"] {
-    --bg: #E8F5E9; /* Light green with better contrast */
+    --bg: #E8F5E9;
     --surface: rgba(248, 252, 249, 0.8);
-    --surface-solid: #F8FBF9; /* Slightly less green tint */
-    --text: #1B3A2A; /* Darker green for better contrast */
-    --text-dim: #4A6749; /* Muted green with better visibility */
-    --accent: #2D6A4F; /* Deep emerald */
+    --surface-solid: #F8FBF9;
+    --text: #1B3A2A;
+    --text-dim: #4A6749;
+    --accent: #2D6A4F;
     --accent-bg: rgba(45, 106, 79, 0.15);
     --danger: #D62828;
     --success: #1B4332;
@@ -55,10 +73,16 @@
     --glass-border: 1px solid rgba(45, 106, 79, 0.12);
 }
 
-/* Reset */
+/* Reset global: remove margens e paddings padrão do navegador para ter controle total do layout */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* Rolagem suave ao navegar e bloqueia rolagem lateral indesejada */
 html { scroll-behavior: smooth; overflow-x: hidden; width: 100%; }
 
+/*
+    Estilo base do corpo da página.
+    Define a fonte padrão, cor de fundo, cor do texto e altura mínima.
+    A transição suave faz a troca de tema (escuro/claro) animar em vez de piscar.
+*/
 body {
     font-family: 'Crimson Pro', Georgia, serif;
     font-size: var(--fs-base);
@@ -72,12 +96,13 @@ body {
     width: 100%;
 }
 
+/* Estilo da barra de rolagem do navegador: fina, arredondada e dourada ao passar o mouse */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-m); border-radius: var(--r-pill); border: 2px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* Layout */
+/* Canvas 3D do fundo: fica fixo atrás de todo o conteúdo, decorativo, não recebe cliques */
 .three-bg {
     position: fixed;
     top: 0; left: 0; width: 100% !important; height: 100% !important;
@@ -86,6 +111,7 @@ body {
     filter: blur(1.5px);
 }
 
+/* Invólucro principal do app: empurra o conteúdo para a direita para dar espaço à sidebar */
 .app-wrapper {
     position: relative;
     z-index: 1;
@@ -96,6 +122,7 @@ body {
     width: 100%;
 }
 
+/* Container central: limita a largura do conteúdo e centraliza na tela */
 .container {
     width: 100%;
     max-width: 1300px;
@@ -106,7 +133,12 @@ body {
     flex-direction: column;
 }
 
-/* Sidebar */
+/*
+    Barra lateral de navegação (sidebar).
+    Fica fixa na esquerda da tela com largura de 80px.
+    Ao passar o mouse, expande para 280px mostrando os textos dos botões.
+    z-index alto garante que fique sempre acima do conteúdo.
+*/
 .sidebar {
     position: fixed;
     top: 20px; left: 20px; bottom: 20px;
@@ -129,12 +161,14 @@ body {
 .sidebar::-webkit-scrollbar-thumb { background: var(--accent-bg); border-radius: 10px; }
 .sidebar:hover::-webkit-scrollbar-thumb { background: var(--accent); }
 
+/* Ao passar o mouse na sidebar, ela expande suavemente para mostrar os rótulos dos botões */
 .sidebar:hover { 
     width: 280px; 
     backdrop-filter: blur(32px) saturate(180%) !important; 
     -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
 }
 
+/* Área do logo no topo da sidebar: clicável para voltar ao menu principal */
 .sidebar-brand {
     padding: 32px 0;
     display: flex; align-items: center; 
@@ -143,6 +177,11 @@ body {
     flex-shrink: 0;
 }
 .sidebar-brand:hover { background: var(--accent-bg); }
+/*
+    Ícone do logo enquanto a sidebar está recolhida.
+    Usa a técnica de máscara CSS: a imagem funciona como um "recorte"
+    e a cor dourada (--accent) preenche esse recorte.
+*/
 .brand-logo-img {
     height: 40px;
     width: 40px;
@@ -159,7 +198,9 @@ body {
     display: block;
     transition: all 0.3s ease;
 }
+/* Quando a sidebar expande, o ícone some e o nome completo aparece no lugar */
 .sidebar:hover .brand-logo-img { display: none; }
+/* Nome completo "Biblio Verso": oculto por padrão, aparece com animação de digitação */
 .brand-logo-full {
     font-family: 'Cinzel', serif;
     font-weight: 700;
@@ -171,7 +212,7 @@ body {
     overflow: hidden;
     padding-left: 24px;
 }
-/* Cursor piscante */
+/* Cursor piscante ao fim do nome, simulando um terminal de digitação */
 .brand-logo-full::after {
     content: '|';
     animation: blink-cursor 0.8s step-end infinite;
@@ -193,9 +234,12 @@ body {
     max-width: 200px;
 }
 
+/* Lista de botões de navegação: ocupa o espaço restante da sidebar */
 .sidebar-nav { padding: 10px 0; display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto; overflow-x: hidden; }
-.sidebar-nav::-webkit-scrollbar { width: 0px; } /* Hide inner scroll */
+/* Oculta a barra de rolagem interna para não poluir visualmente */
+.sidebar-nav::-webkit-scrollbar { width: 0px; }
 
+/* Botão de navegação lateral: ocupa a largura total, sem bordas, fundo transparente */
 .side-btn {
     display: flex; align-items: center;
     padding: 18px 0; width: 100%;
@@ -207,6 +251,7 @@ body {
     position: relative;
     overflow: hidden;
 }
+/* Efeito de brilho que passa da esquerda para direita ao passar o mouse no botão */
 .side-btn::before {
     content: '';
     position: absolute;
@@ -224,12 +269,14 @@ body {
     color: var(--accent);
     transform: translateX(2px);
 }
+/* Estado ativo: marca a tela atual com fundo dourado e barra dourada na direita */
 .side-btn.active {
     background: var(--accent-bg) !important;
     color: var(--accent) !important;
     border-right: 3px solid var(--accent) !important;
     font-weight: 800;
 }
+/* Remove o efeito de brilho no botão que já está ativo */
 .side-btn.active::before {
     display: none;
 }
@@ -262,9 +309,10 @@ body {
     transform: translateX(0);
 }
 
+/* Área inferior da sidebar: espaço para os botões de perfil e sair */
 .sidebar-bottom { padding-bottom: 24px; padding-top: 16px; flex-shrink: 0; }
 
-/* Sidebar no modo claro */
+/* Sidebar adaptada para o tema claro: fundo verde claro em vez de escuro */
 [data-theme="light"] .sidebar {
     background: rgba(232, 245, 233, 0.95) !important;
     backdrop-filter: blur(32px) saturate(180%) !important; 
@@ -276,7 +324,10 @@ body {
 }
 
 
-/* Notificações */
+/*
+    Badge (bolinha de contagem) que aparece sobre o ícone de notificações na sidebar.
+    Fica oculta por padrão e aparece com a classe .show quando há alertas pendentes.
+*/
 .nav-notifications-badge {
   position: absolute;
   top: 4px;
@@ -292,8 +343,12 @@ body {
   display: none;
 }
 .nav-notifications-badge.show { display: block; }
+/*
+    Painel flutuante de notificações: aparece ao clicar no ícone de sino.
+    Fica fixo perto da sidebar, acima de tudo com z-index alto.
+*/
 .nav-notifications-dropdown {
-  position: fixed; /* Breaks out of sidebar overflow */
+  position: fixed;
   bottom: 20px;
   left: 100px;
   background: var(--bg);
@@ -304,9 +359,11 @@ body {
   width: 360px;
   max-height: calc(100vh - 40px);
   display: none;
-  z-index: 3000; /* Must be above sidebar */
+  z-index: 3000;
 }
+/* Torna o painel visível quando tem a classe .show */
 .nav-notifications-dropdown.show { display: block; }
+/* Cabeçalho do painel: título "Notificações" e botão de fechar */
 .notifications-header {
   display: flex;
   justify-content: space-between;
@@ -330,6 +387,7 @@ body {
   border-radius: 4px;
 }
 .btn-close:hover { background: var(--bg-s); color: var(--text); }
+/* Corpo rolável com a lista de itens de notificação */
 .notifications-body {
   max-height: 320px;
   overflow-y: auto;
@@ -340,6 +398,7 @@ body {
   color: var(--text-dim);
   font-size: var(--fs-sm);
 }
+/* Item individual de notificação: com separador inferior e destaque ao passar o mouse */
 .notification-item {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
@@ -363,6 +422,7 @@ body {
   font-size: var(--fs-xs);
   margin-top: 4px;
 }
+/* Etiqueta colorida que indica o tipo da notificação (aviso, perigo, info, sucesso) */
 .notification-type {
   display: inline-block;
   padding: 4px 10px;
@@ -379,10 +439,16 @@ body {
 .notification-type.success { background: rgba(42, 157, 143, 0.15); color: #2A9D8F; border: 1px solid rgba(42, 157, 143, 0.2); }
 
 
-/* Telas */
+/*
+    Sistema de telas (SPA - Single Page Application).
+    Todas as telas ficam ocultas por padrão.
+    Quando .active é adicionada via JavaScript, a tela aparece com animação de entrada.
+    A classe .hidden oculta elementos completamente, sem possibilidade de forçar exibição.
+*/
 .screen { display: none; }
 .screen.active { display: block; animation: screenIn .32s cubic-bezier(.22,1,.36,1); }
 .hidden { display: none !important; }
+/* Animação de entrada: a tela sobe levemente ao aparecer */
 @keyframes screenIn {
     from { opacity: 0; transform: translateY(12px) }
     to   { opacity: 1; transform: translateY(0) }
@@ -390,7 +456,11 @@ body {
 
 
 
-/* Cabeçalho da página */
+/*
+    Cabeçalho padrão de todas as telas do sistema.
+    Exibe o título à esquerda e os botões de ação à direita, lado a lado.
+    A linha inferior (border-bottom) separa visualmente o cabeçalho do conteúdo.
+*/
 .page-header {
     display: flex;
     align-items: flex-end;
@@ -407,7 +477,7 @@ body {
 .page-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: nowrap; }
 .page-actions .btn { white-space: nowrap; }
 
-/* Títulos de seção */
+/* Rótulo de seção: texto menor com destaque dourado, usado como subtítulo dentro de uma tela */
 .section-label {
     font-family: 'Cinzel', serif;
     font-size: var(--fs-md);
@@ -421,11 +491,11 @@ body {
     color: var(--accent);
 }
 
-/* Busca */
+/* Barra de busca: campo de pesquisa que filtra a lista em tempo real conforme o usuário digita */
 .search-bar { margin-bottom: 16px; }
 .search-bar .form-input { background: var(--surface); border-color: var(--border); padding: 10px 16px; }
 
-/* Spinner */
+/* Indicador de carregamento: aro giratório que aparece enquanto dados são buscados do servidor */
 .spinner {
     display: inline-block;
     width: 16px; height: 16px;
@@ -438,7 +508,11 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg) } }
 
-/* Mobile Overlay */
+/*
+    Overlay escuro que cobre a tela quando a sidebar está aberta no mobile.
+    Ao clicar nele, a sidebar fecha.
+    Fica oculto em telas grandes; só aparece em dispositivos móveis.
+*/
 .mobile-overlay {
     display: none;
     position: fixed;
@@ -457,6 +531,7 @@ body {
     opacity: 1;
 }
 
+/* Botão hamburguer (☰): visível apenas em celulares, abre a sidebar ao ser clicado */
 .mobile-header-btn {
     display: none;
     position: fixed;
@@ -477,6 +552,11 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
+/*
+    Botão flutuante de alternância de tema (sol/lua).
+    Fica no canto superior direito e só aparece nas telas de login e cadastro.
+    Nas telas internas, o botão de tema fica dentro da sidebar.
+*/
 .theme-toggle-fixed {
     position: fixed;
     top: 20px;
@@ -504,7 +584,11 @@ body {
     background: var(--surface-solid);
 }
 
-/* Responsivo */
+/*
+    RESPONSIVO: telas com até 900px de largura (tablets e celulares).
+    A sidebar some do layout fixo e passa a ser um menu deslizante (off-canvas).
+    O conteúdo ocupa a tela toda. O botão hamburguer aparece.
+*/
 @media (max-width: 900px) {
     .mobile-header-btn { display: flex; }
 
@@ -602,6 +686,11 @@ body {
     }
 }
 
+/*
+    RESPONSIVO: telas com até 680px de largura (celulares pequenos).
+    Ajustes adicionais: fontes menores, padding reduzido, sidebar mais estreita
+    e modais que ocupam quase toda a tela.
+*/
 @media (max-width: 680px) {
     .app-wrapper {
         padding-left: 0;
@@ -667,7 +756,7 @@ body {
         overflow-y: auto;
     }
 
-    /* Empréstimos: botões em coluna para caber no mobile */
+    /* Na tela de empréstimos, os botões Histórico e Novo Aluguel empilham verticalmente */
     .page-actions-alugueis {
         flex-direction: column;
         align-items: flex-end;

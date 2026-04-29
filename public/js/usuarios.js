@@ -1,40 +1,57 @@
-// Gerenciamento de usuários
+/*
+    GERENCIAMENTO DE USUÁRIOS: listagem, edição, bloqueio e controle de multas.
+    Este arquivo é exclusivo para bibliotecários (administradores) e concentra:
 
-// Debounce para evitar múltiplas requisições de busca
+    - carregarUsuarios: busca e lista todos os usuários cadastrados com paginação
+    - editarUsuario: abre o modal de edição pré-preenchido com os dados do usuário
+    - verMultasUsuario / carregarMultasUsuario: exibe o histórico de multas de um usuário
+    - bloquearUsuario / desbloquearUsuario: controla o acesso do usuário ao sistema
+    - quitarMultasUsuario: marca todas as multas pendentes de um usuário como pagas
+*/
+
+/*
+    Versão com debounce da função de carregamento.
+    Evita disparar uma requisição ao servidor a cada letra digitada na busca.
+    Aguarda um curto intervalo após o usuário parar de digitar antes de buscar.
+*/
 const carregarUsuariosDebounced = debounce((busca) => carregarUsuarios(1, busca));
 
-// Carrega lista de usuários com paginação e busca
+/*
+    Busca e renderiza a lista de usuários cadastrados.
+    Suporta paginação (20 por página) e filtro de busca por nome ou email.
+    Cada linha da tabela mostra: ID, nome (com badges de multa/bloqueio),
+    email, tipo de conta (usuário/bibliotecário) e botões de ação.
+    Os botões variam conforme o estado do usuário (bloqueado ou não, com multa ou não).
+*/
 async function carregarUsuarios(pagina = 1, busca = '') {
-    // Mostra estado de carregamento
     definirCarregando('usuariosTbody', 5);
     try {
-        // Prepara parâmetros da requisição
         const parametros = new URLSearchParams({ 
             page: pagina, 
             limit: 20
         });
         
-        // Adiciona busca se houver
         if (busca.trim()) {
             parametros.set('busca', busca.trim());
         }
 
-        // Busca usuários na API
         const { data, pages } = await api(`/usuarios?${parametros}`);
         const tbody = document.getElementById('usuariosTbody');
         tbody.innerHTML = '';
         
-        // Verifica se há usuários
         if (!data.length) { 
             definirVazio('usuariosTbody', 5, 'Nenhum usuário cadastrado.'); 
             return; 
         }
 
-        // Renderiza cada usuário na tabela
         data.forEach(u => {
             const tr = document.createElement('tr');
             
-            // Badges de status (multas/bloqueios)
+            /*
+                Badges de alerta que aparecem ao lado do nome do usuário:
+                - Badge vermelho "multa": o usuário tem multa pendente a pagar
+                - Badge amarelo "bloqueado": o usuário não pode fazer empréstimos
+            */
             let badgesDestaque = '';
             if (u.multa_pendente) {
                 badgesDestaque += `<span class="badge badge-danger" style="margin-left:6px;font-size:.55rem">multa</span>`;
@@ -43,7 +60,11 @@ async function carregarUsuarios(pagina = 1, busca = '') {
                 badgesDestaque += `<span class="badge badge-warning" style="margin-left:6px;font-size:.55rem">bloqueado</span>`;
             }
 
-            // Botões de ação
+            /*
+                Botão de bloqueio: muda conforme o estado atual do usuário.
+                Se estiver bloqueado, mostra "Desbloquear" (cinza).
+                Se estiver livre, mostra "Bloquear" (vermelho).
+            */
             let botaoBloqueio = '';
             const userId = JSON.stringify(String(u.id));
             const userName = JSON.stringify(u.nome);
@@ -53,7 +74,7 @@ async function carregarUsuarios(pagina = 1, busca = '') {
                 botaoBloqueio = `<button class="btn btn-danger" onclick='bloquearUsuario(${userId}, ${userName})'>Bloquear</button>`;
             }
 
-            // Botão de multas
+            // Botão de multas: só aparece se o usuário tem multas pendentes
             let botaoMultas = '';
             if (u.multa_pendente) {
                 botaoMultas = `<button class="btn btn-warning" onclick='verMultasUsuario(${userId}, ${userName})'>Multas</button>`;
@@ -80,6 +101,10 @@ async function carregarUsuarios(pagina = 1, busca = '') {
     }
 }
 
+/*
+    Abre o modal de edição de usuário pré-preenchido com os dados atuais.
+    Permite ao bibliotecário alterar nome, email e tipo de conta (usuário/bibliotecário).
+*/
 function editarUsuario(u) {
     document.getElementById('editUsuarioId').value = u.id;
     document.getElementById('editUsuarioNome').value = u.nome;
@@ -88,6 +113,10 @@ function editarUsuario(u) {
     abrirModal('editUsuarioModal');
 }
 
+/*
+    Ouve o envio do formulário de edição de usuário.
+    Envia os dados alterados para a API e fecha o modal ao concluir.
+*/
 document.getElementById('editUsuarioForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('editUsuarioId').value;
@@ -108,7 +137,10 @@ document.getElementById('editUsuarioForm').addEventListener('submit', async (e) 
     }
 });
 
-
+/*
+    Abre o modal de multas para um usuário específico.
+    Exibe o nome do usuário no título do modal e carrega o histórico de multas.
+*/
 async function verMultasUsuario(id, nome) {
     abrirModal('multasModal');
     document.getElementById('multasUsuarioNome').textContent = nome;
@@ -116,6 +148,11 @@ async function verMultasUsuario(id, nome) {
     await carregarMultasUsuario(id);
 }
 
+/*
+    Carrega o histórico de multas de um usuário e preenche a tabela do modal.
+    Exibe tipo de multa, livro relacionado, valor em reais, dias de atraso e status.
+    Se houver total pendente, mostra o botão "Quitar Multas"; caso contrário, oculta.
+*/
 async function carregarMultasUsuario(id) {
     definirCarregando('multasTbody', 5);
     try {
@@ -130,6 +167,7 @@ async function carregarMultasUsuario(id) {
 
         multas.forEach(m => {
             const tr = document.createElement('tr');
+            // Badge verde para multas pagas, vermelho para pendentes
             const classeBadge = m.status === 'pendente' ? 'badge-danger' : 'badge-success';
             
             tr.innerHTML = `
@@ -156,6 +194,11 @@ async function carregarMultasUsuario(id) {
     }
 }
 
+/*
+    Bloqueia um usuário, impedindo-o de realizar novos empréstimos.
+    Exige que o bibliotecário informe o motivo do bloqueio via prompt.
+    Se o motivo estiver vazio, a ação é cancelada silenciosamente.
+*/
 async function bloquearUsuario(id, nome) {
     exibirConfirmacao({
         icon: '🔒',
@@ -164,6 +207,7 @@ async function bloquearUsuario(id, nome) {
         okLabel: 'Bloquear',
         onOk: async () => {
             const motivo = prompt('Motivo do bloqueio:');
+            // Se o usuário cancelou o prompt ou deixou vazio, não faz nada
             if (!motivo) {
                 return;
             }
@@ -185,6 +229,10 @@ async function bloquearUsuario(id, nome) {
     });
 }
 
+/*
+    Desbloqueia um usuário, restaurando seu acesso aos empréstimos.
+    Exibe diálogo de confirmação antes de executar a ação.
+*/
 async function desbloquearUsuario(id, nome) {
     exibirConfirmacao({
         icon: '🔓',
@@ -203,6 +251,11 @@ async function desbloquearUsuario(id, nome) {
     });
 }
 
+/*
+    Quita (paga) todas as multas pendentes de um usuário de uma vez.
+    Lê o ID do usuário do campo oculto do modal de multas.
+    Após a quitação, recarrega as multas e a lista de usuários para atualizar os badges.
+*/
 async function quitarMultasUsuario() {
     const id = document.getElementById('multasUsuarioId').value;
     try {

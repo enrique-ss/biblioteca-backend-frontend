@@ -1,11 +1,28 @@
-// Acervo de livros
+/*
+    ACERVO FÍSICO: listagem, cadastro, edição e gestão de exemplares.
+    Este arquivo também processa o envio de documentos digitais (PDFs),
+    pois o formulário de cadastro é unificado (físico ou digital).
 
+    - carregarLivros: busca e renderiza os cards do acervo físico
+    - prepararAddLivro: abre o modal de cadastro adaptado ao tipo (físico ou digital)
+    - editarLivro / removerLivro: edição e exclusão de um livro (só bibliotecário)
+    - verExemplares / carregarExemplares: gerencia os exemplares físicos de um livro
+    - atualizarDisponibilidadeExemplar / atualizarCondicaoExemplar: altera o estado dos exemplares
+*/
+
+// Controlador para cancelar requisições de busca anteriores
 let controladorAbortarLivros = null;
 
-// Debounce para evitar múltiplas requisições de busca
+// Versão com debounce: aguarda pausa na digitação antes de buscar
 const carregarLivrosDebounced = debounce(() => carregarLivros(1));
 
-// Carrega lista de livros com paginação e busca
+/*
+    Busca e renderiza os cards do acervo físico com suporte a paginação (20/página) e busca.
+    Usa AbortController para cancelar a requisição anterior se uma nova for disparada.
+    Cada card exibe capa (ou gradiente), título, autor, sinopse, gênero, localização
+    na estante e contador de exemplares disponíveis.
+    Bibliotecários vêem botões de editar, ver exemplares e excluir.
+*/
 async function carregarLivros(pagina = 1) {
     // Cancela requisição anterior para evitar concorrência
     if (controladorAbortarLivros) {
@@ -60,12 +77,12 @@ async function carregarLivros(pagina = 1) {
         }
 
         const gradientes = [
-            'linear-gradient(135deg, #1e3a8a, #1e40af)', // Blue
-            'linear-gradient(135deg, #312e81, #3730a3)', // Indigo
-            'linear-gradient(135deg, #4c1d95, #5b21b6)', // Violet
-            'linear-gradient(135deg, #701a75, #86198f)', // Fuchsia
-            'linear-gradient(135deg, #831843, #9d174d)', // Pink
-            'linear-gradient(135deg, #111827, #1f2937)'  // Dark Gray
+            'linear-gradient(135deg, #1e3a8a, #1e40af)',
+            'linear-gradient(135deg, #312e81, #3730a3)',
+            'linear-gradient(135deg, #4c1d95, #5b21b6)',
+            'linear-gradient(135deg, #701a75, #86198f)',
+            'linear-gradient(135deg, #831843, #9d174d)',
+            'linear-gradient(135deg, #111827, #1f2937)'
         ];
 
         data.forEach((livro, index) => {
@@ -126,6 +143,13 @@ async function carregarLivros(pagina = 1) {
     }
 }
 
+/*
+    Prepara o modal de cadastro conforme o tipo escolhido: 'fisico' ou 'digital'.
+    Oculta e exibe os campos corretos para cada caso:
+    - Físico: campo de quantidade de exemplares (e corredor/prateleira no servidor)
+    - Digital: campo de número de páginas e campo de upload do arquivo PDF
+    O campo de capa é opcional em ambos os casos.
+*/
 function prepararAddLivro(tipo) {
     const frm = document.getElementById('addLivroForm');
     frm.reset();
@@ -174,7 +198,13 @@ function prepararAddLivro(tipo) {
     abrirModal('addLivroModal');
 }
 
-// Cadastro de livro
+/*
+    Ouve o envio do formulário unificado de cadastro (físico e digital).
+    A imagem de capa é convertida para Base64 antes de enviar (independente do tipo).
+    Para livros físicos: envia dados para /livros via POST.
+    Para digitais: converte o PDF para Base64 e envia para /acervo-digital.
+    O botão fica desabilitado durante o processamento para evitar envios duplos.
+*/
 document.getElementById('addLivroForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const tipo = document.getElementById('livroTipo').value;
@@ -256,6 +286,10 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
     }
 });
 
+/*
+    Abre o modal de edição de livro pré-preenchido com os dados atuais.
+    O objeto 'livro' já vem completo do card, então não precisa de nova requisição.
+*/
 function editarLivro(livro) {
     document.getElementById('editLivroId').value = livro.id;
     document.getElementById('editLivroTitulo').value = livro.titulo;
@@ -267,7 +301,11 @@ function editarLivro(livro) {
     abrirModal('editLivroModal');
 }
 
-// Atualização de livro
+/*
+    Ouve o envio do formulário de edição.
+    Envia apenas os metadados do livro (título, autor, gênero, etc.),
+    sem alterar os exemplares físicos já cadastrados.
+*/
 document.getElementById('editLivroForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('editLivroId').value;
@@ -294,6 +332,11 @@ document.getElementById('editLivroForm').addEventListener('submit', async (e) =>
     }
 });
 
+/*
+    Exclui permanentemente um livro e todos os seus exemplares do acervo.
+    Exibe diálogo de confirmação antes de executar.
+    ATENÇÃO: a exclusão remove todos os registros relacionados (exemplares, histórico).
+*/
 function removerLivro(id, titulo) {
     exibirConfirmacao({
         icon: '🗑️',
@@ -314,9 +357,13 @@ function removerLivro(id, titulo) {
     });
 }
 
-// Exemplares
-
-// Avalia estado do exemplar e retorna ações permitidas
+/*
+    GERENCIAMENTO DE EXEMPLARES
+    Retorna os controles HTML disponíveis para cada exemplar conforme seu estado:
+    - 'emprestado': sem ações (está em uso por alguém)
+    - 'perdido': só permite marcar como 'encontrado'
+    - demais: selects para alterar disponibilidade (disponível/manutenção) e condição (bom/danificado/perdido)
+*/
 function renderizarAcoesExemplar(livroId, ex) {
     // Se emprestado, não permite alteração
     if (ex.disponibilidade === 'emprestado') {
@@ -349,6 +396,10 @@ function renderizarAcoesExemplar(livroId, ex) {
         </select>`;
 }
 
+/*
+    Abre o modal de exemplares de um livro específico.
+    Exibe o título do livro no cabeçalho do modal e carrega a lista de exemplares.
+*/
 async function verExemplares(livroId, titulo) {
     document.getElementById('exemplaresTitulo').textContent = titulo;
     document.getElementById('exemplaresLivroId').value = livroId;
@@ -356,6 +407,11 @@ async function verExemplares(livroId, titulo) {
     await carregarExemplares(livroId);
 }
 
+/*
+    Carrega e renderiza a tabela de exemplares físicos de um livro.
+    Cada linha exibe: ID, código de inventário, disponibilidade, condição,
+    último emprestador e os controles de alteração de estado.
+*/
 async function carregarExemplares(livroId) {
     definirCarregando('exemplaresTbody', 7);
     try {
@@ -398,6 +454,10 @@ async function carregarExemplares(livroId) {
     }
 }
 
+/*
+    Altera a disponibilidade de um exemplar: 'disponivel' ou 'indisponivel' (em manutenção).
+    Após a atualização, recarrega a lista de exemplares e a grade de livros.
+*/
 async function atualizarDisponibilidadeExemplar(livroId, exemplarId, novaDisponibilidade) {
     if (!novaDisponibilidade) return;
     
@@ -417,6 +477,11 @@ async function atualizarDisponibilidadeExemplar(livroId, exemplarId, novaDisponi
     }
 }
 
+/*
+    Altera a condição física de um exemplar: 'bom', 'danificado' ou 'perdido'.
+    Se o estado for danificado ou perdido, solicita uma observação descritiva
+    para registrar o ocorrido no histórico do exemplar.
+*/
 async function atualizarCondicaoExemplar(livroId, exemplarId, novaCondicao) {
     if (!novaCondicao) return;
     

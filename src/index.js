@@ -1,14 +1,23 @@
-// --- CONFIGURAÇÕES E IMPORTAÇÕES ---
-// Importamos as ferramentas necessárias para o servidor funcionar
+/**
+ * SERVIDOR PRINCIPAL - Biblio Verso
+ * Este é o ponto de entrada da aplicação. Aqui configuramos o servidor Express,
+ * as comunicações em tempo real (Socket.io) e as rotas da API.
+ */
 const express = require('express'); // Framework para criar rotas e gerenciar requisições
 const cors = require('cors'); // Permite que o frontend acesse a API de diferentes origens
 const dotenv = require('dotenv'); // Carrega configurações de um arquivo secreto (.env)
 const path = require('path'); // Ajuda a lidar com caminhos de pastas no computador
 const http = require('http'); // Servidor básico de internet
-const { Server } = require('socket.io'); // Tecnologia para atualizações em tempo real (como um chat)
+const { Server } = require('socket.io'); // Tecnologia para atualizações em tempo real (comunicação bi-direcional)
+
+/**
+ * CONFIGURAÇÃO DE SEGURANÇA E INICIALIZAÇÃO
+ * Aqui importamos as ferramentas de controle administrativo, identificamos se o sistema está
+ * em modo de produção (online) ou desenvolvimento (local) e iniciamos o monitoramento de eventos.
+ */
 const { ensureDefaultAdmin } = require('./bootstrapAdmin'); // Garante que exista um administrador padrão
-const { runtimeMode } = require('./database'); // Verifica se estamos rodando online ou offline
-const { initMonitor } = require('./monitor'); // Inicializa o monitoramento do servidor
+const { runtimeMode } = require('./database'); // Identifica se estamos rodando online (Supabase) ou offline (SQLite)
+const { initMonitor } = require('./monitor'); // Inicializa o sistema de monitoramento inteligente
 
 // Carrega as configurações do arquivo .env de forma silenciosa
 dotenv.config({ quiet: true });

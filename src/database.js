@@ -1,14 +1,18 @@
-// --- IMPORTAÇÕES ---
-// Ferramentas para arquivos, criptografia e banco de dados
+/**
+ * CAMADA DE DADOS (Database)
+ * Este módulo é o coração da persistência do Biblio Verso. Ele gerencia a conexão híbrida:
+ * 1. MODO ONLINE: Utiliza o Supabase (PostgreSQL na nuvem) para escalabilidade.
+ * 2. MODO OFFLINE: Simula a API do Supabase usando o SQLite local para desenvolvimento sem internet.
+ */
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto'); // Para gerar IDs únicos
-const bcrypt = require('bcryptjs'); // Para esconder senhas
-const jwt = require('jsonwebtoken'); // Para criar tokens de acesso (crachás digitais)
-const Database = require('better-sqlite3'); // Banco de dados local (SQLite)
-const { createClient } = require('@supabase/supabase-js'); // Banco de dados na nuvem (Supabase)
+const crypto = require('crypto'); // Utilizado para gerar identificadores únicos (UUIDs)
+const bcrypt = require('bcryptjs'); // Utilizado para transformar senhas em códigos ilegíveis (segurança)
+const jwt = require('jsonwebtoken'); // Utilizado para gerar os "crachás digitais" de acesso (Tokens)
+const Database = require('better-sqlite3'); // Banco de dados local ultrarrápido
+const { createClient } = require('@supabase/supabase-js'); // Cliente oficial da infraestrutura de nuvem
 const dotenv = require('dotenv');
-const { applySchema, dbPath } = require('./setup'); // Configurações iniciais do banco
+const { applySchema, dbPath } = require('./setup'); // Script de criação das tabelas
 
 dotenv.config({ quiet: true });
 

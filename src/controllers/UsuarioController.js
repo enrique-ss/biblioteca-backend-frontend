@@ -1,30 +1,37 @@
 const supabase = require('../database');
 
+/**
+ * UsuarioController: Responsável pela administração de contas e usuários.
+ * Controla permissões, bloqueios, edição de perfis e a desativação de contas.
+ */
 class UsuarioController {
 
-  // Lista usuários com paginação e busca
+  /**
+   * Lista todos os usuários cadastrados com suporte a busca e paginação.
+   * Permite que o bibliotecário encontre leitores por nome ou e-mail.
+   */
   listar = async (req, res) => {
     try {
       const { busca, page, limit } = req.query;
 
-      // Prepara paginação
+      // Define a página e a quantidade de registros por vez
       const pagina = Math.max(1, parseInt(String(page || 1)));
       const limite = Math.min(100, parseInt(String(limit || 20)));
       const deslocamento = (pagina - 1) * limite;
 
-      // Consulta base de usuários
+      // Busca apenas usuários ativos (que não foram deletados/arquivados)
       let consulta = supabase
         .from('usuarios')
         .select('id, nome, email, tipo, multa_pendente, bloqueado, motivo_bloqueio, created_at', { count: 'exact' })
         .is('deleted_at', null);
 
-      // Aplica busca por nome ou email
+      // Filtra por nome ou e-mail se houver um termo de busca
       const termoBusca = String(busca || '').trim();
       if (termoBusca) {
         consulta = consulta.or(`nome.ilike.%${termoBusca}%,email.ilike.%${termoBusca}%`);
       }
 
-      // Ordena e pagina
+      // Organiza por nome e aplica a paginação
       consulta = consulta.order('nome', { ascending: true }).range(deslocamento, deslocamento + limite - 1);
 
       const { data: registros, count: total, error } = await consulta;
@@ -44,13 +51,16 @@ class UsuarioController {
     }
   };
 
-  // Atualiza dados de um usuário existente
+  /**
+   * Permite que o bibliotecário altere dados de um usuário (nome, e-mail ou cargo).
+   * Realiza validações de segurança para garantir que o e-mail não seja duplicado.
+   */
   atualizar = async (req, res) => {
     try {
       const { id } = req.params;
       const { nome, email, tipo } = req.body;
 
-      // Verifica se usuário existe
+      // Garante que o usuário alvo existe e está ativo
       const { data: usuarioAlvo } = await supabase
         .from('usuarios')
         .select('*')
@@ -64,7 +74,7 @@ class UsuarioController {
 
       const dadosParaAtualizar = {};
 
-      // Valida e atualiza nome
+      // Validação de nome (mínimo de 3 letras)
       if (nome !== undefined) {
         if (nome.trim().length < 3) {
           return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
@@ -72,14 +82,13 @@ class UsuarioController {
         dadosParaAtualizar.nome = nome.trim();
       }
 
-      // Valida e atualiza email
+      // Validação de e-mail e verificação de duplicidade
       if (email !== undefined) {
         const emailFormatado = email.toLowerCase().trim();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailFormatado)) {
           return res.status(400).json({ error: 'Formato de e-mail inválido.' });
         }
         
-        // Verifica se email já está em uso
         const { data: emailEmUso } = await supabase
           .from('usuarios')
           .select('*')
@@ -94,7 +103,7 @@ class UsuarioController {
         dadosParaAtualizar.email = emailFormatado;
       }
 
-      // Valida e atualiza tipo
+      // Mudança de privilégios (usuário comum vs bibliotecário)
       if (tipo !== undefined) {
         if (!['usuario', 'bibliotecario'].includes(tipo)) {
           return res.status(400).json({ error: 'Tipo de conta inválido.' });
@@ -117,6 +126,7 @@ class UsuarioController {
         .eq('id', id)
         .single();
 
+      // Notifica o frontend para atualizar as listas
       req.app.get('io').emit('refreshData', 'usuarios');
 
       res.json({ 
@@ -129,6 +139,11 @@ class UsuarioController {
     }
   };
 
+  /**
+   * Desativa uma conta de usuário (Arquivamento).
+   * O usuário não é apagado definitivamente para manter o histórico de empréstimos (auditoria).
+   * Bloqueia a exclusão se o usuário ainda tiver livros em posse.
+   */
   excluir = async (req, res) => {
     try {
       const { id } = req.params;
@@ -144,6 +159,7 @@ class UsuarioController {
         return res.status(404).json({ error: 'Usuário não encontrado ou já desativado.' });
       }
 
+      // Segurança: não permite arquivar quem está com livros da biblioteca
       const { count: totalAtivos } = await supabase
         .from('alugueis')
         .select('*', { count: 'exact', head: true })
@@ -156,6 +172,7 @@ class UsuarioController {
         });
       }
 
+      // Soft delete: marca a data de exclusão sem apagar a linha
       const { error } = await supabase
         .from('usuarios')
         .update({ deleted_at: new Date().toISOString() })
@@ -172,6 +189,10 @@ class UsuarioController {
     }
   };
 
+  /**
+   * Impede que um usuário realize novos empréstimos por tempo indeterminado.
+   * Exige que o bibliotecário forneça uma justificativa clara.
+   */
   bloquear = async (req, res) => {
     try {
       const { id } = req.params;
@@ -195,15 +216,10 @@ class UsuarioController {
         return res.status(400).json({ error: 'Este usuário já se encontra bloqueado.' });
       }
 
-      const { error } = await supabase
-        .from('usuarios')
-        .update({
-          bloqueado: true,
-          motivo_bloqueio: motivo.trim()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
+      await supabase.from('usuarios').update({
+        bloqueado: true,
+        motivo_bloqueio: motivo.trim()
+      }).eq('id', id);
 
       req.app.get('io').emit('refreshData', 'usuarios');
 
@@ -214,6 +230,9 @@ class UsuarioController {
     }
   };
 
+  /**
+   * Remove o bloqueio administrativo de um usuário, restaurando seu acesso.
+   */
   desbloquear = async (req, res) => {
     try {
       const { id } = req.params;
@@ -232,15 +251,10 @@ class UsuarioController {
         return res.status(400).json({ error: 'Este usuário não está bloqueado.' });
       }
 
-      const { error } = await supabase
-        .from('usuarios')
-        .update({
-          bloqueado: false,
-          motivo_bloqueio: null
-        })
-        .eq('id', id);
-
-      if (error) throw error;
+      await supabase.from('usuarios').update({
+        bloqueado: false,
+        motivo_bloqueio: null
+      }).eq('id', id);
 
       req.app.get('io').emit('refreshData', 'usuarios');
 
@@ -253,3 +267,4 @@ class UsuarioController {
 }
 
 module.exports = new UsuarioController();
+

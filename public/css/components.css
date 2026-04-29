@@ -1,7 +1,16 @@
-/* Formulários */
+/*
+    FORMULÁRIOS: estilo dos grupos de campo, labels e campos de texto.
+    .form-group: agrupa o label com seu campo, mantendo espaçamento uniforme.
+    .form-label: rótulo acima do campo, em letras mayúsculas e douradas.
+*/
 .form-group { margin-bottom: 24px; }
 .form-label { display: block; margin-bottom: 10px; font-weight: 600; color: var(--accent); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.1em; }
 
+/*
+    Campo de texto e select compartilham o mesmo visual:
+    fundo semitransparente com efeito glassmorphism, borda sutil.
+    Ao receber foco (usuário clicou), a borda fica dourada.
+*/
 .form-input, .form-select {
     width: 100%;
     padding: 12px 18px;
@@ -21,6 +30,11 @@
     outline: none;
 }
 
+/*
+    Select customizado: esconde a seta padrão do navegador
+    e usa uma seta SVG dourada desenhada manualmente.
+    No tema claro, a seta é verde.
+*/
 .form-select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23D4AF37' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -32,6 +46,7 @@
 
 .form-footer { text-align: center; margin-top: 20px; color: var(--text-dim); font-size: var(--fs-sm); }
 
+/* Botões de ação nas telas de login e cadastro: ficam lado a lado com largura igual */
 .auth-actions {
     display: flex;
     gap: 12px;
@@ -47,7 +62,11 @@
 .link-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-family: 'Crimson Pro', serif; font-size: inherit; text-decoration: underline; text-underline-offset: 3px; padding: 0; }
 .link-btn:hover { opacity: 0.8; }
 
-/* Botões */
+/*
+    BOTÕES: todos os botões do sistema herdam de .btn.
+    Fontes em Cinzel (maiúsculas), bordas arredondadas em pílula,
+    transição suave e efeito de escala ao clicar.
+*/
 .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     padding: 12px 32px;
@@ -59,37 +78,48 @@
 }
 .btn:active { transform: scale(0.96); }
 
+/* Botão principal: fundo dourado, sobe ao passar o mouse */
 .btn-primary  { background: var(--accent); color: var(--bg); }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow); filter: brightness(1.1); }
 
+/* Botão de sucesso: verde, para confirmar ações positivas */
 .btn-success  { background: var(--success); color: white; border: none; }
 .btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
+/* Botão de perigo: vermelho, para ações destrutivas como excluir ou bloquear */
 .btn-danger   { background: var(--danger); color: white; border: none; }
 .btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
+/* Botão fantasma: escuro e discreto, vira dourado ao passar o mouse */
 .btn-ghost    { background: rgba(28, 34, 30, 0.9); color: white; border: none; }
 .btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
 
 .btn-gold     { background: var(--accent); color: var(--bg); }
 
+/* Modificações de tamanho: --block (largura total), --sm (compacto), --action (centralizado largo) */
 .btn-block  { width: 100%; }
 .btn-sm     { padding: 10px 24px; font-size: 0.8rem; letter-spacing: 0.05em; min-height: 38px; }
 .btn-action { display: block; margin: 0 auto; min-width: 220px; padding: 14px 36px; }
 
+/* Grupos de botões: par lado a lado ou grupo com flex */
 .btn-pair { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
 .btn-pair .btn { min-width: 140px; }
 
 .btn-group { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
 .btn-group .btn { flex: 1; min-width: 100px; max-width: 220px; }
 
+/* Responsivo: botões de auth em coluna em telas pequenas */
 @media (max-width: 640px) {
     .auth-actions {
         flex-direction: column;
     }
 }
 
-/* Tabelas */
+/*
+    TABELAS: estrutura das tabelas de dados do sistema (livros, usuários, empréstimos).
+    .table-wrap: permite rolagem horizontal sem quebrar o layout.
+    .data-table: espaçamento entre linhas usando border-spacing em vez de bordas.
+*/
 .table-wrap {
     overflow-x: auto;
     padding: 10px 0;
@@ -136,10 +166,15 @@
     background: var(--surface-solid);
 }
 .td-actions { display: flex; gap: 8px; align-items: center; }
+/* Linha vazia: mensagem centralizada quando não há registros para exibir */
 .table-empty { text-align: center; padding: 48px 20px; color: var(--text-faint); font-style: italic; font-size: var(--fs-base); border: none !important; }
+/* Linha de carregamento: texto em itálico centralizado enquanto os dados chegam */
 .loading-row td { text-align: center; padding: 44px 20px; color: var(--text-faint); font-style: italic; font-size: var(--fs-sm); border: none !important; }
 
-/* Ações de exemplar */
+/*
+    Ações do exemplar: select pequeno para alterar disponibilidade e condição
+    diretamente na tabela de exemplares, sem abrir modal.
+*/
 .exemplar-actions {
     display: flex;
     flex-direction: column;
@@ -156,7 +191,10 @@
     outline: none;
 }
 
-/* Otimizações para tabela de exemplares */
+/*
+    Tabela de exemplares: tem colunas fixas e permite rolagem horizontal
+    porque pode ter muitas colunas em telas pequenas.
+*/
 .exemplares-table-wrap {
     overflow-x: auto;
     max-width: 100%;
@@ -187,7 +225,11 @@
     padding: 10px 8px;
 }
 
-/* Badges */
+/*
+    BADGES: etiquetas coloridas que indicam status de forma visual.
+    Usadas para mostrar disponibilidade, tipo de usuário, status de multa, etc.
+    Altura mínima de 38px garante que todos os badges tenham o mesmo tamanho.
+*/
 .badge { 
     display: inline-flex; 
     align-items: center; 
@@ -201,10 +243,11 @@
     border: none; 
     white-space: nowrap; 
     line-height: 1;
-    min-height: 38px; /* Altura padronizada para badges */
+    min-height: 38px;
     justify-content: center;
 }
 
+/* Variações de cor do badge conforme o significado: verde=ok, dourado=info, vermelho=erro, amarelo=aviso */
 .badge-success { background: #2A9D8F !important; color: #FFFFFF !important; }
 .badge-info    { background: #D4AF37 !important; color: #FFFFFF !important; }
 .badge-danger  { background: #E63946 !important; color: #FFFFFF !important; }
@@ -212,6 +255,12 @@
 .badge-gold    { background: #D4AF37 !important; color: #0A0C0B !important; }
 .badge-usuario { background: #646464 !important; color: #FFFFFF !important; }
 
+/*
+    MODAIS: janelas flutuantes que aparecem sobre o conteúdo.
+    O fundo (backdrop) escurece a tela por baixo.
+    A caixa do modal (.modal-box) anima ao entrar (efeito de mola).
+    A linha dourada no topo é um detalhe decorativo elegante.
+*/
 .modal { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; padding: 20px; }
 .modal.active { display: flex; }
 .modal-backdrop { position: absolute; inset: 0; background: rgba(5,6,5,.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
@@ -227,7 +276,11 @@
 .modal-title    { font-family: 'Cinzel', serif; font-size: var(--fs-md); font-weight: 700; color: var(--accent); letter-spacing: .05em; margin-bottom: 4px; }
 .modal-subtitle { color: var(--text); font-style: italic; font-size: var(--fs-sm); margin-bottom: 24px; }
 
-/* Confirmação */
+/*
+    DIÁLOGO DE CONFIRMAÇÃO: caixa centralizada que pede confirmação antes de ações irreversíveis.
+    Tem z-index maior que modais para aparecer sempre por cima.
+    Fundo com blur mais forte para destacar a gravidade da ação.
+*/
 #confirmDialog { display: none; position: fixed; inset: 0; z-index: 800; align-items: center; justify-content: center; padding: 20px; }
 #confirmDialog.active { display: flex; }
 .confirm-backdrop { position: absolute; inset: 0; background: rgba(5,6,5,.80); backdrop-filter: blur(8px); }
@@ -250,7 +303,10 @@
 .confirm-msg     { color: var(--text-dim); font-style: italic; font-size: var(--fs-sm); margin-bottom: 22px; line-height: 1.5; }
 .confirm-actions { display: flex; gap: 10px; justify-content: center; }
 
-/* Paginação */
+/*
+    PAGINAÇÃO: barra de botões numéricos para navegar entre páginas de resultados.
+    .pg-btn: botão de página; .pg-btn.active: página atual em destaque dourado.
+*/
 .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 0 4px; flex-wrap: wrap; }
 .pg-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: var(--r-sm); padding: 6px 12px; font-family: 'Cinzel', serif; font-size: var(--fs-xs); cursor: pointer; transition: all .15s; }
 .pg-btn:hover:not(:disabled) { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
@@ -258,11 +314,11 @@
 .pg-btn:disabled { opacity: .4; cursor: not-allowed; }
 .pg-info { font-family: 'Cinzel', serif; font-size: var(--fs-xs); color: var(--text); padding: 0 8px; }
 
-/* Banner de atrasados */
+/* Banner de alerta de empréstimos atrasados: faixa vermelha que aparece no topo da tela de empréstimos */
 .atrasados-banner { width: 100%; margin-top: 12px; padding: 12px 16px; background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.30); border-radius: var(--r-md); color: #f85149; font-family: 'Cinzel', serif; font-size: var(--fs-xs); letter-spacing: .06em; display: flex; align-items: center; gap: 10px; }
 [data-theme="light"] .atrasados-banner { background: rgba(192,57,43,.08); border-color: rgba(192,57,43,.25); color: #c0392b; }
 
-/* Responsivo */
+/* Responsivo: modal e tabela adaptados para telas pequenas */
 @media (max-width: 680px) {
     .modal-box { padding: 24px 18px; }
     .btn-group { flex-direction: row; flex-wrap: wrap; }
@@ -271,7 +327,11 @@
     .data-table th, .data-table td { padding: 10px; }
 }
 
-/* Hero Carousel de Novidades */
+/*
+    CARROSSEL DE NOVIDADES: ocupa toda a largura da tela inicial
+    e exibe os útimos livros adicionados em formato hero (banner grande).
+    O carrossel passa automaticamente e tem pontinhos de navegação abaixo.
+*/
 .novidades-section {
     width: 100%;
     margin-top: 20px;
@@ -294,11 +354,13 @@
     width: 100%;
 }
 
+/* Cada slide é um item do carrossel: ocupa 100% da largura do trilho */
 .carousel-slide {
     flex: 0 0 100%;
     width: 100%;
 }
 
+/* Pontinhos de navegação abaixo do carrossel: indicam quantos slides existem e qual está ativo */
 .carousel-dots {
     display: flex;
     justify-content: center;
@@ -317,6 +379,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Ponto ativo: fica dourado e maior para indicar o slide atual */
 .carousel-dot.active {
     background: var(--accent);
     opacity: 1;

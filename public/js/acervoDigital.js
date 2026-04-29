@@ -1,14 +1,38 @@
-// Acervo digital (PDFs)
+/*
+    ACERVO DIGITAL: listagem, download, aprovação e remoção de documentos PDF.
+    Este arquivo gerencia toda a interação com o acervo digital da biblioteca:
 
+    - carregarAcervoDigital: busca os PDFs do servidor e renderiza os cards na tela
+    - downloadPDF: cria um link temporário para iniciar o download do arquivo
+    - carregarPendencias: lista documentos enviados por usuários aguardando aprovação
+    - resolverPendencia: aprova ou rejeita um documento pendente (só bibliotecário)
+    - removerDocumentoDigital: exclui permanentemente um documento do acervo
+*/
+
+// Variável que armazena o controlador para cancelar buscas em andamento
 let controladorAbortarDigital = null;
 
+/*
+    Versão com debounce da função de carregamento.
+    Quando o usuário digita na barra de busca, espera um momento antes de
+    disparar a requisição, evitando uma chamada ao servidor a cada letra digitada.
+*/
 const carregarAcervoDigitalDebounced = debounce((valor) => carregarAcervoDigital(1));
 
+/*
+    Busca os documentos digitais do servidor e renderiza os cards na tela.
+    Suporta paginação (12 itens por página) e filtragem por busca.
+    Se uma busca anterior ainda estiver em andamento, ela é cancelada
+    para evitar conflitos de resultado (AbortController).
+    Cada card exibe: capa (ou gradiente colorido), título, autor, sinopse,
+    gênero, ano, páginas, tamanho e botão de download.
+    Bibliotecários também veem o botão de excluir.
+*/
 async function carregarAcervoDigital(pagina = 1) {
     const grid = document.getElementById('digitalGrid');
     const busca = document.getElementById('buscaDigital').value;
 
-    // Cancela requisição anterior
+    // Cancela a requisição anterior se ainda estiver em andamento
     if (controladorAbortarDigital) {
         controladorAbortarDigital.abort();
     }
@@ -44,23 +68,30 @@ async function carregarAcervoDigital(pagina = 1) {
 
         grid.innerHTML = '';
         
+        /*
+            Gradientes usados como fundo dos cards quando o livro não tem imagem de capa.
+            Cada livro pega um gradiente baseado na sua posição na lista (index % total),
+            garantindo variação visual mesmo sem imagem.
+        */
         const gradientes = [
-            'linear-gradient(135deg, #1e3a8a, #1e40af)', // Blue
-            'linear-gradient(135deg, #312e81, #3730a3)', // Indigo
-            'linear-gradient(135deg, #4c1d95, #5b21b6)', // Violet
-            'linear-gradient(135deg, #701a75, #86198f)', // Fuchsia
-            'linear-gradient(135deg, #831843, #9d174d)', // Pink
-            'linear-gradient(135deg, #111827, #1f2937)'  // Dark Gray
+            'linear-gradient(135deg, #1e3a8a, #1e40af)',
+            'linear-gradient(135deg, #312e81, #3730a3)',
+            'linear-gradient(135deg, #4c1d95, #5b21b6)',
+            'linear-gradient(135deg, #701a75, #86198f)',
+            'linear-gradient(135deg, #831843, #9d174d)',
+            'linear-gradient(135deg, #111827, #1f2937)'
         ];
 
         data.forEach((item, index) => {
             const card = document.createElement('div');
             card.className = 'digital-card';
             
+            // Se o livro tem capa, usa a imagem; senão, usa um gradiente colorido
             const fundo = item.capa_url 
                 ? `url('${esc(item.capa_url)}') center/cover no-repeat` 
                 : gradientes[index % gradientes.length];
             
+            // Verifica se o usuário atual é bibliotecário para exibir o botão de excluir
             const ehBibliotecario = currentUser?.permissions?.is_admin || false;
             
             card.innerHTML = `
@@ -93,12 +124,19 @@ async function carregarAcervoDigital(pagina = 1) {
         renderizarPaginacao('digitalPagination', page, pages, (p) => carregarAcervoDigital(p));
 
     } catch (error) {
+        // AbortError é esperado quando a busca é cancelada; ignora silenciosamente
         if (error.name === 'AbortError') return;
         console.error(error);
         grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--danger);">${error.message}</div>`;
     }
 }
 
+/*
+    Inicia o download de um arquivo PDF.
+    Cria um link invisível (<a>) apontando para a URL do arquivo,
+    simula um clique e remove o link logo em seguida.
+    Este método funciona mesmo para arquivos hospedados em outros domínios.
+*/
 function downloadPDF(url, titulo) {
     const link = document.createElement('a');
     link.href = url;
@@ -109,9 +147,14 @@ function downloadPDF(url, titulo) {
     exibirAlerta('Download iniciado...');
 }
 
-// Formulário consolidado em livros.js
+// O formulário de envio de documento digital está consolidado em livros.js
 
-// Gestão de pendências
+/*
+    Carrega e exibe o modal de documentos pendentes de aprovação.
+    Apenas bibliotecários têm acesso. Busca todos os documentos enviados por
+    usuários que ainda não foram aprovados ou rejeitados.
+    Exibe título, remetente, categoria e botões de ação para cada item.
+*/
 async function carregarPendencias() {
     abrirModal('aprovacoesModal');
     const tbody = document.getElementById('aprovacoesTbody');
@@ -145,6 +188,13 @@ async function carregarPendencias() {
     }
 }
 
+/*
+    Aprova ou rejeita um documento digital pendente.
+    A ação é definida pelo parâmetro: 'aprovar' publica o documento no acervo,
+    'rejeitar' remove o arquivo e descarta a submissão.
+    Após a ação, recarrega a lista de pendências e atualiza o contador de notificações.
+    Se o acervo digital estiver aberto, também recarrega a grade de livros.
+*/
 async function resolverPendencia(id, acao) {
     if(!confirm(`Tem certeza que deseja ${acao} este documento?`)) return;
 
@@ -156,16 +206,21 @@ async function resolverPendencia(id, acao) {
             method: 'PATCH'
         });
         exibirAlerta(rsp.message, 'success');
-        carregarPendencias(); // Recarrega a lista
-        if (typeof buscarNotificacoes === 'function') buscarNotificacoes(); // Atualiza contador de alertas
+        carregarPendencias();
+        if (typeof buscarNotificacoes === 'function') buscarNotificacoes();
         if (document.getElementById('acervoDigitalScreen').classList.contains('active')) {
-             carregarAcervoDigital(1); // Atualiza o grid
+             carregarAcervoDigital(1);
         }
     } catch (erro) {
         exibirAlerta(erro.message, 'error');
     }
 }
 
+/*
+    Remove permanentemente um documento do acervo digital.
+    Exibe um diálogo de confirmação antes de executar a exclusão,
+    pois a ação não pode ser desfeita. Só bibliotecários têm acesso a esta função.
+*/
 function removerDocumentoDigital(id, titulo) {
     exibirConfirmacao({
         icon: ' ',

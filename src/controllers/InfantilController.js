@@ -1,14 +1,21 @@
 const supabase = require('../database');
 
+/**
+ * InfantilController: O coração do "Espaço Literário".
+ * Gerencia todo o conteúdo pedagógico, lições, quizzes e o sistema de gamificação (XP, Níveis e Vidas).
+ */
 class InfantilController {
 
-  // Retorna dados completos do espaço infantil
+  /**
+   * Banco de dados local com todo o conteúdo educacional.
+   * Contém as lições divididas por faixa etária, com textos explicativos e perguntas de quiz.
+   */
   getFullData = () => {
     return {
       infantil: {
         greeting: "Olá, Pequeno Leitor! 📚",
         avatar: "🌱",
-        // Categorias de conteúdo por faixa etária
+        // Categorias para crianças pequenas
         categories: [
           { id: 'contos', name: 'Contos e Fábulas', icon: '🐺', color: 'var(--accent)' },
           { id: 'poesia', name: 'Poesia', icon: '🎵', color: '#6a5ae0' },
@@ -110,6 +117,7 @@ class InfantilController {
       infantojuvenil: {
         greeting: "Olá, Grande Leitor! 📚",
         avatar: "🚀",
+        // Categorias para adolescentes
         categories: [
           { id: 'contos', name: 'Contos Brasileiros', icon: '🏜️', color: 'var(--accent)' },
           { id: 'poesia', name: 'Poesia Moderna', icon: '🎭', color: '#6a5ae0' }
@@ -152,6 +160,7 @@ class InfantilController {
       preadolescente: {
         greeting: "Olá, Crítico Literário! 📚",
         avatar: "🎓",
+        // Categorias para jovens críticos
         categories: [
           { id: 'teoria', name: 'Teoria Literária', icon: '📖', color: 'var(--accent)' },
           { id: 'brasileira', name: 'Literatura Brasileira', icon: '🦜', color: '#00d68f' }
@@ -193,17 +202,23 @@ class InfantilController {
     };
   };
 
+  /**
+   * Coleta todo o progresso do usuário logado (XP, Nível, Vidas) e o conteúdo disponível.
+   * Filtra as respostas corretas do quiz para que o usuário não as veja no código-fonte antes de responder.
+   */
   getData = async (req, res) => {
     try {
       const userId = req.usuario?.id;
       if (!userId) return res.status(401).json({ error: 'Usuário não identificado.' });
 
+      // Busca dados de gamificação
       const { data: user } = await supabase
         .from('usuarios')
         .select('infantil_xp, infantil_level, infantil_hearts')
         .eq('id', userId)
         .single();
 
+      // Busca quais lições o usuário já completou com sucesso
       const { data: completedLessonsRecords } = await supabase
         .from('usuarios_leicoes_infantis')
         .select('leicao_id')
@@ -213,6 +228,10 @@ class InfantilController {
 
       const fullData = this.getFullData();
       
+      /**
+       * Segurança: Limpa as respostas ("a") dos objetos do quiz.
+       * Isso impede que usuários curiosos descubram o gabarito inspecionando a rede.
+       */
       const removeAnswers = (obj) => {
         for (const age in obj) {
           if (obj[age].lessons) {
@@ -229,6 +248,7 @@ class InfantilController {
 
       removeAnswers(fullData);
 
+      // Cálculos matemáticos para a barra de progresso (porcentagem do nível)
       const xp = user?.infantil_xp || 0;
       const level = user?.infantil_level || 1;
       const xpPercentage = (xp / (level * 100)) * 100;
@@ -249,6 +269,10 @@ class InfantilController {
     }
   };
 
+  /**
+   * Verifica se o usuário acertou uma pergunta específica do quiz.
+   * Se errar, o servidor diminui uma "Vida" (Coração) do banco de dados.
+   */
   validateAnswer = async (req, res) => {
     try {
       const userId = req.usuario?.id;
@@ -259,6 +283,7 @@ class InfantilController {
       const fullData = this.getFullData();
       let foundQuestion = null;
 
+      // Localiza a questão no banco de dados completo (que tem as respostas)
       for (const age in fullData) {
         for (const cat in fullData[age].lessons) {
           const lesson = fullData[age].lessons[cat].find((l) => l.id === lessonId);
@@ -272,6 +297,7 @@ class InfantilController {
 
       if (!foundQuestion) return res.status(404).json({ error: 'Questão não encontrada.' });
 
+      // Comparação: a opção escolhida pelo usuário é a correta?
       const isCorrect = selectedIndex === foundQuestion.a;
       
       const { data: user } = await supabase.from('usuarios').select('*').eq('id', userId).single();
@@ -282,6 +308,7 @@ class InfantilController {
 
       let currentHearts = user.infantil_hearts;
 
+      // Penalidade por erro: tira uma vida
       if (!isCorrect) {
         currentHearts = Math.max(0, currentHearts - 1);
         await supabase.from('usuarios').update({ infantil_hearts: currentHearts }).eq('id', userId);
@@ -299,6 +326,10 @@ class InfantilController {
     }
   };
 
+  /**
+   * Finaliza o quiz e entrega as recompensas de XP e Nível.
+   * Calcula se o usuário passou de fase e se ganhou novas vidas.
+   */
   finishQuiz = async (req, res) => {
     try {
       const userId = req.usuario?.id;
@@ -306,6 +337,7 @@ class InfantilController {
 
       if (!userId) return res.status(401).json({ error: 'Acesso negado.' });
 
+      // Regra: precisa acertar pelo menos metade para passar
       const percentage = (correctCount / totalQuestions) * 100;
       const passed = percentage >= 50 && !gameOverByHearts;
       
@@ -315,6 +347,7 @@ class InfantilController {
         return res.status(401).json({ error: 'Sua conta não foi encontrada. Por favor, faça login novamente.' });
       }
 
+      // Verifica se é a primeira vez que ele termina essa lição
       const { data: completedRecord } = await supabase
         .from('usuarios_leicoes_infantis')
         .select('*')
@@ -336,11 +369,11 @@ class InfantilController {
         desc = `Você acertou ${correctCount} de ${totalQuestions} perguntas e provou sua sabedoria!`;
         
         if (!completedRecord) {
-          xpGain = 50;
-          hpGain = correctCount === totalQuestions ? 1 : 0;
+          xpGain = 50; // XP cheio por primeira vitória
+          hpGain = correctCount === totalQuestions ? 1 : 0; // Ganha vida se gabaritar
           await supabase.from('usuarios_leicoes_infantis').insert({ usuario_id: userId, leicao_id: lessonId });
         } else {
-          xpGain = 10;
+          xpGain = 10; // XP reduzido se estiver apenas revisando
         }
       } else {
         icon = '📖';
@@ -348,6 +381,7 @@ class InfantilController {
         desc = `Você acertou ${correctCount} de ${totalQuestions}. Tente novamente para ganhar XP!`;
       }
 
+      // Lógica de Subida de Nível: a cada 100 * Nível XP o usuário sobe
       let newXP = user.infantil_xp + xpGain;
       let newLevel = user.infantil_level;
       let newHearts = Math.min(5, user.infantil_hearts + hpGain);
@@ -357,6 +391,7 @@ class InfantilController {
         newLevel++;
       }
 
+      // Salva o novo progresso conquistado
       await supabase.from('usuarios').update({
         infantil_xp: newXP,
         infantil_level: newLevel,
@@ -374,6 +409,9 @@ class InfantilController {
     }
   };
 
+  /**
+   * Sincroniza o progresso manualmente (reserva para funções futuras).
+   */
   saveProgress = async (req, res) => {
     try {
       const userId = req.usuario?.id;
@@ -396,3 +434,4 @@ class InfantilController {
 }
 
 module.exports = new InfantilController();
+

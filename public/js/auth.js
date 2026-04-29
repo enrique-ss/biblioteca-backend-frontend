@@ -1,31 +1,39 @@
-// Autenticação de usuários
+/*
+    AUTENTICAÇÃO: login, registro e controle de sessão.
+    Este arquivo gerencia todo o ciclo de vida da sessão do usuário:
+    - Login: valida credenciais e armazena o token de acesso
+    - Registro: cria uma nova conta e já faz login automático
+    - Logout: pede confirmação e encerra a sessão com segurança
+    - atualizarNavbar: ajusta o que é visível na interface conforme o estado de login
+*/
 
-// Listener do formulário de login
+/*
+    Ouve o envio do formulário de login.
+    Quando o usuário clica em "Entrar", envia o email e a senha para a API.
+    Se o servidor aceitar, armazena o token JWT e os dados do usuário na memória,
+    salva no localStorage para manter a sessão ao recarregar a página,
+    e redireciona para a tela principal.
+*/
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
-        // Prepara dados de login
         const payload = {
             email: document.getElementById('loginEmail').value,
             senha: document.getElementById('loginPassword').value
         };
 
-        // Envia requisição de login
         const dados = await api('/auth/login', {
             method: 'POST',
             body: JSON.stringify(payload)
         });
 
-        // Armazena token e dados do usuário
+        // O token pode vir diretamente ou dentro de um objeto de sessão (Supabase)
         token = dados.token || dados.session?.access_token || null;
         currentUser = dados.usuario;
 
-        // Salva sessão e atualiza interface
         salvarSessao();
         atualizarNavbar();
         carregarMenu();
-
-        // Redireciona para o menu principal
         mostrarTela('menuScreen');
         e.target.reset();
     } catch (erro) {
@@ -33,11 +41,15 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 });
 
-// Listener do formulário de registro
+/*
+    Ouve o envio do formulário de criação de conta.
+    Todos os novos usuários são criados com o tipo "usuario" (leitor).
+    Apenas um administrador pode elevar um usuário a bibliotecário depois.
+    Após o cadastro bem-sucedido, o usuário já é logado automaticamente.
+*/
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
-        // Prepara dados de registro
         const payload = {
             nome: document.getElementById('regNome').value,
             email: document.getElementById('regEmail').value,
@@ -45,22 +57,18 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             tipo: 'usuario'
         };
 
-        // Envia requisição de registro
         const dados = await api('/auth/registrar', {
             method: 'POST',
             body: JSON.stringify(payload)
         });
 
-        // Armazena token e dados do usuário
+        // Armazena o token e os dados do novo usuário para já iniciar a sessão
         token = dados.token || dados.session?.access_token || null;
         currentUser = dados.usuario;
 
-        // Salva sessão e atualiza interface
         salvarSessao();
         atualizarNavbar();
         carregarMenu();
-
-        // Redireciona para o menu principal
         mostrarTela('menuScreen');
         e.target.reset();
     } catch (erro) {
@@ -68,6 +76,12 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     }
 });
 
+/*
+    Encerra a sessão do usuário.
+    Antes de limpar os dados, exibe um diálogo de confirmação para evitar
+    saídas acidentais. Ao confirmar, remove o token do localStorage,
+    oculta a sidebar e redireciona para a tela de login.
+*/
 function logout() {
     exibirConfirmacao({
         icon: 'Sair',
@@ -82,6 +96,12 @@ function logout() {
     });
 }
 
+/*
+    Atualiza a visibilidade dos elementos da interface conforme o estado de login.
+    Quando logado: exibe a sidebar, a navegação, o ícone de notificações e o perfil.
+    Quando deslogado: oculta tudo isso e remove o espaço reservado pela sidebar.
+    Esta função é chamada sempre que o estado de autenticação muda.
+*/
 function atualizarNavbar() {
     const estaLogado = !!currentUser;
     const sidebar = document.getElementById('sidebar');

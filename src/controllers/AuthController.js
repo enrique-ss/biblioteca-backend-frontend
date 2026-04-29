@@ -2,8 +2,16 @@ const supabaseAdmin = require('../database');
 const { supabaseAuth } = require('../database');
 const { isOfflineMode } = require('../database');
 
+/**
+ * AuthController: Gerencia a segurança e acesso ao sistema.
+ * Responsável por criar contas, validar logins e gerenciar dados sensíveis de perfil.
+ */
 class AuthController {
-  // Define permissões do usuário baseado no tipo
+  
+  /**
+   * Define o que cada usuário pode fazer no sistema.
+   * Centraliza as regras de negócio sobre permissões para facilitar mudanças futuras.
+   */
   getPermissions(tipo) {
     const ehAdmin = tipo === 'bibliotecario';
 
@@ -17,32 +25,38 @@ class AuthController {
     };
   }
 
-  // Registro de novo usuário no sistema
+  /**
+   * Cria um novo usuário no sistema.
+   * Realiza validações de segurança (tamanho da senha, formato de email)
+   * e salva os dados tanto no módulo de autenticação quanto na tabela de usuários.
+   */
   registrar = async (req, res) => {
     try {
       const { nome, email, senha } = req.body;
 
-      // Validação do nome
+      // O nome precisa ser identificável
       if (!nome || nome.trim().length < 3) {
         return res.status(400).json({ error: 'O nome deve conter pelo menos 3 caracteres.' });
       }
 
-      // Validação do email
+      // Validação de formato de e-mail para evitar erros de envio
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email || !emailRegex.test(email)) {
         return res.status(400).json({ error: 'Formato de e-mail invalido (exemplo: usuario@dominio.com).' });
       }
 
-      // Validação da senha
+      // Senhas curtas são fáceis de descobrir; exigimos ao menos 8 caracteres
       if (!senha || senha.length < 8) {
         return res.status(400).json({ error: 'A senha deve conter no minimo 8 caracteres.' });
       }
 
-      // Formata e prepara dados para cadastro
       const emailFormatado = email.toLowerCase().trim();
       const tipo = 'usuario';
 
-      // Cria usuário no Supabase Auth
+      /**
+       * O Supabase gerencia a parte "invisível" do usuário (login/senha).
+       * Passamos o nome e o tipo como metadados para o token de acesso.
+       */
       const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
         email: emailFormatado,
         password: senha,
@@ -56,7 +70,10 @@ class AuthController {
 
       if (authError) throw authError;
 
-      // Sempre salvar na tabela usuarios, tanto online quanto offline
+      /**
+       * Além do login, salvamos o usuário na nossa tabela principal
+       * para gerenciar multas, XP infantil e histórico de livros.
+       */
       const { error: dbError } = await supabaseAdmin.from('usuarios').insert({
         id: authData.user.id,
         nome: nome.trim(),
@@ -70,6 +87,7 @@ class AuthController {
 
       if (dbError) throw dbError;
 
+      // Avisa o sistema (via Socket) que um novo usuário apareceu, atualizando listas em tempo real
       req.app.get('io').emit('refreshData', 'usuarios');
 
       res.status(201).json({
@@ -90,29 +108,31 @@ class AuthController {
     }
   };
 
-  // Login do usuário no sistema
+  /**
+   * Valida as credenciais do usuário e libera o acesso.
+   * Retorna os dados do usuário e um "token" (chave) para as próximas requisições.
+   */
   login = async (req, res) => {
     try {
       const { email, senha } = req.body;
 
-      // Validação de campos obrigatórios
       if (!email || !senha) {
         return res.status(400).json({ error: 'E-mail e senha sao campos obrigatorios.' });
       }
 
       const emailFormatado = email.toLowerCase().trim();
 
-      // Autenticação do usuário no Supabase
+      // O Supabase verifica se a senha bate com o e-mail cadastrado
       const { data: authData, error: authError } = await supabaseAuth.auth.signInWithPassword({
         email: emailFormatado,
         password: senha
       });
 
-      // Verifica se credenciais estão corretas
       if (authError) {
         return res.status(401).json({ error: 'Credenciais invalidas. Verifique seu e-mail e senha.' });
       }
 
+      // Busca dados extras (como se o usuário é bibliotecário ou leitor)
       const { data: usuarioData } = await supabaseAdmin
         .from('usuarios')
         .select('*')
@@ -139,8 +159,13 @@ class AuthController {
     }
   };
 
+  /**
+   * Permite que o próprio usuário atualize seus dados de cadastro.
+   * Se trocar o e-mail ou senha, o sistema de autenticação é avisado.
+   */
   editarPerfil = async (req, res) => {
     try {
+      // Verifica se quem está tentando editar é realmente o dono da conta
       const authorization = req.headers.authorization;
       if (!authorization) {
         return res.status(401).json({ error: 'Token nao fornecido.' });
@@ -159,6 +184,7 @@ class AuthController {
       const { nome, email, senha } = req.body;
       const mudancas = {};
 
+      // Atualiza o nome se enviado e válido
       if (nome !== undefined) {
         if (nome.trim().length < 3) {
           return res.status(400).json({ error: 'O nome precisa ter ao menos 3 caracteres.' });
@@ -166,6 +192,7 @@ class AuthController {
         mudancas.nome = nome.trim();
       }
 
+      // Processo de troca de e-mail requer atualização no módulo administrativo do Supabase
       if (email !== undefined) {
         const emailFormatado = email.toLowerCase().trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -183,6 +210,7 @@ class AuthController {
         mudancas.email = emailFormatado;
       }
 
+      // Troca de senha: exige segurança mínima e avisa o servidor de Auth
       if (senha !== undefined) {
         if (senha.length < 8) {
           return res.status(400).json({ error: 'A nova senha deve ter no minimo 8 caracteres.' });
@@ -195,6 +223,7 @@ class AuthController {
         if (updatePasswordError) throw updatePasswordError;
       }
 
+      // Salva todas as alterações de nome/email na nossa tabela de usuários
       if (Object.keys(mudancas).length > 0) {
         const { error } = await supabaseAdmin
           .from('usuarios')
@@ -204,6 +233,7 @@ class AuthController {
         if (error) throw error;
       }
 
+      // Retorna o perfil atualizado para o frontend atualizar a interface
       const { data: usuarioAtualizado } = await supabaseAdmin
         .from('usuarios')
         .select('id, nome, email, tipo')
@@ -225,3 +255,4 @@ class AuthController {
 }
 
 module.exports = new AuthController();
+

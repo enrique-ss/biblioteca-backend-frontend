@@ -1,29 +1,40 @@
 const supabase = require('../database');
 
+/**
+ * StatsController: O motor de inteligência da biblioteca.
+ * Processa grandes volumes de dados para gerar gráficos, rankings e indicadores de desempenho (KPIs).
+ */
 class StatsController {
-  // Agrupa itens por chave e retorna os mais populares
+  
+  /**
+   * Pega uma lista de itens e descobre quais são os mais frequentes.
+   * Usado para criar rankings como "Livros mais lidos" ou "Gêneros favoritos".
+   */
   agruparTop = (items, getKey, limit = 6) => {
     const mapa = new Map();
 
-    // Conta ocorrências de cada chave
+    // Conta quantas vezes cada item aparece
     for (const item of items) {
       const chave = getKey(item);
       if (!chave) continue;
       mapa.set(chave, (mapa.get(chave) || 0) + 1);
     }
 
-    // Ordena por mais populares e retorna limite
+    // Transforma o mapa em uma lista ordenada do maior para o menor
     return [...mapa.entries()]
       .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]), 'pt-BR'))
       .slice(0, limit)
       .map(([label, valor]) => ({ label, valor }));
   };
 
-  // Agrupa itens por mês para gráficos temporais
+  /**
+   * Organiza dados ao longo do tempo (mês a mês).
+   * Ideal para gráficos de linha que mostram o crescimento da biblioteca.
+   */
   agruparPorMes = (items, getDate, limit = 6) => {
     const mapa = new Map();
 
-    // Agrupa por ano-mês
+    // Agrupa os registros por "Ano-Mês"
     for (const item of items) {
       const data = new Date(getDate(item));
       if (Number.isNaN(data.getTime())) continue;
@@ -32,7 +43,7 @@ class StatsController {
       mapa.set(chave, (mapa.get(chave) || 0) + 1);
     }
 
-    // Ordena cronologicamente e formata labels
+    // Ordena as datas e formata o nome do mês (ex: "Jan/24")
     return [...mapa.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
       .slice(-limit)
@@ -46,11 +57,14 @@ class StatsController {
       });
   };
 
-  // Agrupa livros por década para análise histórica
+  /**
+   * Agrupa livros por sua época de lançamento.
+   * Ajuda a entender se o acervo é mais clássico ou contemporâneo.
+   */
   agruparPorDecada = (livros) => {
     const mapa = new Map();
 
-    // Agrupa por década (ex: 1990s, 2000s)
+    // Arredonda o ano para a década (ex: 1994 vira 1990)
     for (const livro of livros) {
       const ano = Number(livro.ano_lancamento);
       if (!Number.isFinite(ano)) continue;
@@ -58,24 +72,30 @@ class StatsController {
       mapa.set(chave, (mapa.get(chave) || 0) + 1);
     }
 
-    // Ordena cronologicamente
+    // Ordena as décadas cronologicamente
     return [...mapa.entries()]
       .sort((a, b) => Number(a[0]) - Number(b[0]))
       .map(([label, valor]) => ({ label, valor }));
   };
 
-  // Gera resumo estatístico baseado no tipo de usuário
+  /**
+   * Gera um resumo rápido de indicadores para o Dashboard principal.
+   * O conteúdo muda se quem está olhando é um bibliotecário ou um leitor comum.
+   */
   resumo = async (req, res) => {
     try {
       const ehBibliotecario = req.usuario.tipo === 'bibliotecario';
       const usuarioId = req.usuario.id;
 
-      // Normaliza data para início do dia
+      // Data de hoje para verificar atrasos
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
       if (ehBibliotecario) {
-        // Estatísticas para bibliotecários (visão geral)
+        /**
+         * Visão do Administrador: Números totais da instituição.
+         * Busca simultaneamente totais de livros, empréstimos e usuários ativos.
+         */
         const [{ data: livrosFisicos = [], count: totalLivros }, { count: ativos }, { count: totalUsuarios }, { count: totalDigitais }] = await Promise.all([
           supabase.from('livros').select('*', { count: 'exact', head: true }).is('deleted_at', null),
           supabase.from('alugueis').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
@@ -104,13 +124,14 @@ class StatsController {
         });
       }
 
-      // Estatísticas para usuário comum (visão pessoal)
+      /**
+       * Visão do Leitor: Seu próprio desempenho e histórico.
+       */
       const [{ count: ativos }, { count: totalHistorico }] = await Promise.all([
         supabase.from('alugueis').select('*', { count: 'exact', head: true }).eq('usuario_id', usuarioId).eq('status', 'ativo'),
         supabase.from('alugueis').select('*', { count: 'exact', head: true }).eq('usuario_id', usuarioId)
       ]);
 
-      // Conta empréstimos em atraso
       const { count: atrasados } = await supabase
         .from('alugueis')
         .select('*', { count: 'exact', head: true })
@@ -132,13 +153,16 @@ class StatsController {
     }
   };
 
-  // Gera estatísticas detalhadas para gráficos e análises
+  /**
+   * Gera um relatório completo com múltiplos gráficos e cruzamento de dados.
+   * Analisa tendências de leitura, popularidade de autores e eficiência de devolução.
+   */
   detalhado = async (req, res) => {
     try {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
-      // Busca todos os dados necessários para análise
+      // Carrega toda a massa de dados para processamento em memória (mais rápido para relatórios complexos)
       const [
         { data: livros = [] },
         { data: alugueis = [] },
@@ -160,6 +184,7 @@ class StatsController {
       const pdfsAprovados = digitais.filter((item) => item.status === 'aprovado');
       const multasPendentes = multas.filter((item) => item.status === 'pendente');
 
+      // Cálculo da eficiência: quanto tempo, em média, um livro fica na mão do leitor
       const totalDiasDevolucao = emprestimosDevolvidos.reduce((total, item) => {
         const inicio = new Date(item.data_aluguel);
         const fim = new Date(item.data_devolucao);
@@ -171,6 +196,7 @@ class StatsController {
         ? (totalDiasDevolucao / emprestimosDevolvidos.length).toFixed(1)
         : '0.0';
 
+      // Monta o objeto final com todas as análises para os gráficos do Chart.js
       return res.json({
         generosMaisEmprestados: this.agruparTop(alugueis, (item) => item.livros?.genero),
         autoresMaisEmprestados: this.agruparTop(alugueis, (item) => item.livros?.autor),
@@ -211,3 +237,4 @@ class StatsController {
 }
 
 module.exports = new StatsController();
+

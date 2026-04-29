@@ -1,9 +1,23 @@
-// Gerenciamento de empréstimos e histórico
+/*
+    GERENCIAMENTO DE EMPRÉSTIMOS: registro, devolução, renovação e histórico.
+    Este arquivo é o coração do controle de circulação da biblioteca.
 
-// Debounce para evitar múltiplas requisições de busca
+    - carregarAlugueis: lista todos os empréstimos ativos (visão do bibliotecário)
+    - carregarMeusAlugueis: lista apenas os empréstimos do leitor logado
+    - prepararModalNovoAluguel: abre o formulário para registrar um novo empréstimo
+    - abrirModalDevolucao: inicia o processo de devolução de um livro
+    - renovarEmprestimo: estende o prazo em 14 dias (só leitores sem atraso)
+    - carregarHistorico: exibe o histórico completo de empréstimos devolvidos
+*/
+
+// Versão com debounce: aguarda pausa na digitação antes de buscar empréstimos
 const carregarAlugueisDebounced = debounce((busca) => carregarAlugueis(1, busca));
 
-// Carrega lista de empréstimos com paginação e busca
+/*
+    Carrega todos os empréstimos ativos do sistema (visão de bibliotecário).
+    Configura o cabeçalho da tabela com todas as colunas administrativas.
+    Exibe um banner vermelho de aviso se houver empréstimos em atraso.
+*/
 async function carregarAlugueis(pagina = 1, busca = '') {
     // Configura título e cabeçalho da tabela
     document.getElementById('alugueisTitle').innerHTML = `<span>Controle</span> de Empréstimos`;
@@ -61,6 +75,10 @@ async function carregarAlugueis(pagina = 1, busca = '') {
     }
 }
 
+/*
+    Carrega apenas os empréstimos do leitor logado.
+    Exibe colunas simplificadas (sem coluna de usuário) e botão de renovação.
+*/
 async function carregarMeusAlugueis() {
     document.getElementById('alugueisTitle').innerHTML = `<span>Meus</span> Livros Alugados`;
     document.getElementById('alugueisHead').innerHTML = `
@@ -86,6 +104,10 @@ async function carregarMeusAlugueis() {
     }
 }
 
+/*
+    Retorna o HTML da multa acumulada: valor em vermelho se houver, traço se não houver.
+    O valor já vem formatado pelo servidor (ex: 'R$ 5,00').
+*/
 function renderizarBadgeMulta(multaFormatada) {
     if (multaFormatada && multaFormatada !== '—') {
         return `<span style="color:#f85149;font-weight:600">${multaFormatada}</span>`;
@@ -93,6 +115,11 @@ function renderizarBadgeMulta(multaFormatada) {
     return `<span style="color:var(--text-faint)">—</span>`;
 }
 
+/*
+    Renderiza a tabela de empréstimos na visão administrativa.
+    Exibe nome do usuário (com badge de inadimplente se tiver débito),
+    código do exemplar e botão de devolução se o empréstimo estiver ativo.
+*/
 function renderizarTabelaAlugueisCompleta(lista) {
     const tbody = document.getElementById('alugueisTbody');
     tbody.innerHTML = '';
@@ -128,6 +155,11 @@ function renderizarTabelaAlugueisCompleta(lista) {
     });
 }
 
+/*
+    Renderiza a tabela de empréstimos na visão do leitor.
+    Mais simples: sem coluna de usuário, com botão de renovação disponível
+    apenas quando o prazo ainda não venceu e não houve renovações anteriores.
+*/
 function renderizarTabelaAlugueisUsuario(lista) {
     const tbody = document.getElementById('alugueisTbody');
     tbody.innerHTML = '';
@@ -158,7 +190,12 @@ function renderizarTabelaAlugueisUsuario(lista) {
     });
 }
 
-// Prepara modal de novo empréstimo
+/*
+    Prepara e abre o modal de novo empréstimo.
+    Busca a lista de livros e usuários em paralelo para popular os selects.
+    Quando o bibliotecário escolhe um livro, carrega automaticamente
+    os exemplares físicos disponíveis daquele livro no terceiro select.
+*/
 async function prepararModalNovoAluguel() {
     try {
         const [livros, usuarios] = await Promise.all([
@@ -216,7 +253,12 @@ async function prepararModalNovoAluguel() {
     }
 }
 
-// Processa formulário de novo empréstimo
+/*
+    Ouve o envio do formulário de novo empréstimo.
+    O exemplar específico é opcional: se não selecionado, o servidor escolhe
+    automaticamente o primeiro exemplar disponível do livro.
+    Após o registro, navega para a tela de empréstimos e recarrega a lista.
+*/
 document.getElementById('addAluguelForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -255,8 +297,11 @@ document.getElementById('addAluguelForm').addEventListener('submit', async (e) =
     }
 });
 
-// Processo de devolução
-
+/*
+    PROCESSO DE DEVOLUÇÃO
+    Abre o modal de devolução pré-configurado com estado 'bom' e sem observação.
+    O campo de observação fica oculto e só aparece quando o estado é 'danificado' ou 'perdido'.
+*/
 function abrirModalDevolucao(aluguelId) {
     document.getElementById('devolucaoAluguelId').value = aluguelId;
     document.getElementById('devolucaoEstado').value = 'bom';
@@ -265,7 +310,12 @@ function abrirModalDevolucao(aluguelId) {
     abrirModal('devolucaoModal');
 }
 
-// Exibe campo de observação se estado for ruim
+/*
+    Após o DOM carregar, configura dois comportamentos do modal de devolução:
+    1. Exibe o campo de observação quando o estado é 'danificado' ou 'perdido'
+    2. Processa o formulário de devolução: envia o estado do exemplar ao servidor.
+       Se houver multas (atraso ou perda), exibe os detalhes após 2 segundos.
+*/
 document.addEventListener('DOMContentLoaded', () => {
     const seletorEstado = document.getElementById('devolucaoEstado');
     if (seletorEstado) {
@@ -317,6 +367,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+/*
+    Renova o prazo de um empréstimo em 14 dias.
+    Só disponível para leitores e apenas se o empréstimo não estiver em atraso.
+    Exibe diálogo de confirmação antes de executar.
+*/
 function renovarEmprestimo(id) {
     exibirConfirmacao({
         icon: '🔄',
@@ -335,8 +390,11 @@ function renovarEmprestimo(id) {
     });
 }
 
-// Histórico detalhado
-
+/*
+    HISTÓRICO DE EMPRÉSTIMOS: lista todos os empréstimos já devolvidos.
+    Permite filtrar por usuário específico. Exibe data de devolução,
+    estado do exemplar na devolução e quantas renovações foram feitas.
+*/
 async function carregarHistorico(pagina = 1, usuarioId = '') {
     definirCarregando('historicoTbody', 9);
     try {
@@ -381,10 +439,12 @@ async function carregarHistorico(pagina = 1, usuarioId = '') {
     }
 }
 
+/*
+    Exportação CSV desabilitada no frontend.
+    Para exportar dados, use o endpoint /alugueis/historico diretamente no backend.
+*/
 async function exportarHistoricoCSV() {
     exibirAlerta('Exportação CSV desabilitada. Use o endpoint do backend.', 'warning');
 }
 
-// Gestão de multas do usuário
-
-// Funções movidas para notifications.js
+// As funções de gestão de multas do usuário foram movidas para notifications.js
