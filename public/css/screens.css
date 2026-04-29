@@ -448,28 +448,29 @@
         gap: 12px; 
     }
     
-    /* Resize hero */
+    /* Hero carousel mobile: mantém layout horizontal igual ao desktop, mas menor */
     .digital-hero {
-        height: auto;
-        padding: 24px 16px;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        border-radius: var(--r-md);
+        height: 160px;
+        padding: 20px 18px;
+        border-radius: var(--r-lg);
     }
+    /* Gradiente mantém padrão horizontal: escuro esquerda -> transparente direita */
     .digital-hero::before {
-        background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%);
+        background: linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 55%, transparent 100%);
     }
     .digital-hero .hero-bg {
-        width: 100%;
-        clip-path: none;
-        opacity: 0.15;
+        width: 55%;
+        clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%);
+        opacity: 0.5;
     }
-    .digital-hero .hero-title { font-size: 1.2rem; margin-bottom: 4px; }
-    .digital-hero .hero-author { font-size: 0.8rem; margin-bottom: 12px; }
+    .digital-hero .hero-content {
+        max-width: 60%;
+    }
+    .digital-hero .hero-title { font-size: 0.95rem; margin-bottom: 4px; line-height: 1.2; }
+    .digital-hero .hero-author { font-size: 0.72rem; margin-bottom: 8px; }
     .digital-hero .hero-desc { display: none !important; }
-    .digital-hero .hero-actions { justify-content: center; margin-top: auto; }
-    .digital-hero .hero-actions .btn { padding: 8px 16px; font-size: 0.8rem; }
+    .digital-hero .hero-actions { gap: 8px; }
+    .digital-hero .hero-actions .btn { padding: 7px 14px; font-size: 0.65rem; letter-spacing: 0.05em; }
     
     /* Resize cards typography */
     .digital-card-title { font-size: 0.85rem; margin-bottom: 4px; }
