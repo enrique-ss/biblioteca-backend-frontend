@@ -482,5 +482,4 @@
 }
 @media (max-width: 400px) {
     .menu-grid { grid-template-columns: 1fr; }
-    .digital-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
 }
