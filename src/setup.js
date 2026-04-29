@@ -46,6 +46,7 @@ function applySchema(db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       usuario_id TEXT NOT NULL,
       leicao_id TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(usuario_id, leicao_id),
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
@@ -145,6 +146,18 @@ function applySchema(db) {
       UNIQUE(usuario_id, livro_digital_id) -- Garante que conte apenas uma vez por livro
     );
   `);
+
+  // Migração: Adiciona a coluna created_at se ela não existir (para bancos legados)
+  try {
+    const tableInfo = db.prepare("PRAGMA table_info(usuarios_leicoes_infantis)").all();
+    const hasCreatedAt = tableInfo.some(col => col.name === 'created_at');
+    if (!hasCreatedAt) {
+      db.exec("ALTER TABLE usuarios_leicoes_infantis ADD COLUMN created_at TEXT");
+      console.log("✅ Migração: Coluna 'created_at' adicionada a usuarios_leicoes_infantis.");
+    }
+  } catch (e) {
+    console.error("❌ Erro ao verificar/adicionar coluna created_at:", e);
+  }
 }
 
 // Apaga tudo e cria do zero (usado para limpar o sistema)

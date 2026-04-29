@@ -135,7 +135,8 @@ class InfantilController {
               funFact: "Machado de Assis, nosso maior escritor, começou escrevendo contos em jornais!",
               quiz: [
                 { q: "O que torna os contos brasileiros especiais?", opts: ["Só falam de reis", "Misturam culturas indígenas, africanas e europeias", "São todos iguais", "Só falam de animais"], a: 1 },
-                { q: "Qual é um tema comum nos contos brasileiros?", opts: ["Castelos medievais", "Sertão e caatinga", "Ninjas", "Dragões"], a: 1 }
+                { q: "Qual é um tema comum nos contos brasileiros?", opts: ["Castelos medievais", "Sertão e caatinga", "Ninjas", "Dragões"], a: 1 },
+                { q: "Quem é considerado o 'Pai do Realismo' no Brasil?", opts: ["Monteiro Lobato", "Machado de Assis", "Jorge Amado", "Cora Coralina"], a: 1 }
               ]
             }
           ],
@@ -146,12 +147,14 @@ class InfantilController {
               meta: "1831—1852 • São Paulo, Brasil",
               highlights: [
                 { icon: '🌙', title: 'O Lado Sombrio', text: 'Sua poesia explora temas como a *noite*, o mistério e o sonho.' },
-                { icon: '💔', title: 'Sentimentalismo', text: 'A expressão máxima dos *sentimentos* juvenis entre o amor idealizado e a tristeza.' }
+                { icon: '💔', title: 'Sentimentalismo', text: 'A expressão máxima dos *sentimentos* juvenis entre o amor idealizado e a tristeza.' },
+                { icon: '🦇', title: 'Noite na Taverna', text: 'Sua única obra em prosa, cheia de mistérios e histórias fantásticas.' }
               ],
               funFact: "Ele morreu com apenas 20 anos, mas deixou uma obra que influenciou gerações de poetas!",
               quiz: [
                 { q: "Quem foi o autor de 'Lira dos Vinte Anos'?", opts: ["Casimiro de Abreu", "Álvares de Azevedo", "Castro Alves", "Machado de Assis"], a: 1 },
-                { q: "Qual era a principal característica de sua poesia?", opts: ["Realismo", "Ultrarromantismo e melancolia", "Poesia social", "Modernismo"], a: 1 }
+                { q: "Qual era a principal característica de sua poesia?", opts: ["Realismo", "Ultrarromantismo e melancolia", "Poesia social", "Modernismo"], a: 1 },
+                { q: "Qual o tema central da obra de Álvares de Azevedo?", opts: ["Política", "Natureza", "Amor idealizado e melancolia", "História"], a: 2 }
               ]
             }
           ]
@@ -177,7 +180,8 @@ class InfantilController {
               funFact: "A teoria literária moderna decidiu tratar a literatura como algo *científico* no início do século XX!",
               quiz: [
                 { q: "O que é teoria literária?", opts: ["Só ler livros", "Estudo dos princípios para analisar obras", "Escrever poesia", "Fazer resumos"], a: 1 },
-                { q: "Qual abordagem foca na estrutura do texto?", opts: ["Psicanálise", "Estruturalismo", "Marxismo", "Feminismo"], a: 1 }
+                { q: "Qual abordagem foca na estrutura do texto?", opts: ["Psicanálise", "Estruturalismo", "Marxismo", "Feminismo"], a: 1 },
+                { q: "A teoria literária ajuda a entender:", opts: ["A gramática", "As entrelinhas e significados da obra", "Como vender livros", "Apenas a biografia do autor"], a: 1 }
               ]
             }
           ],
@@ -188,12 +192,14 @@ class InfantilController {
               meta: "1839—1908 • Rio de Janeiro",
               highlights: [
                 { icon: '🔍', title: 'Análise Psicológica', text: 'Ele não descrevia apenas o exterior, mas o que os personagens *pensavam* de verdade.' },
-                { icon: '😏', title: 'Ironia Machadiana', text: 'Uma forma elegante de criticar a sociedade carioca com muito *humor ácido*.' }
+                { icon: '😏', title: 'Ironia Machadiana', text: 'Uma forma elegante de criticar a sociedade carioca com muito *humor ácido*.' },
+                { icon: '📖', title: 'Dom Casmurro', text: 'Uma de suas obras mais famosas, que desafia o leitor a ser um *investigador*.' }
               ],
               funFact: "Machado foi um dos fundadores da *Academia Brasileira de Letras*!",
               quiz: [
                 { q: "Qual era a característica do Realismo de Machado?", opts: ["Falar de fadas", "Análise psicológica e ironia", "Aventuras no mar", "Poesia religiosa"], a: 1 },
-                { q: "Onde Machado de Assis nasceu?", opts: ["São Paulo", "Rio de Janeiro", "Goiás", "Minas Gerais"], a: 1 }
+                { q: "Onde Machado de Assis nasceu?", opts: ["São Paulo", "Rio de Janeiro", "Goiás", "Minas Gerais"], a: 1 },
+                { q: "O que é a ironia machadiana?", opts: ["Elogiar o tempo todo", "Uma crítica elegante com humor ácido", "Falar sério sempre", "Não usar vírgulas"], a: 1 }
               ]
             }
           ]

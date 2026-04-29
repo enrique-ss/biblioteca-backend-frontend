@@ -121,6 +121,51 @@ async function carregarPerfil() {
         const el = document.getElementById('statDaysActive');
         if (el) el.textContent = diffDays;
     }
+
+    // Chamada inicial do feed
+    carregarAtividades();
+}
+
+let currentActivityPage = 1;
+
+/**
+ * Busca e renderiza o feed completo de atividades do usuário.
+ */
+async function carregarAtividades() {
+    const listEl = document.getElementById('profileActivityList');
+    if (!listEl) return;
+
+    listEl.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">Carregando atividades...</div>';
+
+    try {
+        const atividades = await api('/auth/atividades');
+
+        if (!atividades || atividades.length === 0) {
+            listEl.innerHTML = `
+                <div style="text-align:center; padding:40px; opacity:0.6;">
+                    Nenhuma atividade registrada recentemente.
+                </div>`;
+            return;
+        }
+
+        listEl.innerHTML = atividades.map(atv => `
+            <div class="activity-item" style="display: flex; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div class="activity-icon" style="font-size: 1.5rem; background: rgba(255,255,255,0.05); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--border);">
+                    ${atv.icone}
+                </div>
+                <div class="activity-info" style="flex: 1;">
+                    <div class="activity-text" style="color: var(--text); line-height: 1.4;">${atv.texto}</div>
+                    <div class="activity-date" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
+                        ${new Date(atv.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (erro) {
+        console.error('Erro ao carregar atividades:', erro);
+        listEl.innerHTML = `<div style="text-align:center; padding:20px; color:var(--crimson);">Falha ao carregar atividades. Verifique se o servidor foi reiniciado.</div>`;
+    }
 }
 
 /**

@@ -16,5 +16,8 @@ router.post('/login', controller.login);
 // Editar as próprias informações (Exige que o usuário esteja logado)
 router.put('/perfil', verificarToken, controller.editarPerfil);
 
+// Buscar feed de atividades do usuário
+router.get('/atividades', verificarToken, controller.getAtividades);
+
 module.exports = router;
 

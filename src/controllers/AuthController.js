@@ -157,6 +157,101 @@ class AuthController {
   };
 
   /**
+   * Coleta o histórico completo de ações do usuário (empréstimos, quizzes, uploads)
+   * para montar o feed de atividades do perfil.
+   */
+  getAtividades = async (req, res) => {
+    try {
+      const usuarioId = req.usuario.id;
+      const atividades = [];
+
+      const formatarNomeLeicao = (id) => {
+        const parts = id.split('_');
+        if (parts.length < 2) return id;
+        const ageMap = { 'inf': 'Infantil', 'juv': 'Infanto-Juvenil', 'pre': 'Pré-Adolescente' };
+        const catCode = parts[1].replace(/[0-9]/g, '');
+        const num = parts[1].replace(/[^0-9]/g, '');
+        const catMap = { 'c': 'Contos', 'p': 'Poesia', 'cl': 'Clássicos', 'e': 'Escritoras' };
+        const age = ageMap[parts[0]] || parts[0];
+        const cat = catMap[catCode] || catCode;
+        return `${age} • ${cat} • Lição ${num}`;
+      };
+
+      // 1. Empréstimos (Físicos) - Sem limite
+      try {
+        const { data: alugueis } = await supabaseAdmin
+          .from('alugueis')
+          .select('*, livros(titulo)')
+          .eq('usuario_id', usuarioId)
+          .order('data_aluguel', { ascending: false });
+
+        (alugueis || []).forEach(a => {
+          atividades.push({
+            id: `aluguel_${a.id}`,
+            tipo: 'emprestimo',
+            data: a.data_aluguel || a.created_at,
+            texto: `Alugou o livro <strong>${a.livros?.titulo || 'Desconhecido'}</strong>`,
+            icone: '📚'
+          });
+          if (a.data_devolucao) {
+            atividades.push({
+              id: `devolucao_${a.id}`,
+              tipo: 'devolucao',
+              data: a.data_devolucao,
+              texto: `Devolveu o livro <strong>${a.livros?.titulo || 'Desconhecido'}</strong>`,
+              icone: '↩️'
+            });
+          }
+        });
+      } catch (err) { console.error('Erro alugueis feed:', err); }
+
+      // 2. Conquistas no Quiz Literário
+      try {
+        const { data: leicoes } = await supabaseAdmin
+          .from('usuarios_leicoes_infantis')
+          .select('*')
+          .eq('usuario_id', usuarioId);
+
+        (leicoes || []).forEach(l => {
+          atividades.push({
+            id: `leicao_${l.id}`,
+            tipo: 'quiz',
+            data: l.created_at || new Date().toISOString(),
+            texto: `Completou a lição <strong>${formatarNomeLeicao(l.leicao_id)}</strong> no Espaço Literário`,
+            icone: '🏆'
+          });
+        });
+      } catch (err) { console.error('Erro quizzes feed:', err); }
+
+      // 3. Contribuições Digitais
+      try {
+        const { data: digitais } = await supabaseAdmin
+          .from('acervo_digital')
+          .select('*')
+          .eq('usuario_id', usuarioId);
+
+        (digitais || []).forEach(d => {
+          atividades.push({
+            id: `digital_${d.id}`,
+            tipo: 'digital',
+            data: d.created_at,
+            texto: `Enviou o documento <strong>${d.titulo}</strong> para o acervo digital`,
+            icone: '📤'
+          });
+        });
+      } catch (err) { console.error('Erro digitais feed:', err); }
+
+      // Ordena por data (mais recente primeiro)
+      atividades.sort((a, b) => new Date(b.data) - new Date(a.data));
+      
+      res.json(atividades);
+    } catch (erro) {
+      console.error('Erro fatal ao buscar atividades:', erro);
+      res.status(500).json({ error: 'Falha ao carregar feed de atividades.' });
+    }
+  };
+
+  /**
    * Permite que o próprio usuário atualize seus dados de cadastro.
    * Se trocar o e-mail ou senha, o sistema de autenticação é avisado.
    */

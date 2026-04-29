@@ -519,7 +519,7 @@ class OfflineClient {
       return row;
     }
 
-    if (['livros', 'exemplares', 'alugueis', 'multas', 'acervo_digital'].includes(table)) {
+    if (['livros', 'exemplares', 'alugueis', 'multas', 'acervo_digital', 'usuarios_leicoes_infantis'].includes(table)) {
       row.created_at = row.created_at || now;
       return row;
     }
