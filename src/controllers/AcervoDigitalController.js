@@ -39,8 +39,24 @@ class AcervoDigitalController {
 
       if (error) throw error;
 
+      // Busca os nomes dos usuários que publicaram para mostrar no card
+      const usersIds = [...new Set(registros.map(r => r.usuario_id).filter(Boolean))];
+      let userMap = {};
+      
+      if (usersIds.length > 0) {
+        const { data: users } = await supabase.from('usuarios').select('id, nome').in('id', usersIds);
+        if (users) {
+            userMap = Object.fromEntries(users.map(u => [u.id, u.nome]));
+        }
+      }
+
+      const dataComNomes = registros.map(r => ({
+        ...r,
+        usuario_nome: userMap[r.usuario_id] || 'Bibliotecário'
+      }));
+
       res.json({
-        data: registros,
+        data: dataComNomes,
         total: total || 0,
         page: pagina,
         limit: limite,
@@ -64,7 +80,7 @@ class AcervoDigitalController {
 
       const { data: pendentes } = await supabase
         .from('acervo_digital')
-        .select('*, usuarios(nome)')
+        .select('*')
         .eq('status', 'pendente')
         .is('deleted_at', null)
         .order('created_at', { ascending: false });

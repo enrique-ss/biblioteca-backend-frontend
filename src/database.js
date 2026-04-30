@@ -616,7 +616,14 @@ class OfflineClient {
     
     return {
       select: (columns = '*', options = {}) => {
-        let sql = `SELECT ${columns} FROM ${table}`;
+        // Handle Supabase nested select syntax like "*, livros(*)"
+        // We strip the nested parts for SQLite compatibility
+        const cleanColumns = columns.split(',')
+          .map(col => col.trim())
+          .filter(col => !col.includes('(')) // Remove "table(*)"
+          .join(', ') || '*';
+
+        let sql = `SELECT ${cleanColumns} FROM ${table}`;
         let countSql = `SELECT COUNT(*) as total FROM ${table}`;
         let whereClauses = [];
         let params = [];
@@ -658,14 +665,27 @@ class OfflineClient {
           return builder;
         };
         builder.or = (query) => {
+          // Simplistic parser for Supabase-style OR queries: "col.op.val,col.op.val"
+          // Doesn't perfectly handle complex nested ANDs, but sufficient for our needs.
           const parts = query.split(',');
           const orClauses = parts.map(p => {
-              const [col, op, pattern] = p.split('.');
+              // Handle nested and() by stripping it just for basic functionality if needed
+              let cleanP = p;
+              if (cleanP.startsWith('and(') && cleanP.endsWith(')')) {
+                  cleanP = cleanP.slice(4, -1);
+              }
+
+              const [col, op, ...rest] = cleanP.split('.');
+              const pattern = rest.join('.');
+
               if (op === 'ilike') {
                   params.push(pattern.replace(/%/g, '%'));
                   return `${col} LIKE ?`;
+              } else if (op === 'eq') {
+                  params.push(pattern);
+                  return `${col} = ?`;
               }
-              return '1=1';
+              return '1=1'; // Fallback
           });
           whereClauses.push(`(${orClauses.join(' OR ')})`);
           return builder;
@@ -700,8 +720,17 @@ class OfflineClient {
               finalCountSql += where;
             }
             finalSql += orderBy + limit + offset;
+            
+            console.log(`[OfflineDB] Executing: ${finalSql} with params:`, params);
+            
             const rows = db.prepare(finalSql).all(...params);
             const result = { data: rows.map(r => mapRow(table, r)), error: null };
+            
+            console.log(`[OfflineDB] Result count: ${result.data.length}`);
+            if (result.data.length > 0) {
+                console.log(`[OfflineDB] First row sample:`, result.data[0]);
+            }
+            
             if (options.count) {
               const countRes = db.prepare(finalCountSql).get(...params);
               result.count = countRes.total;
@@ -709,6 +738,7 @@ class OfflineClient {
             if (resolve) resolve(result);
             return result;
           } catch (error) {
+            console.error(`[OfflineDB] Error executing ${sql}:`, error);
             const result = { data: null, error };
             if (resolve) resolve(result);
             return result;

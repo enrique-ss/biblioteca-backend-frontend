@@ -575,6 +575,23 @@ class AluguelController {
       res.status(400).json({ error: erro.message }); 
     }
   };
+  /**
+   * Retorna a lista de empréstimos de um usuário específico.
+   * Usado para exibir estatísticas em perfis públicos.
+   */
+  listarPorUsuario = async (req, res) => {
+    try {
+      const { usuario_id } = req.params;
+      const { data: alugueis } = await supabase
+        .from('alugueis')
+        .select('id')
+        .eq('usuario_id', usuario_id);
+        
+      res.json(alugueis || []);
+    } catch {
+      res.status(500).json({ error: 'Erro ao buscar empréstimos do usuário.' });
+    }
+  };
 }
 
 module.exports = new AluguelController();

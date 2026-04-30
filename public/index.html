@@ -327,13 +327,17 @@
                                     <span id="userProfileInitials">?</span>
                                 </div>
                             </div>
-                            <div class="profile-main-info">
-                                <h1 class="profile-name" id="userProfileName">Carregando...</h1>
-                                <div class="profile-meta">
-                                    <span id="userProfileJoinDate"></span>
-                                    <span>👥 <strong id="statFollowers">0</strong> Amigos</span>
-                                    <span id="userProfileType"></span>
+                            <div class="profile-main-info" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                <div>
+                                    <h1 class="profile-name" id="userProfileName">Carregando...</h1>
+                                    <div class="profile-meta">
+                                        <span id="userProfileJoinDate"></span>
+                                        <span>👥 <strong id="statFollowers">0</strong> Amigos</span>
+                                        <span id="userProfileType"></span>
+                                    </div>
                                 </div>
+                                <!-- Ações Sociais (Adicionar Amigo, etc) - visível apenas em perfis de terceiros -->
+                                <div id="socialActionsContainer" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -349,10 +353,7 @@
                              </div>
 
                              <div class="profile-card">
-                                <h3 class="profile-card-title">Explorar <span>Social</span></h3>
-                                <div class="social-search">
-                                    <input type="text" id="socialSearchInput" placeholder="Buscar leitores..." oninput="buscarUsuariosSocial()">
-                                </div>
+                                <h3 class="profile-card-title">Meus <span>Amigos</span></h3>
                                 <div class="social-users-list" id="socialUsersList">
                                     <!-- Preenchido dinamicamente -->
                                     <div style="text-align:center; padding:10px; opacity:0.5; font-size:0.8rem;">Carregando...</div>

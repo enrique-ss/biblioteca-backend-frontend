@@ -156,15 +156,30 @@ async function carregarNotificacoesUsuario() {
     const lista = [];
 
     try {
-        const [resMultas, meusAlugueis] = await Promise.all([
+        const [resMultas, meusAlugueis, pendentesAmizade] = await Promise.all([
             api('/alugueis/multas/minhas'),
-            api('/alugueis/meus')
+            api('/alugueis/meus'),
+            api('/amizades/pendentes').catch(() => []) // Evita quebrar se a rota não existir em algum momento
         ]);
 
         const multas = resMultas.multas || [];
         const totalPendente = resMultas.total_pendente || 0;
         const listaAlugueis = Array.isArray(meusAlugueis) ? meusAlugueis : [];
         const atrasados = listaAlugueis.filter((a) => a.status === 'atrasado');
+
+        // Alerta de Pedidos de Amizade Pendentes
+        if (pendentesAmizade && pendentesAmizade.length > 0) {
+            pendentesAmizade.forEach(pedido => {
+                lista.push({
+                    type: 'info',
+                    icon: '👥',
+                    title: 'Novo Pedido de Amizade',
+                    message: `<strong>${pedido.remetente_nome || 'Alguém'}</strong> enviou um pedido de amizade para você!`,
+                    count: 1,
+                    action: { label: 'Aceitar Pedido', onClick: `aceitarPedidoAmizade('${pedido.id}', '${pedido.usuario_remetente}')` }
+                });
+            });
+        }
 
         // Se há débito pendente: alerta vermelho com o valor total
         if (totalPendente > 0) {

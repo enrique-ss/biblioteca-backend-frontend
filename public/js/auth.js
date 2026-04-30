@@ -110,6 +110,10 @@ function atualizarNavbar() {
     if (sidebar) sidebar.style.display = estaLogado ? 'flex' : 'none';
     if (wrapper) wrapper.style.paddingLeft = estaLogado ? '' : '0';
 
+    if (estaLogado && typeof socket !== 'undefined' && currentUser?.id) {
+        socket.emit('joinRoom', currentUser.id);
+    }
+
     const btnSair = document.getElementById('btnLogout');
     if (btnSair) {
         btnSair.style.display = estaLogado ? 'inline-flex' : 'none';

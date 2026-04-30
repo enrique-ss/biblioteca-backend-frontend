@@ -145,6 +145,18 @@ function applySchema(db) {
       FOREIGN KEY (livro_digital_id) REFERENCES acervo_digital(id) ON DELETE CASCADE,
       UNIQUE(usuario_id, livro_digital_id) -- Garante que conte apenas uma vez por livro
     );
+
+    -- Tabela de Amizades (Novo Sistema Social)
+    CREATE TABLE IF NOT EXISTS amizades (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_remetente TEXT NOT NULL,
+      usuario_destinatario TEXT NOT NULL,
+      status TEXT DEFAULT 'pendente' CHECK (status IN ('pendente', 'aceito')),
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_remetente) REFERENCES usuarios(id) ON DELETE CASCADE,
+      FOREIGN KEY (usuario_destinatario) REFERENCES usuarios(id) ON DELETE CASCADE,
+      UNIQUE(usuario_remetente, usuario_destinatario)
+    );
   `);
 
   // Migração: Adiciona a coluna created_at se ela não existir (para bancos legados)
@@ -166,6 +178,7 @@ function recreateDatabase() {
   const db = new Database(dbPath);
   db.pragma('foreign_keys = OFF');
   db.exec(`
+    DROP TABLE IF EXISTS amizades;
     DROP TABLE IF EXISTS multas;
     DROP TABLE IF EXISTS alugueis;
     DROP TABLE IF EXISTS exemplares;
@@ -201,6 +214,18 @@ function configurarBanco() {
   ];
 
   dummyUsers.forEach(user => insertUser.run(...user));
+
+  // Adiciona alguns livros digitais para testar o "Publicado por"
+  const insertDigital = db.prepare(`
+    INSERT INTO acervo_digital (id, titulo, autor, categoria, ano, paginas, status, usuario_id, url_arquivo, tamanho_arquivo)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  insertDigital.run(1, 'O Guia do Mochileiro das Galáxias', 'Douglas Adams', 'Ficção Científica', 1979, 208, 'aprovado', 'u1', 'https://example.com/mochileiro.pdf', '2MB');
+  insertDigital.run(2, 'Sapiens: Uma Breve História da Humanidade', 'Yuval Noah Harari', 'História', 2011, 464, 'aprovado', 'u2', 'https://example.com/sapiens.pdf', '5MB');
+  insertDigital.run(3, 'O Código Da Vinci', 'Dan Brown', 'Suspense', 2003, 432, 'aprovado', 'u3', 'https://example.com/davinci.pdf', '3MB');
+
+  console.log('✔ Dados de teste (Usuários e Acervo Digital) inseridos com sucesso.');
   db.close();
 
   return true;

@@ -100,8 +100,11 @@ async function carregarPerfil(userId = null) {
     // Feed de Atividades (Ajustado para o usuário alvo)
     await carregarAtividades(userToShow.id);
 
-    // Carrega a barra lateral Social (Sugestões/Explorar)
-    carregarExplorarSocial();
+    // No perfil, carregamos os AMIGOS ao invés do Explorar
+    carregarAmigos(userToShow.id);
+
+    // Atualiza botões sociais se não for o próprio perfil
+    atualizarAcoesSociais(userToShow.id);
 }
 
 /**
@@ -142,6 +145,16 @@ async function carregarEstatisticasPerfil(userId) {
         const daysEl = document.getElementById('statDaysActive');
         if (daysEl) daysEl.textContent = diffDays;
     } catch (e) {}
+
+    // 4. Quantidade de Amigos
+    try {
+        const amigos = await api(`/amizades/${userId}`);
+        const el = document.getElementById('statFollowers');
+        if (el) el.textContent = amigos?.length || 0;
+    } catch (e) {
+        const el = document.getElementById('statFollowers');
+        if (el) el.textContent = '0';
+    }
 }
 
 /**
@@ -257,50 +270,168 @@ document.addEventListener('submit', async (e) => {
 });
 
 /**
- * Função "Social": Busca e renderiza sugestões de usuários na sidebar ou na tela principal.
- * @param {string} search Termo de busca.
- * @param {string} containerId ID do elemento onde renderizar (socialUsersList ou socialScreenList).
+ * Função "Social": Busca e renderiza amigos do usuário ou sugestões.
  */
-async function carregarExplorarSocial(search = '', containerId = 'socialUsersList') {
+async function carregarAmigos(userId = null) {
+    const listEl = document.getElementById('socialUsersList');
+    if (!listEl) return;
+
+    try {
+        const targetId = userId || currentUser.id;
+        const amigos = await api(`/amizades/${targetId}`);
+
+        if (!amigos || amigos.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.5;">Nenhum amigo adicionado ainda.</div>';
+            return;
+        }
+
+        listEl.innerHTML = amigos.map(user => {
+            const avatarUrl = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome}&background=random`;
+            
+            return `
+                <div class="social-user-item" onclick="verPerfilUsuario('${user.id}')">
+                    <div class="social-user-avatar">
+                        <img src="${avatarUrl}" alt="${user.nome}">
+                    </div>
+                    <div class="social-user-info">
+                        <div class="social-user-name">${user.nome}</div>
+                        <div class="social-user-badge">
+                            🚀 Nível <span class="social-user-level">${user.infantil_level || 1}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (erro) {
+        console.error('Erro ao carregar amigos:', erro);
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--crimson);">Erro ao carregar lista de amigos.</div>';
+    }
+}
+
+/**
+ * Atualiza o container de ações sociais (Botão Adicionar Amigo, etc).
+ */
+async function atualizarAcoesSociais(userId) {
+    const container = document.getElementById('socialActionsContainer');
+    if (!container) return;
+
+    if (!userId || userId === currentUser?.id) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    container.innerHTML = '<span class="spinner-sm"></span>';
+
+    try {
+        const { status, id: amizadeId } = await api(`/amizades/status/${userId}`);
+
+        if (status === 'nenhum') {
+            container.innerHTML = `<button class="btn-edit-floating" onclick="enviarPedidoAmizade('${userId}')" title="Adicionar Amigo">➕</button>`;
+        } else if (status === 'enviado') {
+            container.innerHTML = `<button class="btn-edit-floating" disabled title="Pedido Enviado" style="opacity: 0.6; cursor: not-allowed;">⏳</button>`;
+        } else if (status === 'recebido') {
+            container.innerHTML = `<button class="btn-edit-floating" onclick="aceitarPedidoAmizade('${amizadeId}', '${userId}')" title="Aceitar Pedido" style="background: var(--success); border-color: transparent;">✅</button>`;
+        } else if (status === 'amigos') {
+            container.innerHTML = `<button class="btn-edit-floating" onclick="removerAmizade('${amizadeId}', '${userId}')" title="Remover Amizade" style="background: rgba(220, 53, 69, 0.2); border-color: rgba(220, 53, 69, 0.4);">🗑️</button>`;
+        }
+    } catch (erro) {
+        container.innerHTML = '';
+    }
+}
+
+/**
+ * Envia um pedido de amizade.
+ */
+async function enviarPedidoAmizade(destinatarioId) {
+    try {
+        await api('/amizades/solicitar', {
+            method: 'POST',
+            body: JSON.stringify({ destinatario_id: destinatarioId })
+        });
+        exibirAlerta('Pedido de amizade enviado!', 'success');
+        atualizarAcoesSociais(destinatarioId);
+    } catch (erro) {
+        exibirAlerta(erro.message, 'danger');
+    }
+}
+
+/**
+ * Aceita um pedido de amizade.
+ */
+async function aceitarPedidoAmizade(amizadeId, userId) {
+    try {
+        await api(`/amizades/${amizadeId}/aceitar`, { method: 'PUT' });
+        exibirAlerta('Pedido aceito!', 'success');
+        atualizarAcoesSociais(userId);
+        carregarAmigos(); // Recarrega minha lista
+    } catch (erro) {
+        exibirAlerta(erro.message, 'danger');
+    }
+}
+
+/**
+ * Remove uma amizade ou pedido.
+ */
+async function removerAmizade(amizadeId, userId) {
+    exibirConfirmacao({
+        icon: '👤',
+        title: 'Remover Amizade',
+        msg: 'Tem certeza que deseja desfazer esta amizade?',
+        okLabel: 'Sim, Remover',
+        async onOk() {
+            try {
+                await api(`/amizades/${amizadeId}`, { method: 'DELETE' });
+                exibirAlerta('Amizade removida.', 'info');
+                atualizarAcoesSociais(userId);
+                carregarAmigos();
+            } catch (erro) {
+                exibirAlerta(erro.message, 'danger');
+            }
+        }
+    });
+}
+
+/**
+ * Atalho para ver perfil de outro usuário e mudar de tela.
+ */
+function verPerfilUsuario(id) {
+    console.log(`[Social] Navegando para o perfil do usuário: ${id}`);
+    mostrarTela('perfilScreen');
+    carregarPerfil(id);
+}
+
+/**
+ * Debounce para busca social na TELA PRINCIPAL (Continua explorando a comunidade).
+ */
+let socialMainSearchTimeout;
+function buscarUsuariosSocialPrincipal() {
+    const search = document.getElementById('socialMainSearchInput').value;
+    clearTimeout(socialMainSearchTimeout);
+    socialMainSearchTimeout = setTimeout(() => {
+        carregarExplorarSocial(search, 'socialScreenList');
+    }, 400);
+}
+
+/**
+ * Mantém a função de explorar para a tela SOCIAL dedicada.
+ */
+async function carregarExplorarSocial(search = '', containerId = 'socialScreenList') {
     const listEl = document.getElementById(containerId);
     if (!listEl) return;
 
     try {
         const query = search ? `?search=${encodeURIComponent(search)}` : '';
-        console.log(`[Social] Requisitando usuários em: /api/auth/explorar${query}`);
-        
         const usuarios = await api(`/auth/explorar${query}`);
-        console.log('[Social] Resposta recebida:', usuarios);
 
         if (!usuarios || usuarios.length === 0) {
             listEl.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.5;">Nenhum usuário encontrado.</div>';
             return;
         }
 
-        const isMainScreen = containerId === 'socialScreenList';
-
         listEl.innerHTML = usuarios.map(user => {
-            const initial = (user.nome || '?').charAt(0).toUpperCase();
             const avatarUrl = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome}&background=random`;
-            
-            // Renderização para a Barra Lateral (Compacta)
-            if (!isMainScreen) {
-                return `
-                    <div class="social-user-item" onclick="verPerfilUsuario('${user.id}')">
-                        <div class="social-user-avatar">
-                            <img src="${avatarUrl}" alt="${user.nome}">
-                        </div>
-                        <div class="social-user-info">
-                            <div class="social-user-name">${user.nome}</div>
-                            <div class="social-user-badge">
-                                🚀 Nível <span class="social-user-level">${user.infantil_level || 1}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Renderização para a Tela Principal (Cards Premium)
             return `
                 <div class="glass-card social-card-user" onclick="verPerfilUsuario('${user.id}')" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px; transition: all 0.3s ease; border: 1px solid var(--border);">
                     <div class="social-card-avatar" style="width: 100px; height: 100px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--accent); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 20px; border: 2px solid var(--accent-bg);">
@@ -314,48 +445,24 @@ async function carregarExplorarSocial(search = '', containerId = 'socialUsersLis
                         <span class="social-card-badge" style="padding: 6px 14px; background: var(--accent-bg); color: var(--accent); border-radius: var(--r-pill); font-size: 0.75rem; font-weight: 700;">
                             ✨ Nível ${user.infantil_level || 1}
                         </span>
-                        <span class="social-card-badge" style="padding: 6px 14px; background: rgba(255,255,255,0.05); color: var(--text-dim); border-radius: var(--r-pill); font-size: 0.75rem; font-weight: 700; border: 1px solid var(--border);">
-                            📅 ${new Date(user.created_at).getFullYear()}
-                        </span>
                     </div>
                 </div>
             `;
         }).join('');
-
     } catch (erro) {
-        console.error('Erro ao carregar explorador social:', erro);
         listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--crimson);">Erro ao carregar comunidade.</div>';
     }
 }
 
-/**
- * Atalho para ver perfil de outro usuário e mudar de tela.
- */
-function verPerfilUsuario(id) {
-    mostrarTela('profileScreen');
-    carregarPerfil(id);
-}
+// Socket events para amizade
+socket.on('novoPedidoAmizade', () => {
+    exibirAlerta('Você recebeu um novo pedido de amizade!', 'info');
+    if (typeof buscarNotificacoes === 'function') buscarNotificacoes();
+});
 
-/**
- * Debounce para busca social na barra lateral.
- */
-let socialSearchTimeout;
-function buscarUsuariosSocial() {
-    const search = document.getElementById('socialSearchInput').value;
-    clearTimeout(socialSearchTimeout);
-    socialSearchTimeout = setTimeout(() => {
-        carregarExplorarSocial(search, 'socialUsersList');
-    }, 400);
-}
+socket.on('pedidoAmizadeAceito', (data) => {
+    exibirAlerta('Seu pedido de amizade foi aceito!', 'success');
+    if (typeof buscarNotificacoes === 'function') buscarNotificacoes();
+    carregarAmigos();
+});
 
-/**
- * Debounce para busca social na TELA PRINCIPAL.
- */
-let socialMainSearchTimeout;
-function buscarUsuariosSocialPrincipal() {
-    const search = document.getElementById('socialMainSearchInput').value;
-    clearTimeout(socialMainSearchTimeout);
-    socialMainSearchTimeout = setTimeout(() => {
-        carregarExplorarSocial(search, 'socialScreenList');
-    }, 400);
-}

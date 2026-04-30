@@ -67,6 +67,7 @@ const rotasUsuarios = require('./routes/UsuarioRoutes');
 const rotasEstatisticas = require('./routes/StatsRoutes');
 const rotasAcervoDigital = require('./routes/AcervoDigitalRoutes');
 const rotasInfantil = require('./routes/infantilRoutes');
+const rotasAmizades = require('./routes/amizadeRoutes');
 
 // --- DEFINIÇÃO DOS CAMINHOS DA API ---
 app.use('/api/auth', rotasAutenticacao); // Login e cadastro
@@ -76,6 +77,7 @@ app.use('/api/usuarios', rotasUsuarios); // Cadastro de pessoas
 app.use('/api/stats', rotasEstatisticas); // Painel de números e dados
 app.use('/api/acervo-digital', rotasAcervoDigital); // PDFs e arquivos digitais
 app.use('/api/infantil', rotasInfantil); // Área para as crianças
+app.use('/api/amizades', rotasAmizades); // Sistema Social de Amigos
 
 // --- ROTAS GERAIS ---
 // Verifica se o servidor está funcionando corretamente

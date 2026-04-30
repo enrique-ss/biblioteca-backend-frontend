@@ -44,5 +44,8 @@ router.put('/:id/devolver', verificarBibliotecario, controller.devolver);
 // Baixar manualmente as multas de um usuário (Apenas Bibliotecários)
 router.put('/multas/:usuario_id/pagar', verificarBibliotecario, controller.pagarMulta);
 
+// Ver empréstimos de um usuário específico (Público/Social)
+router.get('/usuario/:usuario_id', controller.listarPorUsuario);
+
 module.exports = router;
 

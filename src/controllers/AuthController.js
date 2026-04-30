@@ -403,6 +403,7 @@ class AuthController {
       // Retorna todos os usuários encontrados (incluindo o próprio usuário logado)
       const filtrados = usuarios;
       
+      console.log(`[Social] Resultado da busca no banco:`, filtrados);
       console.log(`[Social] ${filtrados.length} usuários encontrados.`);
       res.json(filtrados);
     } catch (erro) {
