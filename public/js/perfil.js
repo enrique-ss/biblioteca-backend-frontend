@@ -1,37 +1,56 @@
 /*
     PERFIL DO USUÁRIO: exibição e edição dos dados pessoais (Estilo Rede Social).
-*/
-
-/**
- * Preenche a tela de perfil com os dados do usuário logado e estatísticas.
+*//**
+ * Preenche a tela de perfil com os dados de um usuário (próprio ou explorado).
+ * @param {string|null} userId ID do usuário a ser visualizado. Se nulo, mostra o logado.
  */
-async function carregarPerfil() {
-    console.log('[Perfil] Iniciando carregamento...', currentUser);
-    if (!currentUser) return;
+async function carregarPerfil(userId = null) {
+    const isSelf = !userId || userId === currentUser?.id;
+    let userToShow = currentUser;
 
-    // Campos do formulário (configurações)
-    if (document.getElementById('perfilNome')) {
-        document.getElementById('perfilNome').value = currentUser.nome || '';
-        document.getElementById('perfilEmail').value = currentUser.email || '';
-        document.getElementById('perfilBio').value = currentUser.bio || '';
-        document.getElementById('perfilGeneros').value = currentUser.generos_favoritos || '';
-        document.getElementById('perfilSenha').value = '';
+    console.log(`[Perfil] Carregando perfil de: ${userId || 'mim mesmo'}`);
+
+    // Se estivermos vendo outro usuário, buscamos os dados dele no servidor
+    if (!isSelf) {
+        try {
+            userToShow = await api(`/auth/perfil/${userId}`);
+        } catch (erro) {
+            console.error('Erro ao buscar perfil de outro usuário:', erro);
+            exibirAlerta('Não foi possível carregar este perfil.', 'danger');
+            return;
+        }
+    }
+
+    if (!userToShow) return;
+
+    // Controla visibilidade do botão de edição (apenas para o próprio perfil)
+    const editBtn = document.querySelector('.profile-header-actions');
+    if (editBtn) editBtn.style.display = isSelf ? 'block' : 'none';
+
+    // Preenche campos do formulário de edição (se for o próprio perfil)
+    if (isSelf && document.getElementById('perfilNome')) {
+        document.getElementById('perfilNome').value = userToShow.nome || '';
+        document.getElementById('perfilEmail').value = userToShow.email || '';
+        document.getElementById('perfilBio').value = userToShow.bio || '';
+        document.getElementById('perfilGeneros').value = userToShow.generos_favoritos || '';
     }
 
     // Cabeçalho e Informações Básicas
     const nameEl = document.getElementById('userProfileName');
-    if (nameEl) nameEl.textContent = currentUser.nome || 'Usuário';
+    if (nameEl) nameEl.textContent = userToShow.nome || 'Usuário';
     
     const typeEl = document.getElementById('userProfileType');
-    if (typeEl) typeEl.textContent = currentUser.tipo === 'bibliotecario' ? '👤 Bibliotecário' : '👤 Leitor';
+    if (typeEl) {
+        typeEl.textContent = userToShow.tipo === 'bibliotecario' ? '👤 Bibliotecário' : '👤 Leitor';
+    }
     
     // Atualização do Avatar
     const avatarEl = document.getElementById('userProfileAvatar');
     if (avatarEl) {
-        if (currentUser.avatar_url) {
-            avatarEl.innerHTML = `<img src="${currentUser.avatar_url}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${currentUser.nome}&background=random'">`;
+        if (userToShow.avatar_url) {
+            avatarEl.innerHTML = `<img src="${userToShow.avatar_url}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${userToShow.nome}&background=random'">`;
         } else {
-            const initial = (currentUser.nome || '?').charAt(0).toUpperCase();
+            const initial = (userToShow.nome || '?').charAt(0).toUpperCase();
             avatarEl.innerHTML = `<span id="userProfileInitials">${initial}</span>`;
         }
     }
@@ -39,8 +58,8 @@ async function carregarPerfil() {
     // Atualização do Banner
     const bannerEl = document.querySelector('.profile-banner');
     if (bannerEl) {
-        if (currentUser.banner_url) {
-            bannerEl.style.backgroundImage = `url('${currentUser.banner_url}')`;
+        if (userToShow.banner_url) {
+            bannerEl.style.backgroundImage = `url('${userToShow.banner_url}')`;
         } else {
             bannerEl.style.backgroundImage = `url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=2000')`;
         }
@@ -48,14 +67,14 @@ async function carregarPerfil() {
 
     // Biografia
     const bioEl = document.getElementById('userProfileBio');
-    if (bioEl) bioEl.textContent = currentUser.bio || '';
+    if (bioEl) bioEl.textContent = userToShow.bio || 'Sem biografia definida.';
 
     // Gêneros Favoritos
     const genresEl = document.getElementById('userProfileGenres');
     if (genresEl) {
         genresEl.innerHTML = '';
-        if (currentUser.generos_favoritos) {
-            currentUser.generos_favoritos.split(',').forEach(genre => {
+        if (userToShow.generos_favoritos) {
+            userToShow.generos_favoritos.split(',').forEach(genre => {
                 if (genre.trim()) {
                     const span = document.createElement('span');
                     span.className = 'genre-tag';
@@ -63,82 +82,80 @@ async function carregarPerfil() {
                     genresEl.appendChild(span);
                 }
             });
+        } else {
+            genresEl.innerHTML = '<span style="opacity:0.5; font-size:0.8rem;">Nenhum gênero favorito.</span>';
         }
     }
 
     // Data de entrada
     const joinDateEl = document.getElementById('userProfileJoinDate');
-    if (joinDateEl && currentUser.created_at) {
-        const data = new Date(currentUser.created_at).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    if (joinDateEl && userToShow.created_at) {
+        const data = new Date(userToShow.created_at).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         joinDateEl.textContent = `📅 Membro desde ${data}`;
     }
 
-    // Estatísticas Reais - Carregadas de forma independente
+    // Estatísticas (Ajustado para funcionar com qualquer usuário)
+    await carregarEstatisticasPerfil(userToShow.id);
     
+    // Feed de Atividades (Ajustado para o usuário alvo)
+    await carregarAtividades(userToShow.id);
+
+    // Carrega a barra lateral Social (Sugestões/Explorar)
+    carregarExplorarSocial();
+}
+
+/**
+ * Carrega as estatísticas numéricas do perfil (PDFs, Aluguéis, XP).
+ */
+async function carregarEstatisticasPerfil(userId) {
     // 1. PDFs Subidos
     try {
-        const resSubidos = await api('/acervo-digital/estatisticas/subidos');
+        const resSubidos = await api(`/acervo-digital/estatisticas/subidos?userId=${userId}`);
         const el = document.getElementById('statPDFsUploaded');
         if (el) el.textContent = resSubidos.total || 0;
     } catch (e) {
-        console.error('Erro ao carregar PDFs subidos:', e);
         const el = document.getElementById('statPDFsUploaded');
         if (el) el.textContent = '0';
     }
 
     // 2. Livros Alugados
     try {
-        const resAlugueis = await api('/alugueis/meus');
+        // Nota: no backend precisaremos ajustar 'alugueis/meus' para aceitar um query param de userId se quisermos ver de outros
+        const endpoint = userId === currentUser.id ? '/alugueis/meus' : `/alugueis/usuario/${userId}`;
+        const resAlugueis = await api(endpoint);
         const el = document.getElementById('statBooksRented');
         if (el) el.textContent = resAlugueis.length || 0;
     } catch (e) {
-        console.error('Erro ao carregar livros alugados:', e);
         const el = document.getElementById('statBooksRented');
         if (el) el.textContent = '0';
     }
 
-    // 3. Nível Literário
+    // 3. Nível Literário e Dias Ativos
     try {
-        const resInfantil = await api('/infantil/data');
-        const el = document.getElementById('statLevel');
-        if (el && resInfantil && resInfantil.userProfile) {
-            el.textContent = resInfantil.userProfile.level || 1;
-        }
-    } catch (e) {
-        console.error('Erro ao carregar nível literário:', e);
-        const el = document.getElementById('statLevel');
-        if (el) el.textContent = '1';
-    }
+        const user = (userId === currentUser.id) ? currentUser : await api(`/auth/perfil/${userId}`);
+        
+        const lvlEl = document.getElementById('statLevel');
+        if (lvlEl) lvlEl.textContent = user.infantil_level || 1;
 
-    // 4. Dias Ativos
-    if (currentUser.created_at) {
-        const dataCriacao = new Date(currentUser.created_at);
-        dataCriacao.setHours(0, 0, 0, 0);
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        const diffMilis = Math.abs(hoje - dataCriacao);
-        const diffDays = Math.floor(diffMilis / (1000 * 60 * 60 * 24)) + 1;
-        const el = document.getElementById('statDaysActive');
-        if (el) el.textContent = diffDays;
-    }
-
-    // Chamada inicial do feed
-    carregarAtividades();
+        const dataCriacaoStr = user.created_at || new Date().toISOString();
+        const diffDays = Math.floor(Math.abs(new Date() - new Date(dataCriacaoStr)) / (1000 * 60 * 60 * 24)) + 1;
+        const daysEl = document.getElementById('statDaysActive');
+        if (daysEl) daysEl.textContent = diffDays;
+    } catch (e) {}
 }
 
-let currentActivityPage = 1;
-
 /**
- * Busca e renderiza o feed completo de atividades do usuário.
+ * Busca e renderiza o feed completo de atividades de um usuário.
  */
-async function carregarAtividades() {
+async function carregarAtividades(userId = null) {
     const listEl = document.getElementById('profileActivityList');
     if (!listEl) return;
 
     listEl.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">Carregando atividades...</div>';
 
     try {
-        const atividades = await api('/auth/atividades');
+        const endpoint = userId ? `/auth/atividades?userId=${userId}` : '/auth/atividades';
+        const atividades = await api(endpoint);
 
         if (!atividades || atividades.length === 0) {
             listEl.innerHTML = `
@@ -238,3 +255,107 @@ document.addEventListener('submit', async (e) => {
         }
     }
 });
+
+/**
+ * Função "Social": Busca e renderiza sugestões de usuários na sidebar ou na tela principal.
+ * @param {string} search Termo de busca.
+ * @param {string} containerId ID do elemento onde renderizar (socialUsersList ou socialScreenList).
+ */
+async function carregarExplorarSocial(search = '', containerId = 'socialUsersList') {
+    const listEl = document.getElementById(containerId);
+    if (!listEl) return;
+
+    try {
+        const query = search ? `?search=${encodeURIComponent(search)}` : '';
+        console.log(`[Social] Requisitando usuários em: /api/auth/explorar${query}`);
+        
+        const usuarios = await api(`/auth/explorar${query}`);
+        console.log('[Social] Resposta recebida:', usuarios);
+
+        if (!usuarios || usuarios.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.5;">Nenhum usuário encontrado.</div>';
+            return;
+        }
+
+        const isMainScreen = containerId === 'socialScreenList';
+
+        listEl.innerHTML = usuarios.map(user => {
+            const initial = (user.nome || '?').charAt(0).toUpperCase();
+            const avatarUrl = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome}&background=random`;
+            
+            // Renderização para a Barra Lateral (Compacta)
+            if (!isMainScreen) {
+                return `
+                    <div class="social-user-item" onclick="verPerfilUsuario('${user.id}')">
+                        <div class="social-user-avatar">
+                            <img src="${avatarUrl}" alt="${user.nome}">
+                        </div>
+                        <div class="social-user-info">
+                            <div class="social-user-name">${user.nome}</div>
+                            <div class="social-user-badge">
+                                🚀 Nível <span class="social-user-level">${user.infantil_level || 1}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Renderização para a Tela Principal (Cards Premium)
+            return `
+                <div class="glass-card social-card-user" onclick="verPerfilUsuario('${user.id}')" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px; transition: all 0.3s ease; border: 1px solid var(--border);">
+                    <div class="social-card-avatar" style="width: 100px; height: 100px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--accent); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 20px; border: 2px solid var(--accent-bg);">
+                        <img src="${avatarUrl}" alt="${user.nome}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div class="social-card-name" style="font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 8px;">${user.nome}</div>
+                    <div class="social-card-bio" style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;">
+                        ${user.bio || 'Explorando as fronteiras literárias do Biblio Verso.'}
+                    </div>
+                    <div class="social-card-meta" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                        <span class="social-card-badge" style="padding: 6px 14px; background: var(--accent-bg); color: var(--accent); border-radius: var(--r-pill); font-size: 0.75rem; font-weight: 700;">
+                            ✨ Nível ${user.infantil_level || 1}
+                        </span>
+                        <span class="social-card-badge" style="padding: 6px 14px; background: rgba(255,255,255,0.05); color: var(--text-dim); border-radius: var(--r-pill); font-size: 0.75rem; font-weight: 700; border: 1px solid var(--border);">
+                            📅 ${new Date(user.created_at).getFullYear()}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (erro) {
+        console.error('Erro ao carregar explorador social:', erro);
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--crimson);">Erro ao carregar comunidade.</div>';
+    }
+}
+
+/**
+ * Atalho para ver perfil de outro usuário e mudar de tela.
+ */
+function verPerfilUsuario(id) {
+    mostrarTela('profileScreen');
+    carregarPerfil(id);
+}
+
+/**
+ * Debounce para busca social na barra lateral.
+ */
+let socialSearchTimeout;
+function buscarUsuariosSocial() {
+    const search = document.getElementById('socialSearchInput').value;
+    clearTimeout(socialSearchTimeout);
+    socialSearchTimeout = setTimeout(() => {
+        carregarExplorarSocial(search, 'socialUsersList');
+    }, 400);
+}
+
+/**
+ * Debounce para busca social na TELA PRINCIPAL.
+ */
+let socialMainSearchTimeout;
+function buscarUsuariosSocialPrincipal() {
+    const search = document.getElementById('socialMainSearchInput').value;
+    clearTimeout(socialMainSearchTimeout);
+    socialMainSearchTimeout = setTimeout(() => {
+        carregarExplorarSocial(search, 'socialScreenList');
+    }, 400);
+}

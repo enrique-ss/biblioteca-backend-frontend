@@ -19,5 +19,11 @@ router.put('/perfil', verificarToken, controller.editarPerfil);
 // Buscar feed de atividades do usuário
 router.get('/atividades', verificarToken, controller.getAtividades);
 
+// Explorar outros usuários (Função Social)
+router.get('/explorar', verificarToken, controller.getUsuariosExplorar);
+
+// Ver perfil público de outro usuário
+router.get('/perfil/:id', verificarToken, controller.getPerfilPublico);
+
 module.exports = router;
 

@@ -548,7 +548,10 @@ class OfflineClient {
         return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).get(row[pk] || null)) || row;
       }
     } catch (error) {
-      console.error(`❌ Erro ao inserir na tabela ${table}:`, error);
+      // Silencia erros esperados (como e-mail já existente) para não poluir o terminal
+      if (!error.message.includes('UNIQUE constraint failed')) {
+        console.error(`❌ Erro inesperado na tabela ${table}:`, error);
+      }
       throw error;
     }
   }
@@ -604,6 +607,163 @@ class OfflineClient {
       return this.updateRow(table, existing.id, row);
     }
     return this.insertRow(table, row);
+  }
+
+  // Simula o método .from() do Supabase para manter compatibilidade no código do controller
+  from(table) {
+    const db = this.db;
+    const client = this;
+    
+    return {
+      select: (columns = '*', options = {}) => {
+        let sql = `SELECT ${columns} FROM ${table}`;
+        let countSql = `SELECT COUNT(*) as total FROM ${table}`;
+        let whereClauses = [];
+        let params = [];
+        let orderBy = '';
+        let limit = '';
+        let offset = '';
+
+        const builder = {};
+        
+        builder.eq = (col, val) => {
+          whereClauses.push(`${col} = ?`);
+          params.push(val);
+          return builder;
+        };
+        builder.neq = (col, val) => {
+          whereClauses.push(`${col} != ?`);
+          params.push(val);
+          return builder;
+        };
+        builder.ilike = (col, pattern) => {
+          whereClauses.push(`${col} LIKE ?`);
+          params.push(pattern.replace(/%/g, '%'));
+          return builder;
+        };
+        builder.is = (col, val) => {
+          if (val === null) whereClauses.push(`${col} IS NULL`);
+          else {
+              whereClauses.push(`${col} = ?`);
+              params.push(val);
+          }
+          return builder;
+        };
+        builder.in = (col, vals) => {
+          if (vals.length) {
+            const placeholders = vals.map(() => '?').join(',');
+            whereClauses.push(`${col} IN (${placeholders})`);
+            params.push(...vals);
+          }
+          return builder;
+        };
+        builder.or = (query) => {
+          const parts = query.split(',');
+          const orClauses = parts.map(p => {
+              const [col, op, pattern] = p.split('.');
+              if (op === 'ilike') {
+                  params.push(pattern.replace(/%/g, '%'));
+                  return `${col} LIKE ?`;
+              }
+              return '1=1';
+          });
+          whereClauses.push(`(${orClauses.join(' OR ')})`);
+          return builder;
+        };
+        builder.order = (orderCol, { ascending } = { ascending: true }) => {
+          orderBy = ` ORDER BY ${orderCol} ${ascending ? 'ASC' : 'DESC'}`;
+          return builder;
+        };
+        builder.limit = (limitVal) => {
+          limit = ` LIMIT ${limitVal}`;
+          return builder;
+        };
+        builder.range = (from, to) => {
+          limit = ` LIMIT ${to - from + 1}`;
+          offset = ` OFFSET ${from}`;
+          return builder;
+        };
+        builder.single = async () => {
+          let finalSql = sql;
+          if (whereClauses.length) finalSql += ' WHERE ' + whereClauses.join(' AND ');
+          finalSql += orderBy + ' LIMIT 1';
+          const row = db.prepare(finalSql).get(...params);
+          return { data: mapRow(table, row), error: null };
+        };
+        builder.then = async (resolve) => {
+          try {
+            let finalSql = sql;
+            let finalCountSql = countSql;
+            if (whereClauses.length) {
+              const where = ' WHERE ' + whereClauses.join(' AND ');
+              finalSql += where;
+              finalCountSql += where;
+            }
+            finalSql += orderBy + limit + offset;
+            const rows = db.prepare(finalSql).all(...params);
+            const result = { data: rows.map(r => mapRow(table, r)), error: null };
+            if (options.count) {
+              const countRes = db.prepare(finalCountSql).get(...params);
+              result.count = countRes.total;
+            }
+            if (resolve) resolve(result);
+            return result;
+          } catch (error) {
+            const result = { data: null, error };
+            if (resolve) resolve(result);
+            return result;
+          }
+        };
+        return builder;
+      },
+      insert: async (payload) => {
+        try {
+          const rows = Array.isArray(payload) ? payload : [payload];
+          const results = rows.map(r => client.insertRow(table, r));
+          return { data: Array.isArray(payload) ? results : results[0], error: null };
+        } catch (error) {
+          return { data: null, error };
+        }
+      },
+      upsert: async (data, { onConflict } = {}) => {
+        try {
+          const res = client.upsertRow(table, data, onConflict);
+          return { data: res, error: null };
+        } catch (error) {
+          return { data: null, error };
+        }
+      },
+      update: (updates) => {
+        let whereClauses = [];
+        let whereParams = [];
+        const builder = {
+            eq: (col, val) => {
+                whereClauses.push(`${col} = ?`);
+                whereParams.push(val);
+                return builder;
+            },
+            in: (col, vals) => {
+                const placeholders = vals.map(() => '?').join(',');
+                whereClauses.push(`${col} IN (${placeholders})`);
+                whereParams.push(...vals);
+                return builder;
+            },
+            then: async (resolve) => {
+                try {
+                    const selectSql = `SELECT id FROM ${table} WHERE ` + whereClauses.join(' AND ');
+                    const targets = db.prepare(selectSql).all(...whereParams);
+                    targets.forEach(t => client.updateRow(table, t.id, updates));
+                    if (resolve) resolve({ error: null });
+                    return { error: null };
+                } catch (error) {
+                    if (resolve) resolve({ error });
+                    return { error };
+                }
+            }
+        };
+        return builder;
+      }
+    };
   }
 }
 

@@ -184,6 +184,25 @@ function recreateDatabase() {
 function configurarBanco() {
   recreateDatabase();
   console.log(`Banco offline recriado em ${dbPath}`);
+
+  // Adiciona alguns usuários fictícios para popular o Social
+  const db = new Database(dbPath);
+  const insertUser = db.prepare(`
+    INSERT INTO usuarios (id, nome, email, tipo, bio, infantil_level, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const dummyUsers = [
+    ['u1', 'Ana Clara', 'ana@email.com', 'usuario', 'Apaixonada por romances históricos e café.', 5, '2026-01-10T10:00:00Z'],
+    ['u2', 'Bruno Silva', 'bruno@email.com', 'usuario', 'Explorador de mundos de fantasia e ficção científica.', 8, '2026-02-15T14:30:00Z'],
+    ['u3', 'Carla Mendes', 'carla@email.com', 'usuario', 'Leitora voraz de mistérios e thrillers psicológicos.', 12, '2026-03-20T09:15:00Z'],
+    ['u4', 'Daniel Souza', 'daniel@email.com', 'usuario', 'Interessado em tecnologia, programação e filosofia.', 3, '2026-04-05T11:45:00Z'],
+    ['u5', 'Elena Rocha', 'elena@email.com', 'usuario', 'Poetisa nas horas vagas e fã de literatura clássica.', 15, '2026-04-25T16:20:00Z']
+  ];
+
+  dummyUsers.forEach(user => insertUser.run(...user));
+  db.close();
+
   return true;
 }
 

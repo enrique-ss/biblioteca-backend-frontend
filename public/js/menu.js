@@ -88,6 +88,18 @@ function carregarMenu() {
         });
     }
 
+    // Social: Comunidade de leitores
+    itensMenu.push({ 
+        icon: '🌍', 
+        title: 'Social', 
+        action() { 
+            mostrarTela('socialScreen'); 
+            if (typeof carregarExplorarSocial === 'function') {
+                carregarExplorarSocial('', 'socialScreenList');
+            }
+        } 
+    });
+
     // Espaço Literário: disponível para todos os usuários
     itensMenu.push({ 
         icon: '🎓', 

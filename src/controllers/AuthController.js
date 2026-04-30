@@ -68,24 +68,33 @@ class AuthController {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Trata erro de usuário já existente ou dados inválidos vindo do Auth
+        if (authError.message === 'Usuario ja existe.' || authError.status === 422) {
+          return res.status(400).json({ error: 'Este e-mail já está sendo usado por outra conta.' });
+        }
+        throw authError;
+      }
 
       /**
-       * Além do login, salvamos o usuário na nossa tabela principal
-       * para gerenciar multas, XP infantil e histórico de livros.
+       * MODO OFFLINE vs ONLINE:
+       * No modo offline, o signUp já insere o usuário na tabela 'usuarios'.
+       * Por isso, só tentamos o insert manual se NÃO estivermos em modo offline.
        */
-      const { error: dbError } = await supabaseAdmin.from('usuarios').insert({
-        id: authData.user.id,
-        nome: nome.trim(),
-        email: emailFormatado,
-        tipo,
-        multa_pendente: false,
-        infantil_xp: 0,
-        infantil_level: 1,
-        infantil_hearts: 5
-      });
+      if (!isOfflineMode) {
+        const { error: dbError } = await supabaseAdmin.from('usuarios').insert({
+          id: authData.user.id,
+          nome: nome.trim(),
+          email: emailFormatado,
+          tipo,
+          multa_pendente: false,
+          infantil_xp: 0,
+          infantil_level: 1,
+          infantil_hearts: 5
+        });
 
-      if (dbError) throw dbError;
+        if (dbError) throw dbError;
+      }
 
       // Avisa o sistema (via Socket) que um novo usuário apareceu, atualizando listas em tempo real
       req.app.get('io').emit('refreshData', 'usuarios');
@@ -99,11 +108,21 @@ class AuthController {
           nome: nome.trim(),
           email: emailFormatado,
           tipo,
+          created_at: new Date().toISOString(), // Necessário para estatísticas de dias ativos
           permissions: this.getPermissions(tipo)
         }
       });
     } catch (erro) {
-      console.error('Erro ao registrar usuario:', erro);
+      // Se for um erro esperado (400), não precisamos do log completo no terminal
+      if (!erro.message?.includes('UNIQUE constraint failed')) {
+        console.error('Erro ao registrar usuario:', erro);
+      }
+      
+      // Captura erros específicos de restrição do banco de dados (E-mail duplicado no SQLite)
+      if (erro.message?.includes('UNIQUE constraint failed')) {
+        return res.status(400).json({ error: 'Este e-mail já está cadastrado no sistema.' });
+      }
+
       res.status(500).json({ error: 'Ocorreu um erro interno ao realizar o cadastro.' });
     }
   };
@@ -349,6 +368,69 @@ class AuthController {
     } catch (erro) {
       console.error('Erro ao atualizar perfil:', erro);
       res.status(500).json({ error: 'Ocorreu um erro ao tentar salvar as alteracoes no perfil.' });
+    }
+  };
+  /**
+   * Retorna uma lista de usuários para a função "Social / Explorar".
+   * Permite buscar por nome e retorna apenas dados públicos.
+   */
+  getUsuariosExplorar = async (req, res) => {
+    try {
+      const { search } = req.query;
+      console.log(`[Social] Buscando usuários. Busca: "${search || ''}"`);
+
+      let query = supabaseAdmin
+        .from('usuarios')
+        .select('id, nome, email, bio, avatar_url, infantil_level, created_at')
+        .order('nome', { ascending: true })
+        .limit(40); // Aumentado para preencher o grid de 4
+
+      if (search) {
+        query = query.ilike('nome', `%${search}%`);
+      }
+
+      const { data: usuarios, error } = await query;
+      
+      if (error) {
+        console.error('[Social] Erro na query:', error);
+        throw error;
+      }
+
+      if (!usuarios) {
+        return res.json([]);
+      }
+
+      // Retorna todos os usuários encontrados (incluindo o próprio usuário logado)
+      const filtrados = usuarios;
+      
+      console.log(`[Social] ${filtrados.length} usuários encontrados.`);
+      res.json(filtrados);
+    } catch (erro) {
+      console.error('Erro ao buscar usuários para explorar:', erro);
+      res.status(500).json({ error: 'Falha ao buscar usuários: ' + erro.message });
+    }
+  };
+
+  /**
+   * Retorna o perfil público de um usuário específico.
+   */
+  getPerfilPublico = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { data: usuario, error } = await supabaseAdmin
+        .from('usuarios')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !usuario) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
+
+      res.json(usuario);
+    } catch (erro) {
+      console.error('Erro ao buscar perfil público:', erro);
+      res.status(500).json({ error: 'Falha ao carregar perfil.' });
     }
   };
 }

@@ -313,7 +313,14 @@
                     
                     <!-- Header do Perfil -->
                     <div class="profile-header">
-                        <div class="profile-banner"></div>
+                        <!-- Botão de Edição no Canto do Banner -->
+                        <div class="profile-header-actions">
+                            <button class="btn btn-edit-floating" onclick="abrirModal('editPerfilModal')" title="Editar Perfil">
+                                ⚙️
+                            </button>
+                        </div>
+
+                        <div class="profile-banner" id="userProfileBanner"></div>
                         <div class="profile-header-content">
                             <div class="profile-avatar-wrap">
                                 <div class="profile-avatar" id="userProfileAvatar">
@@ -328,11 +335,6 @@
                                     <span id="userProfileType"></span>
                                 </div>
                             </div>
-                            <div class="profile-header-actions">
-                                <button class="btn btn-ghost" onclick="abrirModal('editPerfilModal')" style="border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text);">
-                                    ⚙️ Editar Perfil
-                                </button>
-                            </div>
                         </div>
                     </div>
 
@@ -341,15 +343,26 @@
                         
                         <!-- Sidebar -->
                         <aside class="profile-sidebar">
-                            <div class="profile-card">
+                             <div class="profile-card">
                                 <h3 class="profile-card-title">Biografia</h3>
                                 <div class="profile-bio" id="userProfileBio"></div>
-                            </div>
+                             </div>
 
-                            <div class="profile-card">
+                             <div class="profile-card">
+                                <h3 class="profile-card-title">Explorar <span>Social</span></h3>
+                                <div class="social-search">
+                                    <input type="text" id="socialSearchInput" placeholder="Buscar leitores..." oninput="buscarUsuariosSocial()">
+                                </div>
+                                <div class="social-users-list" id="socialUsersList">
+                                    <!-- Preenchido dinamicamente -->
+                                    <div style="text-align:center; padding:10px; opacity:0.5; font-size:0.8rem;">Carregando...</div>
+                                </div>
+                             </div>
+
+                             <div class="profile-card">
                                 <h3 class="profile-card-title">Gêneros Favoritos</h3>
                                 <div class="favorite-genres" id="userProfileGenres"></div>
-                            </div>
+                             </div>
 
                             <div class="profile-card">
                                 <h3 class="profile-card-title">Estatísticas</h3>
@@ -388,6 +401,27 @@
                                 </div>
                             </div>
                         </main>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA SOCIAL (socialScreen) -->
+            <section id="socialScreen" class="screen">
+                <div class="page-header">
+                    <h2 class="page-title"><span>Social</span></h2>
+                </div>
+
+                <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
+                    <div class="search-bar" style="flex:1; margin-bottom:0;">
+                        <input type="text" id="socialMainSearchInput" class="form-input" 
+                            placeholder="Buscar leitores por nome ou e-mail..." oninput="buscarUsuariosSocialPrincipal()">
+                    </div>
+                </div>
+
+                <div id="socialScreenList" class="digital-grid">
+                    <!-- Preenchido dinamicamente por perfil.js -->
+                    <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <span class="spinner"></span> Carregando comunidade...
                     </div>
                 </div>
             </section>
@@ -949,48 +983,45 @@
         </div>
     </div>
 
-    <!-- Modal de Edição de Perfil -->
     <div id="editPerfilModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('editPerfilModal')"></div>
-        <div class="modal-box" style="max-width: 700px;">
+        <div class="modal-box" style="max-width: 480px;">
             <h2 class="modal-title">Editar <span>Perfil</span></h2>
-            <p class="modal-subtitle">Atualize suas informações pessoais e aparência</p>
+            <p class="modal-subtitle">Atualize seus dados e aparência</p>
             
-            <form id="editPerfilForm" novalidate style="margin-top:20px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="form-group"><label class="form-label">Nome</label><input type="text" id="perfilNome" class="form-input" required></div>
-                    <div class="form-group"><label class="form-label">Email</label><input type="email" id="perfilEmail" class="form-input" required></div>
-                </div>
+            <form id="editPerfilForm" novalidate style="margin-top:15px;">
+                <div class="form-group"><label class="form-label">Nome</label><input type="text" id="perfilNome" class="form-input" required placeholder="Seu nome completo"></div>
+                <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="perfilEmail" class="form-input" required placeholder="seu@email.com"></div>
                 
                 <div class="form-group">
                     <label class="form-label">Biografia</label>
-                    <textarea id="perfilBio" class="form-input" style="min-height: 80px; resize: vertical;" placeholder="Conte um pouco sobre você..."></textarea>
+                    <textarea id="perfilBio" class="form-input" style="min-height: 60px; resize: vertical;" placeholder="Conte sua história literária..."></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Gêneros Favoritos (separados por vírgula)</label>
+                    <label class="form-label">Gêneros Favoritos</label>
                     <input type="text" id="perfilGeneros" class="form-input" placeholder="Ex: Fantasia, Mistério, Clássicos">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="form-group">
-                        <label class="form-label">Foto de Perfil (Avatar)</label>
-                        <input type="file" id="perfilAvatarFile" class="form-input" accept="image/*" style="padding: 8px;">
+                        <label class="form-label">Foto de Perfil</label>
+                        <input type="file" id="perfilAvatarFile" class="form-input" accept="image/*" style="padding: 6px; font-size: 0.85rem;">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Capa do Perfil (Banner)</label>
-                        <input type="file" id="perfilBannerFile" class="form-input" accept="image/*" style="padding: 8px;">
+                        <label class="form-label">Capa do Perfil</label>
+                        <input type="file" id="perfilBannerFile" class="form-input" accept="image/*" style="padding: 6px; font-size: 0.85rem;">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Nova senha <span style="opacity:0.6; color:var(--accent); font-size:.8em">(deixe em branco para manter)</span></label>
-                    <input type="password" id="perfilSenha" class="form-input" placeholder="••••••••">
+                    <label class="form-label">Alterar Senha <span style="opacity:0.5; font-size:.8em">(opcional)</span></label>
+                    <input type="password" id="perfilSenha" class="form-input" placeholder="Nova senha se desejar mudar">
                 </div>
 
-                <div class="btn-group" style="margin-top:20px; justify-content: flex-end;">
+                <div class="btn-group" style="margin-top:10px;">
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('editPerfilModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="submit" class="btn btn-primary">Salvar Perfil</button>
                 </div>
             </form>
         </div>
