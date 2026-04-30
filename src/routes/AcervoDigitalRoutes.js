@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const controller = require('../controllers/AcervoDigitalController');
-const { verificarToken, verificarBibliotecario } = require('../middlewares/auth');
+const { verificarToken, verificarBibliotecario, verificarRestricao } = require('../middlewares/auth');
 
 /**
  * Rotas de Acervo Digital: Define os caminhos para acessar e gerenciar PDFs e documentos.
@@ -13,18 +13,18 @@ router.use(verificarToken);
 // --- Rotas de Estatísticas (Devem vir antes das rotas com :id para evitar conflitos) ---
 
 // Obter total de PDFs lidos pelo usuário logado
-router.get('/estatisticas/leituras', controller.obterContagemLeituras);
+router.get('/estatisticas/leituras', verificarRestricao('digital'), controller.obterContagemLeituras);
 
 // Obter total de PDFs enviados pelo usuário logado e aprovados
-router.get('/estatisticas/subidos', controller.obterContagemSubidos);
+router.get('/estatisticas/subidos', verificarRestricao('digital'), controller.obterContagemSubidos);
 
 // --- Rotas de Listagem e Cadastro ---
 
 // Listar documentos aprovados (Público para todos os leitores)
-router.get('/', controller.listar);
+router.get('/', verificarRestricao('digital'), controller.listar);
 
 // Enviar um novo documento (Pode ser enviado por leitor ou bibliotecário)
-router.post('/', controller.cadastrar);
+router.post('/', verificarRestricao('digital'), controller.cadastrar);
 
 // Listar documentos que aguardam aprovação (Apenas Bibliotecários)
 router.get('/pendentes', verificarBibliotecario, controller.listarPendentes);
@@ -32,7 +32,7 @@ router.get('/pendentes', verificarBibliotecario, controller.listarPendentes);
 // --- Rotas com Parâmetros (:id) ---
 
 // Registrar que um usuário leu um PDF
-router.post('/:id/ler', controller.registrarLeitura);
+router.post('/:id/ler', verificarRestricao('digital'), controller.registrarLeitura);
 
 // Aprovar um documento pendente (Apenas Bibliotecários)
 router.patch('/:id/aprovar', verificarBibliotecario, controller.aprovar);

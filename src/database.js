@@ -45,7 +45,8 @@ function mapRow(table, row) {
     return {
       ...row,
       multa_pendente: normalizeBoolean(row.multa_pendente),
-      bloqueado: normalizeBoolean(row.bloqueado)
+      bloqueado: normalizeBoolean(row.bloqueado),
+      bloqueios: row.bloqueios ? JSON.parse(row.bloqueios) : {}
     };
   }
 
@@ -61,7 +62,9 @@ function mapOutgoingUser(row) {
     created_at: row.created_at,
     user_metadata: {
       nome: row.nome,
-      tipo: row.tipo
+      tipo: row.tipo,
+      bloqueios: row.bloqueios,
+      bloqueado: Boolean(row.bloqueado)
     }
   };
 }
@@ -254,6 +257,7 @@ class OfflineQueryBuilder {
       case 'lt': return this.compareValues(value, condition.value) < 0;
       case 'lte': return this.compareValues(value, condition.value) <= 0;
       case 'in': return Array.isArray(condition.value) && condition.value.some((item) => this.valuesEqual(value, item));
+
       case 'or': {
         const tests = String(condition.expression)
           .split(',')
@@ -261,14 +265,38 @@ class OfflineQueryBuilder {
           .filter(Boolean);
 
         return tests.some((test) => {
-          const marker = '.ilike.';
-          if (!test.includes(marker)) return false;
-          const [column, rawPattern] = test.split(marker);
-          const current = this.getNestedValue(row, column);
-          const normalized = String(rawPattern || '').replace(/^%|%$/g, '').toLowerCase();
-          return String(current || '').toLowerCase().includes(normalized);
+          // O formato esperado é "coluna.operador.valor"
+          const parts = test.split('.');
+          if (parts.length < 3) return false;
+          
+          const col = parts[0];
+          const op = parts[1];
+          const val = parts.slice(2).join('.'); // Rejunta caso o valor tenha pontos
+
+          const current = this.getNestedValue(row, col);
+          
+          switch (op) {
+            case 'eq': return this.valuesEqual(current, val);
+            case 'neq': return !this.valuesEqual(current, val);
+            case 'ilike': {
+              const normalized = String(val || '').replace(/^%|%$/g, '').toLowerCase();
+              return String(current || '').toLowerCase().includes(normalized);
+            }
+            case 'gt': return this.compareValues(current, val) > 0;
+            case 'gte': return this.compareValues(current, val) >= 0;
+            case 'lt': return this.compareValues(current, val) < 0;
+            case 'lte': return this.compareValues(current, val) <= 0;
+            case 'is': return val === 'null' ? (current === null || current === undefined) : this.valuesEqual(current, val);
+            case 'in': {
+              // Formato do IN no OR costuma ser (val1,val2,val3)
+              const vals = val.replace(/^\(|\)$/g, '').split('|');
+              return vals.some(v => this.valuesEqual(current, v));
+            }
+            default: return false;
+          }
         });
       }
+
       default:
         return true;
     }
@@ -531,9 +559,17 @@ class OfflineClient {
   insertRow(table, payload) {
     const row = this.getInsertableRow(table, payload);
     const keys = Object.keys(row);
+    
+    // Converte objetos para strings JSON para o SQLite
+    keys.forEach(key => {
+      if (row[key] !== null && typeof row[key] === 'object') {
+        row[key] = JSON.stringify(row[key]);
+      }
+    });
+
     const placeholders = keys.map((key) => `@${key}`).join(', ');
     const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-    
+
     try {
       const info = this.db.prepare(sql).run(row);
       const pk = this.getPrimaryKey(table);
@@ -573,18 +609,25 @@ class OfflineClient {
       return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).get(id));
     }
 
+    // Converte objetos para strings JSON para o SQLite
+    keys.forEach(key => {
+      if (patch[key] !== null && typeof patch[key] === 'object') {
+        patch[key] = JSON.stringify(patch[key]);
+      }
+    });
+
     if (Array.isArray(pk)) {
-        // Para chaves compostas, 'id' deve ser um objeto contendo os valores das chaves
-        const assignments = keys.map((key) => `${key} = @${key}`).join(', ');
-        const conditions = pk.map(k => `${k} = @__pk_${k}`).join(' AND ');
-        const queryData = { ...patch };
-        pk.forEach(k => queryData[`__pk_${k}`] = id[k]);
-        this.db.prepare(`UPDATE ${table} SET ${assignments} WHERE ${conditions}`).run(queryData);
-        return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${conditions}`).get(queryData));
+      // Para chaves compostas, 'id' deve ser um objeto contendo os valores das chaves
+      const assignments = keys.map((key) => `${key} = @${key}`).join(', ');
+      const conditions = pk.map(k => `${k} = @__pk_${k}`).join(' AND ');
+      const queryData = { ...patch };
+      pk.forEach(k => queryData[`__pk_${k}`] = id[k]);
+      this.db.prepare(`UPDATE ${table} SET ${assignments} WHERE ${conditions}`).run(queryData);
+      return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${conditions}`).get(queryData));
     } else {
-        const assignments = keys.map((key) => `${key} = @${key}`).join(', ');
-        this.db.prepare(`UPDATE ${table} SET ${assignments} WHERE ${pk} = @pk_val`).run({ ...patch, pk_val: id });
-        return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).get(id));
+      const assignments = keys.map((key) => `${key} = @${key}`).join(', ');
+      this.db.prepare(`UPDATE ${table} SET ${assignments} WHERE ${pk} = @pk_val`).run({ ...patch, pk_val: id });
+      return mapRow(table, this.db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).get(id));
     }
   }
 
@@ -609,192 +652,9 @@ class OfflineClient {
     return this.insertRow(table, row);
   }
 
-  // Simula o método .from() do Supabase para manter compatibilidade no código do controller
-  from(table) {
-    const db = this.db;
-    const client = this;
-    
-    return {
-      select: (columns = '*', options = {}) => {
-        // Handle Supabase nested select syntax like "*, livros(*)"
-        // We strip the nested parts for SQLite compatibility
-        const cleanColumns = columns.split(',')
-          .map(col => col.trim())
-          .filter(col => !col.includes('(')) // Remove "table(*)"
-          .join(', ') || '*';
 
-        let sql = `SELECT ${cleanColumns} FROM ${table}`;
-        let countSql = `SELECT COUNT(*) as total FROM ${table}`;
-        let whereClauses = [];
-        let params = [];
-        let orderBy = '';
-        let limit = '';
-        let offset = '';
-
-        const builder = {};
-        
-        builder.eq = (col, val) => {
-          whereClauses.push(`${col} = ?`);
-          params.push(val);
-          return builder;
-        };
-        builder.neq = (col, val) => {
-          whereClauses.push(`${col} != ?`);
-          params.push(val);
-          return builder;
-        };
-        builder.ilike = (col, pattern) => {
-          whereClauses.push(`${col} LIKE ?`);
-          params.push(pattern.replace(/%/g, '%'));
-          return builder;
-        };
-        builder.is = (col, val) => {
-          if (val === null) whereClauses.push(`${col} IS NULL`);
-          else {
-              whereClauses.push(`${col} = ?`);
-              params.push(val);
-          }
-          return builder;
-        };
-        builder.in = (col, vals) => {
-          if (vals.length) {
-            const placeholders = vals.map(() => '?').join(',');
-            whereClauses.push(`${col} IN (${placeholders})`);
-            params.push(...vals);
-          }
-          return builder;
-        };
-        builder.or = (query) => {
-          // Simplistic parser for Supabase-style OR queries: "col.op.val,col.op.val"
-          // Doesn't perfectly handle complex nested ANDs, but sufficient for our needs.
-          const parts = query.split(',');
-          const orClauses = parts.map(p => {
-              // Handle nested and() by stripping it just for basic functionality if needed
-              let cleanP = p;
-              if (cleanP.startsWith('and(') && cleanP.endsWith(')')) {
-                  cleanP = cleanP.slice(4, -1);
-              }
-
-              const [col, op, ...rest] = cleanP.split('.');
-              const pattern = rest.join('.');
-
-              if (op === 'ilike') {
-                  params.push(pattern.replace(/%/g, '%'));
-                  return `${col} LIKE ?`;
-              } else if (op === 'eq') {
-                  params.push(pattern);
-                  return `${col} = ?`;
-              }
-              return '1=1'; // Fallback
-          });
-          whereClauses.push(`(${orClauses.join(' OR ')})`);
-          return builder;
-        };
-        builder.order = (orderCol, { ascending } = { ascending: true }) => {
-          orderBy = ` ORDER BY ${orderCol} ${ascending ? 'ASC' : 'DESC'}`;
-          return builder;
-        };
-        builder.limit = (limitVal) => {
-          limit = ` LIMIT ${limitVal}`;
-          return builder;
-        };
-        builder.range = (from, to) => {
-          limit = ` LIMIT ${to - from + 1}`;
-          offset = ` OFFSET ${from}`;
-          return builder;
-        };
-        builder.single = async () => {
-          let finalSql = sql;
-          if (whereClauses.length) finalSql += ' WHERE ' + whereClauses.join(' AND ');
-          finalSql += orderBy + ' LIMIT 1';
-          const row = db.prepare(finalSql).get(...params);
-          return { data: mapRow(table, row), error: null };
-        };
-        builder.then = async (resolve) => {
-          try {
-            let finalSql = sql;
-            let finalCountSql = countSql;
-            if (whereClauses.length) {
-              const where = ' WHERE ' + whereClauses.join(' AND ');
-              finalSql += where;
-              finalCountSql += where;
-            }
-            finalSql += orderBy + limit + offset;
-            
-            console.log(`[OfflineDB] Executing: ${finalSql} with params:`, params);
-            
-            const rows = db.prepare(finalSql).all(...params);
-            const result = { data: rows.map(r => mapRow(table, r)), error: null };
-            
-            console.log(`[OfflineDB] Result count: ${result.data.length}`);
-            if (result.data.length > 0) {
-                console.log(`[OfflineDB] First row sample:`, result.data[0]);
-            }
-            
-            if (options.count) {
-              const countRes = db.prepare(finalCountSql).get(...params);
-              result.count = countRes.total;
-            }
-            if (resolve) resolve(result);
-            return result;
-          } catch (error) {
-            console.error(`[OfflineDB] Error executing ${sql}:`, error);
-            const result = { data: null, error };
-            if (resolve) resolve(result);
-            return result;
-          }
-        };
-        return builder;
-      },
-      insert: async (payload) => {
-        try {
-          const rows = Array.isArray(payload) ? payload : [payload];
-          const results = rows.map(r => client.insertRow(table, r));
-          return { data: Array.isArray(payload) ? results : results[0], error: null };
-        } catch (error) {
-          return { data: null, error };
-        }
-      },
-      upsert: async (data, { onConflict } = {}) => {
-        try {
-          const res = client.upsertRow(table, data, onConflict);
-          return { data: res, error: null };
-        } catch (error) {
-          return { data: null, error };
-        }
-      },
-      update: (updates) => {
-        let whereClauses = [];
-        let whereParams = [];
-        const builder = {
-            eq: (col, val) => {
-                whereClauses.push(`${col} = ?`);
-                whereParams.push(val);
-                return builder;
-            },
-            in: (col, vals) => {
-                const placeholders = vals.map(() => '?').join(',');
-                whereClauses.push(`${col} IN (${placeholders})`);
-                whereParams.push(...vals);
-                return builder;
-            },
-            then: async (resolve) => {
-                try {
-                    const selectSql = `SELECT id FROM ${table} WHERE ` + whereClauses.join(' AND ');
-                    const targets = db.prepare(selectSql).all(...whereParams);
-                    targets.forEach(t => client.updateRow(table, t.id, updates));
-                    if (resolve) resolve({ error: null });
-                    return { error: null };
-                } catch (error) {
-                    if (resolve) resolve({ error });
-                    return { error };
-                }
-            }
-        };
-        return builder;
-      }
-    };
-  }
+  // Os métodos de busca, inserção e atualização agora usam o OfflineQueryBuilder
+  // definido no início do arquivo para manter compatibilidade total com a API do Supabase.
 }
 
 // --- CLIENTE DE AUTENTICAÇÃO OFFLINE ---
@@ -842,6 +702,10 @@ class OfflineAuthClient {
         const valid = await bcrypt.compare(String(password), user.senha_hash);
         if (!valid) {
           return { data: null, error: new Error('Credenciais invalidas.') };
+        }
+
+        if (user.bloqueado) {
+          return { data: null, error: new Error('Esta conta foi suspensa permanentemente por um administrador.') };
         }
 
         const session = this.createSession(user);

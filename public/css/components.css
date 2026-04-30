@@ -73,7 +73,7 @@
     border-radius: var(--r-pill);
     font-family: 'Cinzel', serif; font-size: var(--fs-sm); font-weight: 700;
     letter-spacing: .1em; text-transform: uppercase;
-    cursor: pointer; border: 1px solid transparent;
+    cursor: pointer; border: 0.5px solid var(--accent);
     transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; text-decoration: none; line-height: 1;
 }
 .btn:active { transform: scale(0.96); }
@@ -83,15 +83,15 @@
 .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow); filter: brightness(1.1); }
 
 /* Botão de sucesso: verde, para confirmar ações positivas */
-.btn-success  { background: var(--success); color: white; border: none; }
+.btn-success  { background: var(--success); color: white; border: 0.5px solid var(--accent); }
 .btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
 /* Botão de perigo: vermelho, para ações destrutivas como excluir ou bloquear */
-.btn-danger   { background: var(--danger); color: white; border: none; }
+.btn-danger   { background: var(--danger); color: white; border: 0.5px solid var(--accent); }
 .btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
 /* Botão fantasma: escuro e discreto, vira dourado ao passar o mouse */
-.btn-ghost    { background: rgba(28, 34, 30, 0.9); color: white; border: none; }
+.btn-ghost    { background: rgba(28, 34, 30, 0.9); color: white; border: 0.5px solid var(--accent); }
 .btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
 
 .btn-gold     { background: var(--accent); color: var(--bg); }
@@ -148,16 +148,19 @@
 }
 .data-table td {
     padding: 16px 14px;
-    border: none;
+    border-top: 0.5px solid var(--accent);
+    border-bottom: 0.5px solid var(--accent);
     color: var(--text);
     vertical-align: middle;
 }
 .data-table td:first-child {
+    border-left: 0.5px solid var(--accent);
     border-top-left-radius: var(--r-md);
     border-bottom-left-radius: var(--r-md);
     padding-left: 20px;
 }
 .data-table td:last-child {
+    border-right: 0.5px solid var(--accent);
     border-top-right-radius: var(--r-md);
     border-bottom-right-radius: var(--r-md);
     padding-right: 20px;
@@ -240,7 +243,7 @@
     font-weight: 600; 
     letter-spacing: .05em; 
     text-transform: uppercase; 
-    border: none; 
+    border: 0.5px solid var(--accent); 
     white-space: nowrap; 
     line-height: 1;
     min-height: 38px;
@@ -265,7 +268,7 @@
 .modal.active { display: flex; }
 .modal-backdrop { position: absolute; inset: 0; background: rgba(5,6,5,.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .modal-box {
-    position: relative; background: var(--bg); border: 1px solid var(--border);
+    position: relative; background: var(--bg); border: 0.5px solid var(--accent);
     border-radius: var(--r-xl); padding: 36px; width: 100%; max-width: 480px;
     max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -287,7 +290,7 @@
 .confirm-box { 
     position: relative; 
     background: var(--surface); 
-    border: 1px solid var(--accent); 
+    border: 0.5px solid var(--accent); 
     border-radius: var(--r-xl); 
     padding: 32px; 
     width: 100%; 
@@ -308,7 +311,7 @@
     .pg-btn: botão de página; .pg-btn.active: página atual em destaque dourado.
 */
 .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 0 4px; flex-wrap: wrap; }
-.pg-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: var(--r-sm); padding: 6px 12px; font-family: 'Cinzel', serif; font-size: var(--fs-xs); cursor: pointer; transition: all .15s; }
+.pg-btn { background: var(--surface); border: 0.5px solid var(--accent); color: var(--text); border-radius: var(--r-sm); padding: 6px 12px; font-family: 'Cinzel', serif; font-size: var(--fs-xs); cursor: pointer; transition: all .15s; }
 .pg-btn:hover:not(:disabled) { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
 .pg-btn.active   { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 .pg-btn:disabled { opacity: .4; cursor: not-allowed; }
@@ -319,6 +322,81 @@
 [data-theme="light"] .atrasados-banner { background: rgba(192,57,43,.08); border-color: rgba(192,57,43,.25); color: #c0392b; }
 
 /* Responsivo: modal e tabela adaptados para telas pequenas */
+/* 
+    SISTEMA DE NOTIFICAÇÕES (TOASTS): 
+    Alertas flutuantes que aparecem no canto inferior direito.
+    Design moderno com glassmorphism e cores vibrantes.
+*/
+#toast-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast {
+    min-width: 280px;
+    max-width: 400px;
+    padding: 16px 20px;
+    background: var(--surface);
+    backdrop-filter: blur(15px);
+    border: 0.5px solid var(--accent);
+    border-radius: 12px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    pointer-events: auto;
+    animation: toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    cursor: default;
+}
+
+.toast.hiding {
+    animation: toast-out 0.4s ease forwards;
+}
+
+.toast-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.toast-success { border-left: 4px solid var(--success); }
+.toast-danger { border-left: 4px solid var(--danger); }
+.toast-warning { border-left: 4px solid var(--warning); }
+.toast-info { border-left: 4px solid var(--accent); }
+
+@keyframes toast-in {
+    from { transform: translateX(100%) scale(0.9); opacity: 0; }
+    to { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+@keyframes toast-out {
+    from { transform: translateX(0) scale(1); opacity: 1; }
+    to { transform: translateX(100%) scale(0.9); opacity: 0; }
+}
+
+@media (max-width: 600px) {
+    #toast-container {
+        right: 20px;
+        left: 20px;
+        bottom: 20px;
+    }
+    .toast {
+        min-width: unset;
+        width: 100%;
+    }
+}
 @media (max-width: 680px) {
     .modal-box { padding: 24px 18px; }
     .btn-group { flex-direction: row; flex-wrap: wrap; }

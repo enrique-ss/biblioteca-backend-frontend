@@ -16,6 +16,8 @@
 */
 const carregarUsuariosDebounced = debounce((busca) => carregarUsuarios(1, busca));
 
+let usuariosAtuais = []; // Cache global para acesso rápido aos dados dos usuários na página
+
 /*
     Busca e renderiza a lista de usuários cadastrados.
     Suporta paginação (20 por página) e filtro de busca por nome ou email.
@@ -24,11 +26,16 @@ const carregarUsuariosDebounced = debounce((busca) => carregarUsuarios(1, busca)
     Os botões variam conforme o estado do usuário (bloqueado ou não, com multa ou não).
 */
 async function carregarUsuarios(pagina = 1, busca = '') {
-    definirCarregando('usuariosTbody', 5);
+    const grid = document.getElementById('usuariosGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '<div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;"><span class="spinner"></span> Carregando comunidade...</div>';
+
     try {
         const parametros = new URLSearchParams({ 
             page: pagina, 
-            limit: 20
+            limit: 20,
+            _t: new Date().getTime() // Cache buster para garantir dados sempre atualizados
         });
         
         if (busca.trim()) {
@@ -36,106 +43,106 @@ async function carregarUsuarios(pagina = 1, busca = '') {
         }
 
         const { data, pages } = await api(`/usuarios?${parametros}`);
-        const tbody = document.getElementById('usuariosTbody');
-        tbody.innerHTML = '';
+        grid.innerHTML = '';
         
         if (!data.length) { 
-            definirVazio('usuariosTbody', 5, 'Nenhum usuário cadastrado.'); 
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; opacity:0.5;">Nenhum usuário encontrado na comunidade.</div>';
             return; 
         }
 
-        data.forEach(u => {
-            const tr = document.createElement('tr');
+        const ehAdmin = currentUser?.tipo === 'bibliotecario';
+
+        usuariosAtuais = data;
+
+        grid.innerHTML = data.map(u => {
+            const avatarUrl = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.nome)}&background=random`;
             
-            /*
-                Badges de alerta que aparecem ao lado do nome do usuário:
-                - Badge vermelho "multa": o usuário tem multa pendente a pagar
-                - Badge amarelo "bloqueado": o usuário não pode fazer empréstimos
-            */
-            let badgesDestaque = '';
-            if (u.multa_pendente) {
-                badgesDestaque += `<span class="badge badge-danger" style="margin-left:6px;font-size:.55rem">multa</span>`;
-            }
-            if (u.bloqueado) {
-                badgesDestaque += `<span class="badge badge-warning" style="margin-left:6px;font-size:.55rem">bloqueado</span>`;
+            // Lógica de admin (botões flutuantes)
+            let adminActions = '';
+            if (ehAdmin) {
+                const userId = String(u.id);
+                const userName = JSON.stringify(u.nome);
+                
+                let botaoBloqueio = `
+                    <button title="Gerenciar Restrições" 
+                            onclick='event.stopPropagation(); prepararBloqueios("${userId}")' 
+                            style="position: absolute; top: 10px; right: 10px; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.3); color: #f85149; cursor: pointer; padding: 0; width: 24px; height: 24px; border-radius: 50%; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; transition: 0.2s; backdrop-filter: blur(4px); pointer-events: auto;" 
+                            onmouseover="this.style.background='var(--danger)'; this.style.color='white'" 
+                            onmouseout="this.style.background='rgba(248, 81, 73, 0.15)'; this.style.color='#f85149'">
+                        ✕
+                    </button>`;
+                
+                let botaoMultas = u.multa_pendente 
+                    ? `<button title="Gerenciar Multas" onclick='event.stopPropagation(); verMultasUsuario("${userId}", ${userName})' style="background:none; border:none; color:var(--warning); cursor:pointer; padding:4px; font-size:1rem; transition:0.2s; position: absolute; top: 10px; right: 40px; pointer-events: auto;">💸</button>` : '';
+
+                adminActions = `
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;">
+                        ${botaoMultas}
+                        ${botaoBloqueio}
+                    </div>
+                `;
             }
 
-            /*
-                Botão de bloqueio: muda conforme o estado atual do usuário.
-                Se estiver bloqueado, mostra "Desbloquear" (cinza).
-                Se estiver livre, mostra "Bloquear" (vermelho).
-            */
-            let botaoBloqueio = '';
-            const userId = JSON.stringify(String(u.id));
-            const userName = JSON.stringify(u.nome);
-            if (u.bloqueado) {
-                botaoBloqueio = `<button class="btn btn-ghost" onclick='desbloquearUsuario(${userId}, ${userName})'>Desbloquear</button>`;
-            } else {
-                botaoBloqueio = `<button class="btn btn-danger" onclick='bloquearUsuario(${userId}, ${userName})'>Bloquear</button>`;
-            }
-
-            // Botão de multas: só aparece se o usuário tem multas pendentes
-            let botaoMultas = '';
-            if (u.multa_pendente) {
-                botaoMultas = `<button class="btn btn-warning" onclick='verMultasUsuario(${userId}, ${userName})'>Multas</button>`;
-            }
-
-            tr.innerHTML = `
-                <td style="color:var(--text-dim)">${esc(u.id)}</td>
-                <td><strong>${esc(u.nome)}</strong>${badgesDestaque}</td>
-                <td style="color:var(--text)">${esc(u.email)}</td>
-                <td>${badgeTipo(u.tipo)}</td>
-                <td><div class="td-actions">
-                    <button class="btn btn-ghost" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
-                    ${botaoMultas}
-                    ${botaoBloqueio}
-                </div></td>`;
+            // Badges sutis para estado (bloqueado/multa)
+            const temRestricoes = u.bloqueios && Object.values(u.bloqueios).some(v => v === true);
+            let statusBadges = '';
             
-            tbody.appendChild(tr);
-        });
+            if (u.bloqueado) {
+                statusBadges += `<div style="position:absolute; top:12px; left:12px; padding: 3px 7px; border-radius: 6px; background:#f85149; color: white; font-size: 0.55rem; font-weight: 800; box-shadow: 0 0 12px rgba(248, 81, 73, 0.4); letter-spacing: 0.5px;" title="Esta conta está banida e não pode logar">BANIDO</div>`;
+            } else if (temRestricoes) {
+                statusBadges += `<div style="position:absolute; top:12px; left:12px; padding: 3px 7px; border-radius: 6px; background:#e3b341; color: black; font-size: 0.55rem; font-weight: 800; box-shadow: 0 0 12px rgba(227, 179, 65, 0.4); letter-spacing: 0.5px;" title="O usuário possui restrições parciais de acesso">RESTRITO</div>`;
+            }
+
+            if (u.multa_pendente) {
+                statusBadges += `<div style="position:absolute; top:12px; right:12px; width:10px; height:10px; border-radius:50%; background:var(--danger); box-shadow: 0 0 8px var(--danger);" title="Possui multas pendentes"></div>`;
+            }
+
+            // Biografia (vazia ou real)
+            const bioContent = u.bio ? esc(u.bio) : '<span style="opacity:0.4; font-style:italic;">Sem biografia</span>';
+            
+            // Nível e Cargo
+            const cargo = u.tipo === 'bibliotecario' ? '👑 Bibliotecário' : '📖 Leitor';
+            const nivel = `✨ Nível ${u.infantil_level || 1}`;
+
+            return `
+                <div class="glass-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px 15px;">
+                    ${statusBadges}
+                    ${adminActions}
+                    
+                    <div class="avatar-standard" 
+                         onclick="if(typeof verPerfilUsuario === 'function') verPerfilUsuario('${u.id}')" 
+                         style="margin-bottom: 12px; cursor: pointer; pointer-events: auto;">
+                        <img src="${avatarUrl}" alt="${u.nome}">
+                    </div>
+                    
+                    <div onclick="if(typeof verPerfilUsuario === 'function') verPerfilUsuario('${u.id}')" style="font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; cursor: pointer; width: 100%; padding: 0 10px; pointer-events: auto;">
+                        <span class="text-glow">${esc(u.nome)}</span>
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; width: 100%;">
+                        ${bioContent}
+                    </div>
+                    
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: auto; pointer-events: auto;">
+                        <span style="padding: 4px 10px; background: var(--accent-bg); color: var(--accent); border-radius: var(--r-pill); font-size: 0.65rem; font-weight: 700;">
+                            ${nivel}
+                        </span>
+                        <span ${ehAdmin ? `onclick="mudarNivelAcesso('${u.id}', '${u.tipo}')" title="Clique para alterar cargo"` : ''} 
+                              style="padding: 4px 10px; background: rgba(255,255,255,0.03); color: var(--text-dim); border-radius: var(--r-pill); font-size: 0.65rem; font-weight: 700; border: 0.5px solid var(--accent); ${ehAdmin ? 'cursor: pointer;' : 'cursor: default;'} transition: 0.2s;"
+                              ${ehAdmin ? `onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--accent)'; this.style.color='var(--text-dim)'"` : ''}>
+                            ${cargo}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
         renderizarPaginacao('usuariosPagination', pagina, pages, (p) => carregarUsuarios(p, busca));
     } catch (erro) { 
-        definirVazio('usuariosTbody', 5, erro.message); 
-        exibirAlerta(erro.message, 'danger'); 
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--danger);">${esc(erro.message)}</div>`; 
     }
 }
 
-/*
-    Abre o modal de edição de usuário pré-preenchido com os dados atuais.
-    Permite ao bibliotecário alterar nome, email e tipo de conta (usuário/bibliotecário).
-*/
-function editarUsuario(u) {
-    document.getElementById('editUsuarioId').value = u.id;
-    document.getElementById('editUsuarioNome').value = u.nome;
-    document.getElementById('editUsuarioEmail').value = u.email;
-    document.getElementById('editUsuarioTipo').value = u.tipo;
-    abrirModal('editUsuarioModal');
-}
-
-/*
-    Ouve o envio do formulário de edição de usuário.
-    Envia os dados alterados para a API e fecha o modal ao concluir.
-*/
-document.getElementById('editUsuarioForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('editUsuarioId').value;
-    try {
-        await api(`/usuarios/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-                nome: document.getElementById('editUsuarioNome').value,
-                email: document.getElementById('editUsuarioEmail').value,
-                tipo: document.getElementById('editUsuarioTipo').value,
-            })
-        });
-        exibirAlerta('Usuário atualizado com sucesso!');
-        fecharModal('editUsuarioModal');
-        carregarUsuarios();
-    } catch (erro) { 
-        exibirAlerta(erro.message, 'danger'); 
-    }
-});
 
 /*
     Abre o modal de multas para um usuário específico.
@@ -194,33 +201,25 @@ async function carregarMultasUsuario(id) {
     }
 }
 
-/*
-    Bloqueia um usuário, impedindo-o de realizar novos empréstimos.
-    Exige que o bibliotecário informe o motivo do bloqueio via prompt.
-    Se o motivo estiver vazio, a ação é cancelada silenciosamente.
-*/
-async function bloquearUsuario(id, nome) {
+/**
+ * Alterna o cargo do usuário entre Leitor e Bibliotecário.
+ */
+async function mudarNivelAcesso(id, tipoAtual) {
+    const novoTipo = tipoAtual === 'bibliotecario' ? 'usuario' : 'bibliotecario';
+    const label = novoTipo === 'bibliotecario' ? 'Bibliotecário' : 'Leitor';
+    
     exibirConfirmacao({
-        icon: '🔒',
-        title: 'Bloquear Usuário',
-        msg: `Bloquear o usuário "${nome}"? Ele não poderá mais realizar empréstimos.`,
-        okLabel: 'Bloquear',
+        icon: '👑',
+        title: 'Alterar Cargo',
+        msg: `Deseja mudar o cargo deste usuário para "${label}"?`,
+        okLabel: 'Alterar',
         onOk: async () => {
-            const motivo = prompt('Motivo do bloqueio:');
-            // Se o usuário cancelou o prompt ou deixou vazio, não faz nada
-            if (!motivo) {
-                return;
-            }
-            if (motivo.trim() === '') {
-                return;
-            }
-            
             try {
-                await api(`/usuarios/${id}/bloquear`, {
+                await api(`/usuarios/${id}/mudar-tipo`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ motivo: motivo.trim() })
+                    body: JSON.stringify({ tipo: novoTipo })
                 });
-                exibirAlerta('Usuário bloqueado com sucesso!', 'success');
+                exibirAlerta(`Cargo atualizado para ${label}!`, 'success');
                 carregarUsuarios();
             } catch (erro) {
                 exibirAlerta(erro.message, 'danger');
@@ -229,27 +228,53 @@ async function bloquearUsuario(id, nome) {
     });
 }
 
-/*
-    Desbloqueia um usuário, restaurando seu acesso aos empréstimos.
-    Exibe diálogo de confirmação antes de executar a ação.
-*/
-async function desbloquearUsuario(id, nome) {
-    exibirConfirmacao({
-        icon: '🔓',
-        title: 'Desbloquear Usuário',
-        msg: `Desbloquear o usuário "${nome}"? Ele poderá voltar a realizar empréstimos.`,
-        okLabel: 'Desbloquear',
-        onOk: async () => {
-            try {
-                await api(`/usuarios/${id}/desbloquear`, { method: 'PATCH' });
-                exibirAlerta('Usuário desbloqueado com sucesso!', 'success');
-                carregarUsuarios();
-            } catch (erro) {
-                exibirAlerta(erro.message, 'danger');
-            }
-        }
-    });
+/**
+ * Abre o modal de bloqueios granulares e preenche com os dados atuais do usuário.
+ */
+function prepararBloqueios(id) {
+    const u = usuariosAtuais.find(user => String(user.id) === String(id));
+    if (!u) return;
+
+    document.getElementById('bloqueioUsuarioId').value = u.id;
+    document.getElementById('bloqueioMotivo').value = u.motivo_bloqueio || '';
+    
+    const restricoes = u.bloqueios || {};
+    document.getElementById('blockFisico').checked = !!restricoes.fisico;
+    document.getElementById('blockDigital').checked = !!restricoes.digital;
+    document.getElementById('blockSocial').checked = !!restricoes.social;
+    document.getElementById('blockInfantil').checked = !!restricoes.infantil;
+    document.getElementById('blockBan').checked = !!u.bloqueado;
+    
+    abrirModal('bloqueiosModal');
 }
+
+/**
+ * Envia as restrições selecionadas para o servidor.
+ */
+document.getElementById('bloqueiosForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('bloqueioUsuarioId').value;
+    const bloqueios = {
+        fisico: document.getElementById('blockFisico').checked,
+        digital: document.getElementById('blockDigital').checked,
+        social: document.getElementById('blockSocial').checked,
+        infantil: document.getElementById('blockInfantil').checked
+    };
+    const ban = document.getElementById('blockBan').checked;
+    const motivo = document.getElementById('bloqueioMotivo').value;
+
+    try {
+        await api(`/usuarios/${id}/bloquear`, {
+            method: 'PATCH',
+            body: JSON.stringify({ motivo, bloqueios, ban })
+        });
+        exibirAlerta('Restrições atualizadas com sucesso!', 'success');
+        fecharModal('bloqueiosModal');
+        carregarUsuarios();
+    } catch (erro) {
+        exibirAlerta(erro.message, 'danger');
+    }
+});
 
 /*
     Quita (paga) todas as multas pendentes de um usuário de uma vez.

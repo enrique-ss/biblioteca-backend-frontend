@@ -20,6 +20,7 @@
     background: var(--surface);
     box-shadow: var(--shadow-sm);
     margin-bottom: 30px;
+    border: 0.5px solid var(--accent); /* Cor destaque unificada */
 }
 
 .profile-banner {
@@ -75,7 +76,7 @@
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 0.5px solid var(--accent); /* Unificado para cor destaque */
     color: white;
     font-size: 1.2rem;
     display: grid; /* Grid é melhor para centralizar ícones solitários */
@@ -99,17 +100,19 @@
 .profile-avatar {
     width: 160px;
     height: 160px;
-    border-radius: var(--r-xl);
+    border-radius: 50%;
     background: var(--bg);
-    border: 5px solid var(--surface);
+    border: 0.5px solid var(--accent); /* Padronizado para 1px destaque */
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 4rem;
     color: var(--accent);
-    box-shadow: var(--shadow);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     overflow: hidden;
     font-family: 'Cinzel', serif;
+    position: relative;
+    z-index: 2;
 }
 
 .profile-avatar img {
@@ -123,17 +126,27 @@
     padding-bottom: 10px;
 }
 
+
 .profile-name {
     font-family: 'Cinzel', serif;
-    font-size: clamp(1.5rem, 4vw, 2.2rem); /* Tamanho adaptável para não quebrar */
+    font-size: clamp(1.8rem, 5vw, 2.5rem); /* Um pouco maior para destaque */
     color: var(--text);
     margin-bottom: 8px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    white-space: nowrap; /* Garante que o nome não quebre em duas linhas */
+    text-shadow: 0 2px 15px rgba(0,0,0,0.3);
+    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Se o nome for absurdamente grande, ele corta com elegância */
+    text-overflow: ellipsis;
     max-width: 100%;
+    font-weight: 700;
 }
+
+
+.profile-name span {
+    position: relative;
+    display: inline-block;
+}
+
+
 
 .profile-meta {
     display: flex;
@@ -173,8 +186,8 @@
 .profile-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border: var(--glass-border);
-    border-radius: var(--r-lg);
+    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    border-radius: var(--r-md);
     padding: 24px;
     box-shadow: var(--shadow-sm);
 }
@@ -339,14 +352,14 @@
 }
 
 .social-user-item:hover {
-    background: rgba(255,255,255,0.05);
+    background: var(--surface-2);
     border-color: var(--border);
 }
 
 .social-user-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: var(--r-sm);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
     background: var(--surface-2);
     display: flex;
     align-items: center;
@@ -356,12 +369,14 @@
     color: var(--accent);
     flex-shrink: 0;
     overflow: hidden;
+    border: 1px solid var(--border);
 }
 
 .social-user-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
 }
 
 .social-user-info {

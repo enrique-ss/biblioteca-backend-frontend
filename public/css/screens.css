@@ -8,7 +8,7 @@
     background: var(--surface); 
     backdrop-filter: blur(24px); 
     -webkit-backdrop-filter: blur(24px); 
-    border: 1px solid var(--accent); 
+    border: 0.5px solid var(--accent); 
     border-radius: var(--r-xl); 
     padding: 40px; 
     width: 100%; 
@@ -57,7 +57,7 @@
 .notification-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border: 1px solid var(--border);
+    border: 0.5px solid var(--accent);
     border-radius: var(--r-md);
     margin-bottom: 20px;
     padding: 24px 28px;
@@ -93,7 +93,7 @@
     display: flex; align-items: center; justify-content: center;
     border-radius: 12px;
     background: var(--accent-bg);
-    border: 1px solid var(--border);
+    border: 0.5px solid var(--accent);
     font-size: 1.3rem;
     flex-shrink: 0;
 }
@@ -122,11 +122,59 @@
     opacity: 0.9;
 }
 
+
 .notification-footer {
     display: flex;
     justify-content: flex-end;
     margin-top: 12px;
 }
+
+/* Feed de Notificações Unificado (Estilo Atividade) */
+.notification-feed-item {
+    transition: all 0.3s ease;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.notification-feed-item.pending-item {
+    background: rgba(var(--danger-rgb, 230, 57, 70), 0.05);
+    border-left-width: 6px !important;
+    box-shadow: var(--shadow-sm);
+}
+
+.notification-feed-item:hover {
+    transform: translateX(8px);
+    background: var(--surface-2);
+    border-color: var(--accent) !important;
+}
+
+.notification-feed-item .activity-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--surface);
+    border: 0.5px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.notification-feed-item .activity-time {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.notification-actions .btn {
+    border-radius: var(--r-pill);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    box-shadow: var(--shadow-sm);
+}
+
 
 /*
     TELA PRINCIPAL (menu): boas-vindas e grade de acesso rápido.
@@ -202,11 +250,11 @@
     aspect-ratio: 2 / 3;
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border-radius: var(--r-lg);
+    border-radius: var(--r-md);
     overflow: hidden;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    border: var(--glass-border);
+    border: 0.5px solid var(--accent); /* Cor destaque unificada */
     box-shadow: var(--shadow-sm);
 }
 

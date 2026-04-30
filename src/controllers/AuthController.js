@@ -434,7 +434,92 @@ class AuthController {
       res.status(500).json({ error: 'Falha ao carregar perfil.' });
     }
   };
+
+  /**
+   * Coleta o histórico completo de ações do sistema (global) para bibliotecários.
+   * Mostra tudo o que está acontecendo na biblioteca em tempo real.
+   */
+  getAtividadesSistema = async (req, res) => {
+    try {
+      const atividades = [];
+
+      // 1. Novos Empréstimos e Devoluções (Global)
+      try {
+        const { data: alugueis } = await supabaseAdmin
+          .from('alugueis')
+          .select('*, livros(titulo), usuarios(nome)')
+          .order('created_at', { ascending: false })
+          .limit(15);
+
+        (alugueis || []).forEach(a => {
+          atividades.push({
+            id: `sys_aluguel_${a.id}`,
+            tipo: 'emprestimo',
+            data: a.data_aluguel || a.created_at,
+            texto: `<strong>${a.usuarios?.nome || 'Alguém'}</strong> alugou o livro <strong>${a.livros?.titulo || 'Desconhecido'}</strong>`,
+            icone: '📚'
+          });
+          if (a.data_devolucao) {
+            atividades.push({
+              id: `sys_devolucao_${a.id}`,
+              tipo: 'devolucao',
+              data: a.data_devolucao,
+              texto: `<strong>${a.usuarios?.nome || 'Alguém'}</strong> devolveu o livro <strong>${a.livros?.titulo || 'Desconhecido'}</strong>`,
+              icone: '↩️'
+            });
+          }
+        });
+      } catch (err) { console.error('Erro global alugueis feed:', err); }
+
+      // 2. Novos Usuários Cadastrados
+      try {
+        const { data: novosUsuarios } = await supabaseAdmin
+          .from('usuarios')
+          .select('id, nome, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        (novosUsuarios || []).forEach(u => {
+          atividades.push({
+            id: `sys_user_${u.id}`,
+            tipo: 'registro',
+            data: u.created_at,
+            texto: `Novo leitor cadastrado: <strong>${u.nome}</strong>`,
+            icone: '✨'
+          });
+        });
+      } catch (err) { console.error('Erro global usuarios feed:', err); }
+
+      // 3. Submissões Digitais
+      try {
+        const { data: digitais } = await supabaseAdmin
+          .from('acervo_digital')
+          .select('*, usuarios(nome)')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        (digitais || []).forEach(d => {
+          atividades.push({
+            id: `sys_digital_${d.id}`,
+            tipo: 'digital',
+            data: d.created_at,
+            texto: `<strong>${d.usuarios?.nome || 'Alguém'}</strong> enviou o documento <strong>${d.titulo}</strong> para o acervo`,
+            icone: '📤'
+          });
+        });
+      } catch (err) { console.error('Erro global digitais feed:', err); }
+
+      // Ordena por data (más recente primeiro)
+      atividades.sort((a, b) => new Date(b.data) - new Date(a.data));
+      
+      res.json(atividades.slice(0, 30));
+    } catch (erro) {
+      console.error('Erro ao buscar atividades globais:', erro);
+      res.status(500).json({ error: 'Falha ao carregar feed global.' });
+    }
+  };
 }
+
 
 module.exports = new AuthController();
 

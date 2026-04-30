@@ -88,14 +88,14 @@ function carregarMenu() {
         });
     }
 
-    // Social: Comunidade de leitores
+    // Social: Comunidade de leitores (unificado com Usuários)
     itensMenu.push({ 
-        icon: '🌍', 
-        title: 'Social', 
+        icon: '👥', 
+        title: 'Usuários', 
         action() { 
-            mostrarTela('socialScreen'); 
-            if (typeof carregarExplorarSocial === 'function') {
-                carregarExplorarSocial('', 'socialScreenList');
+            mostrarTela('usuariosScreen'); 
+            if (typeof carregarUsuarios === 'function') {
+                carregarUsuarios(1, '');
             }
         } 
     });
@@ -112,17 +112,9 @@ function carregarMenu() {
         } 
     });
 
-    // Itens exclusivos de bibliotecário: gestão de usuários e painel de estatísticas
+    // Itens exclusivos de bibliotecário: painel de estatísticas
     if (ehBibliotecario) {
         itensMenu.push(
-            { 
-                icon: '👥', 
-                title: 'Usuários',     
-                action() { 
-                    carregarUsuarios(); 
-                    mostrarTela('usuariosScreen'); 
-                } 
-            },
             { 
                 icon: '📊', 
                 title: 'Estatísticas', 

@@ -28,8 +28,8 @@ class AmizadeController {
         .select('*')
         .or(`usuario_remetente.eq.${remetenteId},usuario_destinatario.eq.${remetenteId}`);
 
-      const existente = (amizades || []).find(a => 
-        (a.usuario_remetente === remetenteId && a.usuario_destinatario === destinatario_id) || 
+      const existente = (amizades || []).find(a =>
+        (a.usuario_remetente === remetenteId && a.usuario_destinatario === destinatario_id) ||
         (a.usuario_remetente === destinatario_id && a.usuario_destinatario === remetenteId)
       );
 
@@ -111,6 +111,10 @@ class AmizadeController {
       await supabase.from('amizades').delete().eq('id', id);
 
       res.json({ message: 'Amizade removida com sucesso.' });
+
+      // Atualiza o estado social e notificações em tempo real
+      req.app.get('io').emit('refreshData', 'notificacoes');
+      req.app.get('io').emit('refreshData', 'social');
     } catch (erro) {
       console.error('Erro ao remover amizade:', erro);
       res.status(500).json({ error: 'Erro ao remover amizade.' });
@@ -123,7 +127,7 @@ class AmizadeController {
   listarAmigos = async (req, res) => {
     try {
       const { usuario_id } = req.params;
-      
+
       const { data: amizades } = await supabase
         .from('amizades')
         .select('*')
@@ -135,7 +139,7 @@ class AmizadeController {
       }
 
       // Busca os detalhes dos usuários amigos
-      const amigosIds = amizades.map(a => 
+      const amigosIds = amizades.map(a =>
         a.usuario_remetente === usuario_id ? a.usuario_destinatario : a.usuario_remetente
       );
 
@@ -166,7 +170,7 @@ class AmizadeController {
 
       // No modo offline, o join pode não funcionar perfeitamente, então fazemos manual se necessário
       // Mas meu proxy já lida com o stripping, então precisamos resolver nomes manualmente
-      
+
       const result = [];
       for (const p of (pendentes || [])) {
         const { data: user } = await supabase.from('usuarios').select('nome, avatar_url').eq('id', p.usuario_remetente).single();
@@ -197,8 +201,8 @@ class AmizadeController {
         .select('*')
         .or(`usuario_remetente.eq.${remetenteId},usuario_destinatario.eq.${remetenteId}`);
 
-      const amizade = (amizades || []).find(a => 
-        (a.usuario_remetente === remetenteId && a.usuario_destinatario === outro_id) || 
+      const amizade = (amizades || []).find(a =>
+        (a.usuario_remetente === remetenteId && a.usuario_destinatario === outro_id) ||
         (a.usuario_remetente === outro_id && a.usuario_destinatario === remetenteId)
       );
 

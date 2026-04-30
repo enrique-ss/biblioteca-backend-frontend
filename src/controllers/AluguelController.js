@@ -123,6 +123,10 @@ class AluguelController {
           prazo_devolucao: dataPrevista.toLocaleDateString('pt-BR')
         });
 
+        // Atualiza a interface em tempo real
+        req.app.get('io').emit('refreshData', 'alugueis');
+        req.app.get('io').emit('refreshData', 'livros');
+
       } catch (transactionError) {
         // Rollback: desfaz o que foi feito para não deixar o banco de dados bagunçado
         console.error('Erro na transação de empréstimo, fazendo rollback:', transactionError);
@@ -268,6 +272,12 @@ class AluguelController {
         aviso: totalMultas > 0 ? `Atenção: Multa acumulada de R$ ${totalMultas.toFixed(2)}. Cadastro bloqueado até a quitação.` : null
       });
 
+      // Notifica o sistema sobre a mudança de estado
+      req.app.get('io').emit('refreshData', 'alugueis');
+      req.app.get('io').emit('refreshData', 'livros');
+      req.app.get('io').emit('refreshData', 'usuarios');
+      req.app.get('io').emit('refreshData', 'estatisticas');
+
     } catch (erro) { 
       res.status(400).json({ error: erro.message }); 
     }
@@ -299,6 +309,10 @@ class AluguelController {
         quantidade: multasEmAberto.length, 
         total_pago: totalPago 
       });
+
+      // Atualiza o perfil e a lista de usuários
+      req.app.get('io').emit('refreshData', 'usuarios');
+      req.app.get('io').emit('refreshData', 'alugueis');
     } catch (erro) { 
       res.status(500).json({ error: 'Falha interna ao processar o pagamento das multas.' }); 
     }
@@ -384,6 +398,10 @@ class AluguelController {
         message: '✅ Pagamento das multas processado com sucesso!', 
         total_pago: totalPago 
       });
+
+      // Atualiza o estado global
+      req.app.get('io').emit('refreshData', 'usuarios');
+      req.app.get('io').emit('refreshData', 'alugueis');
     } catch { 
       res.status(500).json({ error: 'Erro ao processar o auto-pagamento das multas.' }); 
     }
@@ -571,6 +589,9 @@ class AluguelController {
         novo_prazo: novoPrazo.toLocaleDateString('pt-BR'), 
         renovacoes_restantes: 2 - (aluguelActual.renovacoes + 1)
       });
+
+      // Notifica renovação em tempo real
+      req.app.get('io').emit('refreshData', 'alugueis');
     } catch (erro) { 
       res.status(400).json({ error: erro.message }); 
     }

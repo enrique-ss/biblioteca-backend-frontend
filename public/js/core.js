@@ -15,6 +15,28 @@ let token = null;
 // Dados do usuário logado (nome, email, tipo, permissões): null quando deslogado
 let currentUser = null;
 
+/**
+ * Formata uma data para um formato relativo amigável (ex: "há 2 horas", "hoje às 15:00").
+ */
+function formatarDataRelativa(dataStr) {
+    if (!dataStr) return '';
+    const data = new Date(dataStr);
+    const agora = new Date();
+    const diffMs = agora - data;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHoras = Math.floor(diffMin / 60);
+
+    if (diffMin < 1) return 'agora mesmo';
+    if (diffMin < 60) return `há ${diffMin} min`;
+    if (diffHoras < 24) {
+        if (data.getDate() === agora.getDate()) {
+            return `hoje às ${data.getHours().toString().padStart(2, '0')}:${data.getMinutes().toString().padStart(2, '0')}`;
+        }
+        return `há ${diffHoras} horas`;
+    }
+    return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
 /*
     Conexão WebSocket com o servidor via Socket.io.
     Permite que o servidor avise o navegador em tempo real quando algo muda
@@ -26,7 +48,13 @@ const socket = typeof io !== 'undefined'
     ? io({ withCredentials: true })
     : { on: () => {} };
 
-socket.on('connect', () => console.log('Conectado ao servidor WebSocket!', socket.id));
+socket.on('connect', () => {
+    console.log('Conectado ao servidor WebSocket!', socket.id);
+    // Se o socket reconectar, garante que volta para a sala privada
+    if (currentUser && currentUser.id) {
+        socket.emit('joinRoom', currentUser.id);
+    }
+});
 
 /*
     Ouve o evento 'refreshData' emitido pelo servidor.
@@ -35,17 +63,33 @@ socket.on('connect', () => console.log('Conectado ao servidor WebSocket!', socke
     A tela que estiver aberta no momento é recarregada automaticamente.
 */
 socket.on('refreshData', (tipo) => {
-    if (tipo === 'livros' && typeof carregarLivros === 'function') {
-        carregarLivros(1);
+    console.log(`[Socket] Refresh solicitado para: ${tipo}`);
+    if (tipo === 'usuarios') {
+        if (typeof carregarUsuarios === 'function') carregarUsuarios(1);
+        if (typeof buscarNotificacoes === 'function') buscarNotificacoes();
+        
+        // Se a tela de perfil estiver aberta, atualiza ela também
+        const profileScreen = document.getElementById('profileScreen');
+        if (profileScreen && profileScreen.classList.contains('active') && typeof carregarPerfil === 'function') {
+            carregarPerfil(typeof profileViewingId !== 'undefined' ? profileViewingId : null);
+        }
+    }
+    if (tipo === 'livros') {
+        if (typeof carregarLivros === 'function') carregarLivros(1);
+        if (typeof carregarAcervoDigital === 'function') carregarAcervoDigital(1);
         if (typeof carregarNovidades === 'function') carregarNovidades();
-    } else if (tipo === 'alugueis' && typeof carregarAlugueis === 'function') {
-        carregarAlugueis(1);
-    } else if (tipo === 'usuarios' && typeof carregarUsuarios === 'function') {
-        carregarUsuarios(1);
-    } else if (tipo === 'acervo-digital' && typeof carregarAcervoDigital === 'function') {
-        carregarAcervoDigital(1);
-        if (typeof carregarNovidades === 'function') carregarNovidades();
-    } else if (tipo === 'estatisticas' && typeof carregarEstatisticas === 'function') {
+        if (typeof buscarNotificacoes === 'function') buscarNotificacoes();
+    }
+    if (tipo === 'alugueis') {
+        if (typeof carregarAlugueis === 'function') carregarAlugueis(1);
+        if (typeof carregarMeusAlugueis === 'function') carregarMeusAlugueis();
+        if (typeof carregarHistorico === 'function') carregarHistorico(1);
+        if (typeof buscarNotificacoes === 'function') buscarNotificacoes();
+    }
+    if (tipo === 'notificacoes' && typeof buscarNotificacoes === 'function') {
+        buscarNotificacoes();
+    }
+    if (tipo === 'estatisticas' && typeof carregarEstatisticas === 'function') {
         carregarEstatisticas();
     }
 });
@@ -110,6 +154,11 @@ function restoreTheme() {
 function salvarSessao() {
     sessionStorage.setItem('biblioverso_token', token || '');
     sessionStorage.setItem('biblioverso_user', JSON.stringify(currentUser));
+    
+    // Entra na sala do socket com o próprio ID para receber notificações privadas (pedidos de amizade, etc)
+    if (currentUser && currentUser.id) {
+        socket.emit('joinRoom', currentUser.id);
+    }
 }
 
 /*
@@ -124,6 +173,12 @@ function restaurarSessao() {
     if (t && u) {
         token = t;
         currentUser = JSON.parse(u);
+        
+        // Entra na sala do socket
+        if (currentUser && currentUser.id) {
+            socket.emit('joinRoom', currentUser.id);
+        }
+        
         atualizarNavbar();
         carregarMenu();
         mostrarTela('menuScreen');
@@ -243,12 +298,46 @@ function fecharConfirmacao() {
     document.getElementById('confirmDialog').classList.remove('active');
 }
 
-/*
-    Exibe uma mensagem de feedback para o usuário.
-    Por ora registra no console; pode ser expandido para exibir toasts visuais.
-*/
+/**
+ * Exibe uma mensagem de feedback visual (Toast) para o usuário.
+ * @param {string} mensagem Texto a ser exibido.
+ * @param {'success'|'danger'|'warning'|'info'} tipo Categoria do alerta para definir a cor e ícone.
+ */
 function exibirAlerta(mensagem, tipo = 'success') {
-    console.log(`[${tipo.toUpperCase()}] ${mensagem}`);
+    const container = document.getElementById('toast-container');
+    if (!container) {
+        console.log(`[${tipo.toUpperCase()}] ${mensagem}`);
+        return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${tipo}`;
+    
+    const icones = {
+        success: '✅',
+        danger: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icones[tipo] || '🔔'}</div>
+        <div class="toast-message">${esc(mensagem)}</div>
+    `;
+
+    container.appendChild(toast);
+
+    // Remove automaticamente após 5 segundos
+    setTimeout(() => {
+        toast.classList.add('hiding');
+        toast.addEventListener('animationend', () => toast.remove());
+    }, 5000);
+
+    // Clique para fechar antecipadamente
+    toast.onclick = () => {
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 400);
+    };
 }
 
 /*

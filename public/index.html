@@ -61,7 +61,7 @@
             <section id="loginScreen" class="screen active">
                 <div class="auth-wrap">
                     <div class="auth-card">
-                        <h1 class="auth-title">Acesso</h1>
+                        <h1 class="auth-title"><span>Acesso</span></h1>
                         <!-- Formulário de login -->
                         <form id="loginForm" novalidate>
                             <div class="form-group"><label class="form-label">Email</label><input type="email"
@@ -82,7 +82,7 @@
             <section id="registerScreen" class="screen">
                 <div class="auth-wrap">
                     <div class="auth-card">
-                        <h1 class="auth-title">Cadastro</h1>
+                        <h1 class="auth-title"><span>Cadastro</span></h1>
                         <!-- Formulário de registro -->
                         <form id="registerForm" novalidate>
                             <div class="form-group"><label class="form-label">Nome completo</label><input type="text"
@@ -268,36 +268,26 @@
             </section>
 
             <!-- 
-                TELA DE USUÁRIOS (usuariosScreen): lista todos os cadastros do sistema.
-                Exclusiva para bibliotecários. Permite editar nome/email/tipo, bloquear
-                acesso (impedindo novos empréstimos) e quitar multas pendentes.
-                Badges coloridos ao lado do nome indicam rapidamente usuários
-                com multa (vermelho) ou bloqueados (amarelo).
+                TELA SOCIAL (Antiga Tela de Usuários): lista todos os cadastros do sistema em cards.
+                Bibliotecários podem editar nome/email/tipo, bloquear acesso e ver multas.
+                Leitores podem ver perfis, níveis e interagir socialmente.
             -->
             <section id="usuariosScreen" class="screen">
                 <div class="page-header">
-                    <h2 class="page-title"><span>Gerenciar</span> Usuários</h2>
+                    <h2 class="page-title"><span>Usuários</span></h2>
                     <div class="page-actions"></div>
                 </div>
-                <div class="search-bar"><input type="text" id="buscaUsuarios" class="form-input"
-                        placeholder="Buscar por nome, email ou ID…" oninput="carregarUsuariosDebounced(this.value)"></div>
-                <div class="table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Tipo</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usuariosTbody">
-                            <tr class="loading-row">
-                                <td colspan="5"><span class="spinner"></span>Carregando…</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
+                    <div class="search-bar" style="flex:1; margin-bottom:0;">
+                        <input type="text" id="buscaUsuarios" class="form-input" 
+                            placeholder="Buscar leitores por nome ou e-mail..." oninput="carregarUsuariosDebounced(this.value)">
+                    </div>
+                </div>
+                
+                <div id="usuariosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+                    <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <span class="spinner"></span> Carregando usuários...
+                    </div>
                 </div>
                 <div class="pagination" id="usuariosPagination"></div>
             </section>
@@ -353,7 +343,7 @@
                              </div>
 
                              <div class="profile-card">
-                                <h3 class="profile-card-title">Meus <span>Amigos</span></h3>
+                                <h3 class="profile-card-title">Amigos</h3>
                                 <div class="social-users-list" id="socialUsersList">
                                     <!-- Preenchido dinamicamente -->
                                     <div style="text-align:center; padding:10px; opacity:0.5; font-size:0.8rem;">Carregando...</div>
@@ -406,26 +396,7 @@
                 </div>
             </section>
 
-            <!-- TELA SOCIAL (socialScreen) -->
-            <section id="socialScreen" class="screen">
-                <div class="page-header">
-                    <h2 class="page-title"><span>Social</span></h2>
-                </div>
 
-                <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
-                    <div class="search-bar" style="flex:1; margin-bottom:0;">
-                        <input type="text" id="socialMainSearchInput" class="form-input" 
-                            placeholder="Buscar leitores por nome ou e-mail..." oninput="buscarUsuariosSocialPrincipal()">
-                    </div>
-                </div>
-
-                <div id="socialScreenList" class="digital-grid">
-                    <!-- Preenchido dinamicamente por perfil.js -->
-                    <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                        <span class="spinner"></span> Carregando comunidade...
-                    </div>
-                </div>
-            </section>
 
             <!-- 
                 TELA DO ESPAÇO LITERÁRIO (espacoInfantilScreen): sistema educacional gamificado.
@@ -440,12 +411,11 @@
                 para garantir que não haja trapaça via inspeção do código.
             -->
             <section id="espacoInfantilScreen" class="screen">
-                <div id="screen-age" class="age-select-screen hidden">
-                    <div class="page-header">
-                        <h2 class="page-title"><span>Espaço</span> Literário</h2>
-                    </div>
-                    <div class="glass-card age-select-card">
-                        <h3 class="age-select-title">Olá! Antes de começar, selecione sua faixa etária:</h3>
+                    <div id="screen-age" class="infantil-screen age-select-screen">
+                        <div class="page-header">
+                            <h2 class="page-title"><span>Espaço</span> Literário</h2>
+                        </div>
+                        <h3 class="age-select-title" style="text-align:center; margin-bottom: 40px; font-family:'Cinzel', serif;">Olá! Antes de começar, selecione sua faixa etária:</h3>
                         <div class="age-cards">
                             <div class="glass-card age-card infantil" onclick="selectAge('infantil')">
                                 <div class="age-icon">🌱</div>
@@ -467,7 +437,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- content-after-age: oculto até o usuário escolher a faixa etária.
                      Contém a navbar interna do espaço (avatar, nível, XP, corações)
@@ -867,32 +836,6 @@
         </div>
     </div>
 
-    <!-- Modal: edição de dados de um usuário.
-         Permite ao bibliotecário alterar nome, email e tipo de conta (leitor/bibliotecário).
-         O campo 'editUsuarioId' (oculto) guarda o ID do usuário sendo editado. -->
-    <div id="editUsuarioModal" class="modal">
-        <div class="modal-backdrop" onclick="fecharModal('editUsuarioModal')"></div>
-        <div class="modal-box">
-            <h2 class="modal-title">Editar Usuário</h2>
-            <p class="modal-subtitle">Atualize os dados do cadastro</p>
-            <form id="editUsuarioForm" novalidate>
-                <input type="hidden" id="editUsuarioId">
-                <div class="form-group"><label class="form-label">Nome</label><input type="text" id="editUsuarioNome"
-                        class="form-input" required></div>
-                <div class="form-group"><label class="form-label">Email</label><input type="email" id="editUsuarioEmail"
-                        class="form-input" required></div>
-                <div class="form-group"><label class="form-label">Tipo</label>
-                    <select id="editUsuarioTipo" class="form-select">
-                        <option value="usuario">Leitor</option>
-                        <option value="bibliotecario">Bibliotecário</option>
-                    </select>
-                </div>
-                    <div class="btn-group"><button
-                        type="button" class="btn btn-ghost" onclick="fecharModal('editUsuarioModal')">Cancelar</button><button type="submit" class="btn btn-primary">Salvar alterações</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
 
     <!-- Modal: visualização e quitação de multas de um usuário.
@@ -984,6 +927,70 @@
         </div>
     </div>
 
+    <!-- Modal de Restrições de Acesso (Bloqueio Granular) -->
+    <div id="bloqueiosModal" class="modal">
+        <div class="modal-backdrop" onclick="fecharModal('bloqueiosModal')"></div>
+        <div class="modal-box" style="max-width: 420px;">
+            <h2 class="modal-title">Gerenciar <span>Restrições</span></h2>
+            <p class="modal-subtitle">Selecione quais áreas este usuário não poderá acessar</p>
+            
+            <form id="bloqueiosForm" style="margin-top:20px;">
+                <input type="hidden" id="bloqueioUsuarioId">
+                
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:10px; background:var(--surface-2); border-radius:8px; border:1px solid var(--border);">
+                        <input type="checkbox" id="blockFisico" style="width:18px; height:18px; accent-color:var(--danger);">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; font-size:var(--fs-sm);">Bloquear Novos Empréstimos</span>
+                            <span style="font-size:0.7rem; opacity:0.7;">Impede o aluguel de livros físicos</span>
+                        </div>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:10px; background:var(--surface-2); border-radius:8px; border:1px solid var(--border);">
+                        <input type="checkbox" id="blockDigital" style="width:18px; height:18px; accent-color:var(--danger);">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; font-size:var(--fs-sm);">Bloquear Upload de PDFs</span>
+                            <span style="font-size:0.7rem; opacity:0.7;">Impede o envio de novos arquivos digitais</span>
+                        </div>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:10px; background:var(--surface-2); border-radius:8px; border:1px solid var(--border);">
+                        <input type="checkbox" id="blockSocial" style="width:18px; height:18px; accent-color:var(--danger);">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; font-size:var(--fs-sm);">Bloquear Social e Perfil</span>
+                            <span style="font-size:0.7rem; opacity:0.7;">Impede amizades e edição de bio/avatar</span>
+                        </div>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:10px; background:var(--surface-2); border-radius:8px; border:1px solid var(--border);">
+                        <input type="checkbox" id="blockInfantil" style="width:18px; height:18px; accent-color:var(--danger);">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; font-size:var(--fs-sm);">Bloquear Espaço Infantil</span>
+                            <span style="font-size:0.7rem; opacity:0.7;">Impede acesso a lições e quizzes</span>
+                        </div>
+                    </label>
+
+                    <hr style="border:0; border-top:1px solid var(--border); margin:5px 0;">
+
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px; background:rgba(248, 81, 73, 0.1); border-radius:8px; border:1px solid var(--danger);">
+                        <input type="checkbox" id="blockBan" style="width:20px; height:20px; accent-color:var(--danger);">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:700; font-size:var(--fs-sm); color:var(--danger);">BANIR CONTA (Bloqueio Total)</span>
+                            <span style="font-size:0.7rem; color:var(--danger); opacity:0.8;">O usuário não conseguirá mais logar no sistema</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Motivo (opcional)</label>
+                    <textarea id="bloqueioMotivo" class="form-input" placeholder="Justificativa das restrições..." style="min-height:80px;"></textarea>
+                </div>
+
+                <div class="btn-group" style="margin-top:20px;">
+                    <button type="button" class="btn btn-ghost" onclick="fecharModal('bloqueiosModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Salvar Restrições</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="editPerfilModal" class="modal">
         <div class="modal-backdrop" onclick="fecharModal('editPerfilModal')"></div>
         <div class="modal-box" style="max-width: 480px;">
@@ -1038,6 +1045,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
+    <div id="toast-container"></div>
     </div> <!-- /app-wrapper -->
 
     <!-- SCRIPTS DA APLICAÇÃO -->

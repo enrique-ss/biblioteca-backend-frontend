@@ -20,11 +20,12 @@
     --text: #FFFFFF;
     --accent: #D4AF37;
     --accent-bg: rgba(212, 175, 55, 0.08);
+    --surface-2: rgba(255, 255, 255, 0.03);
     --danger: #E63946;
     --success: #2A9D8F;
     --warning: #E9C46A;
-    --border: rgba(212, 175, 55, 0.15);
-    --border-m: rgba(212, 175, 55, 0.3);
+    --border: rgba(212, 175, 55, 0.4);
+    --border-m: rgba(212, 175, 55, 0.8);
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.08);
     
@@ -37,7 +38,7 @@
 
     /* Efeito de vidro fosco (glassmorphism): desfoca o que está atrás do elemento */
     --glass: blur(24px) saturate(180%);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-border: 0.5px solid var(--accent); /* Unificado para cor destaque 0.5px */
 
     /* Escala de tamanhos de fonte: do menor (xs) ao maior (xl) */
     --fs-xs: .75rem;
@@ -47,6 +48,55 @@
     --fs-lg: 1.6rem;
     --fs-xl: 2.2rem;
     --lh: 1.6;
+}
+
+/* 
+    SISTEMA DE DESIGN UNIFICADO: 
+    Estilos universais para garantir que o site tenha uma identidade visual coesa.
+*/
+
+/* Avatares Redondos Premium: Usados em perfis, listas de usuários e social */
+.avatar-standard {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    position: relative;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.avatar-standard img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* Cartões com Efeito Vidro (Glassmorphism): Usados em todo o acervo e menus */
+.glass-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    border-radius: var(--r-md);
+    padding: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
 }
 
 /*
@@ -66,11 +116,11 @@
     --danger: #D62828;
     --success: #1B4332;
     --warning: #F4A261;
-    --border: rgba(45, 106, 79, 0.15);
-    --border-m: rgba(45, 106, 79, 0.25);
+    --border: rgba(45, 106, 79, 0.35);
+    --border-m: rgba(45, 106, 79, 0.55);
     --shadow: 0 8px 32px rgba(28, 52, 40, 0.15);
     --shadow-sm: 0 4px 16px rgba(28, 52, 40, 0.1);
-    --glass-border: 1px solid rgba(45, 106, 79, 0.12);
+    --glass-border: 0.5px solid var(--accent); /* Sincronizado com padrão 0.5px */
 }
 
 /* Reset global: remove margens e paddings padrão do navegador para ter controle total do layout */
@@ -99,7 +149,7 @@ body {
 /* Estilo da barra de rolagem do navegador: fina, arredondada e dourada ao passar o mouse */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border-m); border-radius: var(--r-pill); border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-m); border-radius: var(--r-pill); border: 0.5px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* Canvas 3D do fundo: fica fixo atrás de todo o conteúdo, decorativo, não recebe cliques */
@@ -273,7 +323,7 @@ body {
 .side-btn.active {
     background: var(--accent-bg) !important;
     color: var(--accent) !important;
-    border-right: 3px solid var(--accent) !important;
+    border-right: 0.5px solid var(--accent) !important; /* Padronizado para 0.5px */
     font-weight: 800;
 }
 /* Remove o efeito de brilho no botão que já está ativo */
@@ -353,7 +403,7 @@ body {
   left: 100px;
   background: var(--bg);
   backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
+  border: 0.5px solid var(--accent);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow);
   width: 360px;
@@ -369,7 +419,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 0.5px solid var(--accent);
 }
 .notifications-header h3 { margin: 0; font-size: var(--fs-sm); color: var(--text); }
 .btn-close {
@@ -401,7 +451,7 @@ body {
 /* Item individual de notificação: com separador inferior e destaque ao passar o mouse */
 .notification-item {
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 0.5px solid var(--accent);
   transition: background .2s;
 }
 .notification-item:hover { background: var(--surface); }
@@ -467,13 +517,13 @@ body {
     justify-content: space-between;
     padding: 0 0 8px;
     margin-bottom: 32px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 0.5px solid var(--accent);
     min-height: 70px;
     gap: 12px;
     flex-wrap: nowrap;
 }
 .page-title { font-family: 'Cinzel', serif; font-size: var(--fs-xl); font-weight: 700; color: var(--text); letter-spacing: .04em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.page-title span { color: var(--accent); }
+
 .page-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: nowrap; }
 .page-actions .btn { white-space: nowrap; }
 
@@ -487,19 +537,48 @@ body {
     margin-bottom: 20px;
     opacity: 0.9;
 }
-.section-label span {
-    color: var(--accent);
+
+
+.page-title span, 
+.page-title b,
+.section-label span, 
+.modal-title span, 
+.profile-card-title span,
+.profile-name span,
+.auth-title span,
+.age-title.infantil,
+.lesson-title-modern,
+.brand-logo-full,
+.text-glow { 
+    color: var(--accent); 
+    font-weight: 800;
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); /* Glow Dourado */
 }
+
+[data-theme="light"] .page-title span,
+[data-theme="light"] .page-title b,
+[data-theme="light"] .section-label span,
+[data-theme="light"] .modal-title span,
+[data-theme="light"] .profile-card-title span,
+[data-theme="light"] .profile-name span,
+[data-theme="light"] .auth-title span,
+[data-theme="light"] .age-title.infantil,
+[data-theme="light"] .lesson-title-modern,
+[data-theme="light"] .brand-logo-full,
+[data-theme="light"] .text-glow {
+    text-shadow: 0 0 15px rgba(45, 106, 79, 0.2); /* Glow Verde para tema claro */
+}
+
 
 /* Barra de busca: campo de pesquisa que filtra a lista em tempo real conforme o usuário digita */
 .search-bar { margin-bottom: 16px; }
-.search-bar .form-input { background: var(--surface); border-color: var(--border); padding: 10px 16px; }
+.search-bar .form-input { background: var(--surface); border-color: var(--accent); padding: 10px 16px; }
 
 /* Indicador de carregamento: aro giratório que aparece enquanto dados são buscados do servidor */
 .spinner {
     display: inline-block;
     width: 16px; height: 16px;
-    border: 1px solid var(--border);
+    border: 0.5px solid var(--accent);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin .7s linear infinite;
@@ -567,7 +646,7 @@ body {
     background: var(--surface);
     backdrop-filter: var(--glass);
     -webkit-backdrop-filter: var(--glass);
-    border: 1px solid var(--accent);
+    border: 0.5px solid var(--accent);
     border-radius: 50%;
     display: flex;
     align-items: center;

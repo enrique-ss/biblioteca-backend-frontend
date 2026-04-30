@@ -22,7 +22,7 @@ class UsuarioController {
       // Busca apenas usuários ativos (que não foram deletados/arquivados)
       let consulta = supabase
         .from('usuarios')
-        .select('id, nome, email, tipo, multa_pendente, bloqueado, motivo_bloqueio, created_at', { count: 'exact' })
+        .select('*', { count: 'exact' })
         .is('deleted_at', null);
 
       // Filtra por nome ou e-mail se houver um termo de busca
@@ -190,18 +190,15 @@ class UsuarioController {
   };
 
   /**
-   * Impede que um usuário realize novos empréstimos por tempo indeterminado.
-   * Exige que o bibliotecário forneça uma justificativa clara.
+   * Gerencia as restrições de acesso de um usuário.
+   * Permite bloqueios granulares (fisico, digital, social, infantil) ou total.
    */
   bloquear = async (req, res) => {
     try {
       const { id } = req.params;
-      const { motivo } = req.body;
+      const { motivo, bloqueios, ban } = req.body;
 
-      if (!motivo?.trim()) {
-        return res.status(400).json({ error: 'É obrigatório informar o motivo do bloqueio.' });
-      }
-
+      // Validação básica
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('*')
@@ -212,21 +209,26 @@ class UsuarioController {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
 
-      if (usuario.bloqueado) {
-        return res.status(400).json({ error: 'Este usuário já se encontra bloqueado.' });
-      }
+      // Um usuário é considerado "bloqueado" (Banido) se a opção 'ban' estiver marcada.
+      // Ele também pode ter restrições granulares mesmo sem estar banido.
+      const b = bloqueios || {};
 
       await supabase.from('usuarios').update({
-        bloqueado: true,
-        motivo_bloqueio: motivo.trim()
+        bloqueado: !!ban,
+        motivo_bloqueio: motivo?.trim() || null,
+        bloqueios: b
       }).eq('id', id);
 
       req.app.get('io').emit('refreshData', 'usuarios');
 
-      res.json({ message: '✅ Usuário bloqueado com sucesso!' });
+      res.json({ 
+        message: ban 
+          ? '✅ Usuário BANIDO do sistema com sucesso.' 
+          : '✅ Restrições de acesso atualizadas com sucesso.' 
+      });
     } catch (erro) {
-      console.error('Erro ao bloquear usuário:', erro);
-      res.status(500).json({ error: 'Erro interno ao processar o bloqueio.' });
+      console.error('Erro ao gerenciar bloqueios do usuário:', erro);
+      res.status(500).json({ error: 'Erro interno ao processar as restrições de acesso.' });
     }
   };
 
@@ -247,24 +249,48 @@ class UsuarioController {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
 
-      if (!usuario.bloqueado) {
-        return res.status(400).json({ error: 'Este usuário não está bloqueado.' });
-      }
-
       await supabase.from('usuarios').update({
         bloqueado: false,
-        motivo_bloqueio: null
+        motivo_bloqueio: null,
+        bloqueios: {}
       }).eq('id', id);
 
       req.app.get('io').emit('refreshData', 'usuarios');
 
-      res.json({ message: '✅ Usuário desbloqueado. O acesso está liberado novamente.' });
+      res.json({ message: '✅ Todas as restrições foram removidas. O acesso está liberado novamente.' });
     } catch (erro) {
       console.error('Erro ao desbloquear usuário:', erro);
       res.status(500).json({ error: 'Erro interno ao processar o desbloqueio.' });
     }
   };
+
+  /**
+   * Alterna o cargo do usuário entre 'usuario' (leitor) e 'bibliotecario'.
+   */
+  mudarTipo = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { tipo } = req.body;
+
+      // Segurança Redundante: Garante que apenas bibliotecários possam usar este método
+      if (req.usuario.tipo !== 'bibliotecario') {
+        return res.status(403).json({ error: '❌ Ação Proibida: Você não tem permissão para alterar cargos.' });
+      }
+
+      if (!['usuario', 'bibliotecario'].includes(tipo)) {
+        return res.status(400).json({ error: 'Tipo de conta inválido.' });
+      }
+
+      await supabase.from('usuarios').update({ tipo }).eq('id', id);
+
+      req.app.get('io').emit('refreshData', 'usuarios');
+
+      res.json({ message: `✅ Cargo alterado para ${tipo === 'bibliotecario' ? 'Bibliotecário' : 'Leitor'}.` });
+    } catch (erro) {
+      console.error('Erro ao mudar tipo de usuário:', erro);
+      res.status(500).json({ error: 'Erro ao processar a mudança de cargo.' });
+    }
+  };
 }
 
 module.exports = new UsuarioController();
-

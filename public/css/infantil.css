@@ -199,16 +199,24 @@
 
 /* Avatar circular do leitor: gradiente dourado-roxo com emoji grande */
 .infantil-navbar .avatar {
-    background: linear-gradient(135deg, var(--accent), var(--infantil-primary));
+    background: var(--surface-2);
     width: 52px;
     height: 52px;
-    border-radius: var(--r-pill);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-sm);
+    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    overflow: hidden;
+}
+
+.infantil-navbar .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
 }
 
 .infantil-navbar .user-details {
@@ -252,7 +260,7 @@
     height: 10px;
     border-radius: var(--r-pill);
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: 0.5px solid var(--accent);
 }
 
 /* Preenchimento da barra de XP: avança da esquerda para direita conforme o leitor ganha pontos */
@@ -422,7 +430,7 @@
 .quiz-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border: 1px solid var(--accent);
+    border: 0.5px solid var(--accent);
     border-radius: var(--r-lg);
     box-shadow: var(--shadow);
     padding: 40px;
@@ -441,7 +449,7 @@
     height: 12px;
     border-radius: var(--r-pill);
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: 0.5px solid var(--accent);
 }
 
 .progress-quiz-fill {
@@ -513,7 +521,7 @@
 .result-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border: 1px solid var(--accent);
+    border: 0.5px solid var(--accent);
     border-radius: var(--r-xl);
     box-shadow: var(--shadow);
     padding: 50px;
@@ -691,7 +699,7 @@
     align-items: center;
     gap: 10px;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 0.5px solid var(--accent);
     color: var(--text);
     padding: 10px 22px;
     border-radius: var(--r-pill);
@@ -720,7 +728,7 @@
 /* Cabeçalho da tela dentro do espaço infantil: mesma estrutura do sistema, mas com ajuste de margem */
 #espacoInfantilScreen .page-header {
     margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 0.5px solid var(--accent);
     padding-bottom: 20px;
     text-align: left;
 }
@@ -779,7 +787,7 @@
     padding: 10px 28px;
     background: var(--surface-2);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 0.5px solid var(--accent);
     border-radius: var(--r-pill);
     font-size: 0.8rem;
     font-weight: 800;
@@ -819,7 +827,7 @@
     background: var(--surface);
     backdrop-filter: var(--glass);
     -webkit-backdrop-filter: var(--glass);
-    border: 1px solid var(--border);
+    border: 0.5px solid var(--accent);
     border-radius: var(--r-md);
     padding: 16px 20px;
     display: flex;

@@ -89,12 +89,10 @@ async function selectAge(age) {
     }
 
     infantilState.currentAge = age;
-    const data = INFANTIL_BACKEND_DATA[age];
     
     // Atualiza navbar
-    const avatarEl = document.getElementById('infantil-avatar');
-    if (avatarEl) avatarEl.textContent = data.avatar;
-    
+    updateUI();
+
     const nameEl = document.getElementById('infantil-user-name');
     if (nameEl) nameEl.textContent = currentUser.nome.split(' ')[0]; // Apenas primeiro nome
 
@@ -117,12 +115,12 @@ async function initializeInfantilSpace() {
     infantilState.currentCategory = null;
     infantilState.currentLesson = null;
     
-    document.getElementById('content-after-age').classList.add('hidden');
-    document.getElementById('screen-age').classList.remove('hidden');
-    
     document.querySelectorAll('.infantil-screen').forEach(screen => {
         screen.classList.add('hidden');
     });
+    
+    document.getElementById('content-after-age').classList.add('hidden');
+    document.getElementById('screen-age').classList.remove('hidden');
 }
 
 /*
@@ -186,7 +184,7 @@ function loadLessons() {
         card.className = `glass-card ${isLocked ? 'locked' : ''}`;
         card.innerHTML = `
             <div style="display: flex; align-items: center; gap: 24px;">
-                <div style="font-size: 2.2rem; background: var(--surface-2); padding: 12px; border-radius: 12px;">${lesson.icon}</div>
+                <div style="font-size: 2.2rem; background: var(--surface-2); padding: 12px; border-radius: 12px; border: 0.5px solid var(--accent);">${lesson.icon}</div>
                 <div style="flex: 1;">
                     <h4 style="margin-bottom: 5px; font-size: 1.1rem; color: var(--text);">${lesson.title}</h4>
                     <p style="opacity: 0.7; font-size: 0.85rem; font-weight: 600;">
@@ -456,6 +454,17 @@ function updateUI() {
     const xpTextEl = document.getElementById('infantil-xp-text');
     const xpBarEl = document.getElementById('infantil-xp-bar');
     const livesEl = document.getElementById('infantil-lives');
+    const avatarEl = document.getElementById('infantil-avatar');
+
+    // Atualiza Avatar (Foto real ou Emoji temático)
+    if (avatarEl) {
+        if (currentUser && currentUser.avatar_url) {
+            avatarEl.innerHTML = `<img src="${currentUser.avatar_url}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+        } else if (infantilState.currentAge && INFANTIL_BACKEND_DATA) {
+            const data = INFANTIL_BACKEND_DATA[infantilState.currentAge];
+            avatarEl.textContent = data.avatar || '🌱';
+        }
+    }
 
     const level = infantilState.userLevel || 1;
     const xp = infantilState.userXP || 0;

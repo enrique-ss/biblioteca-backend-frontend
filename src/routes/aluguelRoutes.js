@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const controller = require('../controllers/AluguelController');
-const { verificarToken, verificarBibliotecario } = require('../middlewares/auth');
+const { verificarToken, verificarBibliotecario, verificarRestricao } = require('../middlewares/auth');
 
 /**
  * Rotas de Aluguel: Controla o fluxo de empréstimos, devoluções, multas e renovações.
@@ -13,16 +13,16 @@ router.use(verificarToken);
 // --- Rotas do Leitor (Ações que o próprio aluno pode fazer) ---
 
 // Ver os livros que estão atualmente comigo
-router.get('/meus', controller.meus);
+router.get('/meus', verificarRestricao('fisico'), controller.meus);
 
 // Ver meu histórico pessoal de multas
-router.get('/multas/minhas', controller.minhasMultas);
+router.get('/multas/minhas', verificarRestricao('fisico'), controller.minhasMultas);
 
 // Pagar minhas multas pendentes pelo sistema
-router.put('/multas/pagar/mim', controller.pagarMinhasMultas);
+router.put('/multas/pagar/mim', verificarRestricao('fisico'), controller.pagarMinhasMultas);
 
 // Adiar a data de devolução de um livro (Renovação)
-router.put('/:id/renovar', controller.renovar);
+router.put('/:id/renovar', verificarRestricao('fisico'), controller.renovar);
 
 // --- Rotas do Bibliotecário (Gestão administrativa) ---
 

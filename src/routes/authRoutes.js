@@ -19,6 +19,9 @@ router.put('/perfil', verificarToken, controller.editarPerfil);
 // Buscar feed de atividades do usuário
 router.get('/atividades', verificarToken, controller.getAtividades);
 
+// Buscar feed global do sistema (Bibliotecários apenas)
+router.get('/atividades-sistema', verificarToken, controller.getAtividadesSistema);
+
 // Explorar outros usuários (Função Social)
 router.get('/explorar', verificarToken, controller.getUsuariosExplorar);
 

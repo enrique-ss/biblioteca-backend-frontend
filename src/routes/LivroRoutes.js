@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const controller = require('../controllers/LivroController');
-const { verificarToken, verificarBibliotecario } = require('../middlewares/auth');
+const { verificarToken, verificarBibliotecario, verificarRestricao } = require('../middlewares/auth');
 
 /**
  * Rotas de Livros: Gerencia o catálogo físico da biblioteca.
@@ -10,8 +10,8 @@ const router = Router();
 // Todas as consultas de livros exigem que o usuário esteja logado
 router.use(verificarToken);
 
-// Buscar todos os livros (Público para todos os leitores)
-router.get('/', controller.listar);
+// Buscar todos os livros (Público para todos os leitores, exceto bloqueados)
+router.get('/', verificarRestricao('fisico'), controller.listar);
 
 // Cadastrar um novo livro no catálogo (Apenas Bibliotecários)
 router.post('/', verificarBibliotecario, controller.cadastrar);

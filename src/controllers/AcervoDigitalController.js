@@ -140,6 +140,10 @@ class AcervoDigitalController {
             : 'Documento enviado com sucesso! Aguarde a aprovação de um bibliotecário.';
 
           res.status(201).json({ message: mensagem });
+
+          // Atualiza em tempo real
+          req.app.get('io').emit('refreshData', 'livros');
+          req.app.get('io').emit('refreshData', 'estatisticas');
       } catch (erro) {
           console.error('Erro ao cadastrar documento digital:', erro);
           res.status(500).json({ error: 'Falha ao incluir documento no acervo digital.' });
@@ -160,6 +164,10 @@ class AcervoDigitalController {
           const { error } = await supabase.from('acervo_digital').update({ status: 'aprovado' }).eq('id', id);
           if (error) throw error;
           res.json({ message: 'Documento aprovado e adicionado ao acervo!' });
+          
+          // Notifica aprovação
+          req.app.get('io').emit('refreshData', 'livros');
+          req.app.get('io').emit('refreshData', 'estatisticas');
       } catch (erro) {
           console.error('Erro ao processar aprovação:', erro);
           res.status(500).json({ error: 'Falha ao processar solicitação.' });
@@ -179,6 +187,9 @@ class AcervoDigitalController {
         const { error } = await supabase.from('acervo_digital').delete().eq('id', id).eq('status', 'pendente');
         if (error) throw error;
         res.json({ message: 'Documento rejeitado e excluído permanentemente do sistema.' });
+        
+        // Notifica rejeição
+        req.app.get('io').emit('refreshData', 'livros');
     } catch (erro) {
         console.error('Erro ao processar rejeição:', erro);
         res.status(500).json({ error: 'Falha ao processar solicitação.' });
@@ -217,6 +228,10 @@ class AcervoDigitalController {
         if (error) throw error;
 
         res.json({ message: 'Documento removido do acervo digital.' });
+
+        // Notifica remoção
+        req.app.get('io').emit('refreshData', 'livros');
+        req.app.get('io').emit('refreshData', 'estatisticas');
     } catch (erro) {
         console.error('Erro ao remover documento digital:', erro);
         res.status(500).json({ error: 'Falha ao remover documento do acervo.' });

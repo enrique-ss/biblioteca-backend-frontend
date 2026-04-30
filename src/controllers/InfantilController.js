@@ -409,6 +409,10 @@ class InfantilController {
         userProfile: { xp: newXP, level: newLevel, hearts: newHearts }
       });
 
+      // Notifica atualização de progresso
+      req.app.get('io').emit('refreshData', 'estatisticas');
+      req.app.get('io').emit('refreshData', 'usuarios');
+
     } catch (error) {
       console.error('❌ Erro no backend (finishQuiz):', error);
       res.status(500).json({ error: 'Erro interno ao processar recompensas.' });
@@ -432,6 +436,10 @@ class InfantilController {
       }).eq('id', userId);
 
       res.json({ message: '✅ Dados sincronizados.' });
+
+      // Notifica sincronização
+      req.app.get('io').emit('refreshData', 'estatisticas');
+      req.app.get('io').emit('refreshData', 'usuarios');
     } catch (error) {
       console.error('❌ Erro no backend (saveProgress):', error);
       res.status(500).json({ error: 'Erro ao sincronizar progresso.' });

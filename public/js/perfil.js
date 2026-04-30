@@ -4,7 +4,10 @@
  * Preenche a tela de perfil com os dados de um usuário (próprio ou explorado).
  * @param {string|null} userId ID do usuário a ser visualizado. Se nulo, mostra o logado.
  */
+let profileViewingId = null;
+
 async function carregarPerfil(userId = null) {
+    profileViewingId = userId;
     const isSelf = !userId || userId === currentUser?.id;
     let userToShow = currentUser;
 
@@ -37,13 +40,13 @@ async function carregarPerfil(userId = null) {
 
     // Cabeçalho e Informações Básicas
     const nameEl = document.getElementById('userProfileName');
-    if (nameEl) nameEl.textContent = userToShow.nome || 'Usuário';
-    
+    if (nameEl) nameEl.innerHTML = `<span>${userToShow.nome || 'Usuário'}</span>`;
+
     const typeEl = document.getElementById('userProfileType');
     if (typeEl) {
         typeEl.textContent = userToShow.tipo === 'bibliotecario' ? '👤 Bibliotecário' : '👤 Leitor';
     }
-    
+
     // Atualização do Avatar
     const avatarEl = document.getElementById('userProfileAvatar');
     if (avatarEl) {
@@ -96,7 +99,7 @@ async function carregarPerfil(userId = null) {
 
     // Estatísticas (Ajustado para funcionar com qualquer usuário)
     await carregarEstatisticasPerfil(userToShow.id);
-    
+
     // Feed de Atividades (Ajustado para o usuário alvo)
     await carregarAtividades(userToShow.id);
 
@@ -136,7 +139,7 @@ async function carregarEstatisticasPerfil(userId) {
     // 3. Nível Literário e Dias Ativos
     try {
         const user = (userId === currentUser.id) ? currentUser : await api(`/auth/perfil/${userId}`);
-        
+
         const lvlEl = document.getElementById('statLevel');
         if (lvlEl) lvlEl.textContent = user.infantil_level || 1;
 
@@ -144,7 +147,7 @@ async function carregarEstatisticasPerfil(userId) {
         const diffDays = Math.floor(Math.abs(new Date() - new Date(dataCriacaoStr)) / (1000 * 60 * 60 * 24)) + 1;
         const daysEl = document.getElementById('statDaysActive');
         if (daysEl) daysEl.textContent = diffDays;
-    } catch (e) {}
+    } catch (e) { }
 
     // 4. Quantidade de Amigos
     try {
@@ -179,14 +182,14 @@ async function carregarAtividades(userId = null) {
         }
 
         listEl.innerHTML = atividades.map(atv => `
-            <div class="activity-item" style="display: flex; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div class="activity-icon" style="font-size: 1.5rem; background: rgba(255,255,255,0.05); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--border);">
+            <div class="activity-item" style="display: flex; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 0.5px solid var(--accent);">
+                <div class="activity-icon" style="font-size: 1.5rem; background: rgba(255,255,255,0.05); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 0.5px solid var(--accent);">
                     ${atv.icone}
                 </div>
                 <div class="activity-info" style="flex: 1;">
                     <div class="activity-text" style="color: var(--text); line-height: 1.4;">${atv.texto}</div>
                     <div class="activity-date" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
-                        ${new Date(atv.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        ${formatarDataRelativa(atv.data)}
                     </div>
                 </div>
             </div>
@@ -238,19 +241,19 @@ document.addEventListener('submit', async (e) => {
             const avatarBase64 = avatarFile ? await lerArquivoComoBase64(avatarFile) : currentUser.avatar_url;
             const bannerBase64 = bannerFile ? await lerArquivoComoBase64(bannerFile) : currentUser.banner_url;
 
-            const dadosParaAtualizar = { 
-                nome, 
-                email, 
-                bio, 
-                generos_favoritos, 
-                avatar_url: avatarBase64, 
-                banner_url: bannerBase64 
+            const dadosParaAtualizar = {
+                nome,
+                email,
+                bio,
+                generos_favoritos,
+                avatar_url: avatarBase64,
+                banner_url: bannerBase64
             };
             if (senha) dadosParaAtualizar.senha = senha;
 
-            const resposta = await api('/auth/perfil', { 
-                method: 'PUT', 
-                body: JSON.stringify(dadosParaAtualizar) 
+            const resposta = await api('/auth/perfil', {
+                method: 'PUT',
+                body: JSON.stringify(dadosParaAtualizar)
             });
 
             currentUser = { ...currentUser, ...resposta.usuario };
@@ -287,7 +290,7 @@ async function carregarAmigos(userId = null) {
 
         listEl.innerHTML = amigos.map(user => {
             const avatarUrl = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome}&background=random`;
-            
+
             return `
                 <div class="social-user-item" onclick="verPerfilUsuario('${user.id}')">
                     <div class="social-user-avatar">
@@ -402,57 +405,7 @@ function verPerfilUsuario(id) {
     carregarPerfil(id);
 }
 
-/**
- * Debounce para busca social na TELA PRINCIPAL (Continua explorando a comunidade).
- */
-let socialMainSearchTimeout;
-function buscarUsuariosSocialPrincipal() {
-    const search = document.getElementById('socialMainSearchInput').value;
-    clearTimeout(socialMainSearchTimeout);
-    socialMainSearchTimeout = setTimeout(() => {
-        carregarExplorarSocial(search, 'socialScreenList');
-    }, 400);
-}
 
-/**
- * Mantém a função de explorar para a tela SOCIAL dedicada.
- */
-async function carregarExplorarSocial(search = '', containerId = 'socialScreenList') {
-    const listEl = document.getElementById(containerId);
-    if (!listEl) return;
-
-    try {
-        const query = search ? `?search=${encodeURIComponent(search)}` : '';
-        const usuarios = await api(`/auth/explorar${query}`);
-
-        if (!usuarios || usuarios.length === 0) {
-            listEl.innerHTML = '<div style="text-align:center; padding:30px; opacity:0.5;">Nenhum usuário encontrado.</div>';
-            return;
-        }
-
-        listEl.innerHTML = usuarios.map(user => {
-            const avatarUrl = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome}&background=random`;
-            return `
-                <div class="glass-card social-card-user" onclick="verPerfilUsuario('${user.id}')" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px; transition: all 0.3s ease; border: 1px solid var(--border);">
-                    <div class="social-card-avatar" style="width: 100px; height: 100px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--accent); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 20px; border: 2px solid var(--accent-bg);">
-                        <img src="${avatarUrl}" alt="${user.nome}" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    <div class="social-card-name" style="font-size: 1.3rem; font-weight: 700; color: var(--text); margin-bottom: 8px;">${user.nome}</div>
-                    <div class="social-card-bio" style="font-size: 0.9rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;">
-                        ${user.bio || 'Explorando as fronteiras literárias do Biblio Verso.'}
-                    </div>
-                    <div class="social-card-meta" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                        <span class="social-card-badge" style="padding: 6px 14px; background: var(--accent-bg); color: var(--accent); border-radius: var(--r-pill); font-size: 0.75rem; font-weight: 700;">
-                            ✨ Nível ${user.infantil_level || 1}
-                        </span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } catch (erro) {
-        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--crimson);">Erro ao carregar comunidade.</div>';
-    }
-}
 
 // Socket events para amizade
 socket.on('novoPedidoAmizade', () => {

@@ -36,8 +36,17 @@ async function verificarToken(req, res, next) {
       id: user.id,
       email: user.email,
       nome: user.user_metadata?.nome,
-      tipo: user.user_metadata?.tipo || 'usuario'
+      tipo: user.user_metadata?.tipo || 'usuario',
+      bloqueios: user.user_metadata?.bloqueios || {},
+      bloqueado: !!user.user_metadata?.bloqueado
     };
+
+    // Bloqueio total (Banimento)
+    if (req.usuario.bloqueado && req.usuario.tipo !== 'bibliotecario') {
+      return res.status(403).json({ 
+        error: 'Sua conta foi suspensa permanentemente e seu acesso ao sistema foi revogado.' 
+      });
+    }
 
     // 'next()' diz ao Express: "Tudo certo! Pode passar para a próxima função."
     next();
@@ -50,30 +59,47 @@ async function verificarToken(req, res, next) {
 
 /**
  * verificarBibliotecario: O segurança da área restrita.
- * Ele garante que apenas pessoas com o cargo de 'bibliotecario' possam realizar certas ações sensíveis,
- * como apagar livros, cadastrar novos usuários ou gerenciar multas.
- * 
- * ATENÇÃO: Esta função só funciona se for colocada DEPOIS da 'verificarToken'.
+ * Ele garante que apenas pessoas com o cargo de 'bibliotecario' possam realizar certas ações sensíveis.
  */
 function verificarBibliotecario(req, res, next) {
-  // Se o porteiro (verificarToken) não tiver preenchido os dados do usuário, paramos por aqui
   if (!req.usuario) {
     return res.status(401).json({ error: 'Não foi possível identificar o seu perfil de acesso.' });
   }
 
-  // Verificamos se o cargo (tipo) do usuário é 'bibliotecario'
   if (req.usuario.tipo !== 'bibliotecario') {
     return res.status(403).json({
       error: '❌ Acesso Negado: Apenas bibliotecários autorizados podem realizar esta operação.'
     });
   }
 
-  // Se for bibliotecário, liberamos a passagem
   next();
 }
 
+/**
+ * verificarRestricao: Verifica se o usuário tem uma restrição específica ativa.
+ * @param {string} area - 'fisico', 'digital', 'social' ou 'infantil'
+ */
+const verificarRestricao = (area) => (req, res, next) => {
+  if (req.usuario?.tipo === 'bibliotecario') return next(); // Bibliotecários não têm restrições
+
+  const bloqueios = req.usuario?.bloqueios || {};
+  if (bloqueios[area]) {
+    const nomesAreas = {
+      fisico: 'o aluguel de livros físicos',
+      digital: 'o envio de arquivos digitais (PDFs)',
+      social: 'a interação com outros usuários',
+      infantil: 'o acesso ao Espaço Infantil'
+    };
+    return res.status(403).json({
+      error: `❌ Acesso Negado: Seu acesso para ${nomesAreas[area] || area} foi suspenso por um administrador.`
+    });
+  }
+  next();
+};
+
 module.exports = {
   verificarToken,
-  verificarBibliotecario
+  verificarBibliotecario,
+  verificarRestricao
 };
 

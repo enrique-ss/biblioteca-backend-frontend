@@ -38,7 +38,8 @@ function applySchema(db) {
       bio TEXT,
       generos_favoritos TEXT,
       avatar_url TEXT,
-      banner_url TEXT
+      banner_url TEXT,
+      bloqueios TEXT DEFAULT '{}' -- JSON com restrições granulares (fisico, digital, social, infantil)
     );
 
     -- Tabela para o progresso das crianças nas lições
@@ -169,6 +170,32 @@ function applySchema(db) {
     }
   } catch (e) {
     console.error("❌ Erro ao verificar/adicionar coluna created_at:", e);
+  }
+
+  // Migração: Garante que todas as novas colunas existam na tabela usuários
+  try {
+    const tableInfo = db.prepare("PRAGMA table_info(usuarios)").all();
+    const cols = tableInfo.map(c => c.name);
+    
+    const migrations = [
+      { name: 'infantil_xp', type: 'INTEGER DEFAULT 0' },
+      { name: 'infantil_level', type: 'INTEGER DEFAULT 1' },
+      { name: 'infantil_hearts', type: 'INTEGER DEFAULT 5' },
+      { name: 'bio', type: 'TEXT' },
+      { name: 'generos_favoritos', type: 'TEXT' },
+      { name: 'avatar_url', type: 'TEXT' },
+      { name: 'banner_url', type: 'TEXT' },
+      { name: 'bloqueios', type: "TEXT DEFAULT '{}'" }
+    ];
+
+    migrations.forEach(m => {
+      if (!cols.includes(m.name)) {
+        db.exec(`ALTER TABLE usuarios ADD COLUMN ${m.name} ${m.type}`);
+        console.log(`✅ Migração: Coluna '${m.name}' adicionada a usuarios.`);
+      }
+    });
+  } catch (e) {
+    console.error("❌ Erro ao realizar migrações na tabela usuarios:", e);
   }
 }
 

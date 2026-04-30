@@ -54,8 +54,8 @@ const PORTA = process.env.PORT || 3000;
 // Configurações básicas de segurança e processamento de dados
 app.set('trust proxy', 1);
 app.use(cors(corsOptions)); // Aplica as regras de acesso
-app.use(express.json()); // Permite que o servidor entenda dados em formato JSON
-app.use(express.urlencoded({ extended: true })); // Permite entender dados de formulários
+app.use(express.json({ limit: '10mb' })); // Permite que o servidor entenda dados em formato JSON (até 10MB para fotos)
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // Permite entender dados de formulários pesados
 app.use(express.static(path.join(__dirname, '../public'))); // Serve os arquivos do site (HTML, CSS, JS)
 
 // --- IMPORTAÇÃO DAS ROTAS ---
@@ -107,7 +107,15 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Erro nao tratado na aplicacao:', err);
 
-  res.status(500).json({
+  // Erro de tamanho de arquivo (Base64 muito grande)
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      error: 'Arquivo muito grande',
+      message: 'A imagem selecionada ultrapassa o limite permitido (10MB). Tente uma imagem menor.'
+    });
+  }
+
+  res.status(err.status || 500).json({
     error: 'Erro interno no servidor',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Ocorreu um problema inesperado.'
   });

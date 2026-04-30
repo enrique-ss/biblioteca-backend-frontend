@@ -112,7 +112,7 @@ async function carregarAcervoDigital(pagina = 1) {
                         <span style="color: var(--text); opacity: 0.8;"><strong>Páginas:</strong> ${esc(item.paginas)}</span>
                         <span style="color: var(--text); opacity: 0.8;"><strong>Tamanho:</strong> ${esc(item.tamanho_arquivo)}</span>
                     </div>
-                    <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                    <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 10px; border-top: 0.5px solid var(--accent); padding-top: 8px;">
                         👤 <strong>Publicado por:</strong> ${esc(item.usuario_nome || 'Bibliotecário')}
                     </p>
                     <div class="digital-card-actions">

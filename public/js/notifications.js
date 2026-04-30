@@ -16,8 +16,9 @@
     O badge (bolinha numérica) no ícone de sino da sidebar mostra o total de pendências.
 */
 
-// Armazena a lista atual de notificações para uso nas funções de renderização
+// Armazena a lista atual de notificações e atividades para o feed unificado
 let dadosNotificacoes = [];
+let dadosFeedNotificacoes = [];
 
 /*
     Carrega as notificações e exibe a tela completa de alertas.
@@ -29,37 +30,54 @@ async function carregarNotificacoesCompleto() {
     renderizarNotificacoesTelaCheia();
 }
 
-/*
-    Busca as notificações do servidor e atualiza o badge do sino.
-    Decide automaticamente qual conjunto de alertas buscar:
-    - Bibliotecário: alertas administrativos do sistema
-    - Leitor: alertas pessoais relacionados aos seus livros e multas
-    Se o usuário não estiver logado, sai sem fazer nada.
-*/
+/**
+ * Carrega o feed unificado de notificações (alertas ativos + histórico recente).
+ * Segue o padrão estético do feed de atividades do perfil.
+ */
 async function buscarNotificacoes() {
     if (!currentUser) return;
 
     try {
         const corpoNotificacoes = document.getElementById('notificationsFullScreenBody');
-        if (corpoNotificacoes) {
-            corpoNotificacoes.innerHTML = '<div style="text-align:center; padding:40px; color:var(--accent); font-family:\'Cinzel\', serif;">Buscando alertas do sistema...</div>';
+        if (corpoNotificacoes && corpoNotificacoes.innerHTML === '') {
+            corpoNotificacoes.innerHTML = '<div style="text-align:center; padding:40px; color:var(--accent); font-family:\'Cinzel\', serif;"><span class="spinner"></span> Sincronizando Biblio Verso...</div>';
         }
 
-        // Redireciona para a função correta conforme o tipo de usuário
-        const resultados = await (currentUser.tipo === 'bibliotecario'
-            ? carregarNotificacoesAdmin()
-            : carregarNotificacoesUsuario());
+        const ehAdmin = currentUser.tipo === 'bibliotecario';
+        
+        // Buscamos em paralelo: Alertas do Usuário, Alertas Admin (se for), Atividades (Pessoais ou Sistema)
+        const promessas = [
+            carregarNotificacoesUsuario(),
+            ehAdmin ? carregarNotificacoesAdmin() : Promise.resolve([]),
+            ehAdmin ? api('/auth/atividades-sistema') : api('/auth/atividades')
+        ];
 
-        dadosNotificacoes = resultados || [];
+        const resultados = await Promise.allSettled(promessas);
+        
+        const alertasUsuario = resultados[0].status === 'fulfilled' ? resultados[0].value : [];
+        const alertasAdmin = resultados[1].status === 'fulfilled' ? resultados[1].value : [];
+        const atividades = resultados[2].status === 'fulfilled' ? (resultados[2].value.data || resultados[2].value) : [];
+
+        // Marcamos os alertas como 'pendencia' para o estilo visual
+        const pendencias = [...alertasUsuario, ...alertasAdmin].map(a => ({ ...a, is_pending: true }));
+        
+        // Convertemos as atividades para o formato do feed se necessário (já deve estar certo)
+        const feedAtividades = (atividades || []).map(a => ({
+            ...a,
+            title: a.tipo?.toUpperCase() || 'ATIVIDADE',
+            message: a.texto,
+            type: a.tipo === 'devolucao' ? 'success' : 'info',
+            is_activity: true
+        }));
+
+        // Unificamos tudo e guardamos
+        dadosNotificacoes = [...pendencias]; // Para o badge, contamos apenas pendências
+        dadosFeedNotificacoes = [...pendencias, ...feedAtividades];
 
         renderizarNotificacoesTelaCheia();
         atualizarBadgeNotificacoes();
     } catch (erro) {
-        console.error('Erro ao buscar notificacoes:', erro);
-        const corpo = document.getElementById('notificationsFullScreenBody');
-        if (corpo) {
-            corpo.innerHTML = '<div style="text-align:center; padding:40px; color:var(--danger);">Erro critico ao carregar alertas.</div>';
-        }
+        console.error('Erro ao buscar feed de notificações:', erro);
     }
 }
 
@@ -75,13 +93,18 @@ async function carregarNotificacoesAdmin() {
     const lista = [];
 
     try {
-        const [emprestimosRes, usuariosRes] = await Promise.all([
+
+        const resultados = await Promise.allSettled([
             api('/alugueis/todos?limit=20'),
             api('/usuarios?limit=100')
         ]);
 
+        const emprestimosRes = resultados[0].status === 'fulfilled' ? resultados[0].value : { total_atrasados: 0 };
+        const usuariosRes = resultados[1].status === 'fulfilled' ? resultados[1].value : { data: [] };
+
         const atrasadosTotal = emprestimosRes.total_atrasados || 0;
         const usuarios = usuariosRes.data || [];
+
 
         // Alerta de empréstimos atrasados: adverte que há devoluções pendentes
         if (atrasadosTotal > 0) {
@@ -241,44 +264,77 @@ async function carregarNotificacoesUsuario() {
     return lista;
 }
 
-/*
-    Renderiza os cartões de notificação na tela de alertas completa.
-    Se não houver alertas, exibe uma mensagem tranquilizadora.
-    Cada card tem: ícone colorido, título, mensagem e, opcionalmente, um botão de ação.
-    O badge de contagem (número vermelho) só aparece se count > 0.
-*/
+/**
+ * Renderiza o feed unificado de notificações na tela cheia.
+ * Combina alertas que exigem ação e um log de atividades recentes.
+ */
 function renderizarNotificacoesTelaCheia() {
     const corpo = document.getElementById('notificationsFullScreenBody');
     if (!corpo) return;
 
-    if (dadosNotificacoes.length === 0) {
+    if (dadosFeedNotificacoes.length === 0) {
         corpo.innerHTML = `
             <div style="text-align: center; padding: 60px; color: var(--text-dim); font-style: italic;">
-                Nenhum alerta ou pendencia no momento. Tudo tranquilo!
+                Nenhum alerta ou atividade registrada no momento. Tudo tranquilo!
             </div>`;
         return;
     }
 
-    corpo.innerHTML = dadosNotificacoes.map((notif) => `
-        <div class="notification-card ${notif.type}">
-            <div class="notification-header">
-                <div class="notification-title-wrap">
-                    <span class="notification-icon-badge ${notif.type}">${notif.icon || '🔔'}</span>
-                    <h3 class="notification-title">${notif.title}</h3>
-                </div>
-                ${notif.count > 0 ? `<span class="badge badge-${notif.type}">${notif.count}</span>` : ''}
-            </div>
-            <div class="notification-content">
-                <p class="notification-text">${notif.message}</p>
-                ${notif.action ? `
-                    <div class="notification-footer">
-                        <button class="btn btn-ghost btn-sm" onclick="${notif.action.onClick}">
-                            ${notif.action.label}
-                        </button>
+    corpo.innerHTML = `
+        <div class="notifications-feed-container" style="display: flex; flex-direction: column; gap: 16px; max-width: 800px; margin: 0 auto;">
+            ${dadosFeedNotificacoes.map((item) => {
+                const isPending = item.is_pending;
+                const hasAction = item.action && item.action.onClick;
+                
+                return `
+                <div class="activity-item notification-feed-item ${item.type || 'info'} ${isPending ? 'pending-item' : ''}" 
+                     style="border-left: 4px solid var(--${item.type || 'accent'});">
+                    <div class="activity-icon">${item.icon || '🔔'}</div>
+                    <div class="activity-details" style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                            <h4 style="font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--accent); letter-spacing: 0.05em; margin: 0;">
+                                ${item.title}
+                            </h4>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                ${isPending ? '<span class="badge badge-danger" style="font-size: 0.6rem; padding: 2px 6px;">PENDÊNCIA</span>' : ''}
+                                ${item.data ? `<span class="activity-time">${formatarDataRelativa(item.data)}</span>` : ''}
+                            </div>
+                        </div>
+                        <p class="activity-text" style="font-size: 0.9rem; line-height: 1.5; color: var(--text); margin: 6px 0;">
+                            ${item.message}
+                        </p>
+                        ${hasAction ? `
+                        <div class="notification-actions" style="margin-top: 12px; display: flex; gap: 8px;">
+                            <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem;" onclick="${item.action.onClick}">
+                                ${item.action.label}
+                            </button>
+                        </div>` : ''}
                     </div>
-                ` : ''}
-            </div>
-        </div>`).join('');
+                </div>`;
+            }).join('')}
+        </div>`;
+}
+
+/**
+ * Formata uma data para um formato relativo (ex: "há 2 horas", "hoje às 15:00").
+ */
+function formatarDataRelativa(dataStr) {
+    if (!dataStr) return '';
+    const data = new Date(dataStr);
+    const agora = new Date();
+    const diffMs = agora - data;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHoras = Math.floor(diffMin / 60);
+
+    if (diffMin < 1) return 'agora mesmo';
+    if (diffMin < 60) return `há ${diffMin} min`;
+    if (diffHoras < 24) {
+        if (data.getDate() === agora.getDate()) {
+            return `hoje às ${data.getHours().toString().padStart(2, '0')}:${data.getMinutes().toString().padStart(2, '0')}`;
+        }
+        return `há ${diffHoras} horas`;
+    }
+    return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
 /*
