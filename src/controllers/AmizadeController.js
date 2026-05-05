@@ -22,18 +22,11 @@ class AmizadeController {
         return res.status(400).json({ error: 'Você não pode ser amigo de si mesmo (embora devesse!).' });
       }
 
-      // Verifica se já existe uma amizade ou pedido
-      const { data: amizades } = await supabase
-        .from('amizades')
-        .select('*')
-        .or(`usuario_remetente.eq.${remetenteId},usuario_destinatario.eq.${remetenteId}`);
+      // Verifica se já existe uma amizade ou pedido (mais robusto no simulador online)
+      const { data: enviadas } = await supabase.from('amizades').select('*').eq('usuario_remetente', remetenteId).eq('usuario_destinatario', destinatario_id);
+      const { data: recebidas } = await supabase.from('amizades').select('*').eq('usuario_remetente', destinatario_id).eq('usuario_destinatario', remetenteId);
 
-      const existente = (amizades || []).find(a =>
-        (String(a.usuario_remetente) === String(remetenteId) && String(a.usuario_destinatario) === String(destinatario_id)) ||
-        (String(a.usuario_remetente) === String(destinatario_id) && String(a.usuario_destinatario) === String(remetenteId))
-      );
-
-      if (existente) {
+      if ((enviadas && enviadas.length > 0) || (recebidas && recebidas.length > 0)) {
         return res.status(400).json({ error: 'Já existe um pedido pendente ou uma amizade entre vocês.' });
       }
 
@@ -196,15 +189,10 @@ class AmizadeController {
       const remetenteId = req.usuario.id;
       const { outro_id } = req.params;
 
-      const { data: amizades } = await supabase
-        .from('amizades')
-        .select('*')
-        .or(`usuario_remetente.eq.${remetenteId},usuario_destinatario.eq.${remetenteId}`);
+      const { data: enviadas } = await supabase.from('amizades').select('*').eq('usuario_remetente', remetenteId).eq('usuario_destinatario', outro_id);
+      const { data: recebidas } = await supabase.from('amizades').select('*').eq('usuario_remetente', outro_id).eq('usuario_destinatario', remetenteId);
 
-      const amizade = (amizades || []).find(a =>
-        (String(a.usuario_remetente) === String(remetenteId) && String(a.usuario_destinatario) === String(outro_id)) ||
-        (String(a.usuario_remetente) === String(outro_id) && String(a.usuario_destinatario) === String(remetenteId))
-      );
+      const amizade = (enviadas && enviadas[0]) || (recebidas && recebidas[0]);
 
       if (!amizade) {
         return res.json({ status: 'nenhum' });

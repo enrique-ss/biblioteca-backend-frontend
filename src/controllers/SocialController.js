@@ -320,14 +320,17 @@ class SocialController {
 
       const { data } = await supabase
         .from('clube_mensagens')
-        .select('*, usuarios(nome, avatar_url)')
+        .select(`
+          *,
+          usuario:usuarios!usuario_id (nome, avatar_url)
+        `)
         .eq('clube_id', clube_id)
         .order('created_at', { ascending: true });
 
       const mensagens = (data || []).map(m => ({
         ...m,
-        usuario_nome: m.usuarios?.nome || m.usuario_nome,
-        avatar_url: m.usuarios?.avatar_url || m.avatar_url
+        usuario_nome: m.usuario?.nome || 'Usuário',
+        avatar_url: m.usuario?.avatar_url || null
       }));
 
       res.json(mensagens);
@@ -367,9 +370,13 @@ class SocialController {
       const usuario2 = req.params.userId;
 
       // O simulador offline não suporta and() dentro de or(), então buscamos todas e filtramos no JS
+      // Buscamos mensagens onde o usuário atual participa e fazemos join com o remetente para pegar nome/foto
       const { data } = await supabase
         .from('mensagens_diretas')
-        .select('*, usuarios(nome, avatar_url)')
+        .select(`
+          *,
+          remetente:usuarios!remetente_id (nome, avatar_url)
+        `)
         .or(`remetente_id.eq.${usuario1},destinatario_id.eq.${usuario1}`);
 
       const mensagens = (data || [])
@@ -379,8 +386,8 @@ class SocialController {
         )
         .map(m => ({
           ...m,
-          usuario_nome: m.usuarios?.nome,
-          avatar_url: m.usuarios?.avatar_url
+          usuario_nome: m.remetente?.nome || 'Usuário',
+          avatar_url: m.remetente?.avatar_url || null
         }));
 
       res.json(mensagens || []);
@@ -394,28 +401,24 @@ class SocialController {
     try {
       const meuId = req.usuario.id;
 
-      // 1. Busca IDs das conversas existentes
-      const { data: msgs } = await supabase
-        .from('mensagens_diretas')
-        .select('remetente_id, destinatario_id')
-        .or(`remetente_id.eq.${meuId},destinatario_id.eq.${meuId}`);
+      // 1. Busca IDs das conversas existentes (Remetente ou Destinatário)
+      const { data: enviadas } = await supabase.from('mensagens_diretas').select('destinatario_id').eq('remetente_id', meuId);
+      const { data: recebidas } = await supabase.from('mensagens_diretas').select('remetente_id').eq('destinatario_id', meuId);
 
       const idsParticipantes = new Set();
-      (msgs || []).forEach(m => {
-        if (String(m.remetente_id) !== String(meuId)) idsParticipantes.add(m.remetente_id);
-        if (String(m.destinatario_id) !== String(meuId)) idsParticipantes.add(m.destinatario_id);
-      });
+      (enviadas || []).forEach(m => idsParticipantes.add(m.destinatario_id));
+      (recebidas || []).forEach(m => idsParticipantes.add(m.remetente_id));
 
       // 2. Busca IDs dos amigos (opcional: o usuário quer ver amigos no inbox também)
       const { data: amizades } = await supabase
         .from('amizades')
-        .select('usuario_id, amigo_id')
+        .select('usuario_remetente, usuario_destinatario')
         .eq('status', 'aceito')
-        .or(`usuario_id.eq.${meuId},amigo_id.eq.${meuId}`);
+        .or(`usuario_remetente.eq.${meuId},usuario_destinatario.eq.${meuId}`);
 
       (amizades || []).forEach(a => {
-        if (String(a.usuario_id) !== String(meuId)) idsParticipantes.add(a.usuario_id);
-        if (String(a.amigo_id) !== String(meuId)) idsParticipantes.add(a.amigo_id);
+        if (String(a.usuario_remetente) !== String(meuId)) idsParticipantes.add(a.usuario_remetente);
+        if (String(a.usuario_destinatario) !== String(meuId)) idsParticipantes.add(a.usuario_destinatario);
       });
 
       if (idsParticipantes.size === 0) return res.json([]);
