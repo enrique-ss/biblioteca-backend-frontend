@@ -328,6 +328,10 @@ let _dbInstance = null;
 function getDb() {
   if (!_dbInstance) {
     const Database = require('better-sqlite3');
+    // Garante que a pasta 'data' exista antes de tentar abrir o banco
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
     _dbInstance = new Database(dbPath);
     _dbInstance.pragma('journal_mode = WAL');
     _dbInstance.pragma('foreign_keys = ON');

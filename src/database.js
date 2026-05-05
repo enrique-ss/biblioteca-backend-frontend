@@ -24,6 +24,14 @@ const hasSupabaseConfig = Boolean(
   process.env.SUPABASE_ANON_KEY &&
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+if (requestedMode === 'online' && !hasSupabaseConfig) {
+  console.warn('⚠️  Aviso: APP_MODE=online solicitado, mas faltam configurações do Supabase:');
+  if (!process.env.SUPABASE_URL) console.warn('   - SUPABASE_URL ausente');
+  if (!process.env.SUPABASE_ANON_KEY) console.warn('   - SUPABASE_ANON_KEY ausente');
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) console.warn('   - SUPABASE_SERVICE_ROLE_KEY ausente');
+}
+
 const runtimeMode = requestedMode === 'online' && hasSupabaseConfig ? 'online' : 'offline';
 const isOfflineMode = runtimeMode !== 'online';
 const jwtSecret = process.env.JWT_SECRET || 'offline-biblioteca-dev-secret';
