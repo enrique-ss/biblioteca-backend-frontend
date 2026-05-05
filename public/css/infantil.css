@@ -208,7 +208,7 @@
     justify-content: center;
     font-size: 1.6rem;
     box-shadow: var(--shadow-sm);
-    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    border: none;
     overflow: hidden;
 }
 
@@ -430,7 +430,7 @@
 .quiz-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border: 0.5px solid var(--accent);
+    border: none;
     border-radius: var(--r-lg);
     box-shadow: var(--shadow);
     padding: 40px;
@@ -449,7 +449,7 @@
     height: 12px;
     border-radius: var(--r-pill);
     overflow: hidden;
-    border: 0.5px solid var(--accent);
+    border: none;
 }
 
 .progress-quiz-fill {
@@ -521,7 +521,7 @@
 .result-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border: 0.5px solid var(--accent);
+    border: none;
     border-radius: var(--r-xl);
     box-shadow: var(--shadow);
     padding: 50px;
@@ -699,7 +699,7 @@
     align-items: center;
     gap: 10px;
     background: var(--surface);
-    border: 0.5px solid var(--accent);
+    border: none;
     color: var(--text);
     padding: 10px 22px;
     border-radius: var(--r-pill);
@@ -786,7 +786,7 @@
     padding: 10px 28px;
     background: var(--surface-2);
     backdrop-filter: blur(5px);
-    border: 0.5px solid var(--accent);
+    border: none;
     border-radius: var(--r-pill);
     font-size: 0.8rem;
     font-weight: 800;
@@ -826,7 +826,7 @@
     background: var(--surface);
     backdrop-filter: var(--glass);
     -webkit-backdrop-filter: var(--glass);
-    border: 0.5px solid var(--accent);
+    border: none;
     border-radius: var(--r-md);
     padding: 16px 20px;
     display: flex;
