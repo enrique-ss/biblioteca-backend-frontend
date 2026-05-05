@@ -602,6 +602,11 @@ async function abrirChat(tipo, id, nome) {
     const widget = document.getElementById('biblioChatWidget');
     widget.style.display = 'flex';
     
+    // Se estava minimizado, maximiza primeiro
+    if (widget.dataset.minimized === 'true') {
+        minimizarChatMaster();
+    }
+    
     if (id) {
         // Abre uma conversa específica
         chatViewMode = 'conversation';
@@ -749,6 +754,56 @@ function fecharChatMaster() {
     if (window.chatMasterInterval) {
         clearInterval(window.chatMasterInterval);
         window.chatMasterInterval = null;
+    }
+}
+
+function minimizarChatMaster() {
+    const widget = document.getElementById('biblioChatWidget');
+    const minimizeBtn = document.querySelector('[onclick="minimizarChatMaster()"]');
+    
+    // Se está minimizado, restaura (estilo Facebook)
+    if (widget.dataset.minimized === 'true') {
+        widget.style.height = 'auto';
+        widget.style.width = '380px';
+        delete widget.dataset.minimized;
+        
+        // Ao maximizar, sempre mostra o inbox primeiro (com as abas Pessoas/Clubes)
+        document.getElementById('chatInboxView').style.display = 'flex';
+        document.getElementById('chatConversationView').style.display = 'none';
+        
+        // Reseta para a aba padrão (Pessoas)
+        currentChatTab = 'privado';
+        chatViewMode = 'inbox';
+        document.getElementById('btnFilterPrivado').classList.add('active');
+        document.getElementById('btnFilterClube').classList.remove('active');
+        
+        // Carrega o inbox quando maximizar
+        setTimeout(() => carregarInbox('privado'), 100);
+        
+        // Muda o botão para minimizar (seta para baixo)
+        minimizeBtn.innerHTML = '▼';
+        minimizeBtn.title = 'Minimizar';
+    } 
+    // Se está expandido, minimiza (estilo Facebook)
+    else {
+        // Salva qual view está ativa
+        if (document.getElementById('chatInboxView').style.display !== 'none') {
+            widget.dataset.lastView = 'inbox';
+        } else if (document.getElementById('chatConversationView').style.display !== 'none') {
+            widget.dataset.lastView = 'conversation';
+        }
+        
+        widget.style.height = '50px';
+        widget.style.width = '300px';
+        widget.dataset.minimized = 'true';
+        
+        // Esconde as views internas
+        document.getElementById('chatInboxView').style.display = 'none';
+        document.getElementById('chatConversationView').style.display = 'none';
+        
+        // Muda o botão para maximizar (seta para cima)
+        minimizeBtn.innerHTML = '▲';
+        minimizeBtn.title = 'Maximizar';
     }
 }
 

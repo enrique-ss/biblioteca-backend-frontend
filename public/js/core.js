@@ -173,13 +173,12 @@ function restaurarSessao() {
     if (t && u) {
         token = t;
         currentUser = JSON.parse(u);
-        
-        // Entra na sala do socket
-        if (currentUser && currentUser.id) {
-            socket.emit('joinRoom', currentUser.id);
-        }
-        
+
+        salvarSessao();
         atualizarNavbar();
+        
+        // Mostra o chat quando usuário fizer login
+        inicializarChatMinimizado();
         carregarMenu();
         mostrarTela('menuScreen');
     } else {
@@ -196,6 +195,12 @@ function limparSessao() {
     sessionStorage.clear();
     token = null;
     currentUser = null;
+    
+    // Esconde o chat quando usuário fizer logout
+    const widget = document.getElementById('biblioChatWidget');
+    if (widget) {
+        widget.style.display = 'none';
+    }
 }
 
 /*
@@ -645,10 +650,36 @@ document.addEventListener('keydown', (e) => {
 // Restaura o tema assim que o arquivo carrega, antes de qualquer outro script executar
 restoreTheme();
 
+// Inicializa o chat minimizado por padrão ao carregar a página (apenas se usuário estiver logado)
+function inicializarChatMinimizado() {
+    const widget = document.getElementById('biblioChatWidget');
+    if (widget && currentUser) {
+        // Mostra o widget mas já minimizado
+        widget.style.display = 'flex';
+        widget.style.height = '50px';
+        widget.style.width = '300px';
+        widget.dataset.minimized = 'true';
+        
+        // Esconde as views internas
+        document.getElementById('chatInboxView').style.display = 'none';
+        document.getElementById('chatConversationView').style.display = 'none';
+        
+        // Configura o botão como maximizar
+        const minimizeBtn = document.querySelector('[onclick="minimizarChatMaster()"]');
+        if (minimizeBtn) {
+            minimizeBtn.innerHTML = '▲';
+            minimizeBtn.title = 'Maximizar';
+        }
+    }
+}
+
 // --- LÓGICA DE AVALIAÇÕES (SISTEMA SOCIAL) ---
 let currentRating = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa o chat apenas se usuário já estiver logado
+    inicializarChatMinimizado();
+    
     const stars = document.querySelectorAll('.star-rating span');
     
     stars.forEach(star => {

@@ -33,6 +33,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
         salvarSessao();
         atualizarNavbar();
+        
+        // Mostra o chat quando usuário fizer login
+        inicializarChatMinimizado();
+        
         carregarMenu();
         mostrarTela('menuScreen');
         e.target.reset();
@@ -68,6 +72,10 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
         salvarSessao();
         atualizarNavbar();
+        
+        // Mostra o chat quando usuário fizer cadastro/login
+        inicializarChatMinimizado();
+        
         carregarMenu();
         mostrarTela('menuScreen');
         e.target.reset();
