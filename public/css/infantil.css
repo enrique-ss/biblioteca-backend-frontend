@@ -361,7 +361,7 @@
 .grid-categories .glass-card:hover {
     transform: translateY(-10px) scale(1.05);
     background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-md);
 }
 
 /* Container da grade de categorias: responsivo, mínimo de 280px por coluna */
@@ -399,7 +399,7 @@
 .lesson-list .glass-card:hover {
     background: rgba(255, 255, 255, 0.12);
     transform: translateX(10px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-md);
 }
 
 .lesson-list .glass-card.locked {
@@ -478,7 +478,7 @@
 .options-grid .glass-card:hover {
     background: rgba(255, 255, 255, 0.12);
     transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-md);
 }
 
 /* Estados das opções do quiz: neutra, selecionada, correta e incorreta */
@@ -567,7 +567,7 @@
 
 .reward-badge:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .reward-row {

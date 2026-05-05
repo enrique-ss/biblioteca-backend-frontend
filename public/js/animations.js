@@ -1,303 +1,306 @@
 /*
-    FUNDO 3D E ANIMAÇÕES DE INTERFACE.
-    Este arquivo é responsável por toda a camada visual animada do sistema:
+    FUNDO ANIMADO COM EMOJIS.
+    Este arquivo é responsável pela camada visual animada do sistema:
 
-    1. Fundo 3D com Three.js: partículas flutuantes em forma de estrela e patinha de gato
-       que giram lentamente atrás de todo o conteúdo, criando profundidade e elegância.
+    1. Fundo animado com emojis sólidos (estrelas ⭐ e patinhas 🐾)
+       que flutuam suavemente atrás de todo o conteúdo
     2. Animações de transição entre telas usando GSAP: efeito de entrada suave quando
        o usuário navega de uma seção para outra.
     3. Animação de entrada das linhas de tabela: cada linha aparece deslizando da esquerda.
 
-    As partículas mudam de cor dourada (tema escuro) para verde (tema claro) automaticamente.
+    Os emojis mudam de cor dourada (tema escuro) para verde (tema claro) automaticamente.
 */
 
 /*
-    Gera uma textura Canvas em forma de estrela de 4 pontas.
-    O Canvas é desenhado usando curvas quadráticas (quadraticCurveTo)
-    que criam a silhueta arredondada de uma estrela clássica.
-    A textura é entregue ao Three.js para usar como sprite das partículas.
+    Inicializa o fundo animado com emojis sólidos.
+    Cria múltiplas camadas de emojis flutuantes com diferentes tamanhos e velocidades.
+    Usa CSS puro para melhor performance e compatibilidade.
 */
-function criarTexturaEstrela() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    
-    // Blur leve para suavizar as bordas da estrela e torná-la mais etérea
-    ctx.filter = 'blur(2px)';
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.moveTo(64, 4); 
-    ctx.quadraticCurveTo(64, 64, 124, 64); 
-    ctx.quadraticCurveTo(64, 64, 64, 124); 
-    ctx.quadraticCurveTo(64, 64, 4, 64); 
-    ctx.quadraticCurveTo(64, 64, 64, 4); 
-    ctx.fill();
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    return texture;
-}
-
-/*
-    Gera uma textura Canvas em forma de patinha de gato.
-    Composta por: uma almofada central (elipse grande) e 4 dedos (elipses menores).
-    Cada dedo tem leve rotação para parecer mais natural.
-    É usada como sprite de partículas especiais espalhadas pelo fundo.
-*/
-function criarTexturaPatinha() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    
-    ctx.fillStyle = '#ffffff';
-    // Almofada central: elipse larga na parte inferior
-    ctx.beginPath();
-    ctx.ellipse(64, 80, 25, 20, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // Quatro dedos dispostos em arco acima da almofada
-    ctx.beginPath();
-    ctx.ellipse(35, 45, 10, 15, -0.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(55, 30, 10, 15, -0.1, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(75, 30, 10, 15, 0.1, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(95, 45, 10, 15, 0.4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    return texture;
-}
-
-/*
-    Inicializa o fundo 3D animado usando a biblioteca Three.js.
-    Cria uma cena com três camadas de estrelas (pequenas, médias e grandes)
-    mais uma camada de patinhas sutis espalhadas pelo espaço.
-    As partículas giram lentamente e oscilam para dar sensação de profundidade.
-    Se Three.js não estiver carregado, a função sai silenciosamente.
-*/
-function inicializarFundo3D() {
+function inicializarFundoAnimado() {
     const canvas = document.getElementById('threeCanvas');
-    if (!canvas || typeof THREE === 'undefined') {
+    if (!canvas) {
+        console.log('Canvas threeCanvas não encontrado');
         return;
     }
 
-    const cena = new THREE.Scene();
-    cena.background = null; // Fundo transparente para ver o CSS por baixo
+    console.log('Inicializando fundo animado com emojis...');
     
-    const aspect = window.innerWidth / window.innerHeight;
-    const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    camera.position.z = 5;
+    // Limpa qualquer conteúdo existente
+    canvas.innerHTML = '';
+    
+    // Configuração do canvas
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '1';
+    canvas.style.overflow = 'hidden';
 
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    // Limita o pixel ratio a 2 para não sobrecarregar GPUs de telas de alta resolução
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    const grupoParticulas = new THREE.Group();
-    const texturaEstrela = criarTexturaEstrela();
-    const temaEhClaro = document.documentElement.getAttribute('data-theme') === 'light';
-
-    /*
-        Três camadas de estrelas com tamanhos e opacidades crescentes.
-        A variação cria a ilusão de profundidade (estrelas menores = mais longe).
-        Quantidade reduzida para manter a elegância sem poluir visualmente.
-    */
+    // 20 estrelas espalhadas
     const camadas = [
-        { total: 200, size: 0.15, opacity: 0.7 }, 
-        { total: 150, size: 0.25, opacity: 0.8 }, 
-        { total: 100, size: 0.40, opacity: 0.9 }  
+        { emoji: '⭐', count: 20, sizeRange: [18, 28], speedRange: [0.3, 1], opacity: 0.6 }
     ];
 
-    const materiais = [];
+    const temaEhClaro = document.documentElement.getAttribute('data-theme') === 'light';
+    const corBase = temaEhClaro ? '#2D6A4F' : '#D4AF37';
 
+    // Cria cada camada de estrelas
     camadas.forEach(camada => {
-        const geometria = new THREE.BufferGeometry();
-        const posArray = new Float32Array(camada.total * 3);
-        
-        for(let i = 0; i < camada.total * 3; i += 3) {
-            posArray[i]   = (Math.random() - 0.5) * 45;     // eixo X: largura
-            posArray[i+1] = (Math.random() - 0.5) * 35;     // eixo Y: altura
-            posArray[i+2] = (Math.random() - 0.5) * 30 - 10; // eixo Z: profundidade
+        console.log(`Criando ${camada.count} estrelas da camada`);
+        for (let i = 0; i < camada.count; i++) {
+            criarEstrelaFlutuante(canvas, camada, corBase);
         }
-        
-        geometria.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-        const material = new THREE.PointsMaterial({
-            size: camada.size,
-            // Dourado no tema escuro, verde no tema claro
-            color: temaEhClaro ? 0x2D6A4F : 0xD4AF37,
-            transparent: true,
-            opacity: camada.opacity, 
-            map: texturaEstrela,
-            depthWrite: false,
-            // AdditiveBlending no escuro: as partículas brilham sobre si mesmas
-            blending: temaEhClaro ? THREE.NormalBlending : THREE.AdditiveBlending,
-            sizeAttenuation: true 
-        });
-        
-        materiais.push({ mat: material, camada: camada });
-        const mesh = new THREE.Points(geometria, material);
-        grupoParticulas.add(mesh);
     });
-
-    // Adiciona 40 patinhas espalhadas pelo fundo, mais sutis e maiores que as estrelas
-    const texturaPatinha = criarTexturaPatinha();
-    const geoPatinhas = new THREE.BufferGeometry();
-    const posPatinhas = new Float32Array(40 * 3);
-    for(let i = 0; i < 40 * 3; i += 3) {
-        posPatinhas[i]   = (Math.random() - 0.5) * 40;
-        posPatinhas[i+1] = (Math.random() - 0.5) * 30;
-        posPatinhas[i+2] = (Math.random() - 0.5) * 20 - 5;
-    }
-    geoPatinhas.setAttribute('position', new THREE.BufferAttribute(posPatinhas, 3));
-    const matPatinhas = new THREE.PointsMaterial({
-        size: 0.8,
-        color: temaEhClaro ? 0x2D6A4F : 0xD4AF37,
-        transparent: true,
-        opacity: 0.4,
-        map: texturaPatinha,
-        depthWrite: false,
-        blending: temaEhClaro ? THREE.NormalBlending : THREE.AdditiveBlending
-    });
-    materiais.push({ mat: matPatinhas, camada: { size: 0.8 } });
-    const meshPatinhas = new THREE.Points(geoPatinhas, matPatinhas);
-    grupoParticulas.add(meshPatinhas);
-
-    cena.add(grupoParticulas);
     
-    /*
-        Observa mudanças no atributo data-theme do <html>.
-        Quando o usuário alterna entre escuro e claro, atualiza a cor
-        e o modo de mistura (blending) de todas as partículas em tempo real.
-    */
+    console.log(`Total de ${camadas.reduce((sum, camada) => sum + camada.count, 0)} estrelas criadas`);
+
+    // Observa mudanças de tema
     const observadorTema = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.attributeName === 'data-theme') {
-                const ehClaro = document.documentElement.getAttribute('data-theme') === 'light';
-                materiais.forEach(m => {
-                    const novaCor = ehClaro ? 0x2D6A4F : 0xD4AF37;
-                    const novoBlending = ehClaro ? THREE.NormalBlending : THREE.AdditiveBlending;
-                    
-                    m.mat.color.setHex(novaCor);
-                    m.mat.blending = novoBlending;
-                    m.mat.needsUpdate = true;
-                });
+                console.log('=== MUTAÇÃO DETECTADA ===');
+                console.log('Tema mudou, atualizando cores das estrelas...');
+                console.log('Atributo antigo:', mutation.oldValue);
+                console.log('Atributo novo:', document.documentElement.getAttribute('data-theme'));
+                atualizarCoresEmojis();
             }
         });
     });
     
-    observadorTema.observe(document.documentElement, { attributes: true });
-
-    const relogio = new THREE.Clock();
-
-    /*
-        Loop de animação do Three.js.
-        requestAnimationFrame garante que a animação rode em sincronia com
-        a taxa de atualização da tela (60fps ou mais), sem desperdiçar processamento.
-        O grupo gira lentamente (drift) e cada camada oscila levemente (profundidade).
-    */
-    function animar() {
-        requestAnimationFrame(animar);
-        const tempoDecorrido = relogio.getElapsedTime();
-
-        // Rotação de drift: movimento suave e contínuo do conjunto de partículas
-        grupoParticulas.rotation.y = tempoDecorrido * 0.006;
-        grupoParticulas.rotation.x = tempoDecorrido * 0.004;
-
-        // Micro-oscilação senoidal por camada: cria sensação de "respiração" e profundidade
-        grupoParticulas.children.forEach((camada, i) => {
-            camada.position.z = Math.sin(tempoDecorrido * 0.15 + i) * 1.5;
-            camada.position.x = Math.cos(tempoDecorrido * 0.1 + i) * 0.8;
-        });
-
-        renderer.render(cena, camera);
-    }
-    
-    animar();
-
-    // Atualiza tamanho do canvas e proporção da câmera quando a janela é redimensionada
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+    observadorTema.observe(document.documentElement, { 
+        attributes: true, 
+        attributeOldValue: true 
     });
 }
 
 /*
-    Anima a entrada de uma tela usando GSAP.
-    A tela começa levemente abaixo e transparente, e sobe ao lugar correto.
-    Os cartões internos (auth-card, menu-card, etc.) aparecem com um pequeno
-    atraso escalonado (stagger), criando um efeito de cascata visual.
-    Se GSAP não estiver carregado, a função sai sem erro.
+    Cria uma estrela individual com movimento similar ao Three.js original
 */
-function animarTransicaoTela(idTela) {
-    if (typeof gsap === 'undefined') {
-        return;
-    }
-
-    const elementoTela = document.getElementById(idTela);
-    if (!elementoTela) {
-        return;
-    }
-
-    // Cancela animações anteriores na mesma tela para evitar conflitos
-    gsap.killTweensOf(elementoTela);
+function criarEstrelaFlutuante(container, camada, cor) {
+    const estrela = document.createElement('div');
+    estrela.innerHTML = `
+        <svg width="30" height="30" viewBox="0 0 30 30" style="display: block;">
+            <path d="M15 2 L18.5 10 L27 11 L21 17 L22.5 25.5 L15 21 L7.5 25.5 L9 17 L3 11 L11.5 10 Z" 
+                  fill="${cor}" 
+                  stroke="none" />
+        </svg>
+    `;
+    estrela.style.position = 'absolute';
+    estrela.style.fontSize = `${Math.random() * (camada.sizeRange[1] - camada.sizeRange[0]) + camada.sizeRange[0]}px`;
+    estrela.style.opacity = camada.opacity;
+    estrela.style.pointerEvents = 'none';
+    estrela.style.userSelect = 'none';
     
-    // A tela sobe 15px e aparece com 0.5s de duração
-    gsap.fromTo(elementoTela, 
-        { opacity: 0, scale: 0.98, y: 15 },
-        { duration: 0.5, opacity: 1, scale: 1, y: 0, ease: "power2.out", clearProps: "all" }
-    );
-
-    const elementosUI = elementoTela.querySelectorAll('.auth-card, .menu-card, .stats-chart-card, .quiz-age-card, .perfil-info');
+    // Posição inicial aleatória mais espalhada
+    const startX = (Math.random() - 0.5) * 90; // -45 a 45 (mais espalhado)
+    const startY = (Math.random() - 0.5) * 90; // -45 a 45 (mais espalhado)
+    const startZ = Math.random() * 10; // Profundidade simples
+    estrela.style.left = `${50 + startX}%`; // Centralizado com alcance maior
+    estrela.style.top = `${50 + startY}%`;
+    estrela.style.zIndex = Math.floor(startZ); // Profundidade simulada
     
-    if (elementosUI.length > 0) {
-        // Cartões internos aparecem com efeito de mola (back.out) e atraso de 80ms entre cada um
-        gsap.fromTo(elementosUI, 
-            { opacity: 0, y: 50, rotationX: 10 }, 
-            { duration: 0.9, opacity: 1, y: 0, rotationX: 0, stagger: 0.08, ease: "back.out(1.2)", delay: 0.1 }
-        );
+    // Movimento aleatório tipo espaço (cada estrela com sua própria direção)
+    const speedX = (Math.random() - 0.5) * 0.02; // Movimento X aleatório e lento
+    const speedY = (Math.random() - 0.5) * 0.02; // Movimento Y aleatório e lento
+    const rotationSpeed = Math.random() * 0.001 + 0.0005; // Rotação suave
+    let currentX = startX;
+    let currentY = startY;
+    let rotation = 0;
+    
+    // Animação contínua
+    function animar(currentTime) {
+        // Movimento aleatório e suave tipo flutuação no espaço
+        const time = currentTime * 0.0001;
+        
+        // Adiciona movimento aleatório suave
+        currentX += speedX + Math.sin(time * 2) * 0.01;
+        currentY += speedY + Math.cos(time * 3) * 0.01;
+        
+        // Rotação suave da estrela
+        rotation += rotationSpeed;
+        
+        // Wrap around nas bordas (reaparece do lado oposto)
+        if (currentX > 50) currentX = -50;
+        if (currentX < -50) currentX = 50;
+        if (currentY > 50) currentY = -50;
+        if (currentY < -50) currentY = 50;
+        
+        estrela.style.left = `${50 + currentX}%`;
+        estrela.style.top = `${50 + currentY}%`;
+        estrela.style.transform = `rotate(${rotation}rad)`;
+        
+        requestAnimationFrame(animar);
     }
+    
+    container.appendChild(estrela);
+    animar(0);
 }
 
 /*
-    Anima a entrada das linhas de uma tabela após o carregamento dos dados.
-    Cada linha desliza da esquerda com um atraso de 30ms entre elas,
-    dando a sensação de que os dados estão "chegando" progressivamente.
-    Linhas de carregamento (loading-row) são ignoradas.
+    Atualiza as cores dos emojis quando o tema muda
 */
-function animarLinhasTabela(idTbody) {
-    if (typeof gsap === 'undefined') {
-        return;
-    }
+function atualizarCoresEmojis() {
+    const canvas = document.getElementById('threeCanvas');
+    if (!canvas) return;
     
-    const tbody = document.getElementById(idTbody);
-    if (!tbody) {
-        return;
-    }
-
-    const linhas = tbody.querySelectorAll('tr:not(.loading-row)');
-    if (linhas.length > 0) {
-        gsap.fromTo(linhas,
-            { opacity: 0, x: -15 },
-            { duration: 0.4, opacity: 1, x: 0, stagger: 0.03, ease: "power2.out", clearProps: "all" }
-        );
-    }
+    const temaAtual = document.documentElement.getAttribute('data-theme');
+    console.log(`Tema atual detectado: ${temaAtual}`);
+    
+    const temaEhClaro = temaAtual === 'light';
+    const corBase = temaEhClaro ? '#2D6A4F' : '#D4AF37';
+    
+    console.log(`Cor base definida: ${corBase} (tema ${temaEhClaro ? 'claro' : 'escuro'})`);
+    
+    const emojis = canvas.querySelectorAll('div');
+    console.log(`Encontrados ${emojis.length} estrelas para atualizar`);
+    
+    emojis.forEach((emoji, index) => {
+        // Atualiza o fill do SVG dentro da estrela
+        const svg = emoji.querySelector('svg path');
+        if (svg) {
+            svg.setAttribute('fill', corBase);
+            console.log(`Estrela ${index + 1} atualizada para cor: ${corBase}`);
+        }
+    });
+    
+    console.log('Todas as estrelas foram atualizadas!');
 }
 
 /*
-    Inicia o fundo 3D assim que o HTML termina de carregar.
-    DOMContentLoaded garante que o elemento <canvas> já existe no DOM
-    antes de tentar acessá-lo.
+    Animação de entrada suave para telas usando GSAP.
+    Aplica efeito de fade-in e deslizamento vertical quando uma tela se torna ativa.
 */
-window.addEventListener('DOMContentLoaded', () => {
-    inicializarFundo3D();
+function animarTransicaoTela(id) {
+    const tela = document.getElementById(id);
+    if (!tela || typeof gsap === 'undefined') return;
+
+    // Reset para estado inicial
+    gsap.set(tela, {
+        opacity: 0,
+        y: 30,
+        scale: 0.98
+    });
+
+    // Animação de entrada
+    gsap.to(tela, {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.6,
+        ease: 'power2.out',
+        clearProps: 'transform'
+    });
+}
+
+/*
+    Animação de entrada para linhas de tabela.
+    Cada linha aparece deslizando da esquerda com leve opacidade.
+*/
+function animarEntradaTabela() {
+    if (typeof gsap === 'undefined') return;
+
+    gsap.utils.toArray('tbody tr').forEach((linha, index) => {
+        gsap.from(linha, {
+            opacity: 0,
+            x: -50,
+            duration: 0.4,
+            delay: index * 0.05,
+            ease: 'power2.out',
+            clearProps: 'transform'
+        });
+    });
+}
+
+/*
+    Animação para cards do acervo digital e físico.
+    Efeito de entrada em cascata com escala e rotação sutis.
+*/
+function animarEntradaCards() {
+    if (typeof gsap === 'undefined') return;
+
+    gsap.utils.toArray('.digital-card, .menu-card').forEach((card, index) => {
+        gsap.from(card, {
+            opacity: 0,
+            scale: 0.9,
+            y: 20,
+            duration: 0.5,
+            delay: index * 0.08,
+            ease: 'back.out(1.2)',
+            clearProps: 'transform'
+        });
+    });
+}
+
+/*
+    Animação para notificações e alertas.
+    Efeito de slide-in da direita com bounce suave.
+*/
+function animarEntradaNotificacoes() {
+    if (typeof gsap === 'undefined') return;
+
+    gsap.utils.toArray('.notification-card, .activity-item').forEach((item, index) => {
+        gsap.from(item, {
+            opacity: 0,
+            x: 100,
+            duration: 0.4,
+            delay: index * 0.06,
+            ease: 'power2.out',
+            clearProps: 'transform'
+        });
+    });
+}
+
+/*
+    Inicializa todas as animações quando o DOM estiver pronto.
+*/
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicia o fundo animado
+    inicializarFundoAnimado();
+    
+    // Animações específicas por tela
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                if (target.classList.contains('screen') && target.classList.contains('active')) {
+                    // Animação de entrada da tela
+                    animarTransicaoTela(target.id);
+                    
+                    // Animações específicas baseadas no ID da tela
+                    setTimeout(() => {
+                        switch(target.id) {
+                            case 'livrosScreen':
+                            case 'acervoDigitalScreen':
+                                animarEntradaCards();
+                                break;
+                            case 'alugueisScreen':
+                            case 'historicoScreen':
+                                animarEntradaTabela();
+                                break;
+                            case 'notificacoesScreen':
+                                animarEntradaNotificacoes();
+                                break;
+                        }
+                    }, 100);
+                }
+            }
+        });
+    });
+    
+    // Observa todas as telas
+    document.querySelectorAll('.screen').forEach(screen => {
+        observer.observe(screen, { attributes: true });
+    });
+});
+
+/*
+    Redimensiona o canvas quando a janela muda
+*/
+window.addEventListener('resize', () => {
+    const canvas = document.getElementById('threeCanvas');
+    if (canvas) {
+        // As posições percentuais dos emojis se ajustam automaticamente
+    }
 });
