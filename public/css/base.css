@@ -24,8 +24,8 @@
     --danger: #E63946;
     --success: #2A9D8F;
     --warning: #E9C46A;
-    --border: transparent;
-    --border-m: transparent;
+    --border: none;
+    --border-m: none;
     --shadow: 0 6px 24px rgba(28, 52, 40, 0.12);
     --shadow-sm: 0 2px 8px rgba(28, 52, 40, 0.08);
     --shadow-md: 0 4px 16px rgba(28, 52, 40, 0.1);

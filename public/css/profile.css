@@ -222,7 +222,7 @@
     padding: 15px;
     border-radius: var(--r-md);
     text-align: center;
-    border: 1px solid var(--border);
+    border: none;
 }
 
 .stat-value {
@@ -322,7 +322,7 @@
     width: 100%;
     padding: 10px 14px;
     background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: var(--r-md);
     color: var(--text);
     font-size: 0.85rem;
@@ -374,7 +374,7 @@
     color: var(--accent);
     flex-shrink: 0;
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: none;
 }
 
 .social-user-avatar img {
