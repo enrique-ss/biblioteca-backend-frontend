@@ -49,7 +49,7 @@ async function carregarAcervoDigital(pagina = 1) {
         if (busca.trim()) query.set('busca', busca.trim());
 
         const response = await fetch(`${API_URL}/acervo-digital?${query}`, {
-            headers: { 
+            headers: {
                 'Authorization': `Bearer ${token || ''}`,
                 'Content-Type': 'application/json'
             },
@@ -67,7 +67,7 @@ async function carregarAcervoDigital(pagina = 1) {
         }
 
         grid.innerHTML = '';
-        
+
         /*
             Gradientes usados como fundo dos cards quando o livro não tem imagem de capa.
             Cada livro pega um gradiente baseado na sua posição na lista (index % total),
@@ -85,38 +85,39 @@ async function carregarAcervoDigital(pagina = 1) {
         data.forEach((item, index) => {
             const card = document.createElement('div');
             card.className = 'digital-card';
-            
+
             // Se o livro tem capa, usa a imagem; senão, usa um gradiente colorido
-            const fundo = item.capa_url 
-                ? `url('${esc(item.capa_url)}') center/cover no-repeat` 
+            const fundo = item.capa_url
+                ? `url('${esc(item.capa_url)}') center/cover no-repeat`
                 : gradientes[index % gradientes.length];
-            
+
             // Verifica se o usuário atual é bibliotecário para exibir o botão de excluir
             const ehBibliotecario = currentUser?.permissions?.is_admin || false;
-            
+
             card.innerHTML = `
                 <div class="digital-card-poster" style="background: ${fundo}">
                     ${!item.capa_url ? `<div class="digital-card-cover-text">${esc(item.titulo)}</div>` : ''}
                 </div>
+                <div class="digital-card-footer">
+                    <h4 class="digital-card-footer-title">${esc(item.titulo)}</h4>
+                    <p class="digital-card-footer-subtitle">${esc(item.autor)}</p>
+                </div>
                 <div class="digital-card-content">
                     <h3 class="digital-card-title">${esc(item.titulo)}</h3>
-                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;"><strong>Autor:</strong> ${esc(item.autor)}</p>
-                    ${item.sinopse ? `
-                        <p class="card-sinopse" style="font-size: 0.8rem; color: var(--text); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.4em; line-height: 1.2em; opacity: 0.9;">
-                            <strong>Sinopse:</strong> ${esc(item.sinopse)}
-                        </p>
-                    ` : ''}
                     <div class="digital-card-meta">
-                        <span style="color: var(--text); opacity: 0.8;"><strong>Gênero:</strong> ${esc(item.categoria)}</span>
-                        <span style="color: var(--text); opacity: 0.8;"><strong>Ano:</strong> ${esc(item.ano)}</span>
-                        <span style="color: var(--text); opacity: 0.8;"><strong>Páginas:</strong> ${esc(item.paginas)}</span>
-                        <span style="color: var(--text); opacity: 0.8;"><strong>Tamanho:</strong> ${esc(item.tamanho_arquivo)}</span>
+                        <span><strong>Autor:</strong> ${esc(item.autor)}</span>
+                        ${item.sinopse ? `<span class="card-sinopse-meta"><strong>Sinopse:</strong> ${esc(item.sinopse)}</span>` : ''}
+                        <span><strong>Gênero:</strong> ${esc(item.categoria)}</span>
+                        <span><strong>Ano:</strong> ${esc(item.ano)}</span>
+                        <span><strong>Páginas:</strong> ${esc(item.paginas)}</span>
+                        <span><strong>Tamanho:</strong> ${esc(item.tamanho_arquivo)}</span>
                     </div>
-                    <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 10px; border-top: 0.5px solid var(--accent); padding-top: 8px;">
+                    <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 10px; padding-top: 8px;">
                         👤 <strong>Publicado por:</strong> ${esc(item.usuario_nome || 'Bibliotecário')}
                     </p>
                     <div class="digital-card-actions">
-                        <button class="btn btn-ghost btn-icon-text" title="Ler / Baixar" onclick="registrarLeituraPDF(${item.id}, '${esc(item.url_arquivo)}', '${esc(item.titulo)}')"><span>📖 Ler</span></button>
+                        <button class="btn btn-ghost btn-icon-text" title="Ler / Baixar" onclick="registrarLeituraPDF(${item.id}, '${esc(item.url_arquivo)}', '${esc(item.titulo)}')"><span>Ler</span></button>
+                        <button class="btn btn-ghost btn-icon-text" title="Ver Perfil" onclick="abrirPerfilLivro(${item.id}, 'digital')"><span>📄</span></button>
                         ${ehBibliotecario ? `<button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerDocumentoDigital(${item.id}, '${esc(item.titulo)}')"><span>🗑️</span></button>` : ''}
                     </div>
                 </div>
@@ -144,7 +145,7 @@ async function registrarLeituraPDF(id, url, titulo) {
     } catch (e) {
         // Silencioso se der erro (ex: já registrado)
     }
-    
+
     downloadPDF(url, titulo);
 }
 
@@ -177,7 +178,7 @@ async function carregarPendencias() {
 
     try {
         const dados = await api('/acervo-digital/pendentes');
-        
+
         if (!dados || dados.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-dim);">Nenhuma submissão pendente.</td></tr>';
             return;
@@ -199,7 +200,7 @@ async function carregarPendencias() {
         `).join('');
 
     } catch (erro) {
-         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--crimson);">${erro.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--crimson);">${erro.message}</td></tr>`;
     }
 }
 
@@ -211,7 +212,7 @@ async function carregarPendencias() {
     Se o acervo digital estiver aberto, também recarrega a grade de livros.
 */
 async function resolverPendencia(id, acao) {
-    if(!confirm(`Tem certeza que deseja ${acao} este documento?`)) return;
+    if (!confirm(`Tem certeza que deseja ${acao} este documento?`)) return;
 
     try {
         const endpoint = acao === 'aprovar'
@@ -224,7 +225,7 @@ async function resolverPendencia(id, acao) {
         carregarPendencias();
         if (typeof buscarNotificacoes === 'function') buscarNotificacoes();
         if (document.getElementById('acervoDigitalScreen').classList.contains('active')) {
-             carregarAcervoDigital(1);
+            carregarAcervoDigital(1);
         }
     } catch (erro) {
         exibirAlerta(erro.message, 'error');

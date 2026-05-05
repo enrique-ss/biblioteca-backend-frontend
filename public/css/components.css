@@ -464,4 +464,15 @@
     transform: scale(1.4);
 }
 
-
+/* 
+    SISTEMA DE AVALIAÇÃO: Estrelas
+*/
+.star-rating span {
+    transition: color 0.2s, transform 0.2s;
+}
+.star-rating span:hover {
+    transform: scale(1.2);
+}
+.star-rating span.active, .star-rating span.hover-active {
+    color: var(--accent) !important;
+}

@@ -114,7 +114,7 @@ async function carregarNotificacoesAdmin() {
                 title: 'Emprestimos Atrasados',
                 message: `Existem <strong>${atrasadosTotal}</strong> emprestimo(s) com entrega pendente no sistema.`,
                 count: atrasadosTotal,
-                action: { label: 'Gerenciar Emprestimos', onClick: "mostrarTela('alugueisScreen')" }
+                action: { label: 'Gerenciar', onClick: "mostrarTela('alugueisScreen')" }
             });
         }
 
@@ -127,7 +127,7 @@ async function carregarNotificacoesAdmin() {
                 title: 'Multas Pendentes',
                 message: `<strong>${usuariosComMulta.length}</strong> usuario(s) possuem debitos pendentes que precisam de regularizacao.`,
                 count: usuariosComMulta.length,
-                action: { label: 'Gerenciar Usuarios', onClick: "mostrarTela('usuariosScreen')" }
+                action: { label: 'Gerenciar', onClick: "mostrarTela('usuariosScreen')" }
             });
         }
 
@@ -154,7 +154,7 @@ async function carregarNotificacoesAdmin() {
                     title: 'Novas Submissoes',
                     message: `Existem <strong>${pendentesDigital.length}</strong> novos documentos digitais aguardando curadoria.`,
                     count: pendentesDigital.length,
-                    action: { label: 'Revisar Agora', onClick: 'carregarPendencias()' }
+                    action: { label: 'Revisar', onClick: 'carregarPendencias()' }
                 });
             }
         } catch (erroPendencias) {
@@ -199,7 +199,7 @@ async function carregarNotificacoesUsuario() {
                     title: 'Novo Pedido de Amizade',
                     message: `<strong>${pedido.remetente_nome || 'Alguém'}</strong> enviou um pedido de amizade para você!`,
                     count: 1,
-                    action: { label: 'Aceitar Pedido', onClick: `aceitarPedidoAmizade('${pedido.id}', '${pedido.usuario_remetente}')` }
+                    action: { label: 'Aceitar', onClick: `aceitarPedidoAmizade('${pedido.id}', '${pedido.usuario_remetente}')` }
                 });
             });
         }
@@ -212,7 +212,7 @@ async function carregarNotificacoesUsuario() {
                 title: 'Debito Automatico',
                 message: `Voce possui um debito total de <strong>R$ ${totalPendente.toFixed(2)}</strong> referente a multas por atraso ou perda.`,
                 count: multas.filter((m) => m.status === 'pendente').length,
-                action: { label: 'Quitar Debito', onClick: 'pagarMinhasMultas()' }
+                action: { label: 'Quitar', onClick: 'pagarMinhasMultas()' }
             });
         } else if (multas.length > 0) {
             // Se teve multas mas todas foram pagas: alerta verde de parabenização
@@ -233,7 +233,7 @@ async function carregarNotificacoesUsuario() {
                 title: 'Livros Atrasados',
                 message: `Voce esta com <strong>${atrasados.length}</strong> livro(s) fora do prazo.`,
                 count: atrasados.length,
-                action: { label: 'Ver Meus Emprestimos', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
+                action: { label: 'Ver', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
             });
         }
 
@@ -254,7 +254,7 @@ async function carregarNotificacoesUsuario() {
                 title: 'Final de Prazo',
                 message: `Voce tem <strong>${vencendoEmBreve.length}</strong> livro(s) que devem ser devolvidos ou renovados em breve.`,
                 count: vencendoEmBreve.length,
-                action: { label: 'Renovar Online', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
+                action: { label: 'Renovar', onClick: "mostrarTela('alugueisScreen'); carregarMeusAlugueis();" }
             });
         }
     } catch (erro) {
@@ -379,7 +379,7 @@ async function pagarMinhasMultas() {
         icon: '💳',
         title: 'Quitar Debitos',
         msg: 'Deseja processar o pagamento de todas as multas pendentes?',
-        okLabel: 'Sim, Pagar Agora',
+        okLabel: 'Sim',
         async onOk() {
             try {
                 const resultado = await api('/alugueis/multas/pagar/mim', { method: 'PUT' });

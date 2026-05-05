@@ -101,32 +101,33 @@ async function carregarLivros(pagina = 1) {
                 <div class="digital-card-poster" style="${bgStyle}">
                     ${!livro.capa_url ? `<div class="digital-card-cover-text">${esc(livro.titulo)}</div>` : ''}
                 </div>
+                <div class="digital-card-footer">
+                    <h4 class="digital-card-footer-title">${esc(livro.titulo)}</h4>
+                    <p class="digital-card-footer-subtitle">${esc(livro.autor)}</p>
+                </div>
                 <div class="digital-card-content">
                     <h3 class="digital-card-title">${esc(livro.titulo)}</h3>
-                    <p style="font-size: 0.9em; color: var(--text); margin-bottom: 12px; font-style: italic; opacity: 0.8;"><strong>Autor:</strong> ${esc(livro.autor)}</p>
                     
-                    ${livro.sinopse ? `
-                        <p class="card-sinopse" style="font-size: 0.8rem; color: var(--text); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.4em; line-height: 1.2em; opacity: 0.9;">
-                            <strong>Sinopse:</strong> ${esc(livro.sinopse)}
-                        </p>
-                    ` : ''}
-
                     <div class="digital-card-meta">
-                        <span style="color: var(--text); opacity: 0.8;"><strong>Gênero:</strong> ${esc(livro.genero)}</span>
-                        <span style="color: var(--text); opacity: 0.8;"><strong>Corredor</strong> ${esc(livro.corredor ?? '—')} • <strong>Prat.</strong> ${esc(livro.prateleira ?? '—')}</span>
+                        <span><strong>Autor:</strong> ${esc(livro.autor)}</span>
+                        ${livro.sinopse ? `<span class="card-sinopse-meta"><strong>Sinopse:</strong> ${esc(livro.sinopse)}</span>` : ''}
+                        <span><strong>Gênero:</strong> ${esc(livro.genero)}</span>
+                        <span><strong>Localização:</strong> Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
                     </div>
 
-                    <div style="margin-bottom:16px; border-top:1px solid var(--border); padding-top:12px;">
+                    <div style="margin-bottom:16px; padding-top:12px;">
                         <span class="badge ${livro.exemplares_disponiveis > 0 ? 'badge-success' : 'badge-danger'}">${livro.exemplares_disponiveis > 0 ? 'Disponível' : 'Indisponível'}</span>
                         <span style="font-size:12px; color: var(--text); opacity: 0.7; float:right; margin-top:2px;">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)} unid.</span>
                     </div>
 
-                    ${ehBibliotecario ? `
                     <div class="digital-card-actions">
+                        <button class="btn btn-ghost btn-icon-text" title="Ver Perfil" onclick="abrirPerfilLivro(${livro.id}, 'fisico')"><span>📖</span></button>
+                        ${ehBibliotecario ? `
                         <button class="btn btn-icon-text" title="Editar" onclick='editarLivro(${JSON.stringify(livro)})'><span>✏️</span></button>
                         <button class="btn btn-icon-text" title="Exemplares" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')"><span>📚</span></button>
                         <button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerLivro(${livro.id}, '${esc(livro.titulo)}')"><span>🗑️</span></button>
-                    </div>` : ''}
+                        ` : ''}
+                    </div>
                 </div>
             `;
             
@@ -163,7 +164,7 @@ function prepararAddLivro(tipo) {
     if (tipo === 'digital') {
         document.getElementById('addLivroTitle').innerHTML = 'Adicionar <span>Digital</span>';
         document.getElementById('addLivroSubtitle').textContent = 'Incluir um livro no acervo digital (PDF)';
-        document.getElementById('btnAddSubmit').textContent = 'Enviar PDF';
+        document.getElementById('btnAddSubmit').textContent = 'Enviar';
         document.getElementById('btnAddSubmit').className = 'btn btn-primary';
 
         groupExemplares.style.display = 'none';
@@ -180,7 +181,7 @@ function prepararAddLivro(tipo) {
     } else {
         document.getElementById('addLivroTitle').innerHTML = 'Cadastrar <span>Físico</span>';
         document.getElementById('addLivroSubtitle').textContent = 'Preencha os dados do novo exemplar';
-        document.getElementById('btnAddSubmit').textContent = 'Cadastrar Físico';
+        document.getElementById('btnAddSubmit').textContent = 'Cadastrar';
         document.getElementById('btnAddSubmit').className = 'btn btn-primary';
 
         groupExemplares.style.display = 'block';
@@ -246,7 +247,7 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
             const fileInput = document.getElementById('livroArquivo');
             if (!fileInput.files.length) {
                 exibirAlerta('Você deve anexar um arquivo PDF!', 'error');
-                btnSubmit.textContent = 'Enviar PDF';
+                btnSubmit.textContent = 'Enviar';
                 btnSubmit.disabled = false;
                 return;
             }
@@ -281,7 +282,7 @@ document.getElementById('addLivroForm').addEventListener('submit', async (e) => 
     } catch (erro) {
         exibirAlerta(erro.message || 'Erro ao concluir operação.', 'error');
     } finally {
-        btnSubmit.textContent = tipo === 'digital' ? 'Enviar PDF' : 'Cadastrar Físico';
+        btnSubmit.textContent = tipo === 'digital' ? 'Enviar' : 'Cadastrar';
         btnSubmit.disabled = false;
     }
 });

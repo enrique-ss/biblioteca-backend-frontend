@@ -644,3 +644,86 @@ document.addEventListener('keydown', (e) => {
 
 // Restaura o tema assim que o arquivo carrega, antes de qualquer outro script executar
 restoreTheme();
+
+// --- LÓGICA DE AVALIAÇÕES (SISTEMA SOCIAL) ---
+let currentRating = 0;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const stars = document.querySelectorAll('.star-rating span');
+    
+    stars.forEach(star => {
+        star.addEventListener('mouseover', function() {
+            const val = this.getAttribute('data-value');
+            stars.forEach(s => {
+                if(s.getAttribute('data-value') <= val) {
+                    s.classList.add('hover-active');
+                } else {
+                    s.classList.remove('hover-active');
+                }
+            });
+        });
+
+        star.addEventListener('mouseout', function() {
+            stars.forEach(s => s.classList.remove('hover-active'));
+        });
+
+        star.addEventListener('click', function() {
+            currentRating = this.getAttribute('data-value');
+            document.getElementById('avaliacaoNota').value = currentRating;
+            document.getElementById('btnSalvarAvaliacao').disabled = false;
+            
+            stars.forEach(s => {
+                if(s.getAttribute('data-value') <= currentRating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    const avaliacaoForm = document.getElementById('avaliacaoForm');
+    if (avaliacaoForm) {
+        avaliacaoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const tipo = document.getElementById('avaliacaoItemTipo').value; // 'fisico' ou 'digital'
+            const itemId = document.getElementById('avaliacaoItemId').value;
+            const nota = document.getElementById('avaliacaoNota').value;
+            const comentario = document.getElementById('avaliacaoComentario').value;
+
+            const payload = {
+                nota: parseInt(nota),
+                comentario: comentario
+            };
+
+            if (tipo === 'digital') {
+                payload.acervo_digital_id = itemId;
+            } else {
+                payload.livro_id = itemId;
+            }
+
+            try {
+                await api('/social/avaliacoes', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                exibirAlerta('Avaliação salva com sucesso!', 'success');
+                fecharModal('avaliacaoModal');
+            } catch (err) {
+                exibirAlerta(err.message, 'danger');
+            }
+        });
+    }
+});
+
+function abrirAvaliacaoModal(tipo, id, titulo) {
+    document.getElementById('avaliacaoItemTipo').value = tipo;
+    document.getElementById('avaliacaoItemId').value = id;
+    document.getElementById('avaliacaoSubtitle').textContent = `Como foi sua experiência lendo "${titulo}"?`;
+    document.getElementById('avaliacaoNota').value = 0;
+    document.getElementById('avaliacaoComentario').value = '';
+    document.getElementById('btnSalvarAvaliacao').disabled = true;
+    currentRating = 0;
+    document.querySelectorAll('.star-rating span').forEach(s => s.classList.remove('active'));
+    abrirModal('avaliacaoModal');
+}

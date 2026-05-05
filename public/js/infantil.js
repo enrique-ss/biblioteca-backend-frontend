@@ -257,7 +257,7 @@ function selectLesson(lesson) {
             ` : ''}
 
             <button class="btn btn-primary btn-action" onclick="startQuiz()">
-                Estou Pronta/Pronto!
+                Começar
             </button>
         </div>
     `;

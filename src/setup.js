@@ -158,6 +158,65 @@ function applySchema(db) {
       FOREIGN KEY (usuario_destinatario) REFERENCES usuarios(id) ON DELETE CASCADE,
       UNIQUE(usuario_remetente, usuario_destinatario)
     );
+    -- Tabela de Avaliações de Livros e Digitais
+    CREATE TABLE IF NOT EXISTS avaliacoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      usuario_id TEXT NOT NULL,
+      livro_id INTEGER,
+      acervo_digital_id INTEGER,
+      nota INTEGER NOT NULL CHECK (nota BETWEEN 1 AND 5),
+      comentario TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+      FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE CASCADE,
+      FOREIGN KEY (acervo_digital_id) REFERENCES acervo_digital(id) ON DELETE CASCADE,
+      CHECK (livro_id IS NOT NULL OR acervo_digital_id IS NOT NULL)
+    );
+
+    -- Tabela de Clubes de Leitura
+    CREATE TABLE IF NOT EXISTS clubes_leitura (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      descricao TEXT,
+      criado_por TEXT NOT NULL,
+      livro_id INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (criado_por) REFERENCES usuarios(id) ON DELETE CASCADE,
+      FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE SET NULL
+    );
+
+    -- Tabela de Mensagens dos Clubes
+    CREATE TABLE IF NOT EXISTS clube_mensagens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      clube_id INTEGER NOT NULL,
+      usuario_id TEXT NOT NULL,
+      mensagem TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (clube_id) REFERENCES clubes_leitura(id) ON DELETE CASCADE,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    );
+
+    -- Tabela de Comentários no Feed de Atividades
+    CREATE TABLE IF NOT EXISTS atividades_comentarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      atividade_id TEXT NOT NULL,
+      usuario_id TEXT NOT NULL,
+      comentario TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    );
+
+    -- Tabela de Chat Privado entre Amigos
+    CREATE TABLE IF NOT EXISTS mensagens_diretas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      remetente_id TEXT NOT NULL,
+      destinatario_id TEXT NOT NULL,
+      mensagem TEXT NOT NULL,
+      lida INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (remetente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+      FOREIGN KEY (destinatario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    );
   `);
 
   // Migração: Adiciona a coluna created_at se ela não existir (para bancos legados)
@@ -264,4 +323,16 @@ if (require.main === module) {
   process.exitCode = ok ? 0 : 1;
 }
 
-module.exports = { configurarBanco, applySchema, dbPath };
+// Retorna a instância do banco para uso direto com SQL nativo
+let _dbInstance = null;
+function getDb() {
+  if (!_dbInstance) {
+    const Database = require('better-sqlite3');
+    _dbInstance = new Database(dbPath);
+    _dbInstance.pragma('journal_mode = WAL');
+    _dbInstance.pragma('foreign_keys = ON');
+  }
+  return _dbInstance;
+}
+
+module.exports = { configurarBanco, applySchema, dbPath, getDb };

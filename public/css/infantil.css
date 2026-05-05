@@ -114,7 +114,7 @@
 }
 
 .age-card:hover .age-icon {
-    transform: scale(1.15) rotate(5deg);
+    transform: scale(1.15);
 }
 
 /* Título do cartão: cada faixa etária tem uma cor diferente */
@@ -728,7 +728,6 @@
 /* Cabeçalho da tela dentro do espaço infantil: mesma estrutura do sistema, mas com ajuste de margem */
 #espacoInfantilScreen .page-header {
     margin-bottom: 40px;
-    border-bottom: 0.5px solid var(--accent);
     padding-bottom: 20px;
     text-align: left;
 }

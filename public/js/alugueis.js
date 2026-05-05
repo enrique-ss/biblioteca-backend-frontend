@@ -183,7 +183,7 @@ function renderizarTabelaAlugueisUsuario(lista) {
             <td>${renderizarBadgeMulta(item.multa_acumulada_formatada)}</td>
             <td>${badgeStatus(item.status)}</td>
             <td>
-                ${item.pode_renovar ? `<button class="btn btn-gold" onclick="renovarEmprestimo(${item.id})">Renovar (14 dias)</button>` : '<span style="color:var(--text-dim)">—</span>'}
+                ${item.pode_renovar ? `<button class="btn btn-gold" onclick="renovarEmprestimo(${item.id})">Renovar</button>` : '<span style="color:var(--text-dim)">—</span>'}
             </td>`;
             
         tbody.appendChild(tr);
@@ -377,7 +377,7 @@ function renovarEmprestimo(id) {
         icon: '🔄',
         title: 'Renovar Empréstimo',
         msg: 'Deseja adicionar mais 14 dias ao prazo de entrega atual?',
-        okLabel: 'Renovar (14 dias)',
+        okLabel: 'Renovar',
         async onOk() {
             try {
                 const resposta = await api(`/alugueis/${id}/renovar`, { method: 'PUT' });

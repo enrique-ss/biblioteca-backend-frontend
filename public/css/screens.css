@@ -254,8 +254,11 @@
     overflow: hidden;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    border: 0.5px solid var(--accent);
     box-shadow: var(--shadow-sm);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .digital-card:hover {
@@ -267,7 +270,7 @@
 
 .digital-card-poster {
     width: 100%;
-    height: 100%;
+    height: 80% !important;
     object-fit: cover;
     background: linear-gradient(135deg, var(--surface), var(--bg));
     display: flex;
@@ -275,13 +278,53 @@
     justify-content: center;
     position: relative;
     transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+/* Rodapé do card visível sem hover (20% do card) */
+.digital-card-footer {
+    height: 20%;
+    width: 100%;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-top: 0.5px solid rgba(212, 175, 55, 0.3);
+    transition: opacity 0.3s ease;
+}
+
+.digital-card:hover .digital-card-footer {
+    opacity: 0;
+}
+
+.digital-card-footer-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.digital-card-footer-subtitle {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .digital-card-poster::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, var(--bg) 0%, transparent 100%);
+    background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.7) 60%, transparent 100%);
     opacity: 0;
     transition: all 0.4s ease;
 }
@@ -324,18 +367,33 @@
 */
 .digital-card-content {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 32px 24px;
-    transform: translateY(40px);
+    inset: 0; /* Ocupa o card todo para permitir scroll total se necessário */
+    padding: 20px 16px;
+    padding-top: 60px; /* Deixa a parte superior da capa visível */
+    transform: translateY(20px);
     opacity: 0;
-    transition: all 0.4s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) transparent;
+    pointer-events: none;
 }
+
+.digital-card-content > *:first-child {
+    margin-top: auto;
+}
+
+.digital-card-content::-webkit-scrollbar { width: 4px; }
+.digital-card-content::-webkit-scrollbar-track { background: transparent; }
+.digital-card-content::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
 .digital-card:hover .digital-card-content {
     transform: translateY(0);
     opacity: 1;
+    pointer-events: auto;
 }
 
 /* Quando o usuário passa o mouse, todos os textos ficam brancos para contraste sobre o fundo escuro */
@@ -369,25 +427,36 @@
     font-size: var(--fs-base);
     font-weight: 700;
     color: #ffffff;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     line-height: 1.2;
+    display: block;
+    overflow: visible;
 }
 
 /* Informações do livro (autor, ano, páginas) exibidas abaixo do título */
 .digital-card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 16px;
     text-align: left;
 }
+ 
+/* Informações fixas na base do poster (visíveis sem hover) */
+ 
+ 
 
 .digital-card-meta span {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: #e2e8f0;
     display: block;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.card-sinopse-meta {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    opacity: 0.85;
+    margin-bottom: 8px !important;
 }
 
 /* Destaques em dourado nos rótulos de status dentro do card */
@@ -413,6 +482,18 @@
     color: #fff !important;
 }
 
+.card-sinopse {
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    margin-bottom: 16px;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.card-sinopse strong {
+    color: var(--accent);
+}
+
 .digital-card-actions {
     display: flex;
     gap: 8px;
@@ -421,9 +502,9 @@
 
 .digital-card-actions .btn {
     flex: 1;
-    font-size: 0.7rem;
-    padding: 12px 6px;
-    border-radius: var(--r-md);
+    font-size: 0.65rem;
+    padding: 8px 4px;
+    border-radius: var(--r-sm);
     text-transform: uppercase;
     font-weight: 700;
     letter-spacing: 0.05em;
@@ -545,11 +626,15 @@
     /* Tipografia reduzida nos cards para caber em telas menores */
     .digital-card-title { font-size: 0.85rem; margin-bottom: 4px; }
     .digital-card-meta span { font-size: 0.65rem; }
-    .digital-card-content { padding: 12px 8px; }
+    .digital-card-content { padding: 12px 10px; padding-top: 40px; }
     .digital-card-cover-text { font-size: 0.8rem; }
 
-    /* Metadados em linha simples para economizar espaço vertical no card */
-    .digital-card-meta { gap: 2px; }
+    /* Metadados sem corte no mobile, permitindo scroll interno */
+    .digital-card-meta { gap: 4px; }
+    .digital-card-title { font-size: 0.9rem; -webkit-line-clamp: unset; }
+    .digital-card-meta span { font-size: 0.75rem; white-space: normal; }
+    .card-sinopse { display: block !important; -webkit-line-clamp: unset !important; height: auto !important; }
+    .digital-card-actions .btn { padding: 8px 4px; font-size: 0.65rem; }
 }
 /* Grade de menu em coluna única em telas muito pequenas (menos de 400px) */
 @media (max-width: 400px) {

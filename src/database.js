@@ -109,6 +109,15 @@ const RELATIONS = {
   },
   multas: {
     alugueis: { table: 'alugueis', localKey: 'aluguel_id', foreignKey: 'id' }
+  },
+  amizades: {
+    usuarios: { table: 'usuarios', localKey: 'usuario_remetente', foreignKey: 'id' }
+  },
+  clube_mensagens: {
+    usuarios: { table: 'usuarios', localKey: 'usuario_id', foreignKey: 'id' }
+  },
+  mensagens_diretas: {
+    usuarios: { table: 'usuarios', localKey: 'remetente_id', foreignKey: 'id' }
   }
 };
 

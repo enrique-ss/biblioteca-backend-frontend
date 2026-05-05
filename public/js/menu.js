@@ -91,11 +91,23 @@ function carregarMenu() {
     // Social: Comunidade de leitores (unificado com Usuários)
     itensMenu.push({ 
         icon: '👥', 
-        title: 'Usuários', 
+        title: 'Comunidade', 
         action() { 
             mostrarTela('usuariosScreen'); 
             if (typeof carregarUsuarios === 'function') {
                 carregarUsuarios(1, '');
+            }
+        } 
+    });
+
+    // Clubes de Leitura
+    itensMenu.push({ 
+        icon: '☕', 
+        title: 'Clubes', 
+        action() { 
+            mostrarTela('clubesScreen'); 
+            if (typeof carregarClubes === 'function') {
+                carregarClubes();
             }
         } 
     });

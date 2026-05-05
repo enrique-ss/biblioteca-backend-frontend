@@ -195,7 +195,7 @@ body {
     width: 80px;
     background: rgba(28, 34, 30, 0.95) !important;
     backdrop-filter: blur(32px) saturate(180%) !important; -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-    border: var(--glass-border);
+    border: none;
     border-radius: var(--r-lg);
     z-index: 99999;
     display: flex; flex-direction: column;
@@ -340,7 +340,7 @@ body {
     z-index: 2;
 }
 .side-btn:hover .side-icon { 
-    transform: scale(1.15) rotate(5deg);
+    transform: scale(1.15);
     filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
 }
 .side-text { 
@@ -517,7 +517,6 @@ body {
     justify-content: space-between;
     padding: 0 0 8px;
     margin-bottom: 32px;
-    border-bottom: 0.5px solid var(--accent);
     min-height: 70px;
     gap: 12px;
     flex-wrap: nowrap;
@@ -658,7 +657,7 @@ body {
 }
 
 .theme-toggle-fixed:hover {
-    transform: scale(1.1) rotate(15deg);
+    transform: scale(1.1);
     box-shadow: var(--shadow);
     background: var(--surface-solid);
 }

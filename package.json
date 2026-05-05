@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "setup": "node src/setup.js",
-    "dev": "node src/index.js",
+    "dev": "powershell -Command \"$p = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue; if ($p) { Stop-Process -Id $p.OwningProcess -Force -ErrorAction SilentlyContinue }\" & node src/index.js",
     "start": "node src/index.js"
   },
   "dependencies": {

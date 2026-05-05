@@ -5,13 +5,14 @@ Este documento fornece uma visão profunda da arquitetura, funcionalidades e dec
 ---
 
 ## 1. Visão Geral do Sistema
-O Biblio Verso é uma plataforma de gestão bibliotecária híbrida que une a administração de acervos físicos tradicionais com as demandas da era digital. O sistema foi projetado para ser intuitivo para leitores e robusto para bibliotecários.
+O Biblio Verso é uma plataforma de gestão bibliotecária híbrida que une a administração de acervos físicos tradicionais com as demandas da era digital e a interatividade das redes sociais. O sistema foi projetado para ser intuitivo para leitores e robusto para bibliotecários.
 
 ### Diferenciais Principais:
 - **Hibridismo Operacional**: Funciona 100% offline (SQLite) para desenvolvimento e online (Supabase) para produção.
-- **Experiência Gamificada**: Área infantil com sistema de XP, níveis e recompensas para incentivar a leitura.
-- **Gestão em Tempo Real**: Notificações automáticas de atrasos e pendências via WebSockets.
-- **Design System Premium**: Interface moderna, responsiva e com suporte a temas (Modo Claro/Escuro).
+- **Ecossistema Social**: Perfis personalizados, sistema de amizades e feed de atividades em tempo real.
+- **Experiência Gamificada**: Área infantil (Espaço Literário) com sistema de XP, níveis, corações e recompensas.
+- **Gestão de Acesso Granular**: Controle preciso de restrições (Empréstimos, Social, Digital, Infantil) para cada usuário.
+- **Design System Premium**: Interface ultra-fina com bordas de 0.5px, botões minimalistas e suporte total a temas.
 
 ---
 
@@ -19,11 +20,11 @@ O Biblio Verso é uma plataforma de gestão bibliotecária híbrida que une a ad
 
 ### 2.1 Stack Tecnológica
 - **Servidor**: Node.js com framework Express.js.
-- **Comunicação**: Socket.io para eventos bi-direcionais em tempo real.
+- **Comunicação**: Socket.io para eventos bi-direcionais em tempo real (Notificações, Atualizações).
 - **Bancos de Dados**: 
   - **Local**: `better-sqlite3` (Desenvolvimento/Offline).
   - **Nuvem**: `Supabase` (Produção/Online).
-- **Frontend**: Vanilla JavaScript (ES6+), HTML5 Semântico e CSS3 Moderno (Gradients, Glassmorphism).
+- **Frontend**: Vanilla JavaScript (ES6+), HTML5 Semântico e CSS3 Moderno.
 - **Bibliotecas Visuais**: `GSAP` (Animações), `Three.js` (Efeitos 3D), `Chart.js` (Dashboards).
 
 ### 2.2 Estrutura de Pastas
@@ -38,67 +39,65 @@ O Biblio Verso é uma plataforma de gestão bibliotecária híbrida que une a ad
 
 O sistema utiliza um modelo relacional robusto para garantir a integridade dos dados.
 
-### 3.1 Modelagem e Tabelas
-O sistema utiliza um modelo relacional robusto para garantir a integridade dos dados. Para a versão Online, o esquema completo está disponível em [supabase_schema.sql](supabase_schema.sql).
-
-### Principais Tabelas:
-1.  **`usuarios`**: Armazena credenciais, cargos (Leitor/Bibliotecário) e dados de gamificação (XP, Nível).
-2.  **`livros`**: Catálogo central de títulos físicos.
-3.  **`exemplares`**: Controla cada cópia física individualmente (Relacionamento 1:N com Livros).
-4.  **`alugueis`**: Registra o ciclo de vida de um empréstimo (Ativo/Devolvido).
-5.  **`multas`**: Gestão financeira de atrasos e danos ao acervo.
-6.  **`acervo_digital`**: Catálogo de PDFs e documentos aprovados para download.
+### 3.1 Tabelas e Relacionamentos
+1.  **`usuarios`**: Contém credenciais, cargo, dados de gamificação e o campo `bloqueios` (JSON) para restrições granulares.
+2.  **`livros` e `exemplares`**: Gerencia o acervo físico e o estado individual de cada cópia cópia.
+3.  **`alugueis` e `multas`**: Ciclo de vida de empréstimos e controle financeiro.
+4.  **`acervo_digital`**: Repositório de PDFs com fluxo de curadoria (Aprovação/Rejeição).
+5.  **`amizades`**: Registra conexões entre usuários (Pendentes, Aceitas).
+6.  **`atividades`**: Log de ações relevantes (Aluguéis, Conquistas, Novas Amizades) para o feed social.
 
 ---
 
-## 4. Lógica de Negócio (Controllers)
+## 4. Funcionalidades Principais
 
-### 4.1 Empréstimos e Devoluções (`AluguelController`)
-- **Operações Atômicas**: O sistema garante que um livro só seja marcado como alugado se o registro de empréstimo for criado com sucesso.
-- **Bloqueio Automático**: Usuários com multas pendentes ou que atingiram o limite de livros são impedidos de realizar novos empréstimos.
-- **Cálculo de Multas**: Calculado no momento da devolução com base em timestamps precisos.
+### 4.1 Gestão de Acervo e Circulação
+- **Controle de Exemplares**: Cada livro pode ter múltiplos exemplares com estados distintos (Bom, Danificado, Manutenção).
+- **Devolução Inteligente**: Cálculo automático de multas por atraso ou perda, com registro de observações.
+- **Renovação**: Leitores podem renovar empréstimos online se não houver atrasos pendentes.
 
-### 4.2 Gamificação (`InfantilController`)
-- **Segurança**: Toda a lógica de validação de respostas e entrega de XP acontece no backend. O frontend nunca recebe o gabarito das questões.
-- **Progressão**: Sistema de níveis baseado em acúmulo de experiência, incentivando a recorrência do leitor.
+### 4.2 Espaço Literário (Gamificação)
+- **Aprendizado Adaptativo**: Conteúdo filtrado por faixa etária (3-5, 6-8, 9-12 anos).
+- **Sistema de Quiz**: Validação de respostas via backend para evitar trapaças, com ganho de XP e perda de "corações".
+- **Avatar Dinâmico**: Integração com a foto de perfil real do usuário ou emojis temáticos.
 
-### 4.3 Inteligência e Dados (`StatsController`)
-- **Dashboards Dinâmicos**: Gera rankings de popularidade, tendências de gênero e indicadores de eficiência da biblioteca.
-- **Visão Diferenciada**: Bibliotecários veem dados globais da instituição; leitores veem seu progresso pessoal.
+### 4.3 Sistema Social e Perfis
+- **Perfis "Instagram-style"**: Banner personalizável, biografia, gêneros favoritos e estatísticas de leitura.
+- **Feed de Atividades**: Ações do usuário e de seus amigos são exibidas cronologicamente em um log visual.
+- **Interação**: Envio e aceitação de pedidos de amizade com notificações instantâneas.
 
----
-
-## 5. Segurança e Autenticação
-
-### 5.1 Fluxo de Autenticação
-- **JWT (JSON Web Tokens)**: O servidor emite um token assinado após o login. Este "crachá digital" deve ser enviado em cada requisição protegida.
-- **Bcryptjs**: Senhas são transformadas em hashes irreversíveis antes de serem salvas, garantindo que nem mesmo os administradores tenham acesso à senha real dos usuários.
-
-### 5.2 Middlewares de Proteção
-- **`verificarToken`**: Atua como porteiro, validando a identidade de quem acessa a API.
-- **`verificarBibliotecario`**: Segurança de área restrita, bloqueando funções administrativas para usuários comuns.
+### 4.5 Biblio Chat (Sistema de Mensageria Unificado)
+O sistema de comunicação foi evoluído para um modelo de **Inbox**, centralizando todas as interações:
+- **Navegação em Dois Níveis**: O widget inicia em modo Inbox (Lista de Conversas) e transiciona para o modo Conversa ao selecionar um contato ou clube.
+- **Categorização Automática**: Divisão clara entre "Pessoas" (DMs) e "Clubes" (Chats de Grupo).
+- **Lógica de Contatos**: O sistema identifica automaticamente amigos e participantes de conversas recentes para popular a caixa de entrada.
+- **Sincronização Híbrida**: Combina Socket.io para mensagens instantâneas com um sistema de *polling* inteligente de 5 segundos para garantir que o Inbox esteja sempre atualizado, mesmo em conexões instáveis.
 
 ---
 
-## 6. Interface e Design (Frontend)
+## 5. Design System e UX
 
-O Biblio Verso segue padrões de design modernos para proporcionar uma sensação "Premium":
-- **GSAP**: Utilizado para transições de tela suaves e micro-interações que aumentam o engajamento.
-- **Three.js**: Cria ambientes imersivos no Espaço Infantil, tornando o aprendizado divertido.
-- **SPA (Single Page Application)**: A navegação entre seções é instantânea, sem recarregamento de página, simulando o comportamento de um aplicativo nativo.
-
----
-
-## 7. Monitoramento (`monitor.js`)
-O sistema possui um "vigilante" que roda em segundo plano:
-- Verifica livros atrasados a cada 30 segundos.
-- Alerta sobre novos materiais digitais aguardando aprovação.
-- Notifica os bibliotecários instantaneamente via WebSockets.
+O Biblio Verso adota uma identidade visual de alta precisão:
+- **Bordas Ultra-finas**: Padronização de todas as bordas do sistema em **0.5px solid var(--accent)**.
+- **Botões Minimalistas**: Uso de rótulos curtos e ícones (Ex: "‹" para voltar) para uma interface limpa e profissional.
+- **Visual Excellence**: Uso extensivo de Glassmorphism, gradientes harmônicos e micro-animações GSAP que dão vida à interface.
 
 ---
 
-## 8. Conclusão
-O Biblio Verso não é apenas um software de inventário, mas uma ferramenta educacional e administrativa completa, construída com foco em escalabilidade, segurança e excelência visual.
+## 6. Segurança e Monitoramento
+
+### 6.1 Autenticação e Autorização
+- **JWT + Bcrypt**: Tokens seguros para sessões e hashing de senhas.
+- **Middlewares**: Proteção de rotas por cargo (Bibliotecário vs. Leitor) e verificação de integridade do token.
+
+### 6.2 Notificações em Tempo Real (`monitor.js`)
+- **WebSockets**: Notificações instantâneas para devoluções atrasadas, novos pedidos de amizade e submissões digitais pendentes.
+- **Badge de Alerta**: Contador dinâmico na sidebar que reflete pendências em tempo real.
 
 ---
-*Documentação atualizada em Abril de 2026 por Luiz Enrique.*
+
+## 7. Conclusão
+O Biblio Verso evoluiu de um simples sistema de inventário para um ecossistema digital completo que prioriza a experiência do usuário, a segurança dos dados e a excelência estética.
+
+---
+*Documentação atualizada em Maio de 2026 por Antigravity AI.*

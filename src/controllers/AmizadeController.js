@@ -29,8 +29,8 @@ class AmizadeController {
         .or(`usuario_remetente.eq.${remetenteId},usuario_destinatario.eq.${remetenteId}`);
 
       const existente = (amizades || []).find(a =>
-        (a.usuario_remetente === remetenteId && a.usuario_destinatario === destinatario_id) ||
-        (a.usuario_remetente === destinatario_id && a.usuario_destinatario === remetenteId)
+        (String(a.usuario_remetente) === String(remetenteId) && String(a.usuario_destinatario) === String(destinatario_id)) ||
+        (String(a.usuario_remetente) === String(destinatario_id) && String(a.usuario_destinatario) === String(remetenteId))
       );
 
       if (existente) {
@@ -140,7 +140,7 @@ class AmizadeController {
 
       // Busca os detalhes dos usuários amigos
       const amigosIds = amizades.map(a =>
-        a.usuario_remetente === usuario_id ? a.usuario_destinatario : a.usuario_remetente
+        String(a.usuario_remetente) === String(usuario_id) ? a.usuario_destinatario : a.usuario_remetente
       );
 
       const { data: amigos } = await supabase
@@ -202,8 +202,8 @@ class AmizadeController {
         .or(`usuario_remetente.eq.${remetenteId},usuario_destinatario.eq.${remetenteId}`);
 
       const amizade = (amizades || []).find(a =>
-        (a.usuario_remetente === remetenteId && a.usuario_destinatario === outro_id) ||
-        (a.usuario_remetente === outro_id && a.usuario_destinatario === remetenteId)
+        (String(a.usuario_remetente) === String(remetenteId) && String(a.usuario_destinatario) === String(outro_id)) ||
+        (String(a.usuario_remetente) === String(outro_id) && String(a.usuario_destinatario) === String(remetenteId))
       );
 
       if (!amizade) {

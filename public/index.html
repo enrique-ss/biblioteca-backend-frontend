@@ -268,6 +268,31 @@
             </section>
 
             <!-- 
+                TELA DE CLUBES DE LEITURA (clubesScreen): permite que os usuários
+                participem de grupos focados em livros específicos.
+            -->
+            <section id="clubesScreen" class="screen">
+                <div class="page-header">
+                    <h2 class="page-title"><span>Clubes</span> de Leitura</h2>
+                    <div class="page-actions">
+                        <button class="btn btn-primary" onclick="abrirModal('criarClubeModal')">Criar Clube</button>
+                    </div>
+                </div>
+
+                <div class="search-wrap" style="display:flex; gap:16px; margin-bottom:24px; align-items:center;">
+                    <div class="search-bar" style="flex:1; margin-bottom:0;">
+                        <input type="text" id="buscaClubes" class="form-input" placeholder="Buscar por nome do clube ou livro…" oninput="carregarClubesDebounced(this.value)">
+                    </div>
+                </div>
+
+                <div id="clubesList" class="digital-grid">
+                    <div class="loading-row" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                        <span class="spinner"></span> Carregando clubes...
+                    </div>
+                </div>
+            </section>
+
+            <!-- 
                 TELA SOCIAL (Antiga Tela de Usuários): lista todos os cadastros do sistema em cards.
                 Bibliotecários podem editar nome/email/tipo, bloquear acesso e ver multas.
                 Leitores podem ver perfis, níveis e interagir socialmente.
@@ -390,6 +415,145 @@
                                         Nenhuma atividade registrada recentemente.
                                     </div>
                                 </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA DE PERFIL DE LIVRO (físico ou digital) -->
+            <section id="livroPerfilScreen" class="screen">
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <div class="profile-header-actions" id="livroBtnVoltar">
+                            <button class="btn btn-edit-floating" onclick="history.back()" title="Voltar">←</button>
+                        </div>
+                        <div class="profile-banner" id="livroBanner" style="background: linear-gradient(135deg, var(--accent) 0%, #1a3a2a 100%);"></div>
+                        <div class="profile-header-content">
+                            <div class="profile-avatar-wrap">
+                                <div class="profile-avatar" id="livroAvatar" style="border-radius: var(--r-md); overflow: hidden;">
+                                    <span>📖</span>
+                                </div>
+                            </div>
+        <div class="profile-main-info">
+                                <div>
+                                    <h1 class="profile-name" id="livroPerfilTitulo">Carregando...</h1>
+                                    <div class="profile-meta">
+                                        <span id="livroPerfilAutor"></span>
+                                        <span id="livroPerfilAno"></span>
+                                        <span id="livroPerfilGenero"></span>
+                                    </div>
+                                    <!-- Nota em estrelas -->
+                                    <div id="livroEstrelasDisplay" style="margin-top: 8px; font-size: 1.3rem; color: var(--accent);"></div>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary" id="btnAvaliarLivro" onclick="abrirAvaliacaoModal()" style="display:none;">⭐ Avaliar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-content-grid">
+                        <aside class="profile-sidebar">
+                            <div class="profile-card">
+                                <h3 class="profile-card-title">Sobre o Livro</h3>
+                                <p id="livroPerfilSinopse" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-dim);">Sem sinopse.</p>
+                            </div>
+                            <div class="profile-card">
+                                <h3 class="profile-card-title">Informações</h3>
+                                <div class="profile-stats-grid">
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="livroStatNota">—</span>
+                                        <span class="stat-label">Nota Média</span>
+                                    </div>
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="livroStatAvaliacoes">0</span>
+                                        <span class="stat-label">Avaliações</span>
+                                    </div>
+                                    <div class="stat-box" id="livroStatExemplarBox">
+                                        <span class="stat-value" id="livroStatExemplares">—</span>
+                                        <span class="stat-label">Disponíveis</span>
+                                    </div>
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="livroStatAno">—</span>
+                                        <span class="stat-label">Ano</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <main class="profile-main-area">
+                            <div class="profile-tabs">
+                                <div class="profile-tab active">Avaliações dos Leitores</div>
+                            </div>
+                            <div class="tab-content active">
+                                <div id="livroAvaliacoesList" class="activity-list">
+                                    <div style="text-align:center; padding:40px; opacity:0.6;">Nenhuma avaliação ainda.</div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA DE PERFIL DE CLUBE DE LEITURA -->
+            <section id="clubePerfilScreen" class="screen">
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <div class="profile-header-actions">
+                            <button class="btn btn-edit-floating" onclick="mostrarTela('clubesScreen'); carregarClubes();" title="Voltar">←</button>
+                        </div>
+                        <div class="profile-banner" id="clubeBanner" style="background: linear-gradient(135deg, #1a3a5c 0%, #0d1f33 100%);"></div>
+                        <div class="profile-header-content">
+                            <div class="profile-avatar-wrap">
+                                <div class="profile-avatar" style="font-size: 2rem; display: flex; align-items: center; justify-content: center;">
+                                    <span>📚</span>
+                                </div>
+                            </div>
+                            <div class="profile-main-info">
+                                <div>
+                                    <h1 class="profile-name" id="clubePerfilNome">Carregando...</h1>
+                                    <div class="profile-meta">
+                                        <span id="clubePerfilCriador"></span>
+                                        <span id="clubePerfilLivro"></span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" onclick="abrirChatClubePerfil()">💬 Entrar no Chat</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-content-grid">
+                        <aside class="profile-sidebar">
+                            <div class="profile-card">
+                                <h3 class="profile-card-title">Sobre o Clube</h3>
+                                <p id="clubePerfilDescricao" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-dim);">Sem descrição.</p>
+                            </div>
+                            <div class="profile-card">
+                                <h3 class="profile-card-title">Estatísticas</h3>
+                                <div class="profile-stats-grid">
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="clubeStatMembros">0</span>
+                                        <span class="stat-label">Participantes</span>
+                                    </div>
+                                    <div class="stat-box">
+                                        <span class="stat-value" id="clubeStatMensagens">0</span>
+                                        <span class="stat-label">Mensagens</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="profile-card">
+                                <h3 class="profile-card-title">Participantes Ativos</h3>
+                                <div id="clubeMembrosList" class="social-users-list"></div>
+                            </div>
+                        </aside>
+
+                        <main class="profile-main-area">
+                            <div class="profile-tabs">
+                                <div class="profile-tab active">Livro em Debate</div>
+                            </div>
+                            <div class="tab-content active" id="clubeLivroDebate" style="padding: 20px;">
+                                <div style="text-align:center; opacity:0.6;">Nenhum livro associado a este clube.</div>
                             </div>
                         </main>
                     </div>
@@ -801,7 +965,7 @@
                 </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('devolucaoModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Confirmar Devolução</button>
+                    <button type="submit" class="btn btn-primary">Confirmar</button>
                 </div>
             </form>
         </div>
@@ -873,7 +1037,7 @@
                     style="font-family:'Cinzel',serif;font-size:var(--fs-sm);color:var(--text-dim);"></span>
                 <div class="btn-group" style="margin-top:0;">
                     <button id="btnQuitarMultas" class="btn btn-primary" style="display:none;"
-                        onclick="quitarMultasUsuario()">Quitar todas</button>
+                        onclick="quitarMultasUsuario()">Quitar</button>
                     <button class="btn btn-ghost" onclick="fecharModal('multasModal')">Fechar</button>
                 </div>
             </div>
@@ -967,7 +1131,7 @@
                         </div>
                     </label>
 
-                    <hr style="border:0; border-top:1px solid var(--border); margin:5px 0;">
+
 
                     <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px; background:rgba(248, 81, 73, 0.1); border-radius:8px; border:1px solid var(--danger);">
                         <input type="checkbox" id="blockBan" style="width:20px; height:20px; accent-color:var(--danger);">
@@ -985,7 +1149,7 @@
 
                 <div class="btn-group" style="margin-top:20px;">
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('bloqueiosModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Salvar Restrições</button>
+                    <button type="submit" class="btn btn-danger">Salvar</button>
                 </div>
             </form>
         </div>
@@ -1029,9 +1193,103 @@
 
                 <div class="btn-group" style="margin-top:10px;">
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('editPerfilModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Perfil</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
                 </div>
             </form>
+        </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE AVALIAÇÃO DE LIVRO/DIGITAL -->
+    <div id="avaliacaoModal" class="modal">
+        <div class="modal-backdrop" onclick="fecharModal('avaliacaoModal')"></div>
+        <div class="modal-box" style="max-width: 480px;">
+            <h2 class="modal-title">Avaliar <span>Leitura</span></h2>
+            <p id="avaliacaoSubtitle" class="modal-subtitle">Como foi sua experiência?</p>
+            <form id="avaliacaoForm" novalidate>
+                <input type="hidden" id="avaliacaoItemTipo">
+                <input type="hidden" id="avaliacaoItemId">
+                
+                <div class="form-group" style="text-align: center; margin-bottom: 20px;">
+                    <label class="form-label">Nota</label>
+                    <div class="star-rating" style="font-size: 2rem; color: var(--text-dim); cursor: pointer; display: flex; justify-content: center; gap: 10px;">
+                        <span data-value="1">★</span>
+                        <span data-value="2">★</span>
+                        <span data-value="3">★</span>
+                        <span data-value="4">★</span>
+                        <span data-value="5">★</span>
+                    </div>
+                    <input type="hidden" id="avaliacaoNota" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Comentário (opcional)</label>
+                    <textarea id="avaliacaoComentario" class="form-input" style="min-height: 80px;" placeholder="O que você achou desta obra?"></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-ghost" onclick="fecharModal('avaliacaoModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarAvaliacao" disabled>Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE CRIAR CLUBE DE LEITURA -->
+    <div id="criarClubeModal" class="modal">
+        <div class="modal-backdrop" onclick="fecharModal('criarClubeModal')"></div>
+        <div class="modal-box" style="max-width: 480px;">
+            <h2 class="modal-title">Criar <span>Clube de Leitura</span></h2>
+            <form id="criarClubeForm" novalidate style="margin-top: 15px;">
+                <div class="form-group">
+                    <label class="form-label">Nome do Clube</label>
+                    <input type="text" id="clubeNome" class="form-input" required placeholder="Ex: Fãs de Agatha Christie">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição (opcional)</label>
+                    <textarea id="clubeDescricao" class="form-input" style="min-height: 80px;" placeholder="Qual o foco do clube?"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-ghost" onclick="fecharModal('criarClubeModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BIBLIO CHAT UNIFICADO (COM NAVEGAÇÃO DE INBOX) -->
+    <div id="biblioChatWidget" class="glass-card" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 380px; z-index: 9999; flex-direction: column; overflow: hidden; padding: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3);">
+        <div class="chat-header" style="padding: 12px 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--accent); display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button id="btnChatBack" class="btn btn-ghost btn-sm" onclick="irParaInbox()" style="display: none; padding: 0 8px; font-size: 1.5rem; color: var(--accent); line-height: 1;">‹</button>
+                <h2 id="chatMainTitle" style="font-size: 0.95rem; margin: 0; color: var(--accent); font-family: 'Cinzel', serif;">Biblio Chat</h2>
+            </div>
+            <button class="btn-close" onclick="fecharChatMaster()" style="font-size: 1.4rem; background: transparent; border: none; color: var(--text-dim); cursor: pointer;">×</button>
+        </div>
+        
+        <!-- Lista de Conversas (Inbox) -->
+        <div id="chatInboxView" style="height: 400px; overflow-y: auto; display: flex; flex-direction: column; background: rgba(0,0,0,0.1);">
+            <!-- Categorias (Pílulas de Filtro) -->
+            <div style="padding: 15px; display: flex; gap: 10px; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <button id="btnFilterPrivado" class="btn btn-ghost btn-sm active" onclick="carregarInbox('privado')" style="flex:1; border-radius: var(--r-pill); font-size: 0.7rem; padding: 8px 15px; border-color: rgba(212, 175, 55, 0.2);">👤 Pessoas</button>
+                <button id="btnFilterClube" class="btn btn-ghost btn-sm" onclick="carregarInbox('clube')" style="flex:1; border-radius: var(--r-pill); font-size: 0.7rem; padding: 8px 15px; border-color: rgba(212, 175, 55, 0.2);">👥 Clubes</button>
+            </div>
+            <div id="inboxItemsList" style="padding: 10px;">
+                <!-- Itens da lista -->
+            </div>
+        </div>
+
+        <!-- Visualização da Conversa Ativa -->
+        <div id="chatConversationView" style="display: none; flex-direction: column;">
+            <div id="chatBodyContainer" style="height: 350px; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.15); display: flex; flex-direction: column;">
+                <!-- Mensagens -->
+            </div>
+            <div class="chat-footer" style="display:flex; gap:10px; padding: 12px; border-top: 1px solid rgba(212, 175, 55, 0.1); background: rgba(0,0,0,0.1);">
+                <input type="text" id="inputMasterChat" class="form-input" placeholder="Sua mensagem..." style="flex:1; min-height: 38px; padding: 0 12px; font-size: 0.85rem;" onkeypress="if(event.key === 'Enter') enviarMensagemMaster()">
+                <button class="btn btn-primary" onclick="enviarMensagemMaster()" style="padding: 0 12px; height: 38px;">
+                    <span style="font-size: 1.1rem;">✈️</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1052,6 +1310,7 @@
     <script src="js/animations.js"></script>
     <script src="js/core.js"></script>
     <script src="js/perfil.js"></script>
+    <script src="js/livroPerfil.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/menu.js"></script>
