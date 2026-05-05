@@ -21,7 +21,7 @@
     background: var(--surface);
     box-shadow: var(--shadow-sm);
     margin-bottom: 30px;
-    border: 0.5px solid var(--accent);
+    border: none;
     display: flex;
     flex-direction: column;
 }
@@ -192,7 +192,7 @@
 .profile-card {
     background: var(--surface);
     backdrop-filter: var(--glass);
-    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    border: none;
     border-radius: var(--r-md);
     padding: 24px;
     box-shadow: var(--shadow-sm);

@@ -17,7 +17,7 @@
 /* Cartão individual de KPI */
 .stats-kpi-card {
     background: var(--surface);
-    border: 0.5px solid var(--accent);
+    border: none;
     border-radius: var(--r-md);
     padding: 16px 18px;
     display: flex;
@@ -55,7 +55,7 @@
 /* Cartão individual de gráfico */
 .stats-chart-card {
     background: var(--surface);
-    border: 0.5px solid var(--accent);
+    border: none;
     border-radius: var(--r-lg);
     padding: 18px;
     display: flex;

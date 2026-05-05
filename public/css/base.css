@@ -24,8 +24,8 @@
     --danger: #E63946;
     --success: #2A9D8F;
     --warning: #E9C46A;
-    --border: rgba(212, 175, 55, 0.4);
-    --border-m: rgba(212, 175, 55, 0.8);
+    --border: transparent;
+    --border-m: transparent;
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.08);
     
@@ -38,7 +38,7 @@
 
     /* Efeito de vidro fosco (glassmorphism): desfoca o que está atrás do elemento */
     --glass: blur(24px) saturate(180%);
-    --glass-border: 0.5px solid var(--accent); /* Unificado para cor destaque 0.5px */
+    --glass-border: none;
 
     /* Escala de tamanhos de fonte: do menor (xs) ao maior (xl) */
     --fs-xs: .75rem;
@@ -84,7 +84,7 @@
     background: var(--surface);
     backdrop-filter: var(--glass);
     -webkit-backdrop-filter: var(--glass);
-    border: 0.5px solid var(--accent); /* Cor destaque unificada */
+    border: none;
     border-radius: var(--r-md);
     padding: 24px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -95,8 +95,7 @@
 
 .glass-card:hover {
     transform: translateY(-4px);
-    border-color: var(--accent);
-    box-shadow: var(--shadow);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
 }
 
 /*

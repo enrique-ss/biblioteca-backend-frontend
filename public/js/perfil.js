@@ -26,9 +26,7 @@ async function carregarPerfil(userId = null) {
 
     if (!userToShow) return;
 
-    // Controla visibilidade do botão de edição (apenas para o próprio perfil)
-    const editBtn = document.querySelector('.profile-header-actions');
-    if (editBtn) editBtn.style.display = isSelf ? 'block' : 'none';
+    // Lógica de botões movida para atualizarAcoesSociais(userToShow.id)
 
     // Preenche campos do formulário de edição (se for o próprio perfil)
     if (isSelf && document.getElementById('perfilNome')) {
@@ -375,8 +373,15 @@ async function atualizarAcoesSociais(userId) {
     const container = document.getElementById('socialActionsContainer');
     if (!container) return;
 
+    container.style.display = 'flex';
+    
+    // Se for o próprio perfil, mostra botão de editar
     if (!userId || userId === currentUser?.id) {
-        container.style.display = 'none';
+        container.innerHTML = `
+            <button class="btn btn-primary btn-sm" onclick="abrirModal('editPerfilModal')" title="Editar Perfil">
+                ⚙️ Editar Perfil
+            </button>
+        `;
         return;
     }
 
@@ -387,16 +392,16 @@ async function atualizarAcoesSociais(userId) {
         const { status, id: amizadeId } = await api(`/amizades/status/${userId}`);
         const userName = document.getElementById('userProfileName')?.textContent || 'Usuário';
         
-        let actionsHtml = `<button class="btn-edit-floating" onclick="abrirChatPrivado('${userId}', '${esc(userName)}')" title="Conversar" style="background: var(--accent); color: #000;">💬</button>`;
+        let actionsHtml = `<button class="btn btn-primary btn-sm" onclick="abrirChatPrivado('${userId}', '${esc(userName)}')" title="Conversar">💬 Chat</button>`;
 
         if (status === 'nenhum') {
-            actionsHtml += `<button class="btn-edit-floating" onclick="enviarPedidoAmizade('${userId}')" title="Adicionar Amigo">➕</button>`;
+            actionsHtml += `<button class="btn btn-ghost btn-sm" onclick="enviarPedidoAmizade('${userId}')" title="Adicionar Amigo">➕ Adicionar</button>`;
         } else if (status === 'enviado') {
-            actionsHtml += `<button class="btn-edit-floating" disabled title="Pedido Enviado" style="opacity: 0.6; cursor: not-allowed;">⏳</button>`;
+            actionsHtml += `<button class="btn btn-ghost btn-sm" disabled title="Pedido Enviado" style="opacity: 0.6; cursor: not-allowed;">⏳ Pendente</button>`;
         } else if (status === 'recebido') {
-            actionsHtml += `<button class="btn-edit-floating" onclick="aceitarPedidoAmizade('${amizadeId}', '${userId}')" title="Aceitar Pedido" style="background: var(--success); border-color: transparent;">✅</button>`;
+            actionsHtml += `<button class="btn btn-success btn-sm" onclick="aceitarPedidoAmizade('${amizadeId}', '${userId}')" title="Aceitar Pedido">✅ Aceitar</button>`;
         } else if (status === 'amigos') {
-            actionsHtml += `<button class="btn-edit-floating" onclick="removerAmizade('${amizadeId}', '${userId}')" title="Remover Amizade" style="background: rgba(220, 53, 69, 0.2); border-color: rgba(220, 53, 69, 0.4);">🗑️</button>`;
+            actionsHtml += `<button class="btn btn-danger btn-sm" onclick="removerAmizade('${amizadeId}', '${userId}')" title="Remover Amizade">🗑️ Remover</button>`;
         }
         
         container.innerHTML = `<div style="display:flex; gap:10px; justify-content:center;">${actionsHtml}</div>`;

@@ -268,7 +268,7 @@
 .modal.active { display: flex; }
 .modal-backdrop { position: absolute; inset: 0; background: rgba(5,6,5,.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .modal-box {
-    position: relative; background: var(--bg); border: 0.5px solid var(--accent);
+    position: relative; background: var(--bg); border: none;
     border-radius: var(--r-xl); padding: 36px; width: 100%; max-width: 480px;
     max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -344,7 +344,7 @@
     padding: 16px 20px;
     background: var(--surface);
     backdrop-filter: blur(15px);
-    border: 0.5px solid var(--accent);
+    border: none;
     border-radius: 12px;
     color: var(--text);
     display: flex;
