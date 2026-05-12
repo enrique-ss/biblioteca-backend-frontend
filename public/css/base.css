@@ -14,43 +14,42 @@
     --shadow: sombra aplicada em elementos flutuantes
 */
 :root {
-    --bg: #0A0C0B;
-    --surface: rgba(28, 34, 30, 0.45);
-    --surface-solid: #1c221e;
-    --text: #FFFFFF;
-    --accent: #D4AF37;
-    --accent-bg: rgba(212, 175, 55, 0.08);
+    --bg: #0d0d0e;
+    --surface: rgba(255, 255, 255, 0.05);
+    --surface-solid: #121212;
+    --text: #ffffff;
+    --text-dim: #a1a1a6;
+    --accent: #ffffff;
+    --accent-gold: #e2b857;
+    --accent-bg: rgba(255, 255, 255, 0.08);
     --surface-2: rgba(255, 255, 255, 0.03);
-    --danger: #E63946;
-    --success: #2A9D8F;
-    --warning: #E9C46A;
-    --border: none;
-    --border-m: none;
-    --shadow: 0 6px 24px rgba(28, 52, 40, 0.12);
-    --shadow-sm: 0 2px 8px rgba(28, 52, 40, 0.08);
-    --shadow-md: 0 4px 16px rgba(28, 52, 40, 0.1);
-    --shadow-lg: 0 6px 24px rgba(28, 52, 40, 0.12);
-    --shadow-xl: 0 8px 32px rgba(28, 52, 40, 0.15);
+    --danger: #ff453a;
+    --success: #32d74b;
+    --warning: #ffd60a;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-m: rgba(255, 255, 255, 0.15);
+    --shadow: 0 4px 20px rgba(255, 255, 255, 0.08);
+    --shadow-sm: 0 2px 10px rgba(255, 255, 255, 0.05);
+    --shadow-md: 0 8px 30px rgba(255, 255, 255, 0.08);
+    --shadow-lg: 0 12px 40px rgba(255, 255, 255, 0.1);
+    --shadow-xl: 0 20px 60px rgba(255, 255, 255, 0.12);
     
-    /* Arredondamento das bordas: --r-sm (pequeno) até --r-pill (oval/pílula) */
     --r-sm: 8px;
-    --r-md: 20px;
-    --r-lg: 32px;
-    --r-xl: 48px;
+    --r-md: 16px;
+    --r-lg: 24px;
+    --r-xl: 32px;
     --r-pill: 999px;
 
-    /* Efeito de vidro fosco (glassmorphism): desfoca o que está atrás do elemento */
-    --glass: blur(24px) saturate(180%);
-    --glass-border: none;
+    --glass: blur(20px) saturate(150%);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
 
-    /* Escala de tamanhos de fonte: do menor (xs) ao maior (xl) */
     --fs-xs: .75rem;
     --fs-sm: .88rem;
-    --fs-base: 1.05rem;
-    --fs-md: 1.25rem;
-    --fs-lg: 1.6rem;
-    --fs-xl: 2.2rem;
-    --lh: 1.6;
+    --fs-base: 1rem;
+    --fs-md: 1.15rem;
+    --fs-lg: 1.5rem;
+    --fs-xl: 2rem;
+    --lh: 1.5;
 }
 
 /* 
@@ -87,7 +86,7 @@
     background: var(--surface);
     backdrop-filter: var(--glass);
     -webkit-backdrop-filter: var(--glass);
-    border: none;
+    border: var(--glass-border);
     border-radius: var(--r-md);
     padding: 24px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -108,24 +107,25 @@
     O fundo vira verde claro e o dourado vira verde escuro.
 */
 [data-theme="light"] {
-    --bg: #E8F5E9;
-    --surface: rgba(248, 252, 249, 0.8);
-    --surface-solid: #F8FBF9;
-    --text: #1B3A2A;
-    --text-dim: #4A6749;
-    --accent: #2D6A4F;
-    --accent-bg: rgba(45, 106, 79, 0.15);
-    --danger: #D62828;
-    --success: #1B4332;
-    --warning: #F4A261;
-    --border: rgba(45, 106, 79, 0.35);
-    --border-m: rgba(45, 106, 79, 0.55);
-    --shadow: 0 6px 24px rgba(28, 52, 40, 0.12);
-    --shadow-sm: 0 2px 8px rgba(28, 52, 40, 0.08);
-    --shadow-md: 0 4px 16px rgba(28, 52, 40, 0.1);
-    --shadow-lg: 0 6px 24px rgba(28, 52, 40, 0.12);
-    --shadow-xl: 0 8px 32px rgba(28, 52, 40, 0.15);
-    --glass-border: 0.5px solid var(--accent); /* Sincronizado com padrão 0.5px */
+    --bg: #f5f5f7;
+    --surface: rgba(0, 0, 0, 0.02);
+    --surface-solid: #ffffff;
+    --text: #1d1d1f;
+    --text-dim: #86868b;
+    --accent: #1d1d1f;
+    --accent-gold: #a67c00;
+    --accent-bg: rgba(0, 0, 0, 0.05);
+    --danger: #ff3b30;
+    --success: #34c759;
+    --warning: #ff9500;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-m: rgba(0, 0, 0, 0.12);
+    --shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    --shadow-sm: 0 3px 10px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 15px 45px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 25px 60px rgba(0, 0, 0, 0.18);
+    --glass-border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Reset global: remove margens e paddings padrão do navegador para ter controle total do layout */
@@ -157,14 +157,6 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border-m); border-radius: var(--r-pill); border: 0.5px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* Canvas 3D do fundo: fica fixo atrás de todo o conteúdo, decorativo, não recebe cliques */
-.three-bg {
-    position: fixed;
-    top: 0; left: 0; width: 100% !important; height: 100% !important;
-    z-index: 0; pointer-events: none;
-    opacity: 0.5;
-    filter: blur(1.5px);
-}
 
 /* Invólucro principal do app: empurra o conteúdo para a direita para dar espaço à sidebar */
 .app-wrapper {
@@ -198,8 +190,9 @@ body {
     position: fixed;
     top: 20px; left: 20px; bottom: 20px;
     width: 80px;
-    background: rgba(28, 34, 30, 0.95) !important;
-    backdrop-filter: blur(32px) saturate(180%) !important; -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+    background: var(--surface-solid) !important;
+    backdrop-filter: var(--glass) !important;
+    -webkit-backdrop-filter: var(--glass) !important;
     border: none;
     border-radius: var(--r-lg);
     z-index: 99999;
@@ -240,7 +233,7 @@ body {
 .brand-logo-img {
     height: 40px;
     width: 40px;
-    background-color: var(--accent);
+    background-color: var(--accent-gold);
     -webkit-mask-image: url('../resources/logo.png');
     mask-image: url('../resources/logo.png');
     -webkit-mask-size: contain;
@@ -313,22 +306,26 @@ body {
     top: 0; left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-bg), transparent);
     transition: left 0.5s ease;
 }
+/* Botão fantasma: escuro e discreto, vira dourado ao passar o mouse */
+.btn-ghost    { background: transparent; color: var(--text); border: var(--glass-border); }
+.btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
+
 .side-btn:hover::before {
     left: 100%;
 }
 .side-btn:hover { 
     background: var(--accent-bg); 
-    color: var(--accent);
+    color: var(--accent-gold);
     transform: translateX(2px);
 }
 /* Estado ativo: marca a tela atual com fundo dourado e barra dourada na direita */
 .side-btn.active {
     background: var(--accent-bg) !important;
-    color: var(--accent) !important;
-    border-right: 0.5px solid var(--accent) !important; /* Padronizado para 0.5px */
+    color: var(--accent-gold) !important;
+    border-right: 2px solid var(--accent-gold) !important;
     font-weight: 800;
 }
 /* Remove o efeito de brilho no botão que já está ativo */
@@ -345,8 +342,7 @@ body {
     z-index: 2;
 }
 .side-btn:hover .side-icon { 
-    transform: scale(1.15);
-    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
+    transform: scale(1.1);
 }
 .side-text { 
     font-family: 'Cinzel', serif; 
@@ -367,15 +363,23 @@ body {
 /* Área inferior da sidebar: espaço para os botões de perfil e sair */
 .sidebar-bottom { padding-bottom: 24px; padding-top: 16px; flex-shrink: 0; }
 
-/* Sidebar adaptada para o tema claro: fundo verde claro em vez de escuro */
+/* Variações de cor do badge conforme o significado */
+.badge-success { background: var(--success) !important; color: #fff !important; }
+.badge-info    { background: var(--accent-gold) !important; color: #fff !important; }
+.badge-danger  { background: var(--danger) !important; color: #fff !important; }
+.badge-warning { background: var(--warning) !important; color: #000 !important; }
+.badge-gold    { background: var(--accent-gold) !important; color: #000 !important; }
+.badge-usuario { background: var(--surface-solid) !important; color: var(--text) !important; border: var(--glass-border) !important; }
+
+/* Sidebar adaptada para o tema claro: segue o padrão minimalista */
 [data-theme="light"] .sidebar {
-    background: rgba(232, 245, 233, 0.95) !important;
-    backdrop-filter: blur(32px) saturate(180%) !important; 
-    -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+    background: var(--surface-solid) !important;
+    backdrop-filter: var(--glass) !important; 
+    -webkit-backdrop-filter: var(--glass) !important;
 }
 [data-theme="light"] .sidebar:hover {
-    backdrop-filter: blur(32px) saturate(180%) !important; 
-    -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+    backdrop-filter: var(--glass) !important; 
+    -webkit-backdrop-filter: var(--glass) !important;
 }
 
 
@@ -501,7 +505,7 @@ body {
     A classe .hidden oculta elementos completamente, sem possibilidade de forçar exibição.
 */
 .screen { display: none; }
-.screen.active { display: block; animation: screenIn .32s cubic-bezier(.22,1,.36,1); }
+.screen.active { display: block; }
 .hidden { display: none !important; }
 /* Animação de entrada: a tela sobe levemente ao aparecer */
 @keyframes screenIn {
@@ -554,30 +558,8 @@ body {
 .lesson-title-modern,
 .brand-logo-full,
 .text-glow { 
-    color: var(--accent); 
-    font-weight: 800;
-    text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); /* Glow Dourado */
-}
-
-/* Remove glow do menuUserName especificamente */
-#menuUserName {
-    color: var(--text) !important;
-    font-weight: 700 !important;
-    text-shadow: none !important;
-}
-
-[data-theme="light"] .page-title span:not(#menuUserName),
-[data-theme="light"] .page-title b,
-[data-theme="light"] .section-label span,
-[data-theme="light"] .modal-title span,
-[data-theme="light"] .profile-card-title span,
-[data-theme="light"] .profile-name span,
-[data-theme="light"] .auth-title span,
-[data-theme="light"] .age-title.infantil,
-[data-theme="light"] .lesson-title-modern,
-[data-theme="light"] .brand-logo-full,
-[data-theme="light"] .text-glow {
-    text-shadow: 0 0 15px rgba(45, 106, 79, 0.2); /* Glow Verde para tema claro */
+    color: var(--accent-gold); 
+    font-weight: 700;
 }
 
 /* Garante que menuUserName não tenha glow em nenhum tema */
@@ -708,6 +690,10 @@ body {
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 99999;
         touch-action: pan-y;
+    }
+
+    .three-bg {
+        display: none;
     }
 
     .sidebar.mobile-open {

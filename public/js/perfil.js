@@ -505,18 +505,17 @@ async function carregarClubes(busca = '') {
                 <div class="digital-card-footer">
                     <h4 class="digital-card-footer-title">${esc(c.nome)}</h4>
                     <p class="digital-card-footer-subtitle">Criado por: ${esc(c.usuario_nome)}</p>
-                </div>
-                <div class="digital-card-content">
-                    <h3 class="digital-card-title">${esc(c.nome)}</h3>
                     
-                    <div class="digital-card-meta">
-                        <span><strong>👑 Criador:</strong> ${esc(c.usuario_nome)}</span>
-                        ${c.livro_titulo ? `<span><strong>📖 Livro:</strong> ${esc(c.livro_titulo)}</span>` : '<span><strong>📖 Livro:</strong> Leitura livre</span>'}
-                        <span class="card-sinopse-meta"><strong>Descrição:</strong> ${esc(c.descricao || 'Sem descrição definida.')}</span>
-                    </div>
+                    <div class="digital-card-content">
+                        <div class="digital-card-meta">
+                            <span><strong>👑 Criador:</strong> ${esc(c.usuario_nome)}</span>
+                            ${c.livro_titulo ? `<span><strong>📖 Livro:</strong> ${esc(c.livro_titulo)}</span>` : '<span><strong>📖 Livro:</strong> Leitura livre</span>'}
+                            <span class="card-sinopse-meta"><strong>Descrição:</strong> ${esc(c.descricao || 'Sem descrição definida.')}</span>
+                        </div>
 
-                    <div class="digital-card-actions" style="margin-top:auto; padding-top:10px; display:flex; gap:8px;">
-                        <button class="btn btn-primary btn-block" onclick="event.stopPropagation(); abrirChatClube(${c.id}, '${esc(c.nome)}')">💬 Chat</button>
+                        <div class="digital-card-actions" style="margin-top:auto; padding-top:10px; display:flex; gap:8px;">
+                            <button class="btn btn-primary btn-block" onclick="event.stopPropagation(); abrirChatClube(${c.id}, '${esc(c.nome)}')">💬 Chat</button>
+                        </div>
                     </div>
                 </div>
             </div>

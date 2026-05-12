@@ -92,14 +92,14 @@
     width: 44px; height: 44px;
     display: flex; align-items: center; justify-content: center;
     border-radius: 12px;
-    background: var(--accent-bg);
-    border: none;
+    background: var(--surface);
+    border: var(--glass-border);
     font-size: 1.3rem;
     flex-shrink: 0;
 }
-.notification-icon-badge.danger { color: var(--danger); border-color: var(--danger); background: rgba(230, 57, 70, 0.1); }
-.notification-icon-badge.warning { color: var(--warning); border-color: var(--warning); background: rgba(233, 196, 106, 0.1); }
-.notification-icon-badge.success { color: var(--success); border-color: var(--success); background: rgba(42, 157, 143, 0.1); }
+.notification-icon-badge.danger { color: var(--danger); }
+.notification-icon-badge.warning { color: var(--warning); }
+.notification-icon-badge.success { color: var(--success); }
 
 .notification-title {
     font-family: 'Cinzel', serif;
@@ -283,41 +283,61 @@
 
 /* Rodapé do card visível sem hover (20% do card) */
 .digital-card-footer {
-    height: 20%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 28%;
     width: 100%;
-    padding: 8px 15px;
-    background: rgba(255, 255, 255, 0.03);
+    padding: 16px;
+    background: var(--surface-solid);
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    border-top: 0.5px solid rgba(212, 175, 55, 0.3);
-    transition: opacity 0.3s ease;
+    gap: 12px; /* Espaçamento equidistante */
+    border-top: 1px solid var(--border);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    overflow: hidden;
 }
 
 .digital-card:hover .digital-card-footer {
-    opacity: 0;
+    height: 100%;
+    background: var(--surface-solid);
+    padding-top: 40px;
+    overflow-y: auto;
 }
 
 .digital-card-footer-title {
     font-family: 'Cinzel', serif;
-    font-size: 0.8rem;
+    font-size: 1.1rem; /* Tamanho padrão levemente maior */
     font-weight: 700;
-    color: var(--accent);
+    color: var(--accent-gold) !important; /* Destaque permanente */
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .digital-card-footer-subtitle {
-    font-size: 0.65rem;
+    font-size: 0.9rem; /* Tamanho padrão */
     color: var(--text-dim);
-    margin-top: 2px;
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+.digital-card:hover .digital-card-footer-subtitle {
+    display: none;
+}
+
+.digital-card:hover .digital-card-footer-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .digital-card-poster::after {
@@ -365,43 +385,49 @@
     Painel de informações do card: fica escondido no rodapé do cartão
     e desliza para cima ao passar o mouse, revelando título, autor e botões.
 */
+/* O conteúdo agora vive dentro do footer que expande */
 .digital-card-content {
-    position: absolute;
-    inset: 0; /* Ocupa o card todo para permitir scroll total se necessário */
-    padding: 20px 16px;
-    padding-top: 60px; /* Deixa a parte superior da capa visível */
-    transform: translateY(20px);
+    display: none;
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 5;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent) transparent;
+    transition: opacity 0.4s ease;
     pointer-events: none;
+    margin-top: 15px;
 }
-
-.digital-card-content > *:first-child {
-    margin-top: auto;
-}
-
-.digital-card-content::-webkit-scrollbar { width: 4px; }
-.digital-card-content::-webkit-scrollbar-track { background: transparent; }
-.digital-card-content::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
 .digital-card:hover .digital-card-content {
-    transform: translateY(0);
+    display: block;
     opacity: 1;
     pointer-events: auto;
 }
 
-/* Quando o usuário passa o mouse, todos os textos ficam brancos para contraste sobre o fundo escuro */
+/* Quando o usuário passa o mouse, os textos seguem a cor do tema, EXCETO o título que já é gold */
+.digital-card:hover .digital-card-footer-subtitle,
 .digital-card:hover .digital-card-content p,
 .digital-card:hover .digital-card-content span:not(.badge),
-.digital-card:hover .digital-card-content h3,
 .digital-card:hover .digital-card-content button:not(.badge) {
-    color: #ffffff !important;
+    color: var(--text) !important;
+}
+
+.digital-card-meta strong {
+    color: var(--accent-gold) !important;
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.publisher-link {
+    cursor: pointer;
+    color: var(--accent-gold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.publisher-link:hover {
+    color: var(--text);
+    text-decoration: none;
 }
 
 /* Garante que badge e texto de quantidade fiquem alinhados horizontalmente */
@@ -433,30 +459,26 @@
     overflow: visible;
 }
 
-/* Informações do livro (autor, ano, páginas) exibidas abaixo do título */
 .digital-card-meta {
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espaçamento padrão entre linhas de meta */
 }
- 
-/* Informações fixas na base do poster (visíveis sem hover) */
- 
- 
 
 .digital-card-meta span {
-    font-size: 0.85rem;
-    color: #e2e8f0;
-    display: block;
-    margin-bottom: 6px;
+    font-size: 0.9rem; /* Tamanho padrão */
+    color: var(--text);
+    margin: 0;
     line-height: 1.4;
 }
 
 .card-sinopse-meta {
     display: -webkit-box !important;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    opacity: 0.85;
-    margin-bottom: 8px !important;
+    opacity: 0.9;
 }
 
 /* Destaques em dourado nos rótulos de status dentro do card */

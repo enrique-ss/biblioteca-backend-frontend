@@ -104,29 +104,28 @@ async function carregarLivros(pagina = 1) {
                 <div class="digital-card-footer">
                     <h4 class="digital-card-footer-title">${esc(livro.titulo)}</h4>
                     <p class="digital-card-footer-subtitle">${esc(livro.autor)}</p>
-                </div>
-                <div class="digital-card-content">
-                    <h3 class="digital-card-title">${esc(livro.titulo)}</h3>
                     
-                    <div class="digital-card-meta">
-                        <span><strong>Autor:</strong> ${esc(livro.autor)}</span>
-                        ${livro.sinopse ? `<span class="card-sinopse-meta"><strong>Sinopse:</strong> ${esc(livro.sinopse)}</span>` : ''}
-                        <span><strong>Gênero:</strong> ${esc(livro.genero)}</span>
-                        <span><strong>Localização:</strong> Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
-                    </div>
+                    <div class="digital-card-content">
+                        <div class="digital-card-meta">
+                            <span><strong>Autor:</strong> ${esc(livro.autor)}</span>
+                            ${livro.sinopse ? `<span class="card-sinopse-meta"><strong>Sinopse:</strong> ${esc(livro.sinopse)}</span>` : ''}
+                            <span><strong>Gênero:</strong> ${esc(livro.genero)}</span>
+                            <span><strong>Localização:</strong> Corredor ${esc(livro.corredor ?? '—')} • Prat. ${esc(livro.prateleira ?? '—')}</span>
+                        </div>
 
-                    <div style="margin-bottom:16px; padding-top:12px;">
-                        <span class="badge ${livro.exemplares_disponiveis > 0 ? 'badge-success' : 'badge-danger'}">${livro.exemplares_disponiveis > 0 ? 'Disponível' : 'Indisponível'}</span>
-                        <span style="font-size:12px; color: var(--text); opacity: 0.7; float:right; margin-top:2px;">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)} unid.</span>
-                    </div>
+                        <div style="margin-bottom:16px; padding-top:12px;">
+                            <span class="badge ${livro.exemplares_disponiveis > 0 ? 'badge-success' : 'badge-danger'}">${livro.exemplares_disponiveis > 0 ? 'Disponível' : 'Indisponível'}</span>
+                            <span style="font-size:12px; color: var(--text); opacity: 0.7; float:right; margin-top:2px;">${esc(livro.exemplares_disponiveis)}/${esc(livro.exemplares)} unid.</span>
+                        </div>
 
-                    <div class="digital-card-actions">
-                        <button class="btn btn-ghost btn-icon-text" title="Ver Perfil" onclick="abrirPerfilLivro(${livro.id}, 'fisico')"><span>📖</span></button>
-                        ${ehBibliotecario ? `
-                        <button class="btn btn-icon-text" title="Editar" onclick='editarLivro(${JSON.stringify(livro)})'><span>✏️</span></button>
-                        <button class="btn btn-icon-text" title="Exemplares" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')"><span>📚</span></button>
-                        <button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerLivro(${livro.id}, '${esc(livro.titulo)}')"><span>🗑️</span></button>
-                        ` : ''}
+                        <div class="digital-card-actions">
+                            <button class="btn btn-ghost btn-icon-text" title="Ver Perfil" onclick="abrirPerfilLivro(${livro.id}, 'fisico')"><span>📖</span></button>
+                            ${ehBibliotecario ? `
+                            <button class="btn btn-icon-text" title="Editar" onclick='editarLivro(${JSON.stringify(livro)})'><span>✏️</span></button>
+                            <button class="btn btn-icon-text" title="Exemplares" onclick="verExemplares(${livro.id},'${esc(livro.titulo)}')"><span>📚</span></button>
+                            <button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerLivro(${livro.id}, '${esc(livro.titulo)}')"><span>🗑️</span></button>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             `;

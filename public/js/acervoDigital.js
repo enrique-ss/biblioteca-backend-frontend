@@ -101,24 +101,20 @@ async function carregarAcervoDigital(pagina = 1) {
                 <div class="digital-card-footer">
                     <h4 class="digital-card-footer-title">${esc(item.titulo)}</h4>
                     <p class="digital-card-footer-subtitle">${esc(item.autor)}</p>
-                </div>
-                <div class="digital-card-content">
-                    <h3 class="digital-card-title">${esc(item.titulo)}</h3>
-                    <div class="digital-card-meta">
-                        <span><strong>Autor:</strong> ${esc(item.autor)}</span>
-                        ${item.sinopse ? `<span class="card-sinopse-meta"><strong>Sinopse:</strong> ${esc(item.sinopse)}</span>` : ''}
-                        <span><strong>Gênero:</strong> ${esc(item.categoria)}</span>
-                        <span><strong>Ano:</strong> ${esc(item.ano)}</span>
-                        <span><strong>Páginas:</strong> ${esc(item.paginas)}</span>
-                        <span><strong>Tamanho:</strong> ${esc(item.tamanho_arquivo)}</span>
-                    </div>
-                    <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 10px; padding-top: 8px;">
-                        👤 <strong>Publicado por:</strong> ${esc(item.usuario_nome || 'Bibliotecário')}
-                    </p>
-                    <div class="digital-card-actions">
-                        <button class="btn btn-ghost btn-icon-text" title="Ler / Baixar" onclick="registrarLeituraPDF(${item.id}, '${esc(item.url_arquivo)}', '${esc(item.titulo)}')"><span>Ler</span></button>
-                        <button class="btn btn-ghost btn-icon-text" title="Ver Perfil" onclick="abrirPerfilLivro(${item.id}, 'digital')"><span>📄</span></button>
-                        ${ehBibliotecario ? `<button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerDocumentoDigital(${item.id}, '${esc(item.titulo)}')"><span>🗑️</span></button>` : ''}
+                    
+                    <div class="digital-card-content">
+                        <div class="digital-card-meta">
+                            <span><strong>Autor:</strong> ${esc(item.autor)}</span>
+                            ${item.sinopse ? `<span class="card-sinopse-meta"><strong>Sinopse:</strong> ${esc(item.sinopse)}</span>` : ''}
+                            <span><strong>Gênero:</strong> ${esc(item.categoria)}</span>
+                            <span><strong>Ano:</strong> ${esc(item.ano)}</span>
+                            <span><strong>Páginas:</strong> ${esc(item.paginas)}</span>
+                            <span><strong>Publicador:</strong> <span class="publisher-link" onclick="event.stopPropagation(); verPerfilUsuario('${item.usuario_id || ''}')">${esc(item.usuario_nome || 'Bibliotecário')}</span></span>
+                        </div>
+                        <div class="digital-card-actions">
+                            <button class="btn btn-ghost btn-icon-text" title="Baixar PDF" onclick="registrarLeituraPDF(${item.id}, '${esc(item.url_arquivo)}', '${esc(item.titulo)}')"><span>⬇️</span></button>
+                            ${ehBibliotecario ? `<button class="btn btn-danger btn-icon-text" title="Excluir" onclick="removerDocumentoDigital(${item.id}, '${esc(item.titulo)}')"><span>🗑️</span></button>` : ''}
+                        </div>
                     </div>
                 </div>
             `;

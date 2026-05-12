@@ -26,7 +26,6 @@
 
 <body>
     <!-- Fundo animado com emojis -->
-    <div id="threeCanvas" class="three-bg"></div>
     
     <div class="app-wrapper">
         <!-- Overlay escuro que aparece ao abrir o menu no mobile -->
@@ -1251,8 +1250,8 @@
     </div>
 
     <!-- BIBLIO CHAT UNIFICADO (COM NAVEGAÇÃO DE INBOX) -->
-    <div id="biblioChatWidget" class="glass-card" style="display: none; position: fixed; bottom: 20px; right: 20px; width: 380px; z-index: 9999; flex-direction: column; overflow: hidden; padding: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow); border: none;">
-        <div class="chat-header" style="padding: 12px 15px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+    <div id="biblioChatWidget" class="glass-card">
+        <div class="chat-header">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button id="btnChatBack" class="btn btn-ghost btn-sm" onclick="irParaInbox()" style="display: none; padding: 0 8px; font-size: 1.5rem; color: var(--accent); line-height: 1;">‹</button>
                 <h2 id="chatMainTitle" style="font-size: 0.95rem; margin: 0; color: var(--accent); font-family: 'Cinzel', serif;">Biblio Chat</h2>
@@ -1261,9 +1260,9 @@
         </div>
         
         <!-- Lista de Conversas (Inbox) -->
-        <div id="chatInboxView" style="height: 400px; overflow-y: auto; display: flex; flex-direction: column; background: rgba(0,0,0,0.1);">
+        <div id="chatInboxView">
             <!-- Categorias (Pílulas de Filtro) -->
-            <div style="padding: 15px; display: flex; gap: 10px; background: rgba(255,255,255,0.02);">
+            <div class="chat-filter-row">
                 <button id="btnFilterPrivado" class="btn btn-ghost btn-sm active" onclick="carregarInbox('privado')" style="flex:1; border-radius: var(--r-pill); font-size: 0.7rem; padding: 8px 15px; border: none;">Pessoas</button>
                 <button id="btnFilterClube" class="btn btn-ghost btn-sm" onclick="carregarInbox('clube')" style="flex:1; border-radius: var(--r-pill); font-size: 0.7rem; padding: 8px 15px; border: none;">Clubes</button>
             </div>
@@ -1274,10 +1273,10 @@
 
         <!-- Visualização da Conversa Ativa -->
         <div id="chatConversationView" style="display: none; flex-direction: column;">
-            <div id="chatBodyContainer" style="height: 350px; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.15); display: flex; flex-direction: column;">
+            <div id="chatBodyContainer">
                 <!-- Mensagens -->
             </div>
-            <div class="chat-footer" style="display:flex; gap:10px; padding: 12px; background: rgba(255,255,255,0.02);">
+            <div class="chat-footer">
                 <input type="text" id="inputMasterChat" class="form-input" placeholder="Sua mensagem..." style="flex:1; min-height: 38px; padding: 0 12px; font-size: 0.85rem;" onkeypress="if(event.key === 'Enter') enviarMensagemMaster()">
                 <button class="btn btn-primary" onclick="enviarMensagemMaster()" style="padding: 0 12px; height: 38px;">
                     <span style="font-size: 1.1rem;">➤</span>

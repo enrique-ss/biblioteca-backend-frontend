@@ -90,8 +90,8 @@
 .btn-danger   { background: var(--danger); color: white; border: none; }
 .btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
-/* Botão fantasma: escuro e discreto, vira dourado ao passar o mouse */
-.btn-ghost    { background: rgba(28, 34, 30, 0.9); color: white; border: none; }
+/* Botão fantasma: discreto, vira destaque ao passar o mouse */
+.btn-ghost    { background: rgba(255, 255, 255, 0.05); color: var(--text); border: var(--glass-border); }
 .btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
 
 .btn-gold     { background: var(--accent); color: var(--bg); }
@@ -250,13 +250,6 @@
     justify-content: center;
 }
 
-/* Variações de cor do badge conforme o significado: verde=ok, dourado=info, vermelho=erro, amarelo=aviso */
-.badge-success { background: #2A9D8F !important; color: #FFFFFF !important; }
-.badge-info    { background: #D4AF37 !important; color: #FFFFFF !important; }
-.badge-danger  { background: #E63946 !important; color: #FFFFFF !important; }
-.badge-warning { background: #E9C46A !important; color: #0A0C0B !important; }
-.badge-gold    { background: #D4AF37 !important; color: #0A0C0B !important; }
-.badge-usuario { background: #646464 !important; color: #FFFFFF !important; }
 
 /*
     MODAIS: janelas flutuantes que aparecem sobre o conteúdo.
@@ -311,6 +304,18 @@
     .pg-btn: botão de página; .pg-btn.active: página atual em destaque dourado.
 */
 .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 0 4px; flex-wrap: wrap; }
+.notification-icon-badge {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    background: var(--surface);
+    border: var(--glass-border);
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+.notification-icon-badge.danger { color: var(--danger); }
+.notification-icon-badge.warning { color: var(--warning); }
+.notification-icon-badge.success { color: var(--success); }
 .pg-btn { background: var(--surface); border: none; color: var(--text); border-radius: var(--r-sm); padding: 6px 12px; font-family: 'Cinzel', serif; font-size: var(--fs-xs); cursor: pointer; transition: all .15s; }
 .pg-btn:hover:not(:disabled) { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
 .pg-btn.active   { background: var(--accent); border-color: var(--accent); color: var(--bg); }
@@ -475,4 +480,85 @@
 }
 .star-rating span.active, .star-rating span.hover-active {
     color: var(--accent) !important;
+}
+
+/*
+    BIBLIO CHAT WIDGET: painel de chat flutuante.
+*/
+#biblioChatWidget {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 380px;
+    z-index: 9999;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow);
+    border: none;
+}
+
+#biblioChatWidget.active {
+    display: flex;
+}
+
+.chat-header {
+    padding: 12px 15px;
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#chatInboxView {
+    height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-2);
+}
+
+.chat-filter-row {
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    background: var(--surface-2);
+}
+
+#chatBodyContainer {
+    height: 350px;
+    overflow-y: auto;
+    padding: 15px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-footer {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(255,255,255,0.02);
+}
+
+/* Responsividade do Chat */
+@media (max-width: 900px) {
+    #biblioChatWidget {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        width: calc(100% - 20px);
+        max-height: 60vh;
+        border-radius: var(--r-md);
+    }
+
+    #chatInboxView {
+        height: 300px;
+    }
+
+    #chatBodyContainer {
+        height: 280px;
+    }
 }
