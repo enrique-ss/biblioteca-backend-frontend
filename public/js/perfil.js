@@ -42,7 +42,8 @@ async function carregarPerfil(userId = null) {
 
     const typeEl = document.getElementById('userProfileType');
     if (typeEl) {
-        typeEl.textContent = userToShow.tipo === 'bibliotecario' ? '👤 Bibliotecário' : '👤 Leitor';
+        const tipo = userToShow.tipo === 'bibliotecario' ? 'Bibliotecário' : 'Leitor';
+        typeEl.innerHTML = `<span class="badge badge-usuario" style="font-family:'Cinzel', serif; padding: 4px 12px; font-weight:700; font-size: 0.7rem;">${tipo}</span>`;
     }
 
     // Atualização do Avatar
@@ -180,18 +181,18 @@ async function carregarAtividades(userId = null) {
         }
 
         listEl.innerHTML = atividades.map(atv => `
-            <div class="activity-item" style="display: flex; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 0.5px solid var(--accent);">
-                <div class="activity-icon" style="font-size: 1.5rem; background: rgba(255,255,255,0.05); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 0.5px solid var(--accent);">
+            <div class="activity-item" style="display: flex; gap: 15px; margin-bottom: 16px; padding: 16px; background: var(--surface-2); border-radius: var(--r-md); box-shadow: var(--shadow-sm); border: none;">
+                <div class="activity-icon" style="font-size: 1.4rem; background: var(--surface-solid); width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; box-shadow: var(--shadow-sm); flex-shrink: 0;">
                     ${atv.icone}
                 </div>
                 <div class="activity-info" style="flex: 1;">
-                    <div class="activity-text" style="color: var(--text); line-height: 1.4;">${atv.texto}</div>
-                    <div class="activity-date" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
+                    <div class="activity-text" style="color: var(--text); line-height: 1.4; font-size: 0.92rem;">${atv.texto}</div>
+                    <div class="activity-date" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 6px; font-family: 'Cinzel', serif;">
                         ${formatarDataRelativa(atv.data)}
                     </div>
                     
-                    <div class="activity-comments" id="comments-${atv.id}" style="margin-top: 10px; padding-top: 10px; border-top: 0.5px dashed rgba(255,255,255,0.1);">
-                        <button class="btn btn-ghost btn-sm" onclick="carregarComentariosAtividade('${atv.id}')" style="padding: 4px 10px; font-size: 0.75rem;">💬 Ver Comentários</button>
+                    <div class="activity-comments" id="comments-${atv.id}" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);">
+                        <button class="btn btn-ghost btn-sm" onclick="carregarComentariosAtividade('${atv.id}')" style="padding: 6px 12px; font-size: 0.75rem;">💬 Comentários</button>
                     </div>
                 </div>
             </div>
@@ -470,6 +471,15 @@ let clubesSearchTimeout = null;
  * Busca e renderiza os clubes de leitura em formato de cards.
  * @param {string} busca Termo de busca opcional.
  */
+/**
+ * Alterna a visibilidade do campo de senha no modal de criação de clube.
+ */
+function toggleClubeSenhaField() {
+    const priv = document.getElementById('clubePrivacidade').value;
+    const group = document.getElementById('clubeSenhaGroup');
+    group.style.display = priv === 'privado' ? 'block' : 'none';
+}
+
 async function carregarClubes(busca = '') {
     const list = document.getElementById('clubesList');
     if (!list) return;
@@ -486,9 +496,9 @@ async function carregarClubes(busca = '') {
             list.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-dim);">${busca ? 'Nenhum clube encontrado para sua busca.' : 'Nenhum clube criado ainda. Que tal criar o primeiro?'}</div>`;
             return;
         }
+        const ehBibliotecario = currentUser?.tipo === 'bibliotecario';
 
         list.innerHTML = clubes.map(c => {
-            // Estilo visual: usa um gradiente baseado no nome do clube para variedade
             const gradients = [
                 'linear-gradient(135deg, #1e3a8a, #1e40af)',
                 'linear-gradient(135deg, #312e81, #3730a3)',
@@ -498,23 +508,37 @@ async function carregarClubes(busca = '') {
             const bg = gradients[Math.abs(c.id) % gradients.length];
 
             return `
-            <div class="digital-card clube-card" onclick="abrirPerfilClube(${c.id})" style="cursor:pointer;">
+            <div class="digital-card clube-card">
                 <div class="digital-card-poster" style="background: ${bg}; display:flex; align-items:center; justify-content:center; position: relative;">
-                     <span style="font-size: 3.5rem; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));">👥</span>
+                     <div class="digital-card-cover-text" style="font-family:'Cinzel', serif; font-size: 1.2rem; text-align:center; padding: 20px; opacity: 0.8;">CLUBE</div>
+                     ${c.is_private ? '<div style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); padding:5px; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">🔒</div>' : ''}
                 </div>
                 <div class="digital-card-footer">
                     <h4 class="digital-card-footer-title">${esc(c.nome)}</h4>
-                    <p class="digital-card-footer-subtitle">Criado por: ${esc(c.usuario_nome)}</p>
+                    <p class="digital-card-footer-subtitle" 
+                       onclick="event.stopPropagation(); if(typeof verPerfilUsuario === 'function') verPerfilUsuario('${c.usuario_id}')"
+                       style="cursor:pointer;">
+                        ${esc(c.usuario_nome)}
+                    </p>
                     
                     <div class="digital-card-content">
                         <div class="digital-card-meta">
-                            <span><strong>👑 Criador:</strong> ${esc(c.usuario_nome)}</span>
-                            ${c.livro_titulo ? `<span><strong>📖 Livro:</strong> ${esc(c.livro_titulo)}</span>` : '<span><strong>📖 Livro:</strong> Leitura livre</span>'}
+                            <span><strong>Criador:</strong> 
+                                <span onclick="event.stopPropagation(); if(typeof verPerfilUsuario === 'function') verPerfilUsuario('${c.usuario_id}')"
+                                      style="cursor:pointer; font-weight:500;">
+                                    ${esc(c.usuario_nome)}
+                                </span>
+                            </span>
+                            ${c.livro_titulo ? `<span><strong>Livro:</strong> ${esc(c.livro_titulo)}</span>` : ''}
                             <span class="card-sinopse-meta"><strong>Descrição:</strong> ${esc(c.descricao || 'Sem descrição definida.')}</span>
                         </div>
 
-                        <div class="digital-card-actions" style="margin-top:auto; padding-top:10px; display:flex; gap:8px;">
-                            <button class="btn btn-primary btn-block" onclick="event.stopPropagation(); abrirChatClube(${c.id}, '${esc(c.nome)}')">💬 Chat</button>
+                        <div class="digital-card-actions" style="margin-top:auto; padding-top:15px; display:flex; gap:8px;">
+                            ${c.sou_membro ? 
+                                `<button class="btn btn-primary btn-block" onclick="event.stopPropagation(); abrirChatClube('${c.id}', '${esc(c.nome).replace(/'/g, "\\'")}')">Chat</button>` :
+                                `<button class="btn btn-success btn-block" onclick="event.stopPropagation(); solicitarEntradaClube('${c.id}', '${esc(c.nome).replace(/'/g, "\\'")}', ${!!c.is_private})">Participar</button>`
+                            }
+                            ${ehBibliotecario ? `<button class="btn btn-danger btn-icon-text" title="Excluir Clube" onclick="event.stopPropagation(); removerClube('${c.id}', '${esc(c.nome).replace(/'/g, "\\'")}')"><span>🗑️</span></button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -525,6 +549,27 @@ async function carregarClubes(busca = '') {
     } catch (err) {
         list.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--danger);">Erro ao carregar: ${err.message}</div>`;
     }
+}
+
+/**
+ * Exclui um clube de leitura (exclusivo para bibliotecários).
+ */
+async function removerClube(id, nome) {
+    exibirConfirmacao({
+        icon: '🗑️',
+        title: 'Excluir Clube',
+        msg: `Deseja realmente excluir o clube "${nome}"? Esta ação não pode ser desfeita.`,
+        okLabel: 'Excluir',
+        onOk: async () => {
+            try {
+                await api(`/social/clubes/${id}`, { method: 'DELETE' });
+                exibirAlerta('Clube excluído com sucesso!', 'success');
+                carregarClubes();
+            } catch (err) {
+                exibirAlerta(err.message, 'danger');
+            }
+        }
+    });
 }
 
 /**
@@ -542,11 +587,18 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const nome = document.getElementById('clubeNome').value;
             const descricao = document.getElementById('clubeDescricao').value;
+            const privacidade = document.getElementById('clubePrivacidade').value;
+            const senha = document.getElementById('clubeSenha').value;
             
             try {
                 await api('/social/clubes', {
                     method: 'POST',
-                    body: JSON.stringify({ nome, descricao })
+                    body: JSON.stringify({ 
+                        nome, 
+                        descricao,
+                        is_private: privacidade === 'privado',
+                        password: senha
+                    })
                 });
                 exibirAlerta('Clube criado!', 'success');
                 fecharModal('criarClubeModal');
@@ -556,7 +608,55 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const senhaForm = document.getElementById('clubeSenhaForm');
+    if (senhaForm) {
+        senhaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('senhaModalClubeId').value;
+            const nome = document.getElementById('senhaModalClubeNome').value;
+            const senha = document.getElementById('inputClubeSenha').value;
+
+            try {
+                // Tenta entrar no clube (o backend validará a senha no endpoint de entrar)
+                await entrarNoClube(id, nome, senha);
+                fecharModal('clubeSenhaModal');
+            } catch (err) {
+                exibirAlerta(err.message || 'Senha incorreta!', 'danger');
+            }
+        });
+    }
 });
+
+/**
+ * Inicia o processo de entrada em um clube.
+ */
+function solicitarEntradaClube(id, nome, isPrivate) {
+    if (isPrivate) {
+        document.getElementById('senhaModalClubeId').value = id;
+        document.getElementById('senhaModalClubeNome').value = nome;
+        document.getElementById('inputClubeSenha').value = '';
+        abrirModal('clubeSenhaModal');
+    } else {
+        entrarNoClube(id, nome);
+    }
+}
+
+/**
+ * Faz a requisição para entrar em um clube.
+ */
+async function entrarNoClube(id, nome, password = null) {
+    try {
+        await api(`/social/clubes/${id}/entrar`, {
+            method: 'POST',
+            body: JSON.stringify({ password })
+        });
+        exibirAlerta(`Bem-vindo ao clube "${nome}"!`, 'success');
+        carregarClubes();
+    } catch (err) {
+        throw err; // Propaga para o formulário tratar
+    }
+}
 
 
 // --- LÓGICA DE CHAT UNIFICADO (BIBLIO CHAT) ---
@@ -808,7 +908,11 @@ function minimizarChatMaster() {
 
 // Compatibilidade
 function abrirChatPrivado(id, nome) { abrirChat('privado', id, nome); }
-function abrirChatClube(id, nome) { abrirChat('clube', id, nome); }
+// Se o botão "Chat" aparece, o usuário já é membro — abrir o chat diretamente, sem pedir senha.
+// A senha só é pedida ao ENTRAR no clube (solicitarEntradaClube).
+function abrirChatClube(id, nome) {
+    abrirChat('clube', id, nome);
+}
 function fecharChatPrivado() { fecharChatMaster(); }
 function fecharChatClube() { fecharChatMaster(); }
 async function carregarMensagensClube(silent) { if(currentChatTab === 'clube' && chatViewMode === 'conversation') await carregarMensagensMaster(silent); }

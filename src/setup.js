@@ -180,9 +180,22 @@ function applySchema(db) {
       descricao TEXT,
       criado_por TEXT NOT NULL,
       livro_id INTEGER,
+      is_private INTEGER DEFAULT 0,
+      password TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (criado_por) REFERENCES usuarios(id) ON DELETE CASCADE,
       FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE SET NULL
+    );
+
+    -- Tabela de Membros dos Clubes
+    CREATE TABLE IF NOT EXISTS clube_membros (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      clube_id INTEGER NOT NULL,
+      usuario_id TEXT NOT NULL,
+      joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(clube_id, usuario_id),
+      FOREIGN KEY (clube_id) REFERENCES clubes_leitura(id) ON DELETE CASCADE,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     );
 
     -- Tabela de Mensagens dos Clubes
@@ -255,6 +268,40 @@ function applySchema(db) {
     });
   } catch (e) {
     console.error("❌ Erro ao realizar migrações na tabela usuarios:", e);
+  }
+
+  // Migração: Adiciona colunas de privacidade à tabela clubes_leitura se não existirem
+  try {
+    const clubeInfo = db.prepare("PRAGMA table_info(clubes_leitura)").all();
+    const clubeCols = clubeInfo.map(c => c.name);
+    if (!clubeCols.includes('is_private')) {
+      db.exec("ALTER TABLE clubes_leitura ADD COLUMN is_private INTEGER DEFAULT 0");
+      console.log("✅ Migração: Coluna 'is_private' adicionada a clubes_leitura.");
+    }
+    if (!clubeCols.includes('password')) {
+      db.exec("ALTER TABLE clubes_leitura ADD COLUMN password TEXT");
+      console.log("✅ Migração: Coluna 'password' adicionada a clubes_leitura.");
+    }
+  } catch (e) {
+    console.error("❌ Erro ao realizar migrações na tabela clubes_leitura:", e);
+  }
+
+  // Migração: Cria a tabela clube_membros se não existir
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS clube_membros (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        clube_id INTEGER NOT NULL,
+        usuario_id TEXT NOT NULL,
+        joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(clube_id, usuario_id),
+        FOREIGN KEY (clube_id) REFERENCES clubes_leitura(id) ON DELETE CASCADE,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+      )
+    `);
+    console.log("✅ Migração: Tabela 'clube_membros' verificada/criada.");
+  } catch (e) {
+    console.error("❌ Erro ao criar tabela clube_membros:", e);
   }
 }
 

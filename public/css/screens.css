@@ -403,8 +403,7 @@
 /* Quando o usuário passa o mouse, os textos seguem a cor do tema, EXCETO o título que já é gold */
 .digital-card:hover .digital-card-footer-subtitle,
 .digital-card:hover .digital-card-content p,
-.digital-card:hover .digital-card-content span:not(.badge),
-.digital-card:hover .digital-card-content button:not(.badge) {
+.digital-card:hover .digital-card-content span:not(.badge) {
     color: var(--text) !important;
 }
 
@@ -430,6 +429,12 @@
     text-decoration: none;
 }
 
+.badge-cargo-social:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--accent-bg);
+}
+
 /* Garante que badge e texto de quantidade fiquem alinhados horizontalmente */
 .digital-card-content > div[style*="border-top"] {
     display: flex !important;
@@ -452,7 +457,7 @@
     font-family: 'Cinzel', serif;
     font-size: var(--fs-base);
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text);
     margin-bottom: 10px;
     line-height: 1.2;
     display: block;
@@ -494,19 +499,20 @@
 /* Botões de ação dentro do card (download, empréstimo, etc.) */
 .digital-card-content .btn {
     border: none !important;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--accent-bg);
+    color: var(--text);
     backdrop-filter: blur(8px);
     transition: all 0.3s ease;
 }
 
 .digital-card-actions .btn:hover {
     background: var(--accent);
-    color: #fff !important;
+    color: var(--bg) !important;
 }
 
 .card-sinopse {
     font-size: 0.85rem;
-    color: #e2e8f0;
+    color: var(--text);
     margin-bottom: 16px;
     line-height: 1.5;
     opacity: 0.9;

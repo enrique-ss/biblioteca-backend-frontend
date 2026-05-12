@@ -164,74 +164,7 @@ function abrirAvaliacaoModal() {
     abrirModal('avaliacaoModal');
 }
 
-// --- PERFIL DE CLUBE DE LEITURA ---
-
-async function abrirPerfilClube(id) {
-    _clubePerfilAtual = { id };
-    mostrarTela('clubePerfilScreen');
-
-    document.getElementById('clubePerfilNome').textContent = 'Carregando...';
-    document.getElementById('clubeMembrosList').innerHTML =
-        '<div style="text-align:center; padding:10px; opacity:0.5; font-size:0.8rem;">Carregando...</div>';
-
-    try {
-        const data = await api(`/social/clubes/${id}/perfil`);
-        const { clube, membros, total_mensagens } = data;
-
-        // Cabeçalho
-        document.getElementById('clubePerfilNome').textContent = clube.nome;
-        document.getElementById('clubePerfilCriador').textContent = `👤 Criado por ${esc(clube.criador_nome)}`;
-        document.getElementById('clubePerfilLivro').textContent = clube.livro_titulo
-            ? `📖 ${esc(clube.livro_titulo)}` : '';
-
-        // Sidebar
-        document.getElementById('clubePerfilDescricao').textContent =
-            clube.descricao || 'Sem descrição.';
-        document.getElementById('clubeStatMembros').textContent = membros.length;
-        document.getElementById('clubeStatMensagens').textContent = total_mensagens;
-
-        // Lista de membros
-        const membrosList = document.getElementById('clubeMembrosList');
-        if (!membros.length) {
-            membrosList.innerHTML = '<div style="opacity:0.5; font-size:0.8rem; text-align:center; padding:10px;">Nenhum participante ainda.</div>';
-        } else {
-            membrosList.innerHTML = membros.map(m => {
-                const inicial = (m.nome || '?').charAt(0).toUpperCase();
-                return `
-                <div class="social-user-item" style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom: 0.5px solid rgba(255,255,255,0.05); cursor:pointer;" onclick="carregarPerfil('${m.id}'); mostrarTela('perfilScreen');">
-                    <div style="width:34px; height:34px; border-radius:50%; background:var(--surface); border: 0.5px solid var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;">
-                        ${m.avatar_url ? `<img src="${m.avatar_url}" style="width:100%;height:100%;object-fit:cover;">` : inicial}
-                    </div>
-                    <span style="font-size:0.88rem;">${esc(m.nome)}</span>
-                </div>`;
-            }).join('');
-        }
-
-        // Livro em debate
-        const debateEl = document.getElementById('clubeLivroDebate');
-        if (clube.livro_titulo) {
-            debateEl.innerHTML = `
-            <div class="digital-card" style="max-width:300px; margin: 0 auto; display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer;" onclick="abrirPerfilLivro(${clube.livro_id}, 'fisico')">
-                ${clube.livro_capa ? `<img src="${clube.livro_capa}" style="width:120px; border-radius:var(--r-sm); box-shadow:var(--shadow);">` : '<div style="font-size:3rem;">📖</div>'}
-                <h3 style="text-align:center; font-size:1rem;">${esc(clube.livro_titulo)}</h3>
-                <button class="btn btn-ghost btn-sm">Ver Perfil do Livro</button>
-            </div>`;
-        } else {
-            debateEl.innerHTML = '<div style="text-align:center; opacity:0.6; padding:20px;">Nenhum livro associado a este clube.</div>';
-        }
-
-    } catch (err) {
-        console.error('Erro ao carregar perfil do clube:', err);
-        exibirAlerta('Erro ao carregar perfil do clube.', 'danger');
-    }
-}
-
-// Abre o chat a partir da tela de perfil do clube
-function abrirChatClubePerfil() {
-    if (!_clubePerfilAtual) return;
-    const nomeEl = document.getElementById('clubePerfilNome');
-    abrirChatClube(_clubePerfilAtual.id, nomeEl?.textContent || 'Clube');
-}
+// --- PERFIL DE CLUBE DE LEITURA (REMOVIDO: Clubes agora funcionam via cards diretos) ---
 
 // --- INICIALIZAÇÃO DO MODAL DE AVALIAÇÃO (Estrelas) ---
 

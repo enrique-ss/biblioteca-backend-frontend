@@ -14,6 +14,8 @@ router.get('/feed/comentarios/:atividade_id', verificarToken, controller.getCome
 // --- CLUBES DE LEITURA ---
 router.post('/clubes', verificarToken, controller.criarClube);
 router.get('/clubes', verificarToken, controller.getClubes);
+router.post('/clubes/:id/entrar', verificarToken, controller.entrarClube);
+router.delete('/clubes/:id', verificarToken, controller.removerClube);
 router.get('/clubes/:id/perfil', verificarToken, controller.getClubePerfil);
 router.post('/clubes/:clubeId/mensagens', verificarToken, controller.enviarMensagemClube);
 router.get('/clubes/:clubeId/mensagens', verificarToken, controller.getMensagensClube);

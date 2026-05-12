@@ -125,7 +125,8 @@
     --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.12);
     --shadow-lg: 0 15px 45px rgba(0, 0, 0, 0.15);
     --shadow-xl: 0 25px 60px rgba(0, 0, 0, 0.18);
-    --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+    --glass-border: 1px solid rgba(0, 0, 0, 0.08);
+    --surface-2: rgba(0, 0, 0, 0.03);
 }
 
 /* Reset global: remove margens e paddings padrão do navegador para ter controle total do layout */
@@ -365,10 +366,10 @@ body {
 
 /* Variações de cor do badge conforme o significado */
 .badge-success { background: var(--success) !important; color: #fff !important; }
-.badge-info    { background: var(--accent-gold) !important; color: #fff !important; }
+.badge-info    { background: var(--accent-gold) !important; color: var(--bg) !important; }
 .badge-danger  { background: var(--danger) !important; color: #fff !important; }
 .badge-warning { background: var(--warning) !important; color: #000 !important; }
-.badge-gold    { background: var(--accent-gold) !important; color: #000 !important; }
+.badge-gold    { background: var(--accent-gold) !important; color: var(--bg) !important; }
 .badge-usuario { background: var(--surface-solid) !important; color: var(--text) !important; border: var(--glass-border) !important; }
 
 /* Sidebar adaptada para o tema claro: segue o padrão minimalista */
@@ -572,8 +573,19 @@ body {
 
 
 /* Barra de busca: campo de pesquisa que filtra a lista em tempo real conforme o usuário digita */
-.search-bar { margin-bottom: 16px; }
-.search-bar .form-input { background: var(--surface); border-color: var(--accent); padding: 10px 16px; }
+.search-bar { margin-bottom: 24px; }
+.search-bar .form-input { 
+    background: var(--surface-solid); 
+    border: none; 
+    padding: 14px 20px; 
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--r-md);
+    font-size: 0.9rem;
+}
+.search-bar .form-input:focus {
+    box-shadow: var(--shadow), 0 0 0 2px var(--accent-gold);
+    background: var(--surface-2);
+}
 
 /* Indicador de carregamento: aro giratório que aparece enquanto dados são buscados do servidor */
 .spinner {

@@ -91,7 +91,7 @@
 .btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: var(--shadow); }
 
 /* Botão fantasma: discreto, vira destaque ao passar o mouse */
-.btn-ghost    { background: rgba(255, 255, 255, 0.05); color: var(--text); border: var(--glass-border); }
+.btn-ghost    { background: var(--surface-2); color: var(--text); border: var(--glass-border); }
 .btn-ghost:hover { background: var(--accent); color: var(--bg); transform: translateY(-2px); }
 
 .btn-gold     { background: var(--accent); color: var(--bg); }
@@ -282,7 +282,7 @@
 .confirm-backdrop { position: absolute; inset: 0; background: rgba(5,6,5,.80); backdrop-filter: blur(8px); }
 .confirm-box { 
     position: relative; 
-    background: var(--surface); 
+    background: var(--bg); 
     border: none; 
     border-radius: var(--r-xl); 
     padding: 32px; 
@@ -506,7 +506,7 @@
 
 .chat-header {
     padding: 12px 15px;
-    background: rgba(255,255,255,0.05);
+    background: var(--surface-solid);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -540,7 +540,7 @@
     display: flex;
     gap: 10px;
     padding: 12px;
-    background: rgba(255,255,255,0.02);
+    background: var(--surface);
 }
 
 /* Responsividade do Chat */

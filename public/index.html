@@ -1241,6 +1241,19 @@
                     <label class="form-label">Descrição (opcional)</label>
                     <textarea id="clubeDescricao" class="form-input" style="min-height: 80px;" placeholder="Qual o foco do clube?"></textarea>
                 </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label class="form-label">Privacidade</label>
+                        <select id="clubePrivacidade" class="form-input" onchange="toggleClubeSenhaField()">
+                            <option value="publico">🔓 Público</option>
+                            <option value="privado">🔒 Privado</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="clubeSenhaGroup" style="display: none;">
+                        <label class="form-label">Senha de Acesso</label>
+                        <input type="password" id="clubeSenha" class="form-input" placeholder="Defina a senha">
+                    </div>
+                </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-ghost" onclick="fecharModal('criarClubeModal')">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Criar</button>
@@ -1249,7 +1262,25 @@
         </div>
     </div>
 
-    <!-- BIBLIO CHAT UNIFICADO (COM NAVEGAÇÃO DE INBOX) -->
+    <div id="clubeSenhaModal" class="modal">
+        <div class="modal-backdrop" onclick="fecharModal('clubeSenhaModal')"></div>
+        <div class="modal-box" style="max-width: 400px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 20px;">🔒</div>
+            <h2 class="modal-title">Clube <span>Privado</span></h2>
+            <p style="margin-bottom: 20px; color: var(--text-dim);">Este clube é restrito. Insira a senha para entrar na conversa.</p>
+            <form id="clubeSenhaForm">
+                <input type="hidden" id="senhaModalClubeId">
+                <input type="hidden" id="senhaModalClubeNome">
+                <div class="form-group">
+                    <input type="password" id="inputClubeSenha" class="form-input" placeholder="Senha do clube" required style="text-align: center; font-size: 1.2rem; letter-spacing: 4px;">
+                </div>
+                <div class="btn-group" style="justify-content: center;">
+                    <button type="button" class="btn btn-ghost" onclick="fecharModal('clubeSenhaModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="biblioChatWidget" class="glass-card">
         <div class="chat-header">
             <div style="display: flex; align-items: center; gap: 10px;">

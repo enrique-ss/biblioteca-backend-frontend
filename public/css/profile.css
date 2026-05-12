@@ -94,6 +94,7 @@
 
 .btn-edit-floating:hover {
     background: var(--accent);
+    color: var(--bg);
     transform: scale(1.1); /* Sutil aumento sem girar */
     border-color: transparent;
 }
@@ -321,8 +322,8 @@
 .social-search input {
     width: 100%;
     padding: 10px 14px;
-    background: rgba(255,255,255,0.03);
-    border: none;
+    background: var(--surface);
+    border: var(--glass-border);
     border-radius: var(--r-md);
     color: var(--text);
     font-size: 0.85rem;
@@ -330,7 +331,7 @@
 }
 
 .social-search input:focus {
-    background: rgba(255,255,255,0.06);
+    background: var(--accent-bg);
     border-color: var(--accent);
     outline: none;
     box-shadow: 0 0 0 3px var(--accent-bg);
@@ -450,7 +451,7 @@
 
 .social-card-user:hover {
     transform: translateY(-5px);
-    background: rgba(255,255,255,0.05);
+    background: var(--surface);
     border-color: var(--accent);
     box-shadow: var(--shadow);
 }
@@ -602,7 +603,7 @@
     display: flex;
     gap: 5px;
     padding: 2px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-2);
     border-radius: var(--r-sm);
 }
 
@@ -616,14 +617,14 @@
 
 .chat-tabs .btn.active {
     background: var(--accent) !important;
-    color: #000 !important;
+    color: var(--bg) !important;
     font-weight: 700;
     opacity: 1;
     box-shadow: var(--shadow-sm);
 }
 
 .chat-tabs .btn:hover:not(.active) {
-    background: rgba(212, 175, 55, 0.1);
+    background: var(--accent-bg);
     opacity: 1;
 }
 

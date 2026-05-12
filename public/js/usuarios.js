@@ -100,9 +100,9 @@ async function carregarUsuarios(pagina = 1, busca = '') {
             // Biografia (vazia ou real)
             const bioContent = u.bio ? esc(u.bio) : '<span style="opacity:0.4; font-style:italic;">Sem biografia</span>';
             
-            // Nível e Cargo
-            const cargo = u.tipo === 'bibliotecario' ? '👑 Bibliotecário' : '📖 Leitor';
-            const nivel = `✨ Nível ${u.infantil_level || 1}`;
+            // Nível e Cargo (Sem emojis para minimalismo e para caber lado a lado)
+            const cargo = u.tipo === 'bibliotecario' ? 'Bibliotecário' : 'Leitor';
+            const nivel = `Nível ${u.infantil_level || 1}`;
 
             return `
                 <div class="glass-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px 15px;">
@@ -123,13 +123,13 @@ async function carregarUsuarios(pagina = 1, busca = '') {
                         ${bioContent}
                     </div>
                     
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: auto; pointer-events: auto;">
-                        <span style="padding: 4px 10px; background: var(--accent-bg); color: var(--accent); border-radius: var(--r-pill); font-size: 0.65rem; font-weight: 700;">
+                    <div style="display: flex; gap: 6px; flex-wrap: nowrap; justify-content: center; margin-top: auto; pointer-events: auto; width: 100%;">
+                        <span style="padding: 4px 8px; background: var(--accent-bg); color: var(--accent); border-radius: var(--r-pill); font-size: 0.65rem; font-weight: 700; font-family: 'Cinzel', serif; white-space: nowrap;">
                             ${nivel}
                         </span>
                         <span ${ehAdmin ? `onclick="mudarNivelAcesso('${u.id}', '${u.tipo}')" title="Clique para alterar cargo"` : ''} 
-                              style="padding: 4px 10px; background: rgba(255,255,255,0.03); color: var(--text-dim); border-radius: var(--r-pill); font-size: 0.65rem; font-weight: 700; border: 0.5px solid var(--accent); ${ehAdmin ? 'cursor: pointer;' : 'cursor: default;'} transition: 0.2s;"
-                              ${ehAdmin ? `onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--accent)'; this.style.color='var(--text-dim)'"` : ''}>
+                              class="badge-cargo-social"
+                              style="padding: 4px 8px; background: var(--accent-bg); color: var(--accent); border-radius: var(--r-pill); font-size: 0.65rem; font-weight: 700; font-family: 'Cinzel', serif; border: none; ${ehAdmin ? 'cursor: pointer;' : 'cursor: default;'} transition: all 0.3s ease; white-space: nowrap;">
                             ${cargo}
                         </span>
                     </div>

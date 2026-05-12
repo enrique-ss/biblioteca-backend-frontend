@@ -248,17 +248,34 @@ class SocialController {
   criarClube = async (req, res) => {
     try {
       const criado_por = req.usuario.id;
-      const { nome, descricao, livro_id } = req.body;
+      const { nome, descricao, livro_id, is_private, password } = req.body;
 
       if (!nome) return res.status(400).json({ error: 'Nome do clube é obrigatório' });
+      if (is_private && !password) return res.status(400).json({ error: 'Clubes privados precisam de uma senha' });
 
-      const { data } = await supabase
-        .from('clubes_leitura')
-        .insert([{ nome, descricao, criado_por, livro_id }])
-        .select()
-        .single();
+      // Insere o clube usando o banco SQLite diretamente
+      const stmt = db.prepare(`
+        INSERT INTO clubes_leitura (nome, descricao, criado_por, livro_id, is_private, password, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+      const info = stmt.run(
+        nome,
+        descricao || null,
+        criado_por,
+        livro_id || null,
+        is_private ? 1 : 0,
+        is_private ? password : null,
+        new Date().toISOString()
+      );
+      const clubeId = info.lastInsertRowid;
 
-      res.status(201).json({ message: 'Clube criado com sucesso!', id: data?.id });
+      // Adiciona o criador automaticamente como membro
+      db.prepare(`
+        INSERT OR IGNORE INTO clube_membros (clube_id, usuario_id, joined_at)
+        VALUES (?, ?, ?)
+      `).run(clubeId, criado_por, new Date().toISOString());
+
+      res.status(201).json({ message: 'Clube criado com sucesso!', id: clubeId });
     } catch (error) {
       console.error('Erro ao criar clube:', error);
       res.status(500).json({ error: 'Erro interno' });
@@ -268,26 +285,97 @@ class SocialController {
   getClubes = async (req, res) => {
     try {
       const { busca } = req.query;
-      let query = supabase
-        .from('clubes_leitura')
-        .select('*, livros(titulo), usuarios(nome)');
+      const usuario_id = req.usuario.id;
+
+      let sql = `
+        SELECT
+          c.id, c.nome, c.descricao, c.criado_por AS usuario_id,
+          c.livro_id, c.is_private, c.created_at,
+          u.nome AS usuario_nome,
+          l.titulo AS livro_titulo,
+          CASE WHEN m.usuario_id IS NOT NULL THEN 1 ELSE 0 END AS sou_membro
+        FROM clubes_leitura c
+        JOIN usuarios u ON u.id = c.criado_por
+        LEFT JOIN livros l ON l.id = c.livro_id
+        LEFT JOIN clube_membros m ON m.clube_id = c.id AND m.usuario_id = ?
+      `;
+      const params = [usuario_id];
 
       if (busca) {
-        // Busca por nome do clube ou título do livro associado
-        query = query.or(`nome.ilike.%${busca}%,descricao.ilike.%${busca}%`);
+        sql += ` WHERE (c.nome LIKE ? OR c.descricao LIKE ?)`;
+        params.push(`%${busca}%`, `%${busca}%`);
       }
 
-      const { data } = await query.order('created_at', { ascending: false });
+      sql += ` ORDER BY c.created_at DESC`;
 
-      const clubes = (data || []).map(c => ({
+      const clubes = db.prepare(sql).all(...params);
+
+      // Nunca expor a senha ao frontend
+      const safe = clubes.map(c => ({
         ...c,
-        livro_titulo: c.livros?.titulo || c.livro_titulo,
-        usuario_nome: c.usuarios?.nome || 'Bibliotecário'
+        is_private: Boolean(c.is_private),
+        sou_membro: Boolean(c.sou_membro),
+        password: undefined
       }));
 
-      res.json(clubes);
+      res.json(safe);
     } catch (error) {
       console.error('Erro ao buscar clubes:', error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  };
+
+  entrarClube = async (req, res) => {
+    try {
+      const usuario_id = req.usuario.id;
+      const clube_id = req.params.id;
+      const { password } = req.body;
+
+      const clube = db.prepare('SELECT * FROM clubes_leitura WHERE id = ?').get(clube_id);
+      if (!clube) return res.status(404).json({ error: 'Clube não encontrado' });
+
+      // Verifica se já é membro
+      const jaMembro = db.prepare('SELECT 1 FROM clube_membros WHERE clube_id = ? AND usuario_id = ?').get(clube_id, usuario_id);
+      if (jaMembro) return res.json({ message: 'Você já é membro deste clube!' });
+
+      // Valida senha para clubes privados (criador já entra direto pelo sou_membro)
+      if (clube.is_private) {
+        if (!password || password !== clube.password) {
+          return res.status(403).json({ error: 'Senha incorreta!' });
+        }
+      }
+
+      db.prepare(`
+        INSERT OR IGNORE INTO clube_membros (clube_id, usuario_id, joined_at)
+        VALUES (?, ?, ?)
+      `).run(clube_id, usuario_id, new Date().toISOString());
+
+      res.json({ message: 'Você entrou no clube com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao entrar no clube:', error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  };
+
+  removerClube = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const usuario = req.usuario;
+
+      if (usuario.tipo !== 'bibliotecario') {
+        return res.status(403).json({ error: 'Apenas bibliotecários podem excluir clubes.' });
+      }
+
+      const clube = db.prepare('SELECT id FROM clubes_leitura WHERE id = ?').get(id);
+      if (!clube) return res.status(404).json({ error: 'Clube não encontrado' });
+
+      db.prepare('DELETE FROM clube_membros WHERE clube_id = ?').run(id);
+      db.prepare('DELETE FROM clube_mensagens WHERE clube_id = ?').run(id);
+      db.prepare('DELETE FROM clubes_leitura WHERE id = ?').run(id);
+
+      res.json({ message: 'Clube excluído com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao remover clube:', error);
       res.status(500).json({ error: 'Erro interno' });
     }
   };
@@ -300,9 +388,15 @@ class SocialController {
 
       if (!mensagem) return res.status(400).json({ error: 'Mensagem vazia' });
 
-      await supabase
-        .from('clube_mensagens')
-        .insert([{ clube_id, usuario_id, mensagem }]);
+      // Verifica se é membro do clube
+      const membro = db.prepare('SELECT 1 FROM clube_membros WHERE clube_id = ? AND usuario_id = ?').get(clube_id, usuario_id);
+      if (!membro) {
+        return res.status(403).json({ error: 'Você precisa entrar no clube para enviar mensagens.' });
+      }
+
+      db.prepare(
+        'INSERT INTO clube_mensagens (clube_id, usuario_id, mensagem, created_at) VALUES (?, ?, ?, ?)'
+      ).run(clube_id, usuario_id, mensagem, new Date().toISOString());
 
       // Notifica os membros do clube via socket
       req.app.get('io').emit('novaMensagemClube', { clube_id });
@@ -317,21 +411,22 @@ class SocialController {
   getMensagensClube = async (req, res) => {
     try {
       const clube_id = req.params.clubeId;
+      const usuario_id = req.usuario.id;
 
-      const { data } = await supabase
-        .from('clube_mensagens')
-        .select(`
-          *,
-          usuario:usuarios!usuario_id (nome, avatar_url)
-        `)
-        .eq('clube_id', clube_id)
-        .order('created_at', { ascending: true });
+      // Verifica se o usuário é membro do clube
+      const membro = db.prepare('SELECT 1 FROM clube_membros WHERE clube_id = ? AND usuario_id = ?').get(clube_id, usuario_id);
+      if (!membro) {
+        return res.status(403).json({ error: 'Você precisa ser membro do clube para ver as mensagens.' });
+      }
 
-      const mensagens = (data || []).map(m => ({
-        ...m,
-        usuario_nome: m.usuario?.nome || 'Usuário',
-        avatar_url: m.usuario?.avatar_url || null
-      }));
+      const mensagens = db.prepare(`
+        SELECT m.id, m.clube_id, m.usuario_id, m.mensagem, m.created_at,
+               u.nome AS usuario_nome, u.avatar_url
+        FROM clube_mensagens m
+        JOIN usuarios u ON u.id = m.usuario_id
+        WHERE m.clube_id = ?
+        ORDER BY m.created_at ASC
+      `).all(clube_id);
 
       res.json(mensagens);
     } catch (error) {
