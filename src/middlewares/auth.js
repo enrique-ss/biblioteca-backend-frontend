@@ -10,6 +10,7 @@ async function verificarToken(req, res, next) {
   const authorization = req.headers.authorization;
 
   if (!authorization) {
+    console.warn('[Auth] Acesso negado: Header Authorization ausente.');
     return res.status(401).json({ error: 'Acesso negado. Você precisa estar logado para acessar este recurso.' });
   }
 
@@ -22,6 +23,7 @@ async function verificarToken(req, res, next) {
 
     // Se o Supabase disser que o token é falso ou expirou, negamos o acesso
     if (error || !user) {
+      console.warn('[Auth] Token inválido ou expirado:', error?.message || 'Usuário não encontrado');
       return res.status(401).json({ 
         error: 'Sua sessão expirou ou o acesso é inválido. Por favor, saia e entre novamente no sistema.' 
       });

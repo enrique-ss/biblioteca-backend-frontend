@@ -174,6 +174,15 @@ function restaurarSessao() {
         token = t;
         currentUser = JSON.parse(u);
 
+        // Sincroniza dados com o servidor para garantir nomes e permissões atuais
+        api('/auth/perfil').then(res => {
+            if (res && res.usuario) {
+                currentUser = { ...currentUser, ...res.usuario };
+                salvarSessao();
+                atualizarNavbar();
+            }
+        }).catch(err => console.warn('[Session] Sincronização falhou:', err.message));
+
         salvarSessao();
         atualizarNavbar();
         

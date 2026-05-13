@@ -481,7 +481,7 @@ class SocialController {
         )
         .map(m => ({
           ...m,
-          usuario_nome: m.remetente?.nome || 'Usuário',
+          usuario_nome: m.remetente?.nome || 'Leitor',
           avatar_url: m.remetente?.avatar_url || null
         }));
 

@@ -330,17 +330,46 @@ class OfflineQueryBuilder {
       if (part === '*') continue;
 
       if (part.includes('(')) {
-        const relationName = part.slice(0, part.indexOf('(')).trim();
+        let fullRelationName = part.slice(0, part.indexOf('(')).trim();
         const innerSelection = part.slice(part.indexOf('(') + 1, -1).trim() || '*';
-        const relation = relationConfig[relationName];
+        
+        let outputAlias = fullRelationName;
+        let lookupName = fullRelationName;
 
-        if (!relation) continue;
+        // Handle "alias:table" syntax
+        if (fullRelationName.includes(':')) {
+          const parts = fullRelationName.split(':');
+          outputAlias = parts[0].trim();
+          lookupName = parts[1].trim();
+        }
+
+        // Handle "table!fk" syntax (hints) - we simplify by taking the part before !
+        if (lookupName.includes('!')) {
+          lookupName = lookupName.split('!')[0].trim();
+        }
+
+        const relation = relationConfig[lookupName];
+
+        if (!relation) {
+          // Fallback: check if any relation uses this table
+          const fallbackRelation = Object.values(relationConfig).find(r => r.table === lookupName);
+          if (fallbackRelation) {
+            const baseRelatedRow = this.client
+              .fetchAll(fallbackRelation.table)
+              .find((candidate) => this.valuesEqual(candidate[fallbackRelation.foreignKey], row[fallbackRelation.localKey]));
+
+            output[outputAlias] = baseRelatedRow
+              ? this.enrichRow(fallbackRelation.table, baseRelatedRow, innerSelection)
+              : null;
+          }
+          continue;
+        }
 
         const baseRelatedRow = this.client
           .fetchAll(relation.table)
           .find((candidate) => this.valuesEqual(candidate[relation.foreignKey], row[relation.localKey]));
 
-        output[relationName] = baseRelatedRow
+        output[outputAlias] = baseRelatedRow
           ? this.enrichRow(relation.table, baseRelatedRow, innerSelection)
           : null;
         continue;

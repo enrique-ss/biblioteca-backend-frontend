@@ -391,7 +391,7 @@ async function atualizarAcoesSociais(userId) {
 
     try {
         const { status, id: amizadeId } = await api(`/amizades/status/${userId}`);
-        const userName = document.getElementById('userProfileName')?.textContent || 'Usuário';
+        const userName = document.getElementById('userProfileName')?.textContent || 'Leitor';
         
         let actionsHtml = `<button class="btn btn-primary btn-sm" onclick="abrirChatPrivado('${userId}', '${esc(userName)}')" title="Conversar">💬 Chat</button>`;
 
@@ -668,10 +668,10 @@ async function entrarNoClube(id, nome, password = null) {
 function renderizarBolhaChat(m, isClube = false) {
     const isMe = String(m.usuario_id || m.remetente_id) === String(currentUser.id);
     const align = isMe ? 'flex-end' : 'flex-start';
-    const bgColor = isMe ? 'var(--accent)' : 'rgba(255,255,255,0.08)';
-    const color = isMe ? '#fff' : 'var(--text)';
+    const bgColor = isMe ? 'var(--accent)' : 'var(--surface-2)';
+    const color = isMe ? 'var(--bg)' : 'var(--text)';
     const borderRadius = isMe ? '18px 18px 2px 18px' : '18px 18px 18px 2px';
-    const name = isMe ? 'Você' : (m.usuario_nome || 'Usuário');
+    const name = isMe ? 'Você' : (m.usuario_nome || 'Leitor');
     const avatar = m.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
     
     return `
@@ -775,7 +775,7 @@ async function carregarInbox(filtro, silent = false) {
             const subtitle = isClube ? 'Grupo Literário' : 'Mensagem Privada';
             
             return `
-                <div class="social-user-item" onclick="abrirChat('${filtro}', '${id}', '${esc(name)}')" style="padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s ease; cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                <div class="social-user-item" onclick="abrirChat('${filtro}', '${id}', '${esc(name)}')" style="padding: 12px; margin-bottom: 10px; background: var(--surface-2); border-radius: 12px; border: 1px solid var(--border); transition: all 0.2s ease; cursor: pointer; display: flex; align-items: center; gap: 12px;">
                     <div class="social-user-avatar" style="width:44px; height:44px; border: 1px solid var(--accent); flex-shrink: 0;">
                         <img src="${esc(avatar)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                     </div>
