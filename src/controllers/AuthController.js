@@ -269,6 +269,34 @@ class AuthController {
       res.status(500).json({ error: 'Falha ao carregar feed de atividades.' });
     }
   };
+  
+  /**
+   * Retorna os dados do próprio usuário logado.
+   * Usado pelo core.js no frontend durante o 'restaurarSessao' (refresh F5).
+   */
+  getPerfil = async (req, res) => {
+    try {
+      const { data: usuario, error } = await supabaseAdmin
+        .from('usuarios')
+        .select('*')
+        .eq('id', req.usuario.id)
+        .single();
+
+      if (error || !usuario) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
+
+      res.json({
+        usuario: {
+          ...usuario,
+          permissions: this.getPermissions(usuario.tipo)
+        }
+      });
+    } catch (erro) {
+      console.error('Erro ao buscar perfil atual:', erro);
+      res.status(500).json({ error: 'Falha ao carregar perfil atual.' });
+    }
+  };
 
   /**
    * Permite que o próprio usuário atualize seus dados de cadastro.

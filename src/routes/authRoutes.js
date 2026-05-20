@@ -13,6 +13,9 @@ router.post('/registrar', controller.registrar);
 // Entrar no sistema com e-mail e senha (Público)
 router.post('/login', controller.login);
 
+// Buscar os dados do próprio perfil (Usado ao recarregar a página)
+router.get('/perfil', verificarToken, controller.getPerfil);
+
 // Editar as próprias informações (Exige que o usuário esteja logado)
 router.put('/perfil', verificarToken, controller.editarPerfil);
 
