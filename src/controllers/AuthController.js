@@ -312,11 +312,14 @@ class AuthController {
           return res.status(400).json({ error: 'O formato do novo e-mail e invalido.' });
         }
 
-        const { error: updateEmailError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
-          email: emailFormatado
-        });
+        // APENAS aciona a troca no Auth (que derruba a sessão/pede confirmação) se o e-mail REALMENTE for novo
+        if (emailFormatado !== user.email.toLowerCase().trim()) {
+          const { error: updateEmailError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+            email: emailFormatado
+          });
 
-        if (updateEmailError) throw updateEmailError;
+          if (updateEmailError) throw updateEmailError;
+        }
 
         mudancas.email = emailFormatado;
       }
