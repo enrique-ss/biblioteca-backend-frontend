@@ -304,20 +304,11 @@ class AuthController {
    */
   editarPerfil = async (req, res) => {
     try {
-      // Verifica se quem está tentando editar é realmente o dono da conta
-      const authorization = req.headers.authorization;
-      if (!authorization) {
-        return res.status(401).json({ error: 'Token nao fornecido.' });
-      }
-
-      const token = authorization.replace('Bearer ', '');
-      const {
-        data: { user },
-        error: authError
-      } = await supabaseAuth.auth.getUser(token);
-
-      if (authError || !user) {
-        return res.status(401).json({ error: 'Token invalido.' });
+      // Usa o usuário autenticado já anexado pelo middleware 'verificarToken'
+      // req.usuario contém o objeto do usuário autenticado (id, email, etc.)
+      const user = req.usuario;
+      if (!user) {
+        return res.status(401).json({ error: 'Usuário não autenticado.' });
       }
 
       const { nome, email, senha } = req.body;
@@ -352,18 +343,18 @@ class AuthController {
         mudancas.email = emailFormatado;
       }
 
-      // Troca de senha: exige segurança mínima e avisa o servidor de Auth
-      if (senha !== undefined) {
-        if (senha.length < 8) {
-          return res.status(400).json({ error: 'A nova senha deve ter no minimo 8 caracteres.' });
+        // Troca de senha: exige segurança mínima e avisa o servidor de Auth
+        if (senha && senha.length > 0) {
+          if (senha.length < 8) {
+            return res.status(400).json({ error: 'A nova senha deve ter no minimo 8 caracteres.' });
+          }
+
+          const { error: updatePasswordError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+            password: senha
+          });
+
+          if (updatePasswordError) throw updatePasswordError;
         }
-
-        const { error: updatePasswordError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
-          password: senha
-        });
-
-        if (updatePasswordError) throw updatePasswordError;
-      }
 
       // Novos campos sociais
       const { bio, generos_favoritos, avatar_url, banner_url } = req.body;
@@ -371,6 +362,14 @@ class AuthController {
       if (generos_favoritos !== undefined) mudancas.generos_favoritos = generos_favoritos;
       if (avatar_url !== undefined) mudancas.avatar_url = avatar_url;
       if (banner_url !== undefined) mudancas.banner_url = banner_url;
+
+        // Atualiza o nome no Auth metadata se o nome mudou
+        if (mudancas.nome && mudancas.nome !== user.user_metadata?.nome) {
+          const { error: updateNameMetaError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+            data: { nome: mudancas.nome }
+          });
+          if (updateNameMetaError) throw updateNameMetaError;
+        }
 
       // Salva todas as alterações de nome/email na nossa tabela de usuários
       if (Object.keys(mudancas).length > 0) {

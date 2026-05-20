@@ -34,6 +34,9 @@ async function carregarPerfil(userId = null) {
         document.getElementById('perfilEmail').value = userToShow.email || '';
         document.getElementById('perfilBio').value = userToShow.bio || '';
         document.getElementById('perfilGeneros').value = userToShow.generos_favoritos || '';
+        if (document.getElementById('perfilSenha')) {
+            document.getElementById('perfilSenha').value = '';
+        }
     }
 
     // Cabeçalho e Informações Básicas
